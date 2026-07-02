@@ -1,0 +1,151 @@
+{
+  "week": 3,
+  "season": 2025,
+  "generated_date": "2025-09-14T00:00:00.000Z",
+  "prediction_count": 7,
+  "predictions": [
+    {
+      "game_id": "BOSTON_COLLEGE_STANFORD_week3",
+      "week": 3,
+      "home_team": "STANFORD",
+      "away_team": "BOSTON COLLEGE",
+      "vegas_spread": 14.0,
+      "contrarian_spread": 15.0,
+      "predicted_edge": 1.02,
+      "edge_direction": "home",
+      "confidence": 69.0,
+      "recommendation": "LEAN - STANFORD (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.02
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-14T00:00:00.000Z"
+    },
+    {
+      "game_id": "USC_PURDUE_week3",
+      "week": 3,
+      "home_team": "PURDUE",
+      "away_team": "USC",
+      "vegas_spread": 20.5,
+      "contrarian_spread": 21.5,
+      "predicted_edge": 1.01,
+      "edge_direction": "home",
+      "confidence": 65.2,
+      "recommendation": "LEAN - PURDUE (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.01
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-14T00:00:00.000Z"
+    },
+    {
+      "game_id": "ARKANSAS_MISSISSIPPI_week3",
+      "week": 3,
+      "home_team": "MISSISSIPPI",
+      "away_team": "ARKANSAS",
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.6,
+      "predicted_edge": 0.94,
+      "edge_direction": "away",
+      "confidence": 65.5,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.94
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-14T00:00:00.000Z"
+    },
+    {
+      "game_id": "FLORIDA_LSU_week3",
+      "week": 3,
+      "home_team": "LSU",
+      "away_team": "FLORIDA",
+      "vegas_spread": -6.5,
+      "contrarian_spread": -5.5,
+      "predicted_edge": 0.98,
+      "edge_direction": "away",
+      "confidence": 67.9,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.98
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-14T00:00:00.000Z"
+    },
+    {
+      "game_id": "VANDERBILT_SOUTH_CAROLINA_week3",
+      "week": 3,
+      "home_team": "SOUTH CAROLINA",
+      "away_team": "VANDERBILT",
+      "vegas_spread": -3.0,
+      "contrarian_spread": -2.0,
+      "predicted_edge": 0.95,
+      "edge_direction": "away",
+      "confidence": 65.9,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.94
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-14T00:00:00.000Z"
+    },
+    {
+      "game_id": "GEORGIA_TENNESSEE_week3",
+      "week": 3,
+      "home_team": "TENNESSEE",
+      "away_team": "GEORGIA",
+      "vegas_spread": -7.0,
+      "contrarian_spread": -5.9,
+      "predicted_edge": 1.05,
+      "edge_direction": "away",
+      "confidence": 65.7,
+      "recommendation": "LEAN - TENNESSEE (home) - 1.1 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.06
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-14T00:00:00.000Z"
+    },
+    {
+      "game_id": "TEXAS_A&M_NOTRE_DAME_week3",
+      "week": 3,
+      "home_team": "NOTRE DAME",
+      "away_team": "TEXAS A&M",
+      "vegas_spread": -6.5,
+      "contrarian_spread": -5.5,
+      "predicted_edge": 0.98,
+      "edge_direction": "away",
+      "confidence": 67.9,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.98
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-14T00:00:00.000Z"
+    }
+  ],
+  "system_stats": {
+    "total_games_analyzed": 7,
+    "games_with_edges": 7,
+    "hit_rate": 0.5,
+    "average_confidence": 66.9,
+    "average_edge_size": 0.99,
+    "consensus_count": 4,
+    "slight_contrarian_count": 3,
+    "insufficient_data_count": 0
+  }
+}

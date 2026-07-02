@@ -1,0 +1,199 @@
+{
+  "week": 4,
+  "season": 2025,
+  "recorded_date": "2025-09-27",
+  "results": [
+    {
+      "game_id": "SYRACUSE_CLEMSON_week4",
+      "home_team": "CLEMSON",
+      "away_team": "SYRACUSE",
+      "home_score": 21,
+      "away_score": 34,
+      "vegas_spread": -17.0,
+      "contrarian_spread": -15.9,
+      "confidence": 65.6,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "STANFORD_VIRGINIA_week4",
+      "home_team": "VIRGINIA",
+      "away_team": "STANFORD",
+      "home_score": 48,
+      "away_score": 20,
+      "vegas_spread": -16.5,
+      "contrarian_spread": -15.5,
+      "confidence": 65.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "NC_STATE_DUKE_week4",
+      "home_team": "DUKE",
+      "away_team": "NC STATE",
+      "home_score": 45,
+      "away_score": 33,
+      "vegas_spread": -3.0,
+      "contrarian_spread": -2.0,
+      "confidence": 67.2,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "WEST_VIRGINIA_KANSAS_week4",
+      "home_team": "KANSAS",
+      "away_team": "WEST VIRGINIA",
+      "home_score": 41,
+      "away_score": 10,
+      "vegas_spread": -13.0,
+      "contrarian_spread": -12.0,
+      "confidence": 66.8,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "TEXAS_TECH_UTAH_week4",
+      "home_team": "UTAH",
+      "away_team": "TEXAS TECH",
+      "home_score": 10,
+      "away_score": 34,
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.6,
+      "confidence": 66.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "ARIZONA_STATE_BAYLOR_week4",
+      "home_team": "BAYLOR",
+      "away_team": "ARIZONA STATE",
+      "home_score": 24,
+      "away_score": 27,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.6,
+      "confidence": 65.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MICHIGAN_STATE_USC_week4",
+      "home_team": "USC",
+      "away_team": "MICHIGAN STATE",
+      "home_score": 45,
+      "away_score": 31,
+      "vegas_spread": -18.5,
+      "contrarian_spread": -17.5,
+      "confidence": 67.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "MARYLAND_WISCONSIN_week4",
+      "home_team": "WISCONSIN",
+      "away_team": "MARYLAND",
+      "home_score": 10,
+      "away_score": 27,
+      "vegas_spread": -10.0,
+      "contrarian_spread": -9.0,
+      "confidence": 69.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "ILLINOIS_INDIANA_week4",
+      "home_team": "INDIANA",
+      "away_team": "ILLINOIS",
+      "home_score": 63,
+      "away_score": 10,
+      "vegas_spread": -6.5,
+      "contrarian_spread": -5.6,
+      "confidence": 65.4,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "IOWA_RUTGERS_week4",
+      "home_team": "RUTGERS",
+      "away_team": "IOWA",
+      "home_score": 28,
+      "away_score": 38,
+      "vegas_spread": 2.0,
+      "contrarian_spread": 2.9,
+      "confidence": 64.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MICHIGAN_NEBRASKA_week4",
+      "home_team": "NEBRASKA",
+      "away_team": "MICHIGAN",
+      "home_score": 27,
+      "away_score": 30,
+      "vegas_spread": 1.5,
+      "contrarian_spread": 2.5,
+      "confidence": 66.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "SOUTH_CAROLINA_MISSOURI_week4",
+      "home_team": "MISSOURI",
+      "away_team": "SOUTH CAROLINA",
+      "home_score": 29,
+      "away_score": 20,
+      "vegas_spread": -9.5,
+      "contrarian_spread": -8.5,
+      "confidence": 66.6,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "AUBURN_OKLAHOMA_week4",
+      "home_team": "OKLAHOMA",
+      "away_team": "AUBURN",
+      "home_score": 24,
+      "away_score": 17,
+      "vegas_spread": -6.5,
+      "contrarian_spread": -5.5,
+      "confidence": 68.3,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "FLORIDA_MIAMI_week4",
+      "home_team": "MIAMI",
+      "away_team": "FLORIDA",
+      "home_score": 26,
+      "away_score": 7,
+      "vegas_spread": -7.5,
+      "contrarian_spread": -6.5,
+      "confidence": 66.4,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "NORTH_CAROLINA_UCF_week4",
+      "home_team": "UCF",
+      "away_team": "NORTH CAROLINA",
+      "home_score": 34,
+      "away_score": 9,
+      "vegas_spread": -7.0,
+      "contrarian_spread": -6.0,
+      "confidence": 66.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "SMU_TCU_week4",
+      "home_team": "TCU",
+      "away_team": "SMU",
+      "home_score": 35,
+      "away_score": 24,
+      "vegas_spread": -6.5,
+      "contrarian_spread": -5.5,
+      "confidence": 64.4,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "PURDUE_NOTRE_DAME_week4",
+      "home_team": "NOTRE DAME",
+      "away_team": "PURDUE",
+      "home_score": 56,
+      "away_score": 30,
+      "vegas_spread": -25.5,
+      "contrarian_spread": -24.4,
+      "confidence": 68.1,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    }
+  ],
+  "summary": {
+    "total_games": 17,
+    "games_with_results": 17,
+    "games_with_predictions": 17
+  }
+}

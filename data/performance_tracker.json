@@ -1,0 +1,28 @@
+{
+  "last_updated": null,
+  "tracking_start_date": null,
+  "weeks_tracked": 0,
+  
+  "overall_performance": {
+    "total_predictions": 0,
+    "correct_predictions": 0,
+    "win_rate": null,
+    "total_games_analyzed": 0,
+    "prediction_rate": null,
+    "average_edge_size": null,
+    "average_confidence": null
+  },
+  
+  "weekly_breakdown": {},
+  
+  "confidence_analysis": {
+    "80_plus": {"predictions": 0, "wins": 0, "win_rate": null},
+    "70_79": {"predictions": 0, "wins": 0, "win_rate": null},
+    "60_69": {"predictions": 0, "wins": 0, "win_rate": null},
+    "below_60": {"predictions": 0, "wins": 0, "win_rate": null}
+  },
+  
+  "factor_performance": {},
+  
+  "notable_results": []
+}

@@ -1,0 +1,29 @@
+# Core Dependencies
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# Data Analysis and Statistics
+statistics>=1.0.3.5
+
+# System Monitoring
+psutil>=5.9.0
+
+# JSON handling (enhanced)
+jsonschema>=4.17.0
+
+# Development Dependencies
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+black>=23.7.0
+flake8>=6.0.0
+mypy>=1.5.0
+
+# Type Hints Support
+typing-extensions>=4.7.0
+
+# Logging Enhancement
+colorlog>=6.7.0
+
+# Path and File Utilities
+pathlib2>=2.3.7; python_version < '3.4'
