@@ -4,8 +4,8 @@ PY ?= python
 
 # Genuinely new logic authored in Phase 0. cli/ is lifted-and-shifted legacy
 # (rewritten in Phase 4.5, SPEC 9), so it is not held to strict lint here.
-LINT_PATHS := main.py data/conferences.py utils/season_calendar.py tests/conftest.py tests/test_week_inference.py
-TYPED_PATHS := data/conferences.py utils/season_calendar.py
+LINT_PATHS := main.py data/conferences.py data/clients utils/season_calendar.py tests/conftest.py tests/test_week_inference.py tests/test_cfbd_v2_client.py
+TYPED_PATHS := data/conferences.py data/clients/cfbd_v2.py utils/season_calendar.py
 
 help:
 	@echo "targets: install  test  lint  predict  grade  report  verify-phase-0"

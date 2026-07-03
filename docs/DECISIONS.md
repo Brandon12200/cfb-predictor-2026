@@ -39,3 +39,19 @@ Binding owner decisions made outside the resolved SPEC §16 set. Each entry reco
 **Decision:** Get the **entire** suite green and offline within Phase 0 (owner choice over the lighter "quarantine network tests" option): delete dead modules with their tests (item 5); fix or remove stale unit tests; and mock all client/network calls (and neutralize rate-limiter sleeps) via a shared test fixture layer so `make test` runs the full suite deterministically with no network.
 **Note:** This front-runs part of Phase 1's snapshot/no-network architecture (SPEC §5). Phase 1 still owns the canonical `engine passes a no-network test` enforcement; the Phase 0 mocking layer is an interim guard, not the permanent data architecture.
 **Rationale:** A trustworthy green suite is the guard rail for the `main.py` decomposition (item 6) and every later phase; leaving a broken baseline would undermine the freeze/audit-trail credibility the project is built on.
+
+---
+
+## D5 — API tier for Phase 1: existing CFBD Tier 1 + Odds API free
+**Date:** 2026-07-03
+**Context:** Phase 1 (data layer v2) needs a decided API budget; CFBD moved from request-throttling to monthly call quotas, and any paid tier is an owner spend decision.
+**Decision:** Use the owner's existing **CFBD Tier 1** subscription — **$1/mo, 5,000 requests/mo shared between the football and basketball APIs** — plus **The Odds API free tier** (500 credits/mo). Verified live: CFBD v2 (`https://api.collegefootballdata.com`, Bearer auth) returns 200 for `/conferences`, `/teams/fbs?year=2026`, `/calendar?year=2026`.
+**Implications:** The 5,000-cap is **shared with basketball**, so the design fetches **league-wide** (year/week-scoped, all teams per call ≈ 110 CFBD calls/season) and caches to disk; the config budget guard must treat 5,000/mo as the shared ceiling. Tier 1 also exposes Weather / Live Scoreboard / Live PBP — unused by the batch weekly pipeline (Weather stays out of 2026 core per SPEC Appendix A).
+
+---
+
+## D6 — Phase 1 scope: core now, availability + line-movement deferred to slice 1.5
+**Date:** 2026-07-03
+**Context:** Phase 1 is the largest phase (~7 weeks to the freeze). Availability-report ingestion is "cut second" per SPEC §14.1, and the four Power-Four report pages are JS-rendered Sidearm `.aspx` whose data format could not be confirmed without a headless-browser pass.
+**Decision:** Ship **core Phase 1** — 4-layer data architecture (clients/normalize/snapshot/engine-reads-snapshot), CFBD v2 migration, provenance manifest, canonical team registry, schedule-intelligence dataset, closing-line capture, inspection tooling — and **defer availability-report ingestion and best-effort line-movement history to a follow-up slice (1.5)**.
+**Implications:** In core Phase 1, `market_sentiment` consumes only the prediction-time spread (+ CFBD opening line where present); line-movement is recorded as `missing` in the manifest and the factor's missing-movement behavior is a documented, deliberate state — never fabricated.
