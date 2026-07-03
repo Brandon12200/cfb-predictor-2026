@@ -72,6 +72,13 @@ check("ACC has 17 members", len(conf["ACC"]) == 17, f"got {len(conf['ACC'])}")
 check("ACC includes Stanford, California, SMU",
       all(t in conf["ACC"] for t in ("STANFORD", "CALIFORNIA", "SMU")))
 
+# No hardcoded conference membership lists survive in the CLI/entry code — a
+# 'BIG TEN': [...] dict-key literal must only live in data/conferences.py.
+conf_literals = [p.name for p in [ROOT / "main.py", *(ROOT / "cli").glob("*.py")]
+                 if "'BIG TEN':" in p.read_text() or '"BIG TEN":' in p.read_text()]
+check("no hardcoded conference lists outside data/conferences.py",
+      not conf_literals, ", ".join(conf_literals) or "none")
+
 # 6. Required Phase 0 docs exist.
 for doc in ("CODE_AUDIT.md", "DECISIONS.md"):
     check(f"docs/{doc} exists", (ROOT / "docs" / doc).exists())

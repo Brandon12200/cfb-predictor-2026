@@ -823,22 +823,8 @@ def run_p4_predictions(week: int, min_edge: float = 1.0, min_confidence: float =
                     'has_line': True
                 })
         
-        # Power 4 conference teams
-        power4_teams = {
-            'SEC': ['ALABAMA', 'ARKANSAS', 'AUBURN', 'FLORIDA', 'GEORGIA', 'KENTUCKY', 
-                   'LSU', 'MISSISSIPPI', 'MISSISSIPPI STATE', 'MISSOURI', 'SOUTH CAROLINA', 
-                   'TENNESSEE', 'TEXAS', 'TEXAS A&M', 'VANDERBILT', 'OKLAHOMA'],
-            'BIG TEN': ['ILLINOIS', 'INDIANA', 'IOWA', 'MARYLAND', 'MICHIGAN', 'MICHIGAN STATE',
-                       'MINNESOTA', 'NEBRASKA', 'NORTHWESTERN', 'OHIO STATE', 'PENN STATE',
-                       'PURDUE', 'RUTGERS', 'WISCONSIN', 'UCLA', 'USC', 'OREGON', 'WASHINGTON'],
-            'BIG 12': ['ARIZONA', 'ARIZONA STATE', 'BAYLOR', 'CINCINNATI', 'COLORADO', 'HOUSTON',
-                      'IOWA STATE', 'KANSAS', 'KANSAS STATE', 'OKLAHOMA STATE', 'TCU', 'TEXAS TECH',
-                      'UCF', 'UTAH', 'WEST VIRGINIA', 'BYU'],
-            'ACC': ['BOSTON COLLEGE', 'CLEMSON', 'DUKE', 'FLORIDA STATE', 'GEORGIA TECH', 'LOUISVILLE',
-                   'MIAMI', 'NC STATE', 'NORTH CAROLINA', 'PITTSBURGH', 'SYRACUSE',
-                   'VIRGINIA', 'VIRGINIA TECH', 'WAKE FOREST', 'CALIFORNIA', 'STANFORD', 'SMU'],
-            'INDEPENDENT': ['NOTRE DAME']
-        }
+        # Power 4 conference membership from the single source (data/conferences.py).
+        power4_teams = get_conference_map()
         
         # Filter to P4 games only
         power4_games = []
