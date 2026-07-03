@@ -10,7 +10,6 @@ from typing import Dict, Any, Tuple, Optional, List
 from datetime import datetime, timedelta
 import logging
 from factors.base_calculator import BaseFactorCalculator, FactorType, FactorConfidence
-from data.cfbd_client import get_cfbd_client
 
 
 class SchedulingFatigueCalculator(BaseFactorCalculator):
@@ -47,28 +46,29 @@ class SchedulingFatigueCalculator(BaseFactorCalculator):
             'lookback_weeks': 4,            # How many weeks to analyze
             'min_games_for_analysis': 2     # Minimum games needed for valid analysis
         }
-        
-        self.cfbd_client = get_cfbd_client()
-    
+
     def calculate(self, home_team: str, away_team: str, context: Optional[Dict[str, Any]] = None) -> float:
         """
         Calculate scheduling fatigue adjustment.
-        
+
         Positive values indicate home team advantage from away team fatigue.
         Negative values indicate away team advantage from home team fatigue.
         """
-        if not context or not self.cfbd_client:
-            self.logger.debug("No context or CFBD client available for scheduling fatigue")
+        if not context:
+            self.logger.debug("No context available for scheduling fatigue")
             return 0.0
-        
+
         week = context.get('week')
         if week is None:
             week = 1  # Default to week 1 if not provided
         year = context.get('year', 2024)
-        
+        # League-wide season games come from the snapshot via context (SPEC §5.2),
+        # not a live CFBD fetch — so the engine stays offline and reproducible.
+        games = context.get('games', [])
+
         # Calculate fatigue scores for both teams
-        home_fatigue = self._calculate_team_fatigue(home_team, week, year)
-        away_fatigue = self._calculate_team_fatigue(away_team, week, year)
+        home_fatigue = self._calculate_team_fatigue(home_team, week, year, games)
+        away_fatigue = self._calculate_team_fatigue(away_team, week, year, games)
         
         # Away team fatigue helps home team (positive adjustment)
         # Home team fatigue helps away team (negative adjustment)
@@ -82,27 +82,29 @@ class SchedulingFatigueCalculator(BaseFactorCalculator):
         
         return self.validate_output(adjustment)
     
-    def _calculate_team_fatigue(self, team: str, current_week: int, year: int) -> float:
-        """Calculate cumulative fatigue score for a team."""
+    def _calculate_team_fatigue(self, team: str, current_week: int, year: int,
+                                games: List[Dict]) -> float:
+        """Calculate cumulative fatigue score for a team from the snapshot's games."""
         try:
             # Ensure current_week is valid
             if current_week is None or current_week < 1:
                 current_week = 1
-            
-            # Get recent games for the team
-            start_week = max(1, current_week - self.config['lookback_weeks'])
-            games = self.cfbd_client.get_games(
-                year=year,
-                team=team,
-                seasonType='regular'
-            )
-            
+
             if not games:
                 return 0.0
-            
+
+            # This team's games (league-wide list → team perspective).
+            team_up = team.upper()
+            team_games = [
+                g for g in games
+                if str(g.get('home_team', '')).upper() == team_up
+                or str(g.get('away_team', '')).upper() == team_up
+            ]
+
             # Filter to recent games before current week
+            start_week = max(1, current_week - self.config['lookback_weeks'])
             recent_games = [
-                g for g in games 
+                g for g in team_games
                 if g.get('week', 0) >= start_week and g.get('week', 0) < current_week
             ]
             
@@ -137,22 +139,22 @@ class SchedulingFatigueCalculator(BaseFactorCalculator):
     
     def _is_road_game(self, game: Dict, team: str) -> bool:
         """Check if team played on the road."""
-        return game.get('awayTeam', '').upper() == team.upper()
-    
+        return str(game.get('away_team', '')).upper() == team.upper()
+
     def _calculate_rest_days(self, game1: Dict, game2: Dict) -> int:
         """Calculate days between two games."""
         try:
-            date1 = datetime.fromisoformat(game1.get('startDate', '').replace('Z', '+00:00'))
-            date2 = datetime.fromisoformat(game2.get('startDate', '').replace('Z', '+00:00'))
+            date1 = datetime.fromisoformat(str(game1.get('start_date', '')).replace('Z', '+00:00'))
+            date2 = datetime.fromisoformat(str(game2.get('start_date', '')).replace('Z', '+00:00'))
             return abs((date2 - date1).days)
-        except:
+        except Exception:
             return 7  # Default to normal rest if can't parse dates
-    
+
     def _is_emotional_game(self, game: Dict, team: str) -> bool:
         """Check if game was emotionally draining (close game, rivalry, OT)."""
-        home_score = game.get('homePoints', 0)
-        away_score = game.get('awayPoints', 0)
-        
+        home_score = game.get('home_points') or 0
+        away_score = game.get('away_points') or 0
+
         if not home_score and not away_score:
             return False
         
@@ -183,10 +185,10 @@ class SchedulingFatigueCalculator(BaseFactorCalculator):
         """Calculate with confidence scoring."""
         value = self.calculate(home_team, away_team, context)
         reasoning = []
-        
-        if not self.cfbd_client:
-            return value, FactorConfidence.NONE, ["CFBD client unavailable"]
-        
+
+        if not context or not context.get('games'):
+            return value, FactorConfidence.NONE, ["No snapshot games available"]
+
         # Determine confidence based on signal strength
         if abs(value) > 2.5:
             confidence = FactorConfidence.VERY_HIGH
@@ -227,7 +229,7 @@ class SchedulingFatigueCalculator(BaseFactorCalculator):
     def get_required_data(self) -> Dict[str, bool]:
         """Declare required data."""
         return {
-            'schedule_data': False,    # Fetched directly via CFBD
+            'schedule_data': True,     # Reads snapshot `games` from context
             'team_info': False,
             'coaching_data': False,
             'team_stats': False,

@@ -211,14 +211,26 @@ class PredictionEngine:
                                prediction_result: Dict[str, Any], context: Dict[str, Any],
                                variance_analysis: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Build comprehensive prediction result."""
-        
+        # Frozen from the snapshot's build time so `predict rerun` is bit-identical
+        # (reproducibility contract, SCHEMA §3). A missing timestamp means the context
+        # was not snapshot-assembled — fall back to wall-clock but WARN loudly, since
+        # reproducibility is broken for this prediction.
+        timestamp = context.get('timestamp')
+        if timestamp is None:
+            self.logger.warning(
+                "Context for %s @ %s has no snapshot timestamp; using wall-clock — "
+                "bit-identical rerun is NOT guaranteed for this prediction.",
+                away_team, home_team)
+            timestamp = datetime.now().isoformat()
+
         return {
             # Basic game info
             'home_team': home_team,
             'away_team': away_team,
             'week': week,
-            'timestamp': datetime.now().isoformat(),
-            
+            'timestamp': timestamp,
+            'snapshot_id': context.get('snapshot_id'),
+
             # Market data
             'vegas_spread': vegas_spread,
             'contrarian_spread': prediction_result.get('contrarian_spread'),

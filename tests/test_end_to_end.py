@@ -16,6 +16,7 @@ from data.data_manager import data_manager
 from factors.factor_registry import factor_registry
 from utils.normalizer import normalizer
 from config import config
+from tests.context_factory import patched_context_from_mocks
 
 
 class TestEndToEndIntegration(unittest.TestCase):
@@ -35,8 +36,7 @@ class TestEndToEndIntegration(unittest.TestCase):
     
     def test_full_prediction_pipeline_with_mocks(self):
         """Test complete prediction pipeline with mocked API responses."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             # Mock API responses
             mock_odds.return_value = -3.5  # Georgia favored by 3.5
@@ -288,8 +288,7 @@ class TestPerformanceBenchmarks(unittest.TestCase):
     def test_prediction_speed_benchmark(self):
         """Benchmark prediction generation speed."""
         # Use mocked data to focus on calculation performance
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = -3.0
             mock_espn.return_value = {

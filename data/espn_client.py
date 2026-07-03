@@ -16,6 +16,10 @@ from data.cache_manager import cache_manager
 from utils.normalizer import normalizer
 
 
+class ESPNError(RuntimeError):
+    """Raised when an ESPN request fails (no neutral fabrication — absence is honest)."""
+
+
 class ESPNStatsClient:
     """
     Client for ESPN API to fetch college football team data.
@@ -154,37 +158,20 @@ class ESPNStatsClient:
             self.logger.debug(f"Using cached team info for {team_name}")
             return cached_data
         
-        try:
-            # Get team ID first
-            team_id = self.find_team_id(team_name)
-            if not team_id:
-                return self._get_neutral_team_data(team_name, 'info')
-            
-            # Rate limiting
-            self.rate_limiter.wait_if_needed()
-            
-            # Fetch team data
-            url = f"{self.base_url}/teams/{team_id}"
-            response = self.session.get(url, timeout=30)
-            
-            if response.status_code != 200:
-                self.logger.warning(f"ESPN API returned {response.status_code} for team {team_name}")
-                return self._get_neutral_team_data(team_name, 'info')
-            
-            data = response.json()
-            
-            # Process team data
-            team_info = self._process_team_info(data, team_name)
-            
-            # Cache the result
-            self.cache.cache_team_data(team_name, team_info, 'info', ttl=3600)  # 1 hour cache
-            
-            self.logger.debug(f"Retrieved team info for {team_name}")
-            return team_info
-            
-        except Exception as e:
-            self.logger.error(f"Error fetching team info for {team_name}: {e}")
-            return self._get_neutral_team_data(team_name, 'info')
+        # Raise on failure (no neutral fabrication); callers decide how to degrade.
+        team_id = self.find_team_id(team_name)
+        if not team_id:
+            raise ESPNError(f"No ESPN team id for {team_name}")
+
+        self.rate_limiter.wait_if_needed()
+        url = f"{self.base_url}/teams/{team_id}"
+        response = self.session.get(url, timeout=30)
+        if response.status_code != 200:
+            raise ESPNError(f"ESPN returned {response.status_code} for team {team_name}")
+
+        team_info = self._process_team_info(response.json(), team_name)
+        self.cache.cache_team_data(team_name, team_info, 'info', ttl=3600)
+        return team_info
     
     def get_team_schedule(self, team_name: str, year: Optional[int] = None) -> List[Dict[str, Any]]:
         """
@@ -247,123 +234,6 @@ class ESPNStatsClient:
         except Exception as e:
             self.logger.error(f"Error fetching schedule for {team_name}: {e}")
             return []
-    
-    def get_coaching_data(self, team_name: str) -> Dict[str, Any]:
-        """
-        Get coaching staff information and tenure data.
-        
-        Args:
-            team_name: Normalized team name
-            
-        Returns:
-            Dictionary with coaching information
-        """
-        # Check cache
-        cached_data = self.cache.get_team_data(team_name, 'coaching')
-        if cached_data:
-            self.logger.debug(f"Using cached coaching data for {team_name}")
-            return cached_data
-        
-        try:
-            team_id = self.find_team_id(team_name)
-            if not team_id:
-                return self._get_neutral_coaching_data(team_name)
-            
-            # Rate limiting
-            self.rate_limiter.wait_if_needed()
-            
-            # Fetch team roster/staff (coaching info sometimes included)
-            url = f"{self.base_url}/teams/{team_id}/roster"
-            response = self.session.get(url, timeout=30)
-            
-            coaching_data = self._get_neutral_coaching_data(team_name)
-            
-            if response.status_code == 200:
-                data = response.json()
-                coaching_data.update(self._extract_coaching_info(data, team_name))
-            
-            # Try alternative endpoint for coaching staff
-            self.rate_limiter.wait_if_needed()
-            
-            url = f"{self.base_url}/teams/{team_id}"
-            response = self.session.get(url, timeout=30)
-            
-            if response.status_code == 200:
-                data = response.json()
-                coaching_data.update(self._extract_coaching_from_team_data(data, team_name))
-            
-            # Cache the result
-            self.cache.cache_team_data(team_name, coaching_data, 'coaching', ttl=7200)  # 2 hour cache
-            
-            self.logger.debug(f"Retrieved coaching data for {team_name}")
-            return coaching_data
-            
-        except Exception as e:
-            self.logger.error(f"Error fetching coaching data for {team_name}: {e}")
-            return self._get_neutral_coaching_data(team_name)
-    
-    def get_team_stats(self, team_name: str, year: Optional[int] = None) -> Dict[str, Any]:
-        """
-        Get team statistics for the season.
-        
-        Args:
-            team_name: Normalized team name
-            year: Season year (default: most recent available season)
-            
-        Returns:
-            Dictionary with team statistics
-        """
-        if year is None:
-            # Use current season based on month
-            current_year = datetime.now().year
-            current_month = datetime.now().month
-            
-            # If we're in early months (Jan-July), use previous year
-            # If we're in Aug+, use current year (season has started)
-            if current_month < 8:
-                year = current_year - 1
-            else:
-                year = current_year
-        
-        # Check cache
-        cache_key = f"stats_{year}"
-        cached_data = self.cache.get_team_data(team_name, cache_key)
-        if cached_data:
-            self.logger.debug(f"Using cached stats for {team_name} {year}")
-            return cached_data
-        
-        try:
-            team_id = self.find_team_id(team_name)
-            if not team_id:
-                return self._get_neutral_stats_data(team_name)
-            
-            # Rate limiting
-            self.rate_limiter.wait_if_needed()
-            
-            # Fetch team statistics
-            url = f"{self.base_url}/teams/{team_id}/statistics"
-            params = {'season': year}
-            
-            response = self.session.get(url, params=params, timeout=30)
-            
-            if response.status_code != 200:
-                self.logger.warning(f"ESPN API returned {response.status_code} for {team_name} stats")
-                return self._get_neutral_stats_data(team_name)
-            
-            data = response.json()
-            
-            # Process statistics
-            stats = self._process_team_stats(data, team_name)
-            
-            # Cache the result
-            self.cache.cache_team_data(team_name, stats, cache_key, ttl=1800)  # 30 min cache
-            
-            self.logger.debug(f"Retrieved stats for {team_name} {year}")
-            return stats
-            
-        except Exception as e:
-            self.logger.error(f"Error fetching stats for {team_name}: {e}")
-            return self._get_neutral_stats_data(team_name)
     
     def find_team_id(self, team_name: str) -> Optional[int]:
         """
@@ -767,45 +637,6 @@ class ESPNStatsClient:
         # This is a placeholder - ESPN doesn't always provide experience data
         # In practice, this would need external data sources or manual curation
         return 5  # Default estimate
-    
-    def _get_neutral_team_data(self, team_name: str, data_type: str) -> Dict[str, Any]:
-        """Return neutral/fallback team data."""
-        return {
-            'team_name': team_name,
-            'data_type': data_type,
-            'status': 'neutral_fallback',
-            'last_updated': datetime.now().isoformat()
-        }
-    
-    def _get_neutral_coaching_data(self, team_name: str) -> Dict[str, Any]:
-        """Return neutral coaching data when real data unavailable."""
-        return {
-            'team_name': team_name,
-            'head_coach_name': 'Unknown',
-            'head_coach_experience': 5,  # Neutral estimate
-            'tenure_years': 3,  # Neutral estimate
-            'overall_record': {'wins': 30, 'losses': 25},  # Neutral record
-            'status': 'neutral_fallback',
-            'last_updated': datetime.now().isoformat()
-        }
-    
-    def _get_neutral_stats_data(self, team_name: str) -> Dict[str, Any]:
-        """Return neutral statistics when real data unavailable."""
-        return {
-            'team_name': team_name,
-            'season_stats': {
-                'offense': {
-                    'points_per_game': 25.0,
-                    'yards_per_game': 350.0
-                },
-                'defense': {
-                    'points_allowed_per_game': 25.0,
-                    'yards_allowed_per_game': 350.0
-                }
-            },
-            'status': 'neutral_fallback',
-            'last_updated': datetime.now().isoformat()
-        }
     
     def get_week_boundaries(self, week: int) -> Optional[Dict[str, datetime]]:
         """

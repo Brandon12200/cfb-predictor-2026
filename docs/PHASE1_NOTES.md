@@ -8,9 +8,8 @@ exploration so no session has to re-derive it.
 ## Current status (branch `phase-1-data-layer`)
 - **Done (commit 5f364e9):** `data/clients/cfbd_v2.py` — dumb fetch-parse-raise CFBD **v2** client, live-verified against Tier 1; `tests/test_cfbd_v2_client.py`; D5/D6 in `docs/DECISIONS.md`.
 - **Done (1a — team registry):** `data/team_registry.py` + committed `data/registry/{fbs_teams_2026.json,calendar_2026.json}` (provenance-stamped; D7). Added `CFBDv2Client.get_teams`. Retired `data/conferences.py`, `schedule_client._get_hardcoded_conference`, and the normalizer's `_build_team_mappings`/`_build_fcs_teams` (now sourced from the registry; public API unchanged). `validate_membership_counts` + `corroborate_calendar` (D1) + diff-aware `refresh_registry`. Tests: `test_team_registry.py` (17), `test_registry_reconciliation.py` (9), fixture `tests/fixtures/legacy_normalizer_vocab.json`. `scripts/verify_phase_1.py` + `make verify-phase-1` (1a checks pass; 1b/1c PENDING). Suite: **312 passed, 5 skipped**, offline; lint/mypy clean.
-- **Next (1a — schema):** canonical dataclasses in `data/normalize/` matching `docs/SCHEMA.md`.
-- **Then 1b:** snapshot builder + provenance + gut `safe_api_call`/neutral-fill + engine-reads-snapshot + no-network test + reproducibility contract. **Wire `validate_membership_counts` (hard-fail) + `corroborate_calendar` (warn) into the first snapshot build (SPEC §5.5.2).**
-- **Then 1c:** schedule intelligence (venue lat/long/elev/tz already in the registry artifact) + closing-line "as-of T" capture + `cfb data inspect`/`status`.
+- **Done (1b — snapshot-first + engine cutover):** `data/clients/odds.py` (dumb Odds client); `data/normalize/` canonical dataclasses + CFBD/Odds converters; `data/snapshot/` builder → `data/snapshots/YYYY_week_NN/` (canonical data + 100%-coverage provenance manifest; runs `validate_membership_counts` hard-fail + `corroborate_calendar` warn at build start, §5.5.2). Rewrote `data_manager.get_game_context` to read only the snapshot; **deleted `safe_api_call` + every `_get_neutral_*`/`_get_default_*`** (grep-clean); slimmed v1 `cfbd_client` (715→146) + `espn_client` (970→802, `get_team_info` now raises). 3 factors read `context` datasets (dropped `self.cfbd_client`); `market_sentiment` line-movement is the documented `missing` state (removed a hash-based fabrication). `data_quality` = honest scalar + itemized report; engine embeds `snapshot_id` + frozen-clock timestamp (bit-identical reruns). Scripts: `build_snapshot.py`, `rerun_prediction.py`. Tests: `test_odds_client`, `test_normalize`, `test_snapshot`, `test_no_network` + `tests/context_factory.py`; 2 D4 tests re-enabled. `make verify-phase-1` → **ALL 1a+1b PASS** (3 pending for 1c). Suite: **345 passed, 4 skipped**; lint/mypy clean.
+- **Then 1c:** schedule intelligence (venue lat/long/elev/tz already in the registry artifact) + closing-line "as-of T" capture + `cfb data inspect`/`status`; **+ the two follow-ups recorded below** (v1 `get_games` migration; calendar week-0 reconciliation).
 - **Deferred → 1.5:** availability reports + line-movement history; normalizer alias/ESPN/Odds **format** dicts (staged — need ESPN/Odds client sampling; CFBD `alternateNames` already captured via `registry.get_aliases`).
 
 ## Deletion map — what Phase 1 REMOVES (SPEC §5.2 acceptance: these must not exist)
@@ -27,6 +26,42 @@ exploration so no session has to re-derive it.
 - ⏳ `_build_espn_mappings`, `_build_odds_mappings`, `_build_alias_mappings` — **staged** (name-format plumbing, not membership; need ESPN/Odds client sampling to re-source safely). `registry.get_aliases()` exposes CFBD `alternateNames` ready for this.
 - ✅ `engine/confidence_calculator.py::_is_major_conference_game` — the last hardcoded `{'SEC','BIG TEN',...}` set (a pre-existing initial-commit residual, surfaced by the code review) now reads `registry.get_p4_conference_names()`.
 - ✅ `scripts/verify_phase_1.py` greps **all application code** (`data/`, `utils/`, `engine/`, `factors/`, `cli/`, `main.py`) for `BIG TEN`/`PAC-12` conference-name literals (not colon-anchored — catches sets/lists/dict-keys), excluding only the sanctioned `data/team_registry.py` (documented `P4_CONFERENCES`/`EXPECTED_COUNTS_2026`). `verify_phase_0` updated: ACC check now `CAL` (canonical) not `CALIFORNIA`.
+
+## 1c / later follow-ups (recorded so they aren't re-derived)
+- **v1 `cfbd_client.get_games` is a lingering dead-API risk (migrate in 1c).** The 1b cutover
+  surgically slimmed the v1 client to `get_games`/`test_connection` (owner's "surgical" choice over
+  full removal), but two consumers still use its **v1** `/games` call on what is now the v2 host:
+  `utils/results_fetcher.py:172` and `data/schedule_client.py:102`. The v1 response shape is not
+  guaranteed by the v2 API, so these can silently return wrong/empty data. **1c: repoint both to
+  `data/clients/cfbd_v2.py::get_games` and adapt their parsing to the raw v2 shape, then delete the
+  v1 `data/cfbd_client.py` shim entirely.**
+- **Calendar corroboration diagnosis (D1, 16 warnings — expected, mostly benign).** `corroborate_calendar`
+  surfaces two distinct things: (a) **weeks 2–15** — a ≤2-day boundary-convention offset (hand calendar
+  is Sunday-anchored 7-day weeks; CFBD `startDate` is mid-week). **Benign**: both put identical Saturday
+  game dates in the same week number (`resolve_week` verified correct for real Saturdays), so no
+  misclassification. (b) **week 0** — CFBD **folds Week 0 into Week 1** (its wk1 window 08-29→09-08
+  absorbs the 8/29 openers), so CFBD has no Week 0 while SPEC §16.2 defines Week 0 = 2026-08-29. Not a
+  1b bug (the snapshot slate filters by CFBD's own `week` field consistently; the hand calendar is only
+  `resolve_week` for CLI date→week), but a **week-numbering reconciliation for Phase 4.5** when the
+  calendar folds into `season.yaml`. No calendar change made in 1b — the warning is the intended surfacing.
+
+## 1b code-review follow-ups (recorded from the pre-commit review)
+- **Blocker FIXED:** `market_sentiment` public-betting simulation + hardcoded team lists removed
+  (see CODE_AUDIT Phase-1b) — the audit docs and `verify_phase_1` fabrication grep are corrected.
+- **Scenario-test coverage loss (do in 1c):** the ~12 migrated tests in `test_real_world_scenarios.py`
+  still build elaborate `mock_espn` payloads that are now dead — the engine runs against
+  `context_factory`'s generic defaults, so those tests are effectively **smoke tests** (engine runs
+  end-to-end), not the specific-behavior tests their names imply (e.g. an asymmetric venue-boost
+  assertion passes for structural reasons). Re-wire real per-test data via `patched_context(**kwargs)`
+  (as the 2 D4 tests already do) or trim the misleading setup.
+- **`style_mismatch.py:127` latent calc (Phase 3):** `offense.get('plays', 70) / max(1, team_stats.get('season', 1))`
+  — the canonical `AdvancedStats` carries no `season` key, so this always divides by 1, making
+  "plays per game" a raw season total. The pace *comparison* is still directionally valid (both teams
+  scaled identically), but the absolute value is wrong; fix when the factor is calibrated in Phase 3.
+- **Committed snapshot is a manual artifact:** `data/snapshots/2026_week_01/` is a hand-run
+  `build_snapshot.py` bundle (real 2026 data, honest `missing` coverage) checked in ahead of the
+  Phase-5 automation as the reproducibility fixture verified by `verify_phase_1`; it will be
+  superseded by pipeline-generated bundles once Phase 5 lands (it is not an audit-trail artifact).
 
 ## The 3 network-bypassing factors (move behind the snapshot in 1b)
 - `factors/scheduling_fatigue.py:94` → `get_games` → snapshot `games`

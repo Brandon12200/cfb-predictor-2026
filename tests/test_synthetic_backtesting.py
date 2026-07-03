@@ -14,6 +14,7 @@ import statistics
 from engine.prediction_engine import prediction_engine
 from factors.factor_registry import factor_registry
 from utils.normalizer import normalizer
+from tests.context_factory import patched_context_from_mocks
 
 
 class SyntheticGame:
@@ -180,8 +181,7 @@ class SyntheticBacktester:
         context = self._create_game_context(game)
         
         try:
-            with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-                 patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+            with patched_context_from_mocks() as (mock_odds, mock_espn):
                 
                 # Mock API responses
                 mock_odds.return_value = game.vegas_spread

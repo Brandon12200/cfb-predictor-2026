@@ -79,6 +79,15 @@ VOLATILE_FIELDS = { "generated_at", "timestamp", "generated_date" }   # wall-clo
 ```
 Everything outside this set (spreads, edges, factor values, provenance) must match exactly. Predictions embed the `snapshot_id` they were computed from.
 
+**As built (1b):** the engine's result `timestamp` is set from the snapshot's `built_at`
+(`prediction_engine._build_prediction_result`), and `market_sentiment`'s deterministic
+team-hash uses stable `hashlib.md5` (not PYTHONHASHSEED-randomized `hash()`). Because the
+snapshot-first flow has no wall-clock "live" prediction to diverge from, two snapshot-based
+predictions are in practice identical over the **full** payload — `test_two_reruns_are_bit_identical`
+asserts byte-equality including `timestamp`. `VOLATILE_FIELDS` remains the documented contract
+for any future comparison against a wall-clock-stamped record (e.g. the storage envelope's
+`generated_date`, which is still set at write time).
+
 ---
 
 ## 4. `market_sentiment` in core Phase 1 (documented deliberate state)
@@ -89,6 +98,14 @@ consumes only the **prediction-time spread** (Odds API) plus, where present,
 manifest.** On missing movement the factor **reduces its contribution and applies
 a confidence penalty** — it never fabricates a movement of 0. This is intended
 behavior, not a defect.
+
+**Public-betting share is also unavailable** (no free data source) and is therefore
+UNAVAILABLE, not simulated: the trap/line-freeze/reverse-line-movement signals that
+depend on it return no-signal (0.0). The prior implementation fabricated a public
+betting % from hardcoded team-popularity/rivalry lists + `random`/`hashlib` noise — all
+removed in 1b (SPEC §5.2, binding principles #2/#4). The factor now runs only on real
+signals: spread size/week/spread-type characteristics, cross-book steam dispersion, and
+the deferred missing line-movement state.
 
 ---
 

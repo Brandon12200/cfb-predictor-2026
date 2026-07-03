@@ -270,39 +270,22 @@ class TestESPNStatsClient(unittest.TestCase):
         self.assertEqual(team_info['espn_id'], '61')
         self.assertIn('venue', team_info)
     
-    def test_neutral_fallback_data(self):
-        """Test neutral fallback data generation."""
-        neutral_coaching = self.client._get_neutral_coaching_data('GEORGIA')
-        
-        self.assertEqual(neutral_coaching['team_name'], 'GEORGIA')
-        self.assertEqual(neutral_coaching['status'], 'neutral_fallback')
-        self.assertIsInstance(neutral_coaching['head_coach_experience'], int)
-        
-        neutral_stats = self.client._get_neutral_stats_data('GEORGIA')
-        
-        self.assertEqual(neutral_stats['team_name'], 'GEORGIA')
-        self.assertEqual(neutral_stats['status'], 'neutral_fallback')
-        self.assertIn('season_stats', neutral_stats)
-    
     @patch('data.espn_client.requests.Session')
-    def test_api_error_handling(self, mock_session_class):
-        """Test handling of ESPN API errors."""
+    def test_api_error_raises_not_fabricates(self, mock_session_class):
+        """On an API error, get_team_info RAISES (Phase 1b) rather than returning a
+        neutral-fabricated structure — absence is honest (SPEC §5.2)."""
+        from data.espn_client import ESPNError
         mock_session = MagicMock()
         mock_session_class.return_value = mock_session
-        
-        # Mock failed response
         mock_response = MagicMock()
         mock_response.status_code = 500
         mock_session.get.return_value = mock_response
-        
+
         client = ESPNStatsClient()
         client.session = mock_session
-        
-        # Should return neutral data, not raise exception
-        team_info = client.get_team_info('GEORGIA')
-        
-        self.assertIn('status', team_info)
-        # Should get fallback data, not crash
+
+        with self.assertRaises(ESPNError):
+            client.get_team_info('GEORGIA')
 
 
 class TestDataManager(unittest.TestCase):
@@ -344,86 +327,47 @@ class TestDataManager(unittest.TestCase):
         # Should have ESPN API
         self.assertTrue(availability['espn_api_available'])
     
-    def test_data_quality_report(self):
-        """Test data quality report generation."""
-        report = self.data_manager.get_data_quality_report('GEORGIA', 'ALABAMA')
-        
-        self.assertIn('quality_score', report)
-        self.assertIn('quality_level', report)
-        self.assertIn('availability', report)
-        self.assertIn('recommendations', report)
-        
-        # Quality score should be between 0 and 1
-        self.assertTrue(0 <= report['quality_score'] <= 1)
-        
-        # Quality level should be valid
-        self.assertIn(report['quality_level'], ['HIGH', 'MEDIUM', 'LOW', 'POOR'])
-        
-        # Should have recommendations
-        self.assertIsInstance(report['recommendations'], list)
-    
-    def test_neutral_data_structures(self):
-        """Test neutral data structure generation."""
-        # Test different data types
-        info_structure = self.data_manager._get_neutral_data_structure('info', 'GEORGIA')
-        self.assertEqual(info_structure['team_name'], 'GEORGIA')
-        self.assertEqual(info_structure['status'], 'neutral_fallback')
-        self.assertIn('display_name', info_structure)
-        
-        coaching_structure = self.data_manager._get_neutral_data_structure('coaching', 'GEORGIA')
-        self.assertEqual(coaching_structure['team_name'], 'GEORGIA')
-        self.assertIn('head_coach_name', coaching_structure)
-        self.assertIn('head_coach_experience', coaching_structure)
-        
-        stats_structure = self.data_manager._get_neutral_data_structure('stats', 'GEORGIA')
-        self.assertEqual(stats_structure['team_name'], 'GEORGIA')
-        self.assertIn('season_stats', stats_structure)
-        
-        schedule_structure = self.data_manager._get_neutral_data_structure('schedule', 'GEORGIA')
-        self.assertEqual(schedule_structure, [])  # Empty list for schedule
-    
-    def test_derived_metrics_calculation(self):
-        """Test derived metrics calculation."""
-        # Mock team data with schedule
-        team_data = {
-            'schedule': [
-                {'completed': True, 'result': 'W', 'is_home_game': True},
-                {'completed': True, 'result': 'L', 'is_home_game': False},
-                {'completed': True, 'result': 'W', 'is_home_game': True},
-                {'completed': False, 'result': None, 'is_home_game': True}
-            ]
-        }
-        
-        metrics = self.data_manager._calculate_derived_metrics(team_data)
-        
-        self.assertIn('current_record', metrics)
-        self.assertIn('venue_performance', metrics)
-        
-        # Check current record calculation
-        record = metrics['current_record']
-        self.assertEqual(record['wins'], 2)
-        self.assertEqual(record['losses'], 1)
-        self.assertAlmostEqual(record['win_percentage'], 2/3, places=2)
-        
-        # Check venue performance
-        venue_perf = metrics['venue_performance']
-        self.assertIn('home_record', venue_perf)
-        self.assertIn('away_record', venue_perf)
-    
-    def test_experience_differential_calculation(self):
-        """Test coaching experience differential calculation."""
-        home_coaching = {'head_coach_experience': 10}
-        away_coaching = {'head_coach_experience': 5}
-        
-        diff = self.data_manager._calculate_experience_differential(home_coaching, away_coaching)
-        self.assertEqual(diff, 5)
-        
-        # Test with missing data (should use defaults)
-        home_coaching_empty = {}
-        away_coaching_empty = {}
-        
-        diff = self.data_manager._calculate_experience_differential(home_coaching_empty, away_coaching_empty)
-        self.assertEqual(diff, 0)  # Both default to 5, so diff is 0
+    def _snapshot(self, home_coaching, away_coaching, stats_status="cfbd", vegas=-3.5):
+        """Minimal in-memory snapshot bundle for get_game_context(snapshot=...)."""
+        def team(name):
+            return {"team_name": name, "info": {"status": "cfbd", "conference": {"name": "SEC"}},
+                    "coaching": home_coaching if name == "GEORGIA" else away_coaching,
+                    "stats": {"status": stats_status}, "schedule": [],
+                    "derived_metrics": {}, "is_home": False}
+        return {"meta": {"snapshot_id": "s1", "built_at": "2026-09-01T00:00:00+00:00"},
+                "data": {"teams": {"GEORGIA": team("GEORGIA"), "ALABAMA": team("ALABAMA")},
+                         "games": [], "advanced_stats": {},
+                         "betting_lines": {"ALABAMA@GEORGIA": {"vegas_spread": vegas, "lines": []}}}}
+
+    def test_get_game_context_from_snapshot(self):
+        """get_game_context assembles the factor-facing context from a snapshot, and
+        coaching_comparison computes the experience differential."""
+        snap = self._snapshot({"head_coach_experience": 9, "tenure_years": 4, "status": "cfbd"},
+                              {"head_coach_experience": 6, "tenure_years": 2, "status": "cfbd"})
+        ctx = self.data_manager.get_game_context("GEORGIA", "ALABAMA", week=1, snapshot=snap)
+        self.assertEqual(ctx["vegas_spread"], -3.5)
+        self.assertTrue(ctx["has_betting_data"])
+        self.assertEqual(ctx["snapshot_id"], "s1")
+        self.assertTrue(ctx["home_team_data"]["is_home"])
+        self.assertEqual(ctx["coaching_comparison"]["experience_differential"], 3)  # 9 - 6
+
+    def test_missing_fields_lower_quality_not_fabricated(self):
+        """D4: missing coaching/stats stay None and lower data_quality honestly — the
+        neutral-fill that used to report full quality is gone (SPEC §5.2)."""
+        snap = self._snapshot({"status": None}, {"status": None}, stats_status=None)
+        ctx = self.data_manager.get_game_context("GEORGIA", "ALABAMA", week=1, snapshot=snap)
+        report = ctx["data_quality_report"]
+        self.assertIn("home_coaching", report["missing_fields"])
+        self.assertIn("home_stats", report["missing_fields"])
+        self.assertLess(ctx["data_quality"], 0.8)  # betting+info present, rest missing
+        self.assertIsNone(ctx["home_team_data"]["coaching"].get("head_coach_experience"))
+
+    def test_no_betting_line_gate(self):
+        """No vegas spread → has_betting_data False (engine skips), not fabricated."""
+        snap = self._snapshot({"status": "cfbd"}, {"status": "cfbd"}, vegas=None)
+        ctx = self.data_manager.get_game_context("GEORGIA", "ALABAMA", week=1, snapshot=snap)
+        self.assertIsNone(ctx["vegas_spread"])
+        self.assertFalse(ctx["has_betting_data"])
     
     def test_cache_integration(self):
         """Test cache integration."""
@@ -485,27 +429,35 @@ class TestAPIIntegration(unittest.TestCase):
         except Exception as e:
             self.fail(f"Real Odds API call failed: {e}")
     
+    @unittest.skip("Live ESPN integration (network); get_team_info now raises rather "
+                   "than neutral-filling, so it cannot run in the offline suite.")
     def test_real_espn_api_call(self):
         """Test real ESPN API call."""
-        try:
-            # Test getting team info for a known team
-            team_info = self.data_manager.espn_client.get_team_info('GEORGIA')
-            
-            self.assertIn('team_name', team_info)
-            self.assertEqual(team_info['team_name'], 'GEORGIA')
-            
-            # Should have basic structure even if it's fallback data
-            self.assertIn('last_updated', team_info)
-        
-        except Exception as e:
-            self.fail(f"Real ESPN API call failed: {e}")
+        team_info = self.data_manager.espn_client.get_team_info('GEORGIA')
+        self.assertEqual(team_info['team_name'], 'GEORGIA')
     
     def test_end_to_end_data_flow(self):
         """Test complete data flow from input to output."""
         try:
-            # Test getting game context for a common matchup
-            context = self.data_manager.get_game_context('GEORGIA', 'ALABAMA')
-            
+            # Game context is assembled from a snapshot bundle (Phase 1b); inject a
+            # minimal in-memory one rather than fetching live.
+            snapshot = {
+                "meta": {"snapshot_id": "e2e", "built_at": "2026-09-01T00:00:00+00:00"},
+                "data": {
+                    "teams": {
+                        "GEORGIA": {"team_name": "GEORGIA", "info": {"status": "cfbd", "conference": {"name": "SEC"}},
+                                    "coaching": {"status": "cfbd", "head_coach_experience": 9}, "stats": {"status": "cfbd"},
+                                    "schedule": [], "derived_metrics": {}, "is_home": False},
+                        "ALABAMA": {"team_name": "ALABAMA", "info": {"status": "cfbd", "conference": {"name": "SEC"}},
+                                    "coaching": {"status": "cfbd", "head_coach_experience": 7}, "stats": {"status": "cfbd"},
+                                    "schedule": [], "derived_metrics": {}, "is_home": False},
+                    },
+                    "games": [], "advanced_stats": {},
+                    "betting_lines": {"ALABAMA@GEORGIA": {"vegas_spread": -3.5, "lines": []}},
+                },
+            }
+            context = self.data_manager.get_game_context('GEORGIA', 'ALABAMA', week=1, snapshot=snapshot)
+
             # Should have basic structure
             self.assertIn('home_team', context)
             self.assertIn('away_team', context)

@@ -13,6 +13,7 @@ from engine.confidence_calculator import confidence_calculator
 from engine.edge_detector import edge_detector, EdgeType
 from factors.factor_registry import factor_registry
 from data.data_manager import data_manager
+from tests.context_factory import make_team_data, patched_context, patched_context_from_mocks
 from output.formatter import output_formatter
 from output.insights_generator import insights_generator
 from utils.normalizer import normalizer
@@ -28,8 +29,7 @@ class TestRealWorldScenarios(unittest.TestCase):
     def test_playoff_elimination_game_scenario(self):
         """Test high-stakes playoff elimination game."""
         # Scenario: Week 13, one team needs win for playoff contention
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             # Mock spread: Georgia slightly favored
             mock_odds.return_value = -2.5
@@ -96,8 +96,7 @@ class TestRealWorldScenarios(unittest.TestCase):
     def test_weather_game_scenario(self):
         """Test game with adverse weather conditions."""
         # Scenario: November game in harsh weather
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = -6.5  # Normal spread
             
@@ -127,8 +126,7 @@ class TestRealWorldScenarios(unittest.TestCase):
     
     def test_rivalry_game_unpredictability(self):
         """Test traditional rivalry game with historical unpredictability."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = -10.5  # Large spread
             
@@ -165,8 +163,7 @@ class TestRealWorldScenarios(unittest.TestCase):
     
     def test_conference_championship_scenario(self):
         """Test conference championship game scenario."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = -3.0  # Close championship game
             
@@ -195,8 +192,7 @@ class TestRealWorldScenarios(unittest.TestCase):
     
     def test_unranked_vs_ranked_trap_game(self):
         """Test unranked home team vs ranked away team (classic trap game)."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = 7.5  # Away team heavily favored
             
@@ -232,8 +228,7 @@ class TestRealWorldScenarios(unittest.TestCase):
     
     def test_bowl_eligibility_desperation(self):
         """Test team on bubble for bowl eligibility."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = -1.5  # Close game
             
@@ -269,8 +264,7 @@ class TestRealWorldScenarios(unittest.TestCase):
     
     def test_lookahead_sandwich_game(self):
         """Test team with big game next week (lookahead concern)."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = -14.0  # Big favorite
             
@@ -310,47 +304,28 @@ class TestRealWorldScenarios(unittest.TestCase):
                     # If it triggers, should slightly favor underdog
                     self.assertLessEqual(lookahead_factor.get('value', 0), 0.5)
     
-    @unittest.skip("Asserts degraded data_quality on missing data; the neutral-fill masking this is removed in Phase 1 (SPEC 5.2). See docs/CODE_AUDIT.md.")
     def test_early_season_limited_data(self):
-        """Test early season game with limited historical data."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
-            
-            mock_odds.return_value = -6.0
-            
-            # Limited early season data
-            early_season_data = {
-                'info': {'conference': {'name': 'BIG TEN'}},
-                'derived_metrics': {
-                    'current_record': {'wins': 2, 'losses': 0, 'win_percentage': 1.0},
-                    'venue_performance': {
-                        'home_record': {'win_percentage': 1.0},  # Small sample
-                        'away_record': {'win_percentage': 0.0}
-                    }
-                },
-                'schedule': [
-                    {'completed': True, 'date': '2024-09-01', 'team_score': 35, 'opponent_score': 10, 'result': 'W'},
-                    {'completed': True, 'date': '2024-09-08', 'team_score': 28, 'opponent_score': 21, 'result': 'W'}
-                ]
-            }
-            mock_espn.return_value = early_season_data
-            
+        """Re-enabled (D4): early season = coaching/stats not yet populated, so the
+        snapshot honestly reports them missing and data_quality drops — the neutral-fill
+        that used to mask this (reporting 1.0) is removed in Phase 1 (SPEC §5.2)."""
+        # Preseason context: betting line + info present, but coaching/stats missing.
+        limited_home = make_team_data("MICHIGAN", conference="BIG TEN", has_stats=False)
+        limited_home["coaching"] = {"status": None, "head_coach_experience": None}
+        limited_away = make_team_data("TEXAS", conference="SEC", has_stats=False)
+        limited_away["coaching"] = {"status": None, "head_coach_experience": None}
+        with patched_context(vegas_spread=-6.0, home_team_data=limited_home,
+                             away_team_data=limited_away, data_quality=0.6):
             result = prediction_engine.generate_prediction("MICHIGAN", "TEXAS", week=3)
-            
-            self.assertFalse(result.get('error'))
-            
-            # Confidence should be lower due to limited data
-            confidence = result.get('confidence_score', 0.0)
-            self.assertLess(confidence, 0.8, "Should have lower confidence with limited early season data")
-            
-            # Data quality should reflect limited information
-            data_quality = result.get('data_quality', 1.0)
-            self.assertLess(data_quality, 0.9, "Data quality should reflect early season limitations")
+
+        self.assertFalse(result.get('error'))
+        self.assertLess(result.get('confidence_score', 1.0), 0.8,
+                        "Lower confidence with limited early-season data")
+        self.assertLess(result.get('data_quality', 1.0), 0.9,
+                        "Data quality reflects honestly-missing coaching/stats")
     
     def test_late_season_injury_impact(self):
         """Test late season game with potential injury impact on data quality."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = -4.5
             
@@ -374,33 +349,30 @@ class TestRealWorldScenarios(unittest.TestCase):
             self.assertIn('confidence_score', result)
             self.assertGreater(result['confidence_score'], 0.15)  # Above minimum
     
-    @unittest.skip("Asserts degraded data_quality on API failure; the neutral-fill masking this is removed in Phase 1 (SPEC 5.2). See docs/CODE_AUDIT.md.")
     def test_system_resilience_to_api_failures(self):
-        """Test system resilience when APIs partially fail."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
-            
-            # Odds API works, ESPN fails
-            mock_odds.return_value = -3.5
-            mock_espn.side_effect = Exception("ESPN API temporarily unavailable")
-            
+        """Re-enabled (D4): when a source was unavailable at snapshot-build time most
+        team fields are missing; the prediction still runs off the betting line but
+        data_quality/confidence are honestly degraded — no neutral-fill masking."""
+        # Odds line present; nearly everything else missing (source was down at build).
+        degraded_home = make_team_data("GEORGIA", has_stats=False)
+        degraded_home["info"] = {"status": None, "conference": {"name": None}}
+        degraded_home["coaching"] = {"status": None, "head_coach_experience": None}
+        degraded_away = make_team_data("ALABAMA", has_stats=False)
+        degraded_away["info"] = {"status": None, "conference": {"name": None}}
+        degraded_away["coaching"] = {"status": None, "head_coach_experience": None}
+        with patched_context(vegas_spread=-3.5, home_team_data=degraded_home,
+                             away_team_data=degraded_away, data_quality=0.35):
             result = prediction_engine.generate_prediction("GEORGIA", "ALABAMA", week=8)
-            
-            # Should gracefully handle partial failure
-            # Either succeed with degraded data or fail gracefully
-            if result.get('error'):
-                # If it fails, should be graceful
-                self.assertIn('error', result)
-                self.assertEqual(result.get('prediction_type'), 'ERROR')
-            else:
-                # If it succeeds, should note data quality issues
-                self.assertLess(result.get('data_quality', 1.0), 0.8)
-                self.assertLess(result.get('confidence_score', 1.0), 0.7)
+
+        if result.get('error'):
+            self.assertEqual(result.get('prediction_type'), 'ERROR')
+        else:
+            self.assertLess(result.get('data_quality', 1.0), 0.8)
+            self.assertLess(result.get('confidence_score', 1.0), 0.7)
     
     def test_neutral_site_game_handling(self):
         """Test handling of neutral site games (bowls, championship games)."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = -2.5  # Close neutral site game
             
@@ -433,8 +405,7 @@ class TestRealWorldScenarios(unittest.TestCase):
     
     def test_conference_strength_differential(self):
         """Test games between teams from different strength conferences."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = -7.0
             
@@ -473,8 +444,7 @@ class TestSystemIntegrationFlow(unittest.TestCase):
     
     def test_complete_prediction_to_output_flow(self):
         """Test complete flow from prediction through formatting."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = -3.5
             mock_espn.return_value = {
@@ -562,8 +532,7 @@ class TestSystemIntegrationFlow(unittest.TestCase):
     
     def test_performance_under_load(self):
         """Test system performance with multiple rapid requests."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn:
+        with patched_context_from_mocks() as (mock_odds, mock_espn):
             
             mock_odds.return_value = -3.5
             mock_espn.return_value = {

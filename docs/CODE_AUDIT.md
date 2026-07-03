@@ -119,3 +119,44 @@ Replaced hardcoded, divergent membership with the CFBD-sourced season registry
 - `scripts/verify_phase_1.py` + `make verify-phase-1`.
 
 **Result:** `312 passed, 5 skipped, 0 failed`, offline; lint + mypy clean on new code.
+
+## Phase 1b — snapshot-first data layer + engine cutover (SPEC §5.2)
+
+Replaced the live-fetch, neutral-fill data path with a snapshot-first one. Deletions
+are recoverable via git history.
+
+**Deleted (fabrication — the core of §5.1/§5.2)**
+- `data/data_manager.py`: `safe_api_call` decorator + `_get_neutral_data_structure` /
+  `_get_neutral_fallback` / `_initialize_fallback_data` / `safe_data_fetch` /
+  `get_data_quality_report` (rewrote the module as a snapshot reader).
+- `data/cfbd_client.py` (v1): `_get_default_coaching_data/_stats_data/_ratings_data` +
+  the now-unused `get_coaching_data`/`get_team_stats`/`get_team_ratings`/`get_betting_lines`/
+  `get_advanced_stats` + their processing helpers (715→146 lines; kept `get_games`/`test_connection`).
+- `data/espn_client.py`: `_get_neutral_team_data/_coaching_data/_stats_data` + the unused
+  `get_coaching_data`/`get_team_stats` (970→802; `get_team_info` now **raises** `ESPNError`).
+- `factors/market_sentiment.py`: **all fabrication + hardcoded team names** (770→452 lines).
+  Removed `_simulate_line_movement` (hash-based line-movement fabricator) and the entire
+  public-betting-simulation subsystem — `_get_public_betting_percentage` (invented a "public
+  betting %" from hardcoded `popular_teams`/`rivalry_pairs`/`service_academies` lists +
+  `hashlib`/`random.uniform` noise) plus its now-dead consumers `_analyze_public_betting`,
+  `_detect_reverse_line_movement`, `_detect_trap_patterns`, `_check_key_number_freeze`,
+  `_is_reverse_line_movement`, and the `big_names` bias block in `_analyze_game_characteristics`.
+  Public betting has no free data source, so it is now honestly UNAVAILABLE: `_detect_line_freeze`
+  returns 0.0 (missing). The factor now runs only on real signals — spread size/week/spread-type
+  characteristics, cross-book steam dispersion, and the (deferred) missing line-movement state.
+  `verify_phase_1`'s fabrication grep now also fails on `random.uniform`/`random.seed`.
+- A grep gate in `verify_phase_1` confirms `safe_api_call`/`_get_neutral_*`/`_get_default_*`/
+  `neutral_fallback` exist nowhere in application code.
+
+**Changed**
+- 3 factors read `context['games'|'advanced_stats'|'betting_lines']` (dropped `self.cfbd_client`).
+- `data_quality`: honest scalar (from field presence) + itemized `data_quality_report`.
+- Engine embeds `snapshot_id` + a snapshot-frozen `timestamp`; a stable hashlib replaces the
+  PYTHONHASHSEED-randomized `hash()` in `market_sentiment` → bit-identical reruns.
+
+**Tests**
+- New: `test_odds_client`, `test_normalize`, `test_snapshot`, `test_no_network` + shared
+  `tests/context_factory.py`. Migrated ~20 scenario/e2e/backtest tests off the retired
+  odds/ESPN mocking. Re-enabled the 2 D4 skips (now assert honest low quality on missing data).
+
+**Result:** `345 passed, 4 skipped, 0 failed`, offline; `make verify-phase-1` ALL 1a+1b PASS.
