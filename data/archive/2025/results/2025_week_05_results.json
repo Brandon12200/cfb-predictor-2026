@@ -1,0 +1,177 @@
+{
+  "week": 5,
+  "season": 2025,
+  "recorded_date": "2025-10-03",
+  "results": [
+    {
+      "game_id": "VIRGINIA_TECH_NC_STATE_week5",
+      "home_team": "NC STATE",
+      "away_team": "VIRGINIA TECH",
+      "home_score": 21,
+      "away_score": 23,
+      "vegas_spread": -9.5,
+      "contrarian_spread": -8.5,
+      "confidence": 67.5,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "GEORGIA_TECH_WAKE_FOREST_week5",
+      "home_team": "WAKE FOREST",
+      "away_team": "GEORGIA TECH",
+      "home_score": 29,
+      "away_score": 30,
+      "vegas_spread": 3.5,
+      "contrarian_spread": 4.4,
+      "confidence": 64.5,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "BAYLOR_OKLAHOMA_STATE_week5",
+      "home_team": "OKLAHOMA STATE",
+      "away_team": "BAYLOR",
+      "home_score": 27,
+      "away_score": 45,
+      "vegas_spread": 28.5,
+      "contrarian_spread": 29.6,
+      "confidence": 67.7,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "UTAH_WEST_VIRGINIA_week5",
+      "home_team": "WEST VIRGINIA",
+      "away_team": "UTAH",
+      "home_score": 14,
+      "away_score": 48,
+      "vegas_spread": 14.5,
+      "contrarian_spread": 15.6,
+      "confidence": 66.4,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "BYU_COLORADO_week5",
+      "home_team": "COLORADO",
+      "away_team": "BYU",
+      "home_score": 21,
+      "away_score": 24,
+      "vegas_spread": 6.5,
+      "contrarian_spread": 7.4,
+      "confidence": 66.9,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "ARIZONA_IOWA_STATE_week5",
+      "home_team": "IOWA STATE",
+      "away_team": "ARIZONA",
+      "home_score": 39,
+      "away_score": 14,
+      "vegas_spread": -4.5,
+      "contrarian_spread": -3.6,
+      "confidence": 65.6,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "INDIANA_IOWA_week5",
+      "home_team": "IOWA",
+      "away_team": "INDIANA",
+      "home_score": 15,
+      "away_score": 20,
+      "vegas_spread": 13.5,
+      "contrarian_spread": 14.5,
+      "confidence": 68.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "OHIO_STATE_WASHINGTON_week5",
+      "home_team": "WASHINGTON",
+      "away_team": "OHIO STATE",
+      "home_score": 6,
+      "away_score": 24,
+      "vegas_spread": 9.0,
+      "contrarian_spread": 10.0,
+      "confidence": 66.7,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "UCLA_NORTHWESTERN_week5",
+      "home_team": "NORTHWESTERN",
+      "away_team": "UCLA",
+      "home_score": 17,
+      "away_score": 14,
+      "vegas_spread": -7.0,
+      "contrarian_spread": -6.1,
+      "confidence": 66.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "OREGON_PENN_STATE_week5",
+      "home_team": "PENN STATE",
+      "away_team": "OREGON",
+      "home_score": 24,
+      "away_score": 30,
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.5,
+      "confidence": 68.6,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "TENNESSEE_MISSISSIPPI_STATE_week5",
+      "home_team": "MISSISSIPPI STATE",
+      "away_team": "TENNESSEE",
+      "home_score": 34,
+      "away_score": 41,
+      "vegas_spread": 7.5,
+      "contrarian_spread": 8.6,
+      "confidence": 66.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "AUBURN_TEXAS_A&M_week5",
+      "home_team": "TEXAS A&M",
+      "away_team": "AUBURN",
+      "home_score": 16,
+      "away_score": 10,
+      "vegas_spread": -12.5,
+      "contrarian_spread": -11.5,
+      "confidence": 68.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "LSU_MISSISSIPPI_week5",
+      "home_team": "MISSISSIPPI",
+      "away_team": "LSU",
+      "home_score": 24,
+      "away_score": 19,
+      "vegas_spread": 5.0,
+      "contrarian_spread": 6.0,
+      "confidence": 69.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "ALABAMA_GEORGIA_week5",
+      "home_team": "GEORGIA",
+      "away_team": "ALABAMA",
+      "home_score": 21,
+      "away_score": 24,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.5,
+      "confidence": 66.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "KENTUCKY_SOUTH_CAROLINA_week5",
+      "home_team": "SOUTH CAROLINA",
+      "away_team": "KENTUCKY",
+      "home_score": 35,
+      "away_score": 13,
+      "vegas_spread": -5.5,
+      "contrarian_spread": -4.6,
+      "confidence": 65.4,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    }
+  ],
+  "summary": {
+    "total_games": 15,
+    "games_with_results": 15,
+    "games_with_predictions": 15
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "week": 7,
+  "season": 2025,
+  "recorded_date": "2025-10-11",
+  "results": [
+    {
+      "game_id": "STANFORD_SMU_week7",
+      "home_team": "SMU",
+      "away_team": "STANFORD",
+      "home_score": 34,
+      "away_score": 10,
+      "vegas_spread": -19.5,
+      "contrarian_spread": -18.5,
+      "confidence": 67.1,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "VIRGINIA_TECH_GEORGIA_TECH_week7",
+      "home_team": "GEORGIA TECH",
+      "away_team": "VIRGINIA TECH",
+      "home_score": 35,
+      "away_score": 20,
+      "vegas_spread": -14.5,
+      "contrarian_spread": -13.5,
+      "confidence": 65.5,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "CLEMSON_BOSTON_COLLEGE_week7",
+      "home_team": "BOSTON COLLEGE",
+      "away_team": "CLEMSON",
+      "home_score": 10,
+      "away_score": 41,
+      "vegas_spread": 14.5,
+      "contrarian_spread": 15.5,
+      "confidence": 66.8,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "PITTSBURGH_FLORIDA_STATE_week7",
+      "home_team": "FLORIDA STATE",
+      "away_team": "PITTSBURGH",
+      "home_score": 31,
+      "away_score": 34,
+      "vegas_spread": -10.5,
+      "contrarian_spread": -9.5,
+      "confidence": 65.9,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "HOUSTON_OKLAHOMA_STATE_week7",
+      "home_team": "OKLAHOMA STATE",
+      "away_team": "HOUSTON",
+      "home_score": 17,
+      "away_score": 39,
+      "vegas_spread": 14.5,
+      "contrarian_spread": 15.5,
+      "confidence": 66.4,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "KANSAS_TEXAS_TECH_week7",
+      "home_team": "TEXAS TECH",
+      "away_team": "KANSAS",
+      "home_score": 42,
+      "away_score": 17,
+      "vegas_spread": -14.5,
+      "contrarian_spread": -13.5,
+      "confidence": 67.1,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "UCF_CINCINNATI_week7",
+      "home_team": "CINCINNATI",
+      "away_team": "UCF",
+      "home_score": 20,
+      "away_score": 11,
+      "vegas_spread": -10.5,
+      "contrarian_spread": -9.5,
+      "confidence": 67.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "ARIZONA_STATE_UTAH_week7",
+      "home_team": "UTAH",
+      "away_team": "ARIZONA STATE",
+      "home_score": 42,
+      "away_score": 10,
+      "vegas_spread": -5.5,
+      "contrarian_spread": -4.6,
+      "confidence": 65.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "IOWA_STATE_COLORADO_week7",
+      "home_team": "COLORADO",
+      "away_team": "IOWA STATE",
+      "home_score": 24,
+      "away_score": 17,
+      "vegas_spread": 3.0,
+      "contrarian_spread": 3.9,
+      "confidence": 65.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "TCU_KANSAS_STATE_week7",
+      "home_team": "KANSAS STATE",
+      "away_team": "TCU",
+      "home_score": 41,
+      "away_score": 28,
+      "vegas_spread": 1.5,
+      "contrarian_spread": 2.4,
+      "confidence": 67.3,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "BYU_ARIZONA_week7",
+      "home_team": "ARIZONA",
+      "away_team": "BYU",
+      "home_score": 27,
+      "away_score": 33,
+      "vegas_spread": 1.5,
+      "contrarian_spread": 2.4,
+      "confidence": 67.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "NORTHWESTERN_PENN_STATE_week7",
+      "home_team": "PENN STATE",
+      "away_team": "NORTHWESTERN",
+      "home_score": 21,
+      "away_score": 22,
+      "vegas_spread": -22.0,
+      "contrarian_spread": -20.9,
+      "confidence": 66.1,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "OHIO_STATE_ILLINOIS_week7",
+      "home_team": "ILLINOIS",
+      "away_team": "OHIO STATE",
+      "home_score": 16,
+      "away_score": 34,
+      "vegas_spread": 14.5,
+      "contrarian_spread": 15.6,
+      "confidence": 67.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "RUTGERS_WASHINGTON_week7",
+      "home_team": "WASHINGTON",
+      "away_team": "RUTGERS",
+      "home_score": 38,
+      "away_score": 19,
+      "vegas_spread": -10.5,
+      "contrarian_spread": -9.5,
+      "confidence": 66.6,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "PURDUE_MINNESOTA_week7",
+      "home_team": "MINNESOTA",
+      "away_team": "PURDUE",
+      "home_score": 27,
+      "away_score": 20,
+      "vegas_spread": -9.0,
+      "contrarian_spread": -8.0,
+      "confidence": 67.1,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "UCLA_MICHIGAN_STATE_week7",
+      "home_team": "MICHIGAN STATE",
+      "away_team": "UCLA",
+      "home_score": 13,
+      "away_score": 38,
+      "vegas_spread": -8.5,
+      "contrarian_spread": -7.5,
+      "confidence": 65.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "INDIANA_OREGON_week7",
+      "home_team": "OREGON",
+      "away_team": "INDIANA",
+      "home_score": 20,
+      "away_score": 30,
+      "vegas_spread": -7.5,
+      "contrarian_spread": -6.5,
+      "confidence": 67.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "NEBRASKA_MARYLAND_week7",
+      "home_team": "MARYLAND",
+      "away_team": "NEBRASKA",
+      "home_score": 31,
+      "away_score": 34,
+      "vegas_spread": 6.5,
+      "contrarian_spread": 7.4,
+      "confidence": 66.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "IOWA_WISCONSIN_week7",
+      "home_team": "WISCONSIN",
+      "away_team": "IOWA",
+      "home_score": 0,
+      "away_score": 37,
+      "vegas_spread": 3.5,
+      "contrarian_spread": 4.5,
+      "confidence": 68.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MICHIGAN_USC_week7",
+      "home_team": "USC",
+      "away_team": "MICHIGAN",
+      "home_score": 31,
+      "away_score": 13,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.6,
+      "confidence": 65.5,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "ARKANSAS_TENNESSEE_week7",
+      "home_team": "TENNESSEE",
+      "away_team": "ARKANSAS",
+      "home_score": 34,
+      "away_score": 31,
+      "vegas_spread": -12.5,
+      "contrarian_spread": -11.5,
+      "confidence": 67.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "SOUTH_CAROLINA_LSU_week7",
+      "home_team": "LSU",
+      "away_team": "SOUTH CAROLINA",
+      "home_score": 20,
+      "away_score": 10,
+      "vegas_spread": -8.5,
+      "contrarian_spread": -7.5,
+      "confidence": 66.8,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "FLORIDA_TEXAS_A&M_week7",
+      "home_team": "TEXAS A&M",
+      "away_team": "FLORIDA",
+      "home_score": 34,
+      "away_score": 17,
+      "vegas_spread": -7.5,
+      "contrarian_spread": -6.5,
+      "confidence": 67.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "GEORGIA_AUBURN_week7",
+      "home_team": "AUBURN",
+      "away_team": "GEORGIA",
+      "home_score": 10,
+      "away_score": 20,
+      "vegas_spread": 3.5,
+      "contrarian_spread": 4.5,
+      "confidence": 67.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "ALABAMA_MISSOURI_week7",
+      "home_team": "MISSOURI",
+      "away_team": "ALABAMA",
+      "home_score": 24,
+      "away_score": 27,
+      "vegas_spread": 3.0,
+      "contrarian_spread": 4.0,
+      "confidence": 67.8,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "OKLAHOMA_TEXAS_week7",
+      "home_team": "TEXAS",
+      "away_team": "OKLAHOMA",
+      "home_score": 23,
+      "away_score": 6,
+      "vegas_spread": -1.5,
+      "contrarian_spread": -0.6,
+      "confidence": 65.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "NC_STATE_NOTRE_DAME_week7",
+      "home_team": "NOTRE DAME",
+      "away_team": "NC STATE",
+      "home_score": 36,
+      "away_score": 7,
+      "vegas_spread": -23.0,
+      "contrarian_spread": -21.9,
+      "confidence": 68.1,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    }
+  ],
+  "summary": {
+    "total_games": 27,
+    "games_with_results": 27,
+    "games_with_predictions": 27
+  }
+}

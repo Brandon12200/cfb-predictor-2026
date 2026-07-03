@@ -1,0 +1,309 @@
+{
+  "week": 10,
+  "season": 2025,
+  "recorded_date": "2025-11-02",
+  "results": [
+    {
+      "game_id": "PITTSBURGH_STANFORD_week10",
+      "home_team": "STANFORD",
+      "away_team": "PITTSBURGH",
+      "home_score": 27,
+      "away_score": 24,
+      "vegas_spread": 14.5,
+      "contrarian_spread": 15.5,
+      "confidence": 67.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MIAMI_SMU_week10",
+      "home_team": "SMU",
+      "away_team": "MIAMI",
+      "home_score": 26,
+      "away_score": 20,
+      "vegas_spread": 11.0,
+      "contrarian_spread": 12.0,
+      "confidence": 65.9,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "LOUISVILLE_VIRGINIA_TECH_week10",
+      "home_team": "VIRGINIA TECH",
+      "away_team": "LOUISVILLE",
+      "home_score": 16,
+      "away_score": 28,
+      "vegas_spread": 10.5,
+      "contrarian_spread": 11.5,
+      "confidence": 67.2,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "WAKE_FOREST_FLORIDA_STATE_week10",
+      "home_team": "FLORIDA STATE",
+      "away_team": "WAKE FOREST",
+      "home_score": 42,
+      "away_score": 7,
+      "vegas_spread": -10.0,
+      "contrarian_spread": -8.9,
+      "confidence": 67.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "GEORGIA_TECH_NC_STATE_week10",
+      "home_team": "NC STATE",
+      "away_team": "GEORGIA TECH",
+      "home_score": 48,
+      "away_score": 36,
+      "vegas_spread": 5.5,
+      "contrarian_spread": 6.4,
+      "confidence": 67.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "NORTH_CAROLINA_SYRACUSE_week10",
+      "home_team": "SYRACUSE",
+      "away_team": "NORTH CAROLINA",
+      "home_score": 10,
+      "away_score": 27,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.6,
+      "confidence": 64.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "DUKE_CLEMSON_week10",
+      "home_team": "CLEMSON",
+      "away_team": "DUKE",
+      "home_score": 45,
+      "away_score": 46,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.6,
+      "confidence": 66.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "OKLAHOMA_STATE_KANSAS_week10",
+      "home_team": "KANSAS",
+      "away_team": "OKLAHOMA STATE",
+      "home_score": 48,
+      "away_score": 10,
+      "vegas_spread": -24.5,
+      "contrarian_spread": -23.5,
+      "confidence": 65.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "WEST_VIRGINIA_HOUSTON_week10",
+      "home_team": "HOUSTON",
+      "away_team": "WEST VIRGINIA",
+      "home_score": 35,
+      "away_score": 45,
+      "vegas_spread": -13.5,
+      "contrarian_spread": -12.6,
+      "confidence": 67.3,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "CINCINNATI_UTAH_week10",
+      "home_team": "UTAH",
+      "away_team": "CINCINNATI",
+      "home_score": 45,
+      "away_score": 14,
+      "vegas_spread": -10.0,
+      "contrarian_spread": -9.0,
+      "confidence": 66.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "ARIZONA_STATE_IOWA_STATE_week10",
+      "home_team": "IOWA STATE",
+      "away_team": "ARIZONA STATE",
+      "home_score": 20,
+      "away_score": 10,
+      "vegas_spread": -8.0,
+      "contrarian_spread": -7.0,
+      "confidence": 66.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "TEXAS_TECH_KANSAS_STATE_week10",
+      "home_team": "KANSAS STATE",
+      "away_team": "TEXAS TECH",
+      "home_score": 20,
+      "away_score": 43,
+      "vegas_spread": 7.0,
+      "contrarian_spread": 8.0,
+      "confidence": 67.1,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "ARIZONA_COLORADO_week10",
+      "home_team": "COLORADO",
+      "away_team": "ARIZONA",
+      "home_score": 36,
+      "away_score": 17,
+      "vegas_spread": 4.0,
+      "contrarian_spread": 5.0,
+      "confidence": 66.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "UCF_BAYLOR_week10",
+      "home_team": "BAYLOR",
+      "away_team": "UCF",
+      "home_score": 32,
+      "away_score": 26,
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.6,
+      "confidence": 65.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "INDIANA_MARYLAND_week10",
+      "home_team": "MARYLAND",
+      "away_team": "INDIANA",
+      "home_score": 10,
+      "away_score": 55,
+      "vegas_spread": 22.0,
+      "contrarian_spread": 23.1,
+      "confidence": 67.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "PURDUE_MICHIGAN_week10",
+      "home_team": "MICHIGAN",
+      "away_team": "PURDUE",
+      "home_score": 21,
+      "away_score": 16,
+      "vegas_spread": -21.5,
+      "contrarian_spread": -20.4,
+      "confidence": 67.1,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "PENN_STATE_OHIO_STATE_week10",
+      "home_team": "OHIO STATE",
+      "away_team": "PENN STATE",
+      "home_score": 38,
+      "away_score": 14,
+      "vegas_spread": -19.5,
+      "contrarian_spread": -18.4,
+      "confidence": 66.8,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "RUTGERS_ILLINOIS_week10",
+      "home_team": "ILLINOIS",
+      "away_team": "RUTGERS",
+      "home_score": 38,
+      "away_score": 31,
+      "vegas_spread": -13.0,
+      "contrarian_spread": -12.0,
+      "confidence": 69.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "USC_NEBRASKA_week10",
+      "home_team": "NEBRASKA",
+      "away_team": "USC",
+      "home_score": 17,
+      "away_score": 21,
+      "vegas_spread": 5.5,
+      "contrarian_spread": 6.5,
+      "confidence": 67.2,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MICHIGAN_STATE_MINNESOTA_week10",
+      "home_team": "MINNESOTA",
+      "away_team": "MICHIGAN STATE",
+      "home_score": 24,
+      "away_score": 17,
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.5,
+      "confidence": 67.9,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "SOUTH_CAROLINA_MISSISSIPPI_week10",
+      "home_team": "MISSISSIPPI",
+      "away_team": "SOUTH CAROLINA",
+      "home_score": 30,
+      "away_score": 14,
+      "vegas_spread": -12.5,
+      "contrarian_spread": -11.5,
+      "confidence": 67.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "KENTUCKY_AUBURN_week10",
+      "home_team": "AUBURN",
+      "away_team": "KENTUCKY",
+      "home_score": 21,
+      "away_score": 7,
+      "vegas_spread": -11.0,
+      "contrarian_spread": -10.0,
+      "confidence": 67.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "GEORGIA_FLORIDA_week10",
+      "home_team": "FLORIDA",
+      "away_team": "GEORGIA",
+      "home_score": 20,
+      "away_score": 24,
+      "vegas_spread": 7.5,
+      "contrarian_spread": 8.5,
+      "confidence": 67.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MISSISSIPPI_STATE_ARKANSAS_week10",
+      "home_team": "ARKANSAS",
+      "away_team": "MISSISSIPPI STATE",
+      "home_score": 35,
+      "away_score": 13,
+      "vegas_spread": -4.5,
+      "contrarian_spread": -3.6,
+      "confidence": 65.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "VANDERBILT_TEXAS_week10",
+      "home_team": "TEXAS",
+      "away_team": "VANDERBILT",
+      "home_score": 34,
+      "away_score": 31,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.5,
+      "confidence": 64.8,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "OKLAHOMA_TENNESSEE_week10",
+      "home_team": "TENNESSEE",
+      "away_team": "OKLAHOMA",
+      "home_score": 27,
+      "away_score": 33,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.6,
+      "confidence": 65.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "NOTRE_DAME_BOSTON_COLLEGE_week10",
+      "home_team": "BOSTON COLLEGE",
+      "away_team": "NOTRE DAME",
+      "home_score": 10,
+      "away_score": 25,
+      "vegas_spread": 28.5,
+      "contrarian_spread": 29.5,
+      "confidence": 69.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    }
+  ],
+  "summary": {
+    "total_games": 27,
+    "games_with_results": 27,
+    "games_with_predictions": 27
+  }
+}

@@ -19,6 +19,8 @@ The model was frozen on August 25, 2025—three days before Week 1—and run for
 
 All predictions and results stored as JSON in `data/predictions/` and `data/results/` with timestamps, Vegas spreads, factor breakdowns, and confidence scores.
 
+**2025 audit trail.** The full 2025 record is preserved in `data/archive/2025/` alongside a provenance note. The original 2025 repository is private and will not be linked (SPEC §16.5), so the prediction/result JSONs are imported here to keep the audit trail attached to this repo. From 2026 onward the automated weekly pipeline commits predictions before kickoff and results after games, so future audit trails are generated automatically.
+
 ## How It Works
 
 Takes the Vegas spread and applies adjustments:
@@ -112,8 +114,8 @@ TTL-based caching: 1h default, 30min for game context data. `RateLimiter` implem
 ## Setup
 
 ```bash
-git clone https://github.com/Brandon12200/CFB-Market-Edge-Platform.git
-cd CFB-Market-Edge-Platform
+git clone https://github.com/Brandon12200/cfb-predictor-2026.git
+cd cfb-predictor-2026
 pip install -r requirements.txt
 ```
 

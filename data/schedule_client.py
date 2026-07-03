@@ -14,6 +14,7 @@ from config import config
 from utils.rate_limiter import rate_limiter_manager
 from data.cache_manager import cache_manager
 from utils.normalizer import normalizer
+from data.conferences import get_p4_conference_names
 
 
 class CFBScheduleClient:
@@ -61,10 +62,8 @@ class CFBScheduleClient:
             'Accept': 'application/json'
         })
 
-        # P4 Conference definitions
-        self.p4_conferences = {
-            'SEC', 'BIG TEN', 'BIG 12', 'ACC', 'PAC-12', 'PACIFIC-12'
-        }
+        # P4 conference-name filter from the single source (data/conferences.py).
+        self.p4_conferences = get_p4_conference_names()
 
         # Logging
         self.logger.info("CFB Schedule API client initialized")

@@ -1,0 +1,309 @@
+{
+  "week": 9,
+  "season": 2025,
+  "recorded_date": "2025-10-25",
+  "results": [
+    {
+      "game_id": "STANFORD_MIAMI_week9",
+      "home_team": "MIAMI",
+      "away_team": "STANFORD",
+      "home_score": 42,
+      "away_score": 7,
+      "vegas_spread": -29.5,
+      "contrarian_spread": -28.4,
+      "confidence": 66.2,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "BOSTON_COLLEGE_LOUISVILLE_week9",
+      "home_team": "LOUISVILLE",
+      "away_team": "BOSTON COLLEGE",
+      "home_score": 38,
+      "away_score": 24,
+      "vegas_spread": -25.5,
+      "contrarian_spread": -24.5,
+      "confidence": 63.6,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "SYRACUSE_GEORGIA_TECH_week9",
+      "home_team": "GEORGIA TECH",
+      "away_team": "SYRACUSE",
+      "home_score": 41,
+      "away_score": 16,
+      "vegas_spread": -16.5,
+      "contrarian_spread": -15.5,
+      "confidence": 66.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "VIRGINIA_NORTH_CAROLINA_week9",
+      "home_team": "NORTH CAROLINA",
+      "away_team": "VIRGINIA",
+      "home_score": 16,
+      "away_score": 17,
+      "vegas_spread": 10.5,
+      "contrarian_spread": 11.4,
+      "confidence": 68.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "NC_STATE_PITTSBURGH_week9",
+      "home_team": "PITTSBURGH",
+      "away_team": "NC STATE",
+      "home_score": 53,
+      "away_score": 34,
+      "vegas_spread": -6.5,
+      "contrarian_spread": -5.6,
+      "confidence": 66.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "SMU_WAKE_FOREST_week9",
+      "home_team": "WAKE FOREST",
+      "away_team": "SMU",
+      "home_score": 13,
+      "away_score": 12,
+      "vegas_spread": 3.5,
+      "contrarian_spread": 4.4,
+      "confidence": 65.5,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "OKLAHOMA_STATE_TEXAS_TECH_week9",
+      "home_team": "TEXAS TECH",
+      "away_team": "OKLAHOMA STATE",
+      "home_score": 42,
+      "away_score": 0,
+      "vegas_spread": -37.0,
+      "contrarian_spread": -36.0,
+      "confidence": 66.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "TCU_WEST_VIRGINIA_week9",
+      "home_team": "WEST VIRGINIA",
+      "away_team": "TCU",
+      "home_score": 17,
+      "away_score": 23,
+      "vegas_spread": 17.0,
+      "contrarian_spread": 18.0,
+      "confidence": 67.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "COLORADO_UTAH_week9",
+      "home_team": "UTAH",
+      "away_team": "COLORADO",
+      "home_score": 53,
+      "away_score": 7,
+      "vegas_spread": -13.5,
+      "contrarian_spread": -12.5,
+      "confidence": 68.1,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "HOUSTON_ARIZONA_STATE_week9",
+      "home_team": "ARIZONA STATE",
+      "away_team": "HOUSTON",
+      "home_score": 16,
+      "away_score": 24,
+      "vegas_spread": -7.0,
+      "contrarian_spread": -6.0,
+      "confidence": 67.6,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "KANSAS_STATE_KANSAS_week9",
+      "home_team": "KANSAS",
+      "away_team": "KANSAS STATE",
+      "home_score": 17,
+      "away_score": 42,
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.6,
+      "confidence": 66.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "BAYLOR_CINCINNATI_week9",
+      "home_team": "CINCINNATI",
+      "away_team": "BAYLOR",
+      "home_score": 41,
+      "away_score": 20,
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.6,
+      "confidence": 65.5,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "BYU_IOWA_STATE_week9",
+      "home_team": "IOWA STATE",
+      "away_team": "BYU",
+      "home_score": 27,
+      "away_score": 41,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.6,
+      "confidence": 66.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "WISCONSIN_OREGON_week9",
+      "home_team": "OREGON",
+      "away_team": "WISCONSIN",
+      "home_score": 21,
+      "away_score": 7,
+      "vegas_spread": -31.5,
+      "contrarian_spread": -30.5,
+      "confidence": 67.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "UCLA_INDIANA_week9",
+      "home_team": "INDIANA",
+      "away_team": "UCLA",
+      "home_score": 56,
+      "away_score": 6,
+      "vegas_spread": -26.0,
+      "contrarian_spread": -25.0,
+      "confidence": 67.8,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "MICHIGAN_MICHIGAN_STATE_week9",
+      "home_team": "MICHIGAN STATE",
+      "away_team": "MICHIGAN",
+      "home_score": 20,
+      "away_score": 31,
+      "vegas_spread": 14.0,
+      "contrarian_spread": 15.1,
+      "confidence": 67.8,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "MINNESOTA_IOWA_week9",
+      "home_team": "IOWA",
+      "away_team": "MINNESOTA",
+      "home_score": 41,
+      "away_score": 3,
+      "vegas_spread": -9.0,
+      "contrarian_spread": -8.0,
+      "confidence": 69.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "NORTHWESTERN_NEBRASKA_week9",
+      "home_team": "NEBRASKA",
+      "away_team": "NORTHWESTERN",
+      "home_score": 28,
+      "away_score": 21,
+      "vegas_spread": -7.5,
+      "contrarian_spread": -6.6,
+      "confidence": 66.9,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "ILLINOIS_WASHINGTON_week9",
+      "home_team": "WASHINGTON",
+      "away_team": "ILLINOIS",
+      "home_score": 42,
+      "away_score": 25,
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.5,
+      "confidence": 67.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "RUTGERS_PURDUE_week9",
+      "home_team": "PURDUE",
+      "away_team": "RUTGERS",
+      "home_score": 24,
+      "away_score": 27,
+      "vegas_spread": 1.5,
+      "contrarian_spread": 2.4,
+      "confidence": 65.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "ALABAMA_SOUTH_CAROLINA_week9",
+      "home_team": "SOUTH CAROLINA",
+      "away_team": "ALABAMA",
+      "home_score": 22,
+      "away_score": 29,
+      "vegas_spread": 11.5,
+      "contrarian_spread": 12.5,
+      "confidence": 67.7,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "TENNESSEE_KENTUCKY_week9",
+      "home_team": "KENTUCKY",
+      "away_team": "TENNESSEE",
+      "home_score": 34,
+      "away_score": 56,
+      "vegas_spread": 8.0,
+      "contrarian_spread": 9.1,
+      "confidence": 67.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "TEXAS_MISSISSIPPI_STATE_week9",
+      "home_team": "MISSISSIPPI STATE",
+      "away_team": "TEXAS",
+      "home_score": 38,
+      "away_score": 45,
+      "vegas_spread": 7.5,
+      "contrarian_spread": 8.5,
+      "confidence": 66.7,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "MISSISSIPPI_OKLAHOMA_week9",
+      "home_team": "OKLAHOMA",
+      "away_team": "MISSISSIPPI",
+      "home_score": 26,
+      "away_score": 34,
+      "vegas_spread": -5.5,
+      "contrarian_spread": -4.5,
+      "confidence": 67.9,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "AUBURN_ARKANSAS_week9",
+      "home_team": "ARKANSAS",
+      "away_team": "AUBURN",
+      "home_score": 24,
+      "away_score": 33,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.6,
+      "confidence": 64.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MISSOURI_VANDERBILT_week9",
+      "home_team": "VANDERBILT",
+      "away_team": "MISSOURI",
+      "home_score": 17,
+      "away_score": 10,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.6,
+      "confidence": 64.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "TEXAS_A&M_LSU_week9",
+      "home_team": "LSU",
+      "away_team": "TEXAS A&M",
+      "home_score": 25,
+      "away_score": 49,
+      "vegas_spread": 2.5,
+      "contrarian_spread": 3.5,
+      "confidence": 67.6,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    }
+  ],
+  "summary": {
+    "total_games": 27,
+    "games_with_results": 27,
+    "games_with_predictions": 27
+  }
+}

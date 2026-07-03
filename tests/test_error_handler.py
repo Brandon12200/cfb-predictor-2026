@@ -290,7 +290,7 @@ class TestErrorHandler(unittest.TestCase):
     
     def test_recovery_mode_with_normalization_failure(self):
         """Test recovery mode when normalization fails."""
-        with patch('normalizer.normalizer') as mock_normalizer:
+        with patch('utils.normalizer.normalizer') as mock_normalizer:
             mock_normalizer.normalize.side_effect = Exception("Normalization failed")
             
             result = self.handler.recovery_mode_prediction('Invalid Team', 'Another Invalid')

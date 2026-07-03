@@ -1,0 +1,246 @@
+{
+  "week": 2,
+  "season": 2025,
+  "generated_date": "2025-09-03T00:00:00.000Z",
+  "prediction_count": 12,
+  "predictions": [
+    {
+      "game_id": "VIRGINIA_NC_STATE_week2",
+      "week": 2,
+      "home_team": "NC STATE",
+      "away_team": "VIRGINIA",
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.5,
+      "predicted_edge": 1.04,
+      "edge_direction": "away",
+      "confidence": 67.6,
+      "recommendation": "LEAN - NC STATE (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.0
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-03T00:00:00.000Z"
+    },
+    {
+      "game_id": "MISSISSIPPI_KENTUCKY_week2",
+      "week": 2,
+      "home_team": "KENTUCKY",
+      "away_team": "MISSISSIPPI",
+      "vegas_spread": 10.0,
+      "contrarian_spread": 11.1,
+      "predicted_edge": 1.07,
+      "edge_direction": "home",
+      "confidence": 66.7,
+      "recommendation": "LEAN - KENTUCKY (home) - 1.1 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.07
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-03T00:00:00.000Z"
+    },
+    {
+      "game_id": "ILLINOIS_DUKE_week2",
+      "week": 2,
+      "home_team": "DUKE",
+      "away_team": "ILLINOIS",
+      "vegas_spread": 3.0,
+      "contrarian_spread": 4.0,
+      "predicted_edge": 1.04,
+      "edge_direction": "home",
+      "confidence": 68.3,
+      "recommendation": "LEAN - DUKE (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.04
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-03T00:00:00.000Z"
+    },
+    {
+      "game_id": "BAYLOR_SMU_week2",
+      "week": 2,
+      "home_team": "SMU",
+      "away_team": "BAYLOR",
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.5,
+      "predicted_edge": 0.98,
+      "edge_direction": "away",
+      "confidence": 67.1,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.98
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-03T00:00:00.000Z"
+    },
+    {
+      "game_id": "VANDERBILT_VIRGINIA_TECH_week2",
+      "week": 2,
+      "home_team": "VIRGINIA TECH",
+      "away_team": "VANDERBILT",
+      "vegas_spread": -1.5,
+      "contrarian_spread": -0.5,
+      "predicted_edge": 0.97,
+      "edge_direction": "away",
+      "confidence": 67.2,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.97
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-03T00:00:00.000Z"
+    },
+    {
+      "game_id": "STANFORD_BYU_week2",
+      "week": 2,
+      "home_team": "BYU",
+      "away_team": "STANFORD",
+      "vegas_spread": -18.5,
+      "contrarian_spread": -17.4,
+      "predicted_edge": 1.07,
+      "edge_direction": "away",
+      "confidence": 69.0,
+      "recommendation": "LEAN - BYU (home) - 1.1 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.07
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-03T00:00:00.000Z"
+    },
+    {
+      "game_id": "IOWA_IOWA_STATE_week2",
+      "week": 2,
+      "home_team": "IOWA STATE",
+      "away_team": "IOWA",
+      "vegas_spread": -3.0,
+      "contrarian_spread": -2.0,
+      "predicted_edge": 1.02,
+      "edge_direction": "away",
+      "confidence": 67.8,
+      "recommendation": "LEAN - IOWA STATE (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.02
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-03T00:00:00.000Z"
+    },
+    {
+      "game_id": "OKLAHOMA_STATE_OREGON_week2",
+      "week": 2,
+      "home_team": "OREGON",
+      "away_team": "OKLAHOMA STATE",
+      "vegas_spread": -28.5,
+      "contrarian_spread": -27.5,
+      "predicted_edge": 1.0,
+      "edge_direction": "away",
+      "confidence": 66.5,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 1.04
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-03T00:00:00.000Z"
+    },
+    {
+      "game_id": "KANSAS_MISSOURI_week2",
+      "week": 2,
+      "home_team": "MISSOURI",
+      "away_team": "KANSAS",
+      "vegas_spread": -6.5,
+      "contrarian_spread": -5.5,
+      "predicted_edge": 1.0,
+      "edge_direction": "away",
+      "confidence": 67.4,
+      "recommendation": "LEAN - MISSOURI (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.0
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-03T00:00:00.000Z"
+    },
+    {
+      "game_id": "ARIZONA_STATE_MISSISSIPPI_STATE_week2",
+      "week": 2,
+      "home_team": "MISSISSIPPI STATE",
+      "away_team": "ARIZONA STATE",
+      "vegas_spread": 6.5,
+      "contrarian_spread": 7.5,
+      "predicted_edge": 0.99,
+      "edge_direction": "home",
+      "confidence": 67.8,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.99
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-03T00:00:00.000Z"
+    },
+    {
+      "game_id": "MICHIGAN_OKLAHOMA_week2",
+      "week": 2,
+      "home_team": "OKLAHOMA",
+      "away_team": "MICHIGAN",
+      "vegas_spread": -5.0,
+      "contrarian_spread": -3.9,
+      "predicted_edge": 1.06,
+      "edge_direction": "away",
+      "confidence": 67.7,
+      "recommendation": "LEAN - OKLAHOMA (home) - 1.1 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.05
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-03T00:00:00.000Z"
+    },
+    {
+      "game_id": "BOSTON_COLLEGE_MICHIGAN_STATE_week2",
+      "week": 2,
+      "home_team": "MICHIGAN STATE",
+      "away_team": "BOSTON COLLEGE",
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.4,
+      "predicted_edge": 1.07,
+      "edge_direction": "away",
+      "confidence": 66.7,
+      "recommendation": "LEAN - MICHIGAN STATE (home) - 1.1 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.06
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-09-06T16:27:17.560182Z"
+    }
+  ],
+  "system_stats": {
+    "total_games_analyzed": 12,
+    "games_with_edges": 8,
+    "hit_rate": 0.667,
+    "average_confidence": 67.5,
+    "average_edge_size": 1.03,
+    "consensus_count": 4,
+    "slight_contrarian_count": 8,
+    "insufficient_data_count": 0
+  }
+}

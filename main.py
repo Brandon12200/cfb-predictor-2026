@@ -13,6 +13,8 @@ import logging
 import time
 from typing import Optional, Dict, Any
 
+from data.conferences import get_conference_map
+
 # Heavy imports moved to main() to allow logging setup first
 # Global variables for lazy loading
 config = None
@@ -42,30 +44,24 @@ def _ensure_imports():
 
 
 def _get_current_week() -> int:
-    """Get the current CFB week based on date."""
+    """Derive the current CFB week from today's date via the season calendar.
+
+    Replaces the old silent week-1 default: the week is echoed on every run and,
+    when the date falls outside the season, the run hard-fails (exit code 2)
+    instead of guessing. Omitting --week therefore resolves to the same value a
+    correct explicit --week would supply.
+    """
     from datetime import datetime
-    
-    # For August 2025, we're at the start of the season
-    # Let's default to week 1 for current testing
-    now = datetime.now()
-    
-    if now.month == 8:  # August - pre-season/early season
-        return 1  # Week 1
-    elif now.month >= 9:  # September-December
-        # Rough approximation: Week 1 starts Sept 1, each week is 7 days
-        week = ((now.day - 1) // 7) + 1
-        if now.month == 9:
-            return min(week, 4)  # Sept has weeks 1-4
-        elif now.month == 10:
-            return min(week + 4, 8)  # Oct has weeks 5-8
-        elif now.month == 11:
-            return min(week + 8, 12)  # Nov has weeks 9-12
-        else:  # December
-            return min(week + 12, 16)  # Dec has weeks 13-16
-    elif now.month == 1:  # January - bowl season
-        return 17  # Bowl week
-    else:
-        return 1  # Default to week 1
+    from utils.season_calendar import resolve_week, WeekInferenceError
+
+    today = datetime.now().date()
+    try:
+        week = resolve_week(None, today=today)
+    except WeekInferenceError as exc:
+        logging.error(str(exc))
+        raise SystemExit(2)
+    print(f"Week {week} — inferred from {today.isoformat()}")
+    return week
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -383,22 +379,8 @@ def list_teams() -> None:
     
     all_teams = sorted(normalizer.get_all_teams())
     
-    # Group by conference (simplified)
-    conferences = {
-        'SEC': ['ALABAMA', 'ARKANSAS', 'AUBURN', 'FLORIDA', 'GEORGIA', 'KENTUCKY',
-                'LSU', 'MISSISSIPPI', 'MISSISSIPPI STATE', 'MISSOURI', 'SOUTH CAROLINA',
-                'TENNESSEE', 'TEXAS', 'TEXAS A&M', 'VANDERBILT', 'OKLAHOMA'],
-        'BIG TEN': ['ILLINOIS', 'INDIANA', 'IOWA', 'MARYLAND', 'MICHIGAN', 'MICHIGAN STATE',
-                    'MINNESOTA', 'NEBRASKA', 'NORTHWESTERN', 'OHIO STATE', 'PENN STATE',
-                    'PURDUE', 'RUTGERS', 'WISCONSIN', 'OREGON', 'WASHINGTON', 'UCLA', 'USC'],
-        'BIG 12': ['BAYLOR', 'IOWA STATE', 'KANSAS', 'KANSAS STATE', 'OKLAHOMA STATE',
-                   'TCU', 'TEXAS TECH', 'WEST VIRGINIA', 'CINCINNATI', 'HOUSTON',
-                   'UCF', 'BYU', 'COLORADO', 'UTAH', 'ARIZONA', 'ARIZONA STATE'],
-        'ACC': ['BOSTON COLLEGE', 'CLEMSON', 'DUKE', 'FLORIDA STATE', 'GEORGIA TECH',
-                'LOUISVILLE', 'MIAMI', 'NC STATE', 'NORTH CAROLINA', 'PITTSBURGH',
-                'SYRACUSE', 'VIRGINIA', 'VIRGINIA TECH', 'WAKE FOREST'],
-        'INDEPENDENT': ['NOTRE DAME']
-    }
+    # Conference membership comes from the single source (data/conferences.py).
+    conferences = get_conference_map()
     
     for conf_name, teams in conferences.items():
         print(f"{conf_name}:")
@@ -859,22 +841,8 @@ def run_weekly_analysis(week: int, min_edge: float = 3.0) -> None:
         except Exception as e:
             print(f"Could not fetch schedule data: {e}")
         
-        # Power 4 conference teams (accurate as of 2024 season)
-        power4_teams = {
-            'SEC': ['ALABAMA', 'ARKANSAS', 'AUBURN', 'FLORIDA', 'GEORGIA', 'KENTUCKY', 
-                   'LSU', 'MISSISSIPPI', 'MISSISSIPPI STATE', 'MISSOURI', 'SOUTH CAROLINA', 
-                   'TENNESSEE', 'TEXAS', 'TEXAS A&M', 'VANDERBILT', 'OKLAHOMA'],
-            'BIG TEN': ['ILLINOIS', 'INDIANA', 'IOWA', 'MARYLAND', 'MICHIGAN', 'MICHIGAN STATE',
-                       'MINNESOTA', 'NEBRASKA', 'NORTHWESTERN', 'OHIO STATE', 'PENN STATE',
-                       'PURDUE', 'RUTGERS', 'WISCONSIN', 'UCLA', 'USC', 'OREGON', 'WASHINGTON'],
-            'BIG 12': ['ARIZONA', 'ARIZONA STATE', 'BAYLOR', 'CINCINNATI', 'COLORADO', 'HOUSTON',
-                      'IOWA STATE', 'KANSAS', 'KANSAS STATE', 'OKLAHOMA STATE', 'TCU', 'TEXAS TECH',
-                      'UCF', 'UTAH', 'WEST VIRGINIA', 'BYU'],
-            'ACC': ['BOSTON COLLEGE', 'CLEMSON', 'DUKE', 'FLORIDA STATE', 'GEORGIA TECH', 'LOUISVILLE',
-                   'MIAMI', 'NC STATE', 'NORTH CAROLINA', 'PITTSBURGH', 'SYRACUSE',
-                   'VIRGINIA', 'VIRGINIA TECH', 'WAKE FOREST', 'CALIFORNIA', 'STANFORD', 'SMU'],
-            'INDEPENDENT': ['NOTRE DAME']  # Football independents that we track
-        }
+        # Power 4 conference membership from the single source (data/conferences.py).
+        power4_teams = get_conference_map()
         
         # Filter to Power 4 games only
         power4_games = []
