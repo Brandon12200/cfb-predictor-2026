@@ -1,5 +1,9 @@
 # Phase 1 Implementation Notes (Data Layer v2)
 
+> **✅ PHASE 1 COMPLETE — merged to `main`** (1a PR #1/#2, 1b PR #3, 1c PR #4).
+> `make verify-phase-1` → ALL PHASE 1 CHECKS PASSED; 376 passed / 4 skipped offline.
+> **Next work is Phase 2 — see `docs/PHASE2_NOTES.md`.** This file is the Phase 1 record.
+
 Working handoff notes for Phase 1 (SPEC §5). Companion to the approved plan (see
 `docs/DECISIONS.md` D5/D6 and the plan referenced in MEMORY.md), `docs/SCHEMA.md`
 (canonical schema + contracts), and `docs/CODE_AUDIT.md`. Captures the

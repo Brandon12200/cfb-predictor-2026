@@ -162,3 +162,9 @@ is captured in the artifact (`get_aliases`) ready to feed that step.
 - Factors defensively default almost every field (e.g. `head_coach_experience` 5, `week` 1/8, `year` 2024) — the snapshot must record **presence/provenance**, not just values, so a real value is distinguishable from a default.
 - The betting line is load-bearing: no spread ⇒ empty context ⇒ engine skips the prediction.
 - Stdlib **dataclasses** (not pydantic) per the minimal-deps policy.
+
+## Planned — Phase 2 (power rating layer, SPEC §6)
+To be documented here when Phase 2 lands (`docs/PHASE2_NOTES.md` has the plan):
+- **Power-rating record** schema (`data/ratings/2026_week_NN.json`: per-team rating, `rating_uncertainty`, preseason-prior source/provenance) and the **projection** schema (`data/projections/2026_week_NN.json`).
+- **spread → win-probability conversion** (the exact constant/curve) — SPEC §6.5 requires it live in this file.
+- Model spread vs. Vegas spread (the model-vs-market diagnostic) as a logged field on real-game output.
