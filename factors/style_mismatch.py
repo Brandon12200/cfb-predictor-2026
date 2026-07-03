@@ -9,7 +9,6 @@ Success rate differentials and pace mismatches create hidden edges.
 from typing import Dict, Any, Tuple, Optional, List
 import logging
 from factors.base_calculator import BaseFactorCalculator, FactorType, FactorConfidence
-from data.cfbd_client import get_cfbd_client
 
 
 class StyleMismatchCalculator(BaseFactorCalculator):
@@ -48,9 +47,7 @@ class StyleMismatchCalculator(BaseFactorCalculator):
             'min_success_diff': 0.05,       # 5% success rate difference threshold
             'pace_advantage_slower': 0.3     # Slower team advantage in mismatches
         }
-        
-        self.cfbd_client = get_cfbd_client()
-    
+
     def calculate(self, home_team: str, away_team: str, context: Optional[Dict[str, Any]] = None) -> float:
         """
         Calculate style mismatch adjustment.
@@ -58,19 +55,17 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         Positive values indicate home team style advantage.
         Negative values indicate away team style advantage.
         """
-        if not context or not self.cfbd_client:
-            self.logger.debug("No context or CFBD client available for style mismatch")
+        if not context:
+            self.logger.debug("No context available for style mismatch")
             return 0.0
-        
-        year = context.get('year', 2024)
-        
-        # For 2025 data, fall back to 2024 for advanced stats analysis
-        if year >= 2025:
-            year = 2024
-        
+
+        # Advanced season stats come from the snapshot via context (SPEC §5.2), not a
+        # live CFBD fetch — current-season only, no prior-season fallback.
+        advanced_by_team = context.get('advanced_stats', {})
+
         # Get advanced stats for both teams
-        home_stats = self._get_team_advanced_stats(home_team, year)
-        away_stats = self._get_team_advanced_stats(away_team, year)
+        home_stats = self._get_team_advanced_stats(home_team, advanced_by_team)
+        away_stats = self._get_team_advanced_stats(away_team, advanced_by_team)
         
         if not home_stats or not away_stats:
             self.logger.debug(f"Insufficient advanced stats for {home_team} vs {away_team}")
@@ -101,18 +96,16 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         
         return self.validate_output(adjustment)
     
-    def _get_team_advanced_stats(self, team: str, year: int) -> Optional[Dict[str, Any]]:
-        """Fetch advanced statistics for a team using real CFBD data."""
+    def _get_team_advanced_stats(self, team: str,
+                                 advanced_by_team: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Read one team's advanced stats from the snapshot's `advanced_stats` map."""
         try:
-            # Get advanced stats from CFBD API
-            advanced_stats = self.cfbd_client.get_advanced_stats(year=year, team=team)
-            
-            if not advanced_stats:
-                self.logger.debug(f"No advanced stats found for {team} in {year}")
+            team_stats = advanced_by_team.get(str(team).upper())
+
+            if not team_stats:
+                self.logger.debug(f"No advanced stats found for {team}")
                 return None
-            
-            # Extract the team's stats (first record should be the team we requested)
-            team_stats = advanced_stats[0]
+
             offense = team_stats.get('offense', {})
             defense = team_stats.get('defense', {})
             
@@ -131,7 +124,11 @@ class StyleMismatchCalculator(BaseFactorCalculator):
                 'ppa_def': defense.get('ppa', 0.0),
                 
                 # Pace metrics
-                'plays_per_game': offense.get('plays', 70) / max(1, team_stats.get('season', 1)),  # Estimate PPG
+                # KNOWN (Phase 3, PHASE1_NOTES): canonical AdvancedStats has no 'season'
+                # key, so this always /1 → a raw season plays total, not per-game. The
+                # pace *comparison* (home vs away) stays directionally valid; the absolute
+                # value is wrong until calibrated with a games-played count.
+                'plays_per_game': offense.get('plays', 70) / max(1, team_stats.get('season', 1)),
                 
                 # Havoc rate (chaos generation)
                 'havoc_rate': defense.get('havoc', {}).get('total', 0.15),
@@ -326,10 +323,10 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         """Calculate with confidence scoring."""
         value = self.calculate(home_team, away_team, context)
         reasoning = []
-        
-        if not self.cfbd_client:
-            return value, FactorConfidence.NONE, ["CFBD client unavailable"]
-        
+
+        if not context or not context.get('advanced_stats'):
+            return value, FactorConfidence.NONE, ["No snapshot advanced stats available"]
+
         # Determine confidence based on mismatch severity
         if abs(value) > 3.0:
             confidence = FactorConfidence.VERY_HIGH
@@ -349,10 +346,10 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         
         # Add specific mismatch type to reasoning
         if abs(value) > 1.0:
-            year = context.get('year', 2024) if context else 2024
-            home_stats = self._get_team_advanced_stats(home_team, year)
-            away_stats = self._get_team_advanced_stats(away_team, year)
-            
+            advanced_by_team = context.get('advanced_stats', {})
+            home_stats = self._get_team_advanced_stats(home_team, advanced_by_team)
+            away_stats = self._get_team_advanced_stats(away_team, advanced_by_team)
+
             if home_stats and away_stats:
                 success_diff = abs(home_stats['success_rate_off'] - away_stats['success_rate_off'])
                 if success_diff > 0.05:
@@ -381,10 +378,10 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         # Identify primary mismatch type
         mismatch_type = "style"
         if context:
-            year = context.get('year', 2024)
-            home_stats = self._get_team_advanced_stats(home_team, year)
-            away_stats = self._get_team_advanced_stats(away_team, year)
-            
+            advanced_by_team = context.get('advanced_stats', {})
+            home_stats = self._get_team_advanced_stats(home_team, advanced_by_team)
+            away_stats = self._get_team_advanced_stats(away_team, advanced_by_team)
+
             if home_stats and away_stats:
                 success_diff = abs(home_stats['success_rate_off'] - away_stats['success_rate_off'])
                 pace_diff = abs(home_stats['plays_per_game'] - away_stats['plays_per_game'])
@@ -402,7 +399,7 @@ class StyleMismatchCalculator(BaseFactorCalculator):
     def get_required_data(self) -> Dict[str, bool]:
         """Declare required data."""
         return {
-            'team_stats': False,       # Fetched directly via CFBD advanced stats
+            'team_stats': True,        # Reads snapshot `advanced_stats` from context
             'team_info': False,
             'coaching_data': False,
             'schedule_data': False,

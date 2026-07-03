@@ -92,13 +92,52 @@ check("registry artifact has provenance", prov.get("source") == "cfbd"
 check("D1 calendar corroboration runs (loud warning, not silent)",
       len(reg.corroborate_calendar()) > 0)
 
-# === 1b / 1c — recorded now, satisfied by later sub-PRs ======================
-todo("1b: `cfb data snapshot --week N` writes a 100%-covered provenance manifest")
-todo("1b: no-network test — full prediction with networking disabled passes")
-todo("1b: two `cfb predict rerun` are bit-identical (minus VOLATILE_FIELDS)")
-todo("1b: safe_api_call + all neutral/default fabrication removed")
+# === 1b — snapshot-first data layer + engine cutover =========================
+# safe_api_call + all neutral/default fabrication removed from application code.
+# `random.uniform`/`random.seed` are the tell-tale of a simulated (fabricated) signal
+# — this rule-based, frozen-weight model must never invent data (SPEC §5.1/§5.2).
+fab_probes = ("safe_api_call", "_get_neutral_", "_get_default_", "neutral_fallback",
+              "random.uniform", "random.seed", "_get_public_betting_percentage")
+fab_offenders = []
+for p in scan_files:  # same application-code scan set as the conference grep
+    text = p.read_text()
+    for tok in fab_probes:
+        # ignore prose in comments/docstrings that merely name the retired symbol
+        hits = [ln for ln in text.splitlines()
+                if tok in ln and not ln.lstrip().startswith("#")
+                and "no neutral" not in ln.lower() and "never fabricat" not in ln.lower()
+                and "not fabricated" not in ln.lower() and "removed" not in ln.lower()]
+        if hits:
+            fab_offenders.append(f"{p.relative_to(ROOT).as_posix()}:{tok}")
+check("safe_api_call + neutral/default fabrication removed from application code",
+      not fab_offenders, ", ".join(fab_offenders) or "none")
+
+# `build_snapshot` produces a provenance manifest that accounts for 100% of fields.
+snap_manifest = ROOT / "data" / "snapshots" / "2026_week_01" / "manifest.json"
+if snap_manifest.exists():
+    m = json.loads(snap_manifest.read_text())
+    s = m["summary"]
+    accounted = s["fields_present"] + s["fields_missing"] == s["fields_total"]
+    every_group = all(set(cov) >= {"info", "coaching", "stats", "schedule", "advanced_stats"}
+                      for cov in m["coverage"]["teams"].values())
+    check("snapshot provenance manifest covers 100% of fields (source/timestamp/missing)",
+          accounted and every_group and s["fields_total"] > 0,
+          f"{s['fields_present']}/{s['fields_total']} present, "
+          f"{s['fields_missing']} missing (all accounted)")
+else:
+    check("snapshot provenance manifest covers 100% of fields", False,
+          "no data/snapshots/2026_week_01 — run `python scripts/build_snapshot.py --week 1`")
+
+# No-network + bit-identical rerun are enforced by the offline suite (run below).
+for name in ("test_full_prediction_runs_with_all_networking_disabled",
+             "test_two_reruns_are_bit_identical"):
+    present = name in (ROOT / "tests" / "test_no_network.py").read_text()
+    check(f"acceptance test present: {name}", present)
+
+# === 1c — recorded now, satisfied by the next slice ==========================
 todo("1c: schedule-intelligence unit tests (travel/rest/timezone) with fixtures")
 todo("1c: closing-line 'as-of T' capture + Odds budget guard")
+todo("1c: migrate results_fetcher + schedule_client off v1 cfbd_client.get_games")
 
 # --- Report -------------------------------------------------------------------
 print("Phase 1 acceptance checks:")
@@ -115,6 +154,6 @@ suite_ok = suite.returncode == 0
 print(f"  [{'PASS' if suite_ok else 'FAIL'}] full test suite")
 failed += not suite_ok
 
-print(f"\n{'ALL 1a CHECKS PASSED' if failed == 0 else f'{failed} CHECK(S) FAILED'}"
-      f" ({len(pending)} pending for 1b/1c)")
+print(f"\n{'ALL 1a+1b CHECKS PASSED' if failed == 0 else f'{failed} CHECK(S) FAILED'}"
+      f" ({len(pending)} pending for 1c)")
 sys.exit(1 if failed else 0)

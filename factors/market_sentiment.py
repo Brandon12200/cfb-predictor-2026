@@ -10,7 +10,6 @@ from typing import Dict, Any, Tuple, Optional, List
 from datetime import datetime, timedelta
 import logging
 from factors.base_calculator import BaseFactorCalculator, FactorType, FactorConfidence
-from data.cfbd_client import get_cfbd_client
 # from data.odds_client import get_odds_client  # TODO: Add when odds client has get_odds_client function
 
 
@@ -50,9 +49,31 @@ class MarketSentimentCalculator(BaseFactorCalculator):
             'public_fade_weight': 0.3,           # Weight for fading public
             'line_freeze_signal': 0.2            # Weight for suspicious line freezes
         }
-        
-        self.cfbd_client = get_cfbd_client()
-        self.odds_client = None  # get_odds_client()  # TODO: Enable when available
+        # Public-betting % has no free data source; the heuristic proxy below is
+        # gated on this staying None (no live odds client in the factor).
+        self.odds_client = None
+
+    def _game_book_lines(self, home_team: str, away_team: str,
+                         context: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """This game's per-book lines from the snapshot's `betting_lines` (via context).
+
+        Each entry has `spread` (current, from the Odds API) and `spread_open`. Line-
+        movement history is deferred to slice 1.5 (D6/SCHEMA §4): `spread_open` is
+        absent in core Phase 1, so movement detectors below find no movement and
+        return 0.0 — an honest `missing`, distinct from a real movement of 0. That
+        missing-movement state also lowers this factor's confidence (see
+        `calculate_with_confidence`); it is never fabricated.
+        """
+        if not context:
+            return []
+        key = f"{str(away_team).upper()}@{str(home_team).upper()}"
+        return context.get('betting_lines', {}).get(key, {}).get('lines', [])
+
+    def _has_line_movement(self, home_team: str, away_team: str,
+                           context: Optional[Dict[str, Any]]) -> bool:
+        """True only if a book carries an opening spread (movement is computable)."""
+        return any(ln.get('spread_open') is not None
+                   for ln in self._game_book_lines(home_team, away_team, context))
     
     def calculate(self, home_team: str, away_team: str, context: Optional[Dict[str, Any]] = None) -> float:
         """
@@ -134,8 +155,12 @@ class MarketSentimentCalculator(BaseFactorCalculator):
             # No line movement, use characteristics only
             weighted_sentiment = sum(sentiment_factors) / len(sentiment_factors)
         
-        # Add deterministic variation based on team names for consistency
-        team_hash = hash(f"{home_team}_{away_team}") % 1000
+        # Add deterministic variation based on team names for consistency. Uses a
+        # stable hash (not Python's PYTHONHASHSEED-randomized hash()) so predictions
+        # are bit-identical across process reruns (reproducibility contract, SCHEMA §3).
+        import hashlib
+        digest = hashlib.md5(f"{home_team}_{away_team}".encode()).hexdigest()
+        team_hash = int(digest[:8], 16) % 1000
         hash_adjustment = (team_hash / 1000 - 0.5) * 0.2  # -0.10 to +0.10
         
         final_sentiment = weighted_sentiment + hash_adjustment
@@ -152,46 +177,20 @@ class MarketSentimentCalculator(BaseFactorCalculator):
             Positive = line moved toward underdog (contrarian signal)
             Negative = line moved toward favorite (public money)
         """
-        if not self.cfbd_client:
-            return 0.0
-            
-        year = context.get('year', 2024)
-        week = context.get('week', 1)
-        
-        # For 2025 data, fall back to 2024 for line movement analysis
-        if year >= 2025:
-            year = 2024
-        
         try:
-            # Get betting lines for this week
-            lines_data = self.cfbd_client.get_betting_lines(year=year, week=week)
-            
-            if not lines_data:
-                return 0.0
-            
-            # Find this game in the lines data
-            game_lines = None
-            for game in lines_data:
-                game_home = game.get('homeTeam', '').replace(' ', '').upper()
-                game_away = game.get('awayTeam', '').replace(' ', '').upper()
-                
-                search_home = home_team.replace(' ', '').upper()
-                search_away = away_team.replace(' ', '').upper()
-                
-                if (game_home == search_home and game_away == search_away):
-                    game_lines = game.get('lines', [])
-                    self.logger.debug(f"Found betting lines for {away_team} @ {home_team}")
-                    break
-            
+            # Book lines come from the snapshot via context, not a live fetch.
+            game_lines = self._game_book_lines(home_team, away_team, context)
             if not game_lines:
                 return 0.0
-            
-            # Analyze line movement across multiple books
+
+            # Analyze line movement across multiple books. In core Phase 1 no book
+            # carries an opening spread (movement history deferred, D6), so this yields
+            # no signal — honest missing, not a fabricated 0.
             movement_signals = []
-            
+
             for book_line in game_lines:
                 current_spread = book_line.get('spread')
-                opening_spread = book_line.get('spreadOpen')
+                opening_spread = book_line.get('spread_open')
                 
                 if current_spread is not None and opening_spread is not None:
                     movement = current_spread - opening_spread
@@ -277,19 +276,6 @@ class MarketSentimentCalculator(BaseFactorCalculator):
         elif spread_magnitude < 3:
             factors.append(-0.2)  # Pick'em games often efficient
         
-        # Factor 2: Team name bias detection
-        big_names = {'ALABAMA', 'GEORGIA', 'OHIO STATE', 'TEXAS', 'USC', 'NOTRE DAME', 
-                    'MICHIGAN', 'PENN STATE', 'FLORIDA', 'LSU', 'CLEMSON', 'OKLAHOMA'}
-        
-        home_big_name = home_team.upper() in big_names
-        away_big_name = away_team.upper() in big_names
-        
-        if home_big_name and not away_big_name and vegas_spread < -7:
-            factors.append(0.4)  # Public likely on big name favorite
-        elif away_big_name and not home_big_name and vegas_spread > 7:
-            factors.append(0.4)  # Public likely on big name road favorite
-        elif home_big_name and away_big_name:
-            factors.append(-0.1)  # Marquee matchups well-analyzed
             
         # Factor 3: Week-based sentiment
         week = context.get('week')
@@ -317,112 +303,17 @@ class MarketSentimentCalculator(BaseFactorCalculator):
         
         Returns the current spread (positive = away team favored)
         """
-        if not self.cfbd_client:
-            return None
-            
-        year = context.get('year', 2024)
-        week = context.get('week', 1)
-        
-        # For 2025 data, fall back to 2024 for line movement analysis
-        if year >= 2025:
-            year = 2024
-        
         try:
-            lines_data = self.cfbd_client.get_betting_lines(year=year, week=week)
-            
-            if not lines_data:
-                return None
-            
-            # Find this game
-            for game in lines_data:
-                game_home = game.get('homeTeam', '').replace(' ', '').upper()
-                game_away = game.get('awayTeam', '').replace(' ', '').upper()
-                
-                search_home = home_team.replace(' ', '').upper()
-                search_away = away_team.replace(' ', '').upper()
-                
-                if (game_home == search_home and game_away == search_away):
-                    game_lines = game.get('lines', [])
-                    
-                    if game_lines:
-                        # Get current spread from first available book
-                        current_spread = game_lines[0].get('spread')
-                        if current_spread is not None:
-                            self.logger.debug(f"Using CFBD spread: {current_spread} for {away_team} @ {home_team}")
-                            return current_spread
-            
+            game_lines = self._game_book_lines(home_team, away_team, context)
+            for book_line in game_lines:
+                current_spread = book_line.get('spread')
+                if current_spread is not None:
+                    self.logger.debug(f"Using snapshot spread: {current_spread} for {away_team} @ {home_team}")
+                    return current_spread
             return None
-            
         except Exception as e:
-            self.logger.error(f"Error getting CFBD spread for {away_team} @ {home_team}: {e}")
+            self.logger.error(f"Error reading snapshot spread for {away_team} @ {home_team}: {e}")
             return None
-    
-    def _detect_reverse_line_movement(self, home_team: str, away_team: str, 
-                                     current_spread: float, context: Dict) -> float:
-        """
-        Detect when line moves opposite to public betting.
-        Strong contrarian signal when public heavy on one side but line moves other way.
-        """
-        try:
-            if not self.cfbd_client:
-                return 0.0
-            
-            year = context.get('year', 2024)
-            week = context.get('week')
-            if week is None:
-                week = 1  # Default to week 1 if not provided
-            
-            # Get betting lines history
-            lines = self.cfbd_client.get_betting_lines(year=year, week=week)
-            
-            # Find this game's lines
-            game_lines = None
-            for game in lines:
-                if (game.get('homeTeam', '').lower() == home_team.lower() and 
-                    game.get('awayTeam', '').lower() == away_team.lower()):
-                    game_lines = game.get('lines', [])
-                    break
-            
-            if not game_lines:
-                return 0.0
-            
-            # Check for line movement
-            opening_spread = None
-            current_spread_from_api = None
-            
-            for line in game_lines:
-                if line.get('spreadOpen'):
-                    opening_spread = line['spreadOpen']
-                if line.get('spread'):
-                    current_spread_from_api = line['spread']
-            
-            if opening_spread is None or current_spread_from_api is None:
-                return 0.0
-            
-            line_movement = current_spread_from_api - opening_spread
-            
-            # Get public betting percentage (would need odds API integration)
-            public_on_favorite = self._get_public_betting_percentage(home_team, away_team, context)
-            
-            # Reverse line movement detection
-            if public_on_favorite > self.config['reverse_movement_threshold']:
-                # Public heavy on favorite but line moved toward dog
-                if abs(line_movement) > self.config['line_move_threshold']:
-                    if (public_on_favorite > 0.7 and line_movement > 0) or \
-                       (public_on_favorite < 0.3 and line_movement < 0):
-                        return 1.0  # Strong reverse signal
-            
-            # Moderate reverse movement
-            if abs(line_movement) > self.config['line_move_threshold'] * 0.5:
-                if (public_on_favorite > 0.6 and line_movement > 0) or \
-                   (public_on_favorite < 0.4 and line_movement < 0):
-                    return 0.5  # Moderate reverse signal
-            
-            return 0.0
-            
-        except Exception as e:
-            self.logger.error(f"Error detecting reverse line movement: {e}")
-            return 0.0
     
     def _detect_steam_moves(self, home_team: str, away_team: str, context: Dict) -> float:
         """
@@ -430,286 +321,37 @@ class MarketSentimentCalculator(BaseFactorCalculator):
         Steam moves show professional money hitting a number hard.
         """
         try:
-            # This would require timestamp data on line movements
-            # For now, we'll detect large line movements as proxy
-            if not self.cfbd_client:
+            # Cross-book spread dispersion is a proxy for steam; it uses only current
+            # book spreads (no movement history), so it works from the snapshot.
+            game_lines = self._game_book_lines(home_team, away_team, context)
+            if not game_lines:
                 return 0.0
-            
-            year = context.get('year', 2024)
-            week = context.get('week')
-            if week is None:
-                week = 1  # Default to week 1 if not provided
-            
-            lines = self.cfbd_client.get_betting_lines(year=year, week=week)
-            
-            for game in lines:
-                if (game.get('homeTeam', '').lower() == home_team.lower() and 
-                    game.get('awayTeam', '').lower() == away_team.lower()):
-                    
-                    game_lines = game.get('lines', [])
-                    if not game_lines:
-                        return 0.0
-                    
-                    # Check for significant movement across books
-                    spreads = [l.get('spread') for l in game_lines if l.get('spread')]
-                    if len(spreads) > 1:
-                        spread_range = max(spreads) - min(spreads)
-                        
-                        # Large discrepancy suggests steam move in progress
-                        if spread_range > self.config['steam_move_threshold']:
-                            return 1.0  # Steam move detected
-                        elif spread_range > self.config['steam_move_threshold'] * 0.5:
-                            return 0.5  # Moderate movement
-            
+
+            spreads = [ln.get('spread') for ln in game_lines if ln.get('spread') is not None]
+            if len(spreads) > 1:
+                spread_range = max(spreads) - min(spreads)
+                if spread_range > self.config['steam_move_threshold']:
+                    return 1.0  # Steam move detected
+                elif spread_range > self.config['steam_move_threshold'] * 0.5:
+                    return 0.5  # Moderate movement
+
             return 0.0
-            
+
         except Exception as e:
             self.logger.error(f"Error detecting steam moves: {e}")
             return 0.0
     
-    def _analyze_public_betting(self, home_team: str, away_team: str, context: Dict) -> float:
-        """
-        Analyze public betting patterns to identify fade opportunities.
-        Heavy public action on one side often indicates value on the other.
-        """
-        try:
-            # Get public betting percentage
-            public_pct = self._get_public_betting_percentage(home_team, away_team, context)
-            
-            # Extreme public betting creates fade opportunity
-            if public_pct > 0.75:
-                return 1.0  # Fade heavy public on favorite
-            elif public_pct > 0.65:
-                return 0.5  # Moderate public lean
-            elif public_pct < 0.25:
-                return 1.0  # Fade heavy public on underdog
-            elif public_pct < 0.35:
-                return 0.5  # Moderate public lean
-            
-            return 0.0  # Balanced public action
-            
-        except Exception as e:
-            self.logger.error(f"Error analyzing public betting: {e}")
-            return 0.0
-    
-    def _get_public_betting_percentage(self, home_team: str, away_team: str, context: Dict) -> float:
-        """
-        Simulate realistic public betting percentage on the favorite.
-        
-        This simulation creates believable public betting patterns based on:
-        - Team popularity and brand recognition
-        - Spread size (public avoids large spreads)
-        - Home/away status
-        - Recent performance and momentum
-        - Primetime/national TV games
-        - Week of season
-        
-        Returns:
-            Float between 0-1 representing % of public money on favorite
-        """
-        # If real odds API available, use it
-        if self.odds_client:
-            try:
-                # Uncomment when API integration available:
-                # public_data = self.odds_client.get_public_betting(home_team, away_team)
-                # return public_data.get('favorite_percentage', 0.5)
-                pass
-            except:
-                pass
-        
-        # Realistic simulation based on game characteristics
-        vegas_spread = context.get('vegas_spread')
-        if vegas_spread is None:
-            vegas_spread = 0  # Default to pick'em if no spread
-        week = context.get('week')
-        if week is None:
-            week = 1  # Default to week 1 if not provided
-        
-        # Determine who is the favorite
-        if vegas_spread < 0:
-            favorite = home_team
-            underdog = away_team
-            spread_size = abs(vegas_spread)
-        else:
-            favorite = away_team
-            underdog = home_team
-            spread_size = abs(vegas_spread)
-        
-        # Start with base public percentage on favorite
-        public_pct = 0.55  # Slight lean to favorites naturally
-        
-        # Factor 1: Team popularity (big names attract public money)
-        popular_teams = {
-            'ALABAMA': 0.15, 'GEORGIA': 0.12, 'OHIO STATE': 0.12, 
-            'TEXAS': 0.10, 'MICHIGAN': 0.10, 'NOTRE DAME': 0.15,
-            'USC': 0.08, 'PENN STATE': 0.08, 'FLORIDA': 0.07,
-            'LSU': 0.07, 'CLEMSON': 0.09, 'OKLAHOMA': 0.08,
-            'TENNESSEE': 0.06, 'FLORIDA STATE': 0.06, 'MIAMI': 0.05,
-            'OREGON': 0.05, 'WASHINGTON': 0.04, 'TEXAS A&M': 0.04
-        }
-        
-        # Adjust for team popularity
-        fav_popularity = popular_teams.get(favorite.upper(), 0)
-        dog_popularity = popular_teams.get(underdog.upper(), 0)
-        
-        # Public loves betting on popular favorites
-        public_pct += fav_popularity
-        # But also loves popular underdogs (Notre Dame effect)
-        if dog_popularity > 0.08:
-            public_pct -= dog_popularity * 0.7
-        
-        # Factor 2: Spread size (public behavior changes with spread)
-        if spread_size <= 3:
-            # Close games: public splits more evenly
-            public_pct = min(public_pct, 0.60)
-        elif spread_size <= 7:
-            # Standard games: moderate public lean
-            public_pct += 0.05
-        elif spread_size <= 14:
-            # Large spreads: public likes favorites but not as much
-            public_pct += 0.08
-        elif spread_size <= 21:
-            # Very large spreads: public starts taking points
-            public_pct -= 0.05
-        else:
-            # Huge spreads: public often takes the points
-            public_pct -= 0.15
-        
-        # Factor 3: Home favorite vs road favorite
-        if vegas_spread < 0:  # Home favorite
-            public_pct += 0.05  # Public likes home favorites
-        else:  # Road favorite
-            if fav_popularity > 0.08:
-                public_pct += 0.03  # Popular road favorites still get action
-            else:
-                public_pct -= 0.08  # Non-popular road favorites less attractive
-        
-        # Factor 4: Week of season effects
-        if week == 1:
-            # Week 1: Public bets names they know
-            if fav_popularity > 0:
-                public_pct += 0.10
-        elif week <= 3:
-            # Early season: Public overreacts to week 1-2
-            public_pct += 0.03
-        elif week >= 10:
-            # Late season: Public chases must-win situations
-            # Would need playoff/bowl implications data
-            public_pct += 0.02
-        
-        # Factor 5: Primetime/rivalry games (simplified)
-        rivalry_pairs = [
-            ('MICHIGAN', 'OHIO STATE'), ('ALABAMA', 'AUBURN'),
-            ('FLORIDA', 'FLORIDA STATE'), ('TEXAS', 'OKLAHOMA'),
-            ('USC', 'UCLA'), ('ARMY', 'NAVY'), ('GEORGIA', 'FLORIDA')
-        ]
-        
-        for pair in rivalry_pairs:
-            if (favorite.upper() in pair and underdog.upper() in pair):
-                # Rivalry games tend to be more balanced betting
-                public_pct = 0.50 + (public_pct - 0.50) * 0.5
-                break
-        
-        # Factor 6: Recent performance momentum (simplified)
-        # In real implementation, would check recent game results
-        # For now, add small random variation for realism
-        import hashlib
-        game_hash = hashlib.md5(f"{favorite}{underdog}{week}".encode()).hexdigest()
-        momentum_adj = (int(game_hash[:2], 16) / 255.0 - 0.5) * 0.10
-        public_pct += momentum_adj
-        
-        # Factor 7: Contrarian spots (public can't resist certain bets)
-        # Undefeated favorite vs bad team
-        if spread_size > 21 and fav_popularity > 0:
-            public_pct += 0.12  # Public pounds undefeated favorites
-        
-        # Home dog on Monday/Thursday night (if we had day of week)
-        # Service academies as big dogs (public respects but won't bet)
-        service_academies = ['ARMY', 'NAVY', 'AIR FORCE']
-        if underdog.upper() in service_academies and spread_size > 14:
-            public_pct += 0.08  # Public fades service academies as big dogs
-        
-        # Ensure percentage stays in valid range
-        public_pct = max(0.15, min(0.85, public_pct))
-        
-        # Add slight noise for games that would otherwise be identical
-        import random
-        random.seed(f"{favorite}{underdog}{week}{vegas_spread}")
-        public_pct += random.uniform(-0.02, 0.02)
-        
-        # Final clamp to valid range
-        public_pct = max(0.10, min(0.90, public_pct))
-        
-        self.logger.debug(f"Simulated public betting: {public_pct:.1%} on {favorite} "
-                         f"(spread: {vegas_spread}, fav_pop: {fav_popularity:.2f})")
-        
-        return public_pct
-    
     def _detect_line_freeze(self, home_team: str, away_team: str, context: Dict) -> float:
+        """Detect suspicious line freezes / trap games.
+
+        This needs BOTH line-movement history and public-betting share. Neither has a
+        data source in core Phase 1 (movement deferred, D6; public-betting % has no free
+        feed), so the signal is honestly UNAVAILABLE and returns 0.0 (missing) — never a
+        simulated value. The prior implementation fabricated public-betting % from
+        hardcoded team-popularity/rivalry lists + random noise; that is removed
+        (SPEC §5.2, SCHEMA §4, binding principles #2 and #4).
         """
-        Detect suspicious line freezes that indicate trap games.
-        
-        When lines don't move despite heavy public betting, it often means:
-        1. Sharp money is balancing public action on the other side
-        2. Books are confident in their number (insider info)
-        3. It's a trap game designed to attract public money
-        
-        Returns:
-            Float signal where positive = potential trap game fade opportunity
-        """
-        vegas_spread = context.get('vegas_spread')
-        if vegas_spread is None:
-            vegas_spread = 0  # Default to pick'em if no spread
-        week = context.get('week')
-        if week is None:
-            week = 1  # Default to week 1 if not provided
-        
-        # Get public betting percentage
-        public_pct = self._get_public_betting_percentage(home_team, away_team, context)
-        
-        # Check for line movement using CFBD data
-        line_movement = self._get_line_movement_magnitude(home_team, away_team, context)
-        
-        # Trap game indicators
-        trap_signal = 0.0
-        trap_reasons = []
-        
-        # Scenario 1: Heavy public action but no line movement (classic trap)
-        if public_pct > 0.70 or public_pct < 0.30:
-            # Heavy public on one side
-            public_lean = abs(public_pct - 0.5) * 2  # 0 to 1 scale
-            
-            if abs(line_movement) < 0.5:  # Line barely moved
-                # Strong trap indicator - line should move with heavy action
-                trap_signal += public_lean * 0.8
-                trap_reasons.append(f"Line frozen at {vegas_spread} despite {public_pct:.0%} public")
-            elif abs(line_movement) < 1.0:  # Small movement relative to action
-                trap_signal += public_lean * 0.4
-                trap_reasons.append("Minimal line movement vs public action")
-        
-        # Scenario 2: Reverse line movement detection
-        if self._is_reverse_line_movement(public_pct, line_movement):
-            trap_signal += 0.6
-            trap_reasons.append("Reverse line movement detected")
-        
-        # Scenario 3: Suspicious line patterns by game type
-        trap_pattern_signal = self._detect_trap_patterns(
-            home_team, away_team, vegas_spread, public_pct, week
-        )
-        trap_signal += trap_pattern_signal
-        
-        # Scenario 4: Line freeze at key numbers
-        key_number_signal = self._check_key_number_freeze(vegas_spread, line_movement, public_pct)
-        trap_signal += key_number_signal
-        
-        # Log significant trap indicators
-        if trap_signal > 0.5 and trap_reasons:
-            self.logger.info(f"Trap game indicators for {away_team} @ {home_team}:")
-            for reason in trap_reasons:
-                self.logger.info(f"  - {reason}")
-        
-        # Cap the signal
-        return min(trap_signal, 1.0)
+        return 0.0
     
     def _get_line_movement_magnitude(self, home_team: str, away_team: str, context: Dict) -> float:
         """
@@ -719,153 +361,24 @@ class MarketSentimentCalculator(BaseFactorCalculator):
             Float representing points moved (positive = toward favorite)
         """
         try:
-            year = context.get('year', 2024)
-            week = context.get('week')
-            if week is None:
-                week = 1  # Default to week 1 if not provided
-            
-            # Fallback to 2024 for line data
-            if year >= 2025:
-                year = 2024
-            
-            if not self.cfbd_client:
-                return 0.0
-            
-            lines_data = self.cfbd_client.get_betting_lines(year=year, week=week)
-            
-            if not lines_data:
-                return 0.0
-            
-            # Find this game
-            for game in lines_data:
-                game_home = game.get('homeTeam', '').replace(' ', '').upper()
-                game_away = game.get('awayTeam', '').replace(' ', '').upper()
-                
-                search_home = home_team.replace(' ', '').upper()
-                search_away = away_team.replace(' ', '').upper()
-                
-                if game_home == search_home and game_away == search_away:
-                    game_lines = game.get('lines', [])
-                    
-                    # Calculate movement across all books
-                    total_movement = 0.0
-                    movement_count = 0
-                    
-                    for line in game_lines:
-                        opening = line.get('spreadOpen')
-                        current = line.get('spread')
-                        
-                        if opening is not None and current is not None:
-                            movement = current - opening
-                            total_movement += movement
-                            movement_count += 1
-                    
-                    if movement_count > 0:
-                        return total_movement / movement_count
-            
-            return 0.0
-            
+            # Open→current movement from the snapshot's book lines. Opening spreads
+            # are absent in core Phase 1 (movement history deferred, D6), so this is
+            # 0.0 (missing) — never simulated/fabricated, which is why the old
+            # `_simulate_line_movement` fallback was removed (SPEC §5.2, SCHEMA §4).
+            game_lines = self._game_book_lines(home_team, away_team, context)
+            total_movement = 0.0
+            movement_count = 0
+            for line in game_lines:
+                opening = line.get('spread_open')
+                current = line.get('spread')
+                if opening is not None and current is not None:
+                    total_movement += current - opening
+                    movement_count += 1
+            return total_movement / movement_count if movement_count else 0.0
         except Exception as e:
-            self.logger.debug(f"Error getting line movement: {e}")
-            # Fallback to simulated movement based on public betting
-            return self._simulate_line_movement(home_team, away_team, context)
-    
-    def _simulate_line_movement(self, home_team: str, away_team: str, context: Dict) -> float:
-        """
-        Simulate realistic line movement when actual data unavailable.
-        """
-        public_pct = self._get_public_betting_percentage(home_team, away_team, context)
-        vegas_spread = context.get('vegas_spread', 0)
-        
-        # Expected movement based on public betting
-        public_lean = public_pct - 0.5  # -0.5 to +0.5
-        
-        # Normal market would move 0.5-2 points per 10% public lean
-        expected_movement = public_lean * 3.0
-        
-        # But simulate that some games don't move (trap games)
-        import hashlib
-        game_hash = hashlib.md5(f"{home_team}{away_team}{vegas_spread}".encode()).hexdigest()
-        freeze_chance = int(game_hash[:2], 16) / 255.0
-        
-        if freeze_chance < 0.2:  # 20% of games have frozen lines
-            return expected_movement * 0.1  # Minimal movement
-        elif freeze_chance < 0.4:  # 20% have reverse movement
-            return -expected_movement * 0.5  # Opposite of expected
-        else:
-            return expected_movement * 0.8  # Normal movement
-    
-    def _is_reverse_line_movement(self, public_pct: float, line_movement: float) -> bool:
-        """
-        Check if line moved opposite to public betting (sharp indicator).
-        """
-        # Public heavy on favorite but line moved toward dog
-        if public_pct > 0.65 and line_movement > 0.5:
-            return True
-        # Public heavy on dog but line moved toward favorite  
-        if public_pct < 0.35 and line_movement < -0.5:
-            return True
-        return False
-    
-    def _detect_trap_patterns(self, home_team: str, away_team: str, 
-                              spread: float, public_pct: float, week: int) -> float:
-        """
-        Detect common trap game patterns.
-        """
-        trap_signal = 0.0
-        
-        # Pattern 1: Popular home favorite with frozen line
-        popular_teams = ['ALABAMA', 'GEORGIA', 'OHIO STATE', 'TEXAS', 'MICHIGAN', 'NOTRE DAME']
-        if home_team.upper() in popular_teams and spread < -7:
-            if public_pct > 0.70:  # Heavy public on popular home favorite
-                trap_signal += 0.3  # Often a trap
-        
-        # Pattern 2: Road favorite trap (public hates road favorites)
-        if spread > 3:  # Away team favored
-            if public_pct < 0.40:  # Public backing home dog
-                trap_signal += 0.25  # Vegas loves this setup
-        
-        # Pattern 3: Rivalry game with lopsided action
-        rivalry_pairs = [
-            ('MICHIGAN', 'OHIO STATE'), ('ALABAMA', 'AUBURN'),
-            ('FLORIDA', 'FLORIDA STATE'), ('TEXAS', 'OKLAHOMA')
-        ]
-        for pair in rivalry_pairs:
-            if home_team.upper() in pair and away_team.upper() in pair:
-                if abs(public_pct - 0.5) > 0.25:  # Lopsided in rivalry
-                    trap_signal += 0.35  # Rivalry traps are common
-                break
-        
-        # Pattern 4: Look-ahead spot with frozen line
-        if week >= 8:  # Late season
-            if abs(spread) > 14:  # Big spread
-                if public_pct > 0.65:  # Public on favorite
-                    trap_signal += 0.2  # Potential look-ahead trap
-        
-        # Pattern 5: Suspicious spread (too good to be true)
-        if spread == -3.0 or spread == -7.0:  # Key numbers
-            if public_pct > 0.70:  # Heavy public
-                trap_signal += 0.15  # Key number trap
-        
-        return trap_signal
-    
-    def _check_key_number_freeze(self, spread: float, movement: float, public_pct: float) -> float:
-        """
-        Check if line is frozen at a key number despite heavy action.
-        """
-        key_numbers = [3.0, 7.0, 10.0, 14.0]
-        
-        # Check if spread is at or near a key number
-        for key in key_numbers:
-            if abs(abs(spread) - key) < 0.5:  # At or near key number
-                if abs(movement) < 0.5:  # Line hasn't moved much
-                    if abs(public_pct - 0.5) > 0.2:  # Decent public lean
-                        # Line frozen at key number = suspicious
-                        importance = 0.4 if key in [3.0, 7.0] else 0.25
-                        return importance * abs(public_pct - 0.5) * 2
-        
-        return 0.0
-    
+            self.logger.debug(f"Error reading line movement: {e}")
+            return 0.0
+
     def calculate_with_confidence(self, home_team: str, away_team: str, 
                                  context: Optional[Dict[str, Any]] = None) -> Tuple[float, FactorConfidence, List[str]]:
         """Calculate with confidence scoring."""
@@ -899,7 +412,15 @@ class MarketSentimentCalculator(BaseFactorCalculator):
             reasoning.append("Sharp money aligned with contrarian position")
         elif value < 0.8:
             reasoning.append("Market sentiment suggests caution")
-        
+
+        # SCHEMA §4 (D6): line-movement history is deferred to slice 1.5. When no book
+        # carries an opening spread, movement is *missing* (not a real 0) — honestly
+        # reduce confidence rather than over-trust the characteristic heuristics.
+        if not self._has_line_movement(home_team, away_team, context):
+            reasoning.append("Line-movement history unavailable (deferred) — reduced confidence")
+            if confidence > FactorConfidence.MEDIUM:
+                confidence = FactorConfidence.MEDIUM
+
         return value, confidence, reasoning
     
     def get_output_range(self) -> Tuple[float, float]:
@@ -922,7 +443,7 @@ class MarketSentimentCalculator(BaseFactorCalculator):
     def get_required_data(self) -> Dict[str, bool]:
         """Declare required data."""
         return {
-            'betting_data': False,     # Fetched directly via CFBD
+            'betting_data': True,      # Reads snapshot `betting_lines` from context
             'team_info': False,
             'coaching_data': False,
             'team_stats': False,

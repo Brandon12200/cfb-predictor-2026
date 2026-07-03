@@ -45,6 +45,13 @@ python_version = "3.11"
 ignore_missing_imports = true
 warn_unused_ignores = false
 
+# Legacy clients/cache are pre-Phase-1 code held to a looser bar (rewritten later);
+# don't let their type debt block the typed new modules that merely import them for
+# diagnostics (e.g. data/data_manager.py's lazy client construction).
+[[tool.mypy.overrides]]
+module = ["data.cache_manager", "data.cfbd_client", "data.espn_client", "data.odds_client"]
+follow_imports = "skip"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 timeout = 60
