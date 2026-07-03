@@ -148,11 +148,14 @@ class TeamRegistry:
         self._canonical_by_conf: dict[str, list[str]] = {}
         self._conf_by_team: dict[str, str] = {}
         self._aliases_by_team: dict[str, list[str]] = {}
+        self._location_by_team: dict[str, dict] = {}
         self._fbs_canonical: set[str] = set()
         for row in self._fbs:
             name = canonical_name(row["school"])
             self._fbs_canonical.add(name)
             self._aliases_by_team[name] = list(row.get("alternateNames") or [])
+            if row.get("location"):
+                self._location_by_team[name] = row["location"]
             key = conference_key(row.get("conference"))
             if key:
                 self._conf_by_team[name] = key
@@ -210,6 +213,15 @@ class TeamRegistry:
     def get_fcs_names(self) -> set[str]:
         """UPPERCASE FCS school names (for `is_fcs_team`)."""
         return set(self._fcs_names)
+
+    def get_venue(self, team: str) -> Any:
+        """Canonical `Venue` (lat/long/elev/tz/dome) for an FBS team, or None. Sourced
+        from the committed CFBD `location` rows — the schedule-intelligence substrate."""
+        # Lazy import: data.normalize.cfbd -> utils.normalizer -> data.team_registry
+        # would be circular at module load.
+        from data.normalize.cfbd import normalize_venue
+        loc = self._location_by_team.get(str(team).upper())
+        return normalize_venue(loc) if loc is not None else None
 
     def iter_fbs(self) -> Iterable[tuple[str, str | None, list[str]]]:
         """Yield (canonical_name, conference_key, aliases) for every FBS team."""

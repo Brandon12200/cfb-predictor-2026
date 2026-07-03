@@ -34,6 +34,10 @@ class _FakeCFBD:
     def get_season_stats(self, year):
         return [{"team": "Georgia", "statName": "totalYards", "statValue": 5000}]
 
+    def get_sp_ratings(self, year):
+        return [{"team": "Georgia", "rating": 22.4, "ranking": 3,
+                 "offense": {"rating": 40.1}, "defense": {"rating": 17.7}}]
+
 
 class _FakeOdds:
     last_quota = {"remaining": 490, "used": 10}
@@ -57,6 +61,17 @@ class _FakeRegistry:
 
     def get_team_conference(self, team):
         return self._conf.get(team)
+
+    def get_venue(self, team):
+        from data.normalize.models import Venue
+        # Georgia + Clemson have venues; Alabama/Duke don't (exercises missing).
+        venues = {
+            "GEORGIA": Venue(name="Sanford", latitude=33.95, longitude=-83.37,
+                             elevation=220.0, timezone="America/New_York", dome=False),
+            "CLEMSON": Venue(name="Memorial", latitude=34.68, longitude=-82.84,
+                             elevation=260.0, timezone="America/New_York", dome=False),
+        }
+        return venues.get(team)
 
     def validate_membership_counts(self):
         if not self._valid:
@@ -85,8 +100,9 @@ def test_manifest_covers_every_team_and_field_group(tmp_path):
     teams_cov = manifest["coverage"]["teams"]
     assert set(teams_cov) == {"GEORGIA", "CLEMSON", "ALABAMA", "DUKE"}
     for cov in teams_cov.values():
-        assert set(cov) == {"info", "coaching", "stats", "schedule", "advanced_stats"}
-        assert all(v == "cfbd" or v == "missing" for v in cov.values())
+        assert set(cov) == {"info", "coaching", "stats", "schedule", "advanced_stats",
+                            "venue", "sp_rating"}
+        assert all(v in ("cfbd", "registry", "missing") for v in cov.values())
     # coverage accounting is exact — no field unaccounted (100%).
     s = manifest["summary"]
     assert s["fields_present"] + s["fields_missing"] == s["fields_total"]
@@ -100,6 +116,9 @@ def test_missing_recorded_honestly_not_fabricated(tmp_path):
     assert cov["ALABAMA"]["advanced_stats"] == "cfbd"
     assert cov["GEORGIA"]["advanced_stats"] == "missing"
     assert cov["DUKE"]["stats"] == "missing"
+    # Only Georgia/Clemson have venues; only Georgia has an SP+ rating.
+    assert cov["GEORGIA"]["venue"] == "registry" and cov["ALABAMA"]["venue"] == "missing"
+    assert cov["GEORGIA"]["sp_rating"] == "cfbd" and cov["DUKE"]["sp_rating"] == "missing"
 
 
 def test_betting_line_coverage_and_vegas_spread(tmp_path):
@@ -111,6 +130,31 @@ def test_betting_line_coverage_and_vegas_spread(tmp_path):
     assert games_cov["DUKE@ALABAMA"]["betting_lines"] == "missing"
     assert snap["data"]["betting_lines"]["CLEMSON@GEORGIA"]["vegas_spread"] == -7.5
     assert snap["data"]["betting_lines"]["DUKE@ALABAMA"]["vegas_spread"] is None
+
+
+def test_schedule_intel_coverage_reflects_venue_presence(tmp_path):
+    manifest = _builder(tmp_path).build(week=1)
+    gc = manifest["coverage"]["games"]
+    # Georgia + Clemson have venues → physical intel resolves; Alabama/Duke don't.
+    assert gc["CLEMSON@GEORGIA"]["schedule_intel"] == "derived"
+    assert gc["DUKE@ALABAMA"]["schedule_intel"] == "missing"
+
+
+class _NeutralCFBD(_FakeCFBD):
+    def get_games(self, year):
+        return [{"week": 1, "homeTeam": "Georgia", "awayTeam": "Clemson",
+                 "homePoints": None, "awayPoints": None, "startDate": "2026-08-30",
+                 "completed": False, "neutralSite": True}]
+
+
+def test_neutral_site_game_has_no_fabricated_venue(tmp_path):
+    """A neutral-site game must not borrow the home team's venue — travel/altitude are
+    honestly missing (would be confidently wrong otherwise)."""
+    snap = SnapshotBuilder(_NeutralCFBD(), _FakeOdds(), _FakeRegistry(),
+                           clock=lambda: "2026-09-01T00:00:00+00:00",
+                           base_dir=tmp_path).build(week=1) and load_snapshot(1, base=tmp_path)
+    intel = snap["data"]["schedule_intel"]["GEORGIA"]
+    assert intel["travel_distance"] is None and intel["altitude"] is None
 
 
 def test_coaching_experience_and_tenure_computed(tmp_path):

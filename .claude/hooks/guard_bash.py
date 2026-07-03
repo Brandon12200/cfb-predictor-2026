@@ -29,11 +29,11 @@ if re.search(r"git\s+commit\b", command) and re.search(r"\.env(\.|\b)", command)
     sys.exit(2)
 
 # (b) Immutable history: refuse rm/rmdir/mv targeting protected dirs.
-if re.search(r"\b(rm|rmdir|mv)\b[^|;&]*\b(data/predictions|data/results|data/archive|reports)/",
+if re.search(r"\b(rm|rmdir|mv)\b[^|;&]*\b(data/predictions|data/results|data/archive|data/lines|reports)/",
              command):
     sys.stderr.write(
         "Blocked: refusing to delete/move append-only artifacts under "
-        "data/predictions|results|archive or reports/ (CLAUDE.md principle 5).\n"
+        "data/predictions|results|archive|lines or reports/ (CLAUDE.md principle 5).\n"
     )
     sys.exit(2)
 

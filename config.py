@@ -30,6 +30,10 @@ class Config:
         self.rate_limit_odds = int(os.getenv('ODDS_API_RATE_LIMIT', '83'))  # calls per day
         self.rate_limit_espn = int(os.getenv('ESPN_API_RATE_LIMIT', '60'))  # calls per minute
         self.rate_limit_cfbd = int(os.getenv('CFBD_API_RATE_LIMIT', '150'))  # calls per day (Tier 1)
+        # The Odds API is a MONTHLY-CREDIT model (D5: free tier = 500 credits/mo), not a
+        # daily-call one. This is the real budget guard for line fetches, enforced against
+        # the client's `last_quota['remaining']` feedback (see data/snapshot/lines.py).
+        self.odds_monthly_budget = int(os.getenv('ODDS_MONTHLY_BUDGET', '500'))
         
         # Cache Configuration
         self.cache_ttl = int(os.getenv('CACHE_TTL', '3600'))  # 1 hour default

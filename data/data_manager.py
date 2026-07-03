@@ -160,8 +160,8 @@ class DataManager:
     @property
     def cfbd_client(self):
         if self._cfbd_client is None and self.config.cfbd_api_key:
-            from data.cfbd_client import get_cfbd_client
-            self._cfbd_client = get_cfbd_client()
+            from data.clients.cfbd_v2 import get_cfbd_v2_client
+            self._cfbd_client = get_cfbd_v2_client()
         return self._cfbd_client
 
     def validate_data_availability(self, home_team: str, away_team: str) -> dict[str, bool]:
@@ -191,8 +191,13 @@ class DataManager:
     def test_all_connections(self) -> dict[str, bool]:
         """Ping each source (diagnostic only)."""
         results: dict[str, bool] = {}
-        for name, client in (("cfbd_api", self.cfbd_client), ("espn_api", self.espn_client),
-                             ("odds_api", self.odds_client)):
+        # CFBD v2 client is dumb (no test_connection) — a light /conferences call pings it.
+        try:
+            results["cfbd_api"] = bool(self.cfbd_client and self.cfbd_client.get_conferences())
+        except Exception as exc:  # noqa: BLE001
+            self.logger.error("cfbd_api connection test failed: %s", exc)
+            results["cfbd_api"] = False
+        for name, client in (("espn_api", self.espn_client), ("odds_api", self.odds_client)):
             try:
                 results[name] = bool(client and client.test_connection())
             except Exception as exc:  # noqa: BLE001

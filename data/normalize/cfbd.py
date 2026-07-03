@@ -48,6 +48,7 @@ def normalize_games(raw_games: list[dict]) -> list[ScheduleGame]:
             away_points=_int(g.get("awayPoints")),
             start_date=g.get("startDate"),
             completed=bool(g.get("completed", False)),
+            neutral_site=bool(g.get("neutralSite", False)),
         ))
     return out
 
@@ -88,6 +89,25 @@ def normalize_advanced_stats(raw_rows: list[dict]) -> dict[str, AdvancedStats]:
             offense=dict(row.get("offense") or {}),
             defense=dict(row.get("defense") or {}),
         )
+    return out
+
+
+def normalize_sp_ratings(raw_rows: list[dict]) -> dict[str, dict[str, Any]]:
+    """CFBD `/ratings/sp` rows → {canonical_team: {rating, ranking, offense, defense}}.
+    The opponent-strength source for schedule-intel sandwich spots + a Phase-2 prior."""
+    out: dict[str, dict[str, Any]] = {}
+    for row in raw_rows:
+        team = _norm(row.get("team"))
+        if team is None:
+            continue
+        offense = row.get("offense") or {}
+        defense = row.get("defense") or {}
+        out[team] = {
+            "rating": row.get("rating"),
+            "ranking": _int(row.get("ranking")),
+            "offense_rating": offense.get("rating"),
+            "defense_rating": defense.get("rating"),
+        }
     return out
 
 

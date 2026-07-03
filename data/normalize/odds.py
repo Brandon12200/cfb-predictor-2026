@@ -8,9 +8,11 @@ current book spreads (+ opening where present) are carried; movement is `missing
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from statistics import mean
+from typing import Any
 
-from data.normalize.models import BookLine, GameLines
+from data.normalize.models import BookLine, GameLines, LineObservation
 from utils.normalizer import normalizer
 
 
@@ -33,9 +35,11 @@ def _home_point(bookmaker: dict, home_raw: str) -> float | None:
     return None
 
 
-def normalize_lines(raw_events: list[dict]) -> dict[tuple[str, str], GameLines]:
-    """Raw Odds events → {(home, away) canonical: GameLines}. Unresolved/FCS games
-    are skipped (the slate reconciler logs coverage gaps)."""
+def normalize_lines(raw_events: list[dict],
+                    fetched_at: str) -> dict[tuple[str, str], GameLines]:
+    """Raw Odds events → {(home, away) canonical: GameLines} with a single "as-of T"
+    observation stamped `fetched_at` and the game's `kickoff` (`commence_time`).
+    Unresolved/FCS games are skipped (the slate reconciler logs coverage gaps)."""
     out: dict[tuple[str, str], GameLines] = {}
     for event in raw_events:
         home_raw = event.get("home_team", "")
@@ -50,12 +54,34 @@ def normalize_lines(raw_events: list[dict]) -> dict[tuple[str, str], GameLines]:
             if point is None:
                 continue
             lines.append(BookLine(provider=bm.get("key", "unknown"), spread=point))
-        out[(home, away)] = GameLines(home_team=home, away_team=away, lines=lines)
+        points = [ln.spread for ln in lines if ln.spread is not None]
+        obs = LineObservation(fetched_at=fetched_at, lines=lines,
+                              consensus_spread=round(mean(points), 1) if points else None)
+        out[(home, away)] = GameLines(home_team=home, away_team=away,
+                                      kickoff=event.get("commence_time"), observations=[obs])
     return out
 
 
-def consensus_spread(game_lines: GameLines) -> float | None:
-    """Consensus home spread across books (the `vegas_spread` gate). None if no book
-    posted a spread — recorded `missing`, never fabricated as 0."""
-    points = [ln.spread for ln in game_lines.lines if ln.spread is not None]
-    return round(mean(points), 1) if points else None
+def _parse_dt(value: Any) -> datetime | None:
+    """Parse an ISO timestamp (accepting a trailing `Z`) to an aware datetime, or None."""
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def closing_observation(game_entry: dict[str, Any]) -> dict[str, Any] | None:
+    """The closing line = the last observation taken at-or-before the game's kickoff
+    (SPEC §5.4.3, for CLV). Falls back to the latest observation if none precede kickoff.
+    Compares parsed datetimes (robust to `Z` vs `+00:00`), not raw strings."""
+    observations = game_entry.get("observations") or []
+    if not observations:
+        return None
+    kickoff = _parse_dt(game_entry.get("kickoff"))
+    _floor = datetime.min.replace(tzinfo=UTC)
+    before = [o for o in observations
+              if kickoff is None or (_parse_dt(o.get("fetched_at")) or _floor) <= kickoff]
+    pool = before or observations
+    return max(pool, key=lambda o: _parse_dt(o.get("fetched_at")) or _floor)

@@ -67,7 +67,11 @@ class MarketSentimentCalculator(BaseFactorCalculator):
         if not context:
             return []
         key = f"{str(away_team).upper()}@{str(home_team).upper()}"
-        return context.get('betting_lines', {}).get(key, {}).get('lines', [])
+        # The snapshot's betting_lines hold the frozen prediction-time observation (1c);
+        # the full as-of-T series lives in the append-only data/lines/ store.
+        entry = context.get('betting_lines', {}).get(key, {})
+        observation = entry.get('observation') or {}
+        return observation.get('lines', [])
 
     def _has_line_movement(self, home_team: str, away_team: str,
                            context: Optional[Dict[str, Any]]) -> bool:

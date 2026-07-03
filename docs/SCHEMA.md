@@ -79,6 +79,16 @@ VOLATILE_FIELDS = { "generated_at", "timestamp", "generated_date" }   # wall-clo
 ```
 Everything outside this set (spreads, edges, factor values, provenance) must match exactly. Predictions embed the `snapshot_id` they were computed from.
 
+**Hash-exclusion rule (1c, non-negotiable).** `snapshot_id` is a content hash over the
+snapshot's `data` only. The growing "as-of T" line-observation series (SPEC §5.4.3) is
+therefore **never** written back into `snapshot.json` — that would change the hash and
+break reproducibility. The snapshot's `betting_lines[game]` holds only the **frozen
+prediction-time observation** (`{home, away, kickoff, observation, vegas_spread}`, in the
+hash); the full series lives in the append-only `data/lines/YYYY_week_NN.json` store,
+**excluded from `snapshot_id`**. `predict rerun` reads the snapshot's frozen observation,
+so appending a closing line leaves `snapshot_id` and every rerun byte-identical (asserted
+by `test_append_does_not_change_snapshot_id_or_bytes`).
+
 **As built (1b):** the engine's result `timestamp` is set from the snapshot's `built_at`
 (`prediction_engine._build_prediction_result`), and `market_sentiment`'s deterministic
 team-hash uses stable `hashlib.md5` (not PYTHONHASHSEED-randomized `hash()`). Because the

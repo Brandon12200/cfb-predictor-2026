@@ -126,25 +126,57 @@ def patched_context(vegas_spread: float | None = -3.0, **kwargs):
         yield
 
 
+def _merge_espn(name: str, espn: dict | None, is_home: bool) -> dict:
+    """Fold a scenario test's ESPN-style team dict (`info`/`derived_metrics`/`schedule`)
+    into the canonical team-data shape, so the test's configured data actually drives
+    the engine (rather than being silently ignored)."""
+    td = make_team_data(name, is_home=is_home)
+    if not isinstance(espn, dict):
+        return td
+    if "info" in espn and isinstance(espn["info"], dict):
+        conf = espn["info"].get("conference", {})
+        td["info"] = {"status": "cfbd",
+                      "conference": conf if isinstance(conf, dict) else {"name": conf}}
+    if "derived_metrics" in espn:
+        td["derived_metrics"] = espn["derived_metrics"]
+    if "schedule" in espn:
+        td["schedule"] = espn["schedule"]
+    return td
+
+
 @contextmanager
 def patched_context_from_mocks(**kwargs):
     """Migration shim for scenario tests that used to `patch(OddsAPIClient)` +
     `patch(ESPNStatsClient)`. Yields `(mock_odds, mock_espn)` and patches
-    `get_game_context` to build a context using `mock_odds.return_value` as the vegas
-    spread — so each test's `mock_odds.return_value = X` still drives the spread while
-    the retired live-fetch path is gone. Extra kwargs pass through to `make_context`.
+    `get_game_context` so that BOTH the test's `mock_odds.return_value` (vegas spread)
+    AND its `mock_espn.return_value`/`side_effect` (per-team data) actually drive the
+    engine — reviving the scenario setups the retired live-fetch path used to consume.
+    Extra kwargs pass through to `make_context`.
     """
     mock_odds = MagicMock()
     mock_odds.return_value = -3.0
     mock_espn = MagicMock()
+    mock_espn.return_value = None
+    mock_espn.side_effect = None
+
+    def _espn_pair():
+        if isinstance(mock_espn.side_effect, (list, tuple)) and mock_espn.side_effect:
+            seq = list(mock_espn.side_effect)
+            return seq[0], (seq[1] if len(seq) > 1 else seq[0])
+        rv = mock_espn.return_value
+        return (rv, rv) if isinstance(rv, dict) else (None, None)
 
     def _fake(self, home_team, away_team, week=None, year=2026, snapshot=None):
         spread = mock_odds.return_value
         if not isinstance(spread, (int, float)):
             spread = -3.0
-        return make_context(home=normalizer.normalize(home_team) or home_team,
-                            away=normalizer.normalize(away_team) or away_team,
-                            week=week, vegas_spread=spread, **kwargs)
+        home = normalizer.normalize(home_team) or home_team
+        away = normalizer.normalize(away_team) or away_team
+        home_espn, away_espn = _espn_pair()
+        overrides = dict(kwargs)
+        overrides.setdefault("home_team_data", _merge_espn(home, home_espn, True))
+        overrides.setdefault("away_team_data", _merge_espn(away, away_espn, False))
+        return make_context(home=home, away=away, week=week, vegas_spread=spread, **overrides)
 
     with patch("data.data_manager.DataManager.get_game_context", _fake):
         yield mock_odds, mock_espn

@@ -160,3 +160,32 @@ are recoverable via git history.
   odds/ESPN mocking. Re-enabled the 2 D4 skips (now assert honest low quality on missing data).
 
 **Result:** `345 passed, 4 skipped, 0 failed`, offline; `make verify-phase-1` ALL 1a+1b PASS.
+
+## Phase 1c — schedule intelligence + closing lines + inspection tooling (SPEC §5.4.2/.3, §5.3)
+
+**Deleted**
+- `data/cfbd_client.py` — the v1 client shim (kept in 1b for `get_games`). Its last two
+  consumers (`utils/results_fetcher.py`, `data/schedule_client.py`) and the `data_manager`
+  diagnostic ping are repointed to `data/clients/cfbd_v2.py` (same `/games` endpoint/shape;
+  v2 sends correct `seasonType`). Closes the 1b-review dead-API follow-up.
+
+**Added**
+- `data/schedule_intel.py` — pure `compute_schedule_intel` (haversine travel via stdlib
+  `math`, time-zone crossings via stdlib `zoneinfo`, rest/bye/short-week/altitude/consecutive-
+  road/sandwich-spot). Serves the builder and Phase-2 hypotheticals. Fixture unit tests.
+- Snapshot field-groups `venues` (from the registry `location` rows) + `sp_ratings`
+  (`cfbd_v2.get_sp_ratings`) + `schedule_intel`, all manifest-covered.
+- `data/snapshot/lines.py` + `data/lines/YYYY_week_NN.json` — the append-only "as-of T"
+  line-observation store (OUTSIDE the snapshot content hash — SCHEMA §3). `scripts/fetch_lines.py`
+  appends; the snapshot keeps only the frozen prediction-time observation.
+- `scripts/{inspect_snapshot,status}.py` — manifest inspection + per-source quota.
+- Regenerated `data/season_calendar_2026.json` from CFBD (D8: no Week 0).
+
+**Changed**
+- `data/normalize/{models,odds}.py`: line-observation model (`LineObservation`/`GameLines`) +
+  `closing_observation`. `data_manager`/`market_sentiment` read the frozen observation.
+- Scenario tests re-wired: `context_factory.patched_context_from_mocks` now folds each test's
+  `mock_espn` team data into the context, so the setups drive the engine (no longer vacuous).
+- `.claude/hooks/{protect_immutable,guard_bash}.py`: append-only protection extended to `data/lines/`.
+
+**Result:** offline suite green; `make verify-phase-1` **ALL PHASE 1 CHECKS PASSED**.

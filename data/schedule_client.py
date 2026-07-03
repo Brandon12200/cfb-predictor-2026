@@ -44,12 +44,12 @@ class CFBScheduleClient:
         # Cache manager
         self.cache = cache_manager
 
-        # Initialize CFBD client for more complete schedule data
+        # Initialize CFBD client for more complete schedule data (v2; v1 retired in 1c).
         try:
-            from data.cfbd_client import CFBDataClient
-            self.cfbd_client = CFBDataClient()
+            from data.clients.cfbd_v2 import get_cfbd_v2_client
+            self.cfbd_client = get_cfbd_v2_client()
             self.logger = logging.getLogger(__name__)
-            self.logger.info("CFBD client initialized for schedule data")
+            self.logger.info("CFBD v2 client initialized for schedule data")
         except Exception as e:
             self.logger = logging.getLogger(__name__)
             self.logger.warning(f"CFBD client not available: {e}")

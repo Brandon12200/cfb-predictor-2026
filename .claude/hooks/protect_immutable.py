@@ -11,7 +11,7 @@ import json
 import os
 import sys
 
-PROTECTED = ("data/predictions/", "data/results/", "data/archive/", "reports/")
+PROTECTED = ("data/predictions/", "data/results/", "data/archive/", "data/lines/", "reports/")
 
 try:
     payload = json.load(sys.stdin)

@@ -57,6 +57,7 @@ coverage.xml
 
 # Project runtime artifacts (regenerable; NOT the tracked data)
 data/cache/
+data/odds_quota.json
 output/
 logs/
 *.log
@@ -99,6 +100,7 @@ node_modules/
 #   data/predictions/       -> the audit trail
 #   data/results/           -> the audit trail
 #   data/snapshots/         -> reproducibility bundles + provenance
+#   data/lines/             -> append-only line-observation series (closing lines / CLV)
 #   data/projections/       -> season drift tracking
 #   reports/                -> committed by the weekly pipeline
 # ============================================================

@@ -26,12 +26,15 @@ from data.normalize.models import (
     TeamInfo,
     compute_derived_metrics,
 )
+from data.schedule_intel import compute_schedule_intel
+from data.snapshot.lines import record_observation
 from data.snapshot.store import compute_snapshot_id, write_snapshot
 
 logger = logging.getLogger(__name__)
 
 # Per-team field-groups the manifest accounts for (100% coverage).
-_TEAM_FIELD_GROUPS = ("info", "coaching", "stats", "schedule", "advanced_stats")
+_TEAM_FIELD_GROUPS = ("info", "coaching", "stats", "schedule", "advanced_stats",
+                      "venue", "sp_rating")
 
 
 class SnapshotBuilder:
@@ -69,9 +72,12 @@ class SnapshotBuilder:
                                  lambda: self.cfbd.get_season_stats(year), sources)
         season_stat_teams = _teams_with_season_stats(raw_season or [])
 
+        raw_sp = self._fetch("sp_ratings", lambda: self.cfbd.get_sp_ratings(year), sources)
+        sp_ratings = cfbd.normalize_sp_ratings(raw_sp or [])
+
         raw_odds = self._fetch("betting_lines",
                                lambda: self.odds.get_ncaaf_spreads(), sources)
-        lines = odds_norm.normalize_lines(raw_odds or [])
+        lines = odds_norm.normalize_lines(raw_odds or [], sources["betting_lines"]["fetched_at"])
         sources["betting_lines"]["quota"] = getattr(self.odds, "last_quota", None)
         sources["registry"] = {"source": "cfbd",
                                "fetched_at": self.registry.provenance.get("fetched_at")}
@@ -80,6 +86,7 @@ class SnapshotBuilder:
         tracked = sorted(self.registry.get_all_tracked_teams())
         teams_data: dict[str, dict] = {}
         team_coverage: dict[str, dict[str, str]] = {}
+        venues: dict[str, dict] = {}
         schedule_ok = sources["games"]["source"] is not None
         for team in tracked:
             schedule = cfbd.team_schedule(games, team)
@@ -92,36 +99,64 @@ class SnapshotBuilder:
                 derived_metrics=compute_derived_metrics(schedule),
             )
             teams_data[team] = td.to_dict()
+            venue = self.registry.get_venue(team)
+            if venue is not None:
+                venues[team] = asdict(venue)
             team_coverage[team] = {
                 "info": "cfbd",
                 "coaching": "cfbd" if team in coaching else "missing",
                 "stats": "cfbd" if team in season_stat_teams else "missing",
                 "schedule": "cfbd" if schedule_ok else "missing",
                 "advanced_stats": "cfbd" if team in advanced else "missing",
+                "venue": "registry" if team in venues else "missing",
+                "sp_rating": "cfbd" if team in sp_ratings else "missing",
             }
 
-        # 5. Slate games + betting-line coverage (both teams tracked, this week).
+        # 5. Slate games: betting-line + schedule-intel coverage (both teams tracked).
         tracked_set = set(tracked)
+        games_dicts = [asdict(g) for g in games]
         betting: dict[str, dict] = {}
+        slate_lines: dict[str, dict] = {}  # full GameLines for the append-only store
+        schedule_intel: dict[str, dict] = {}
         game_coverage: dict[str, dict[str, str]] = {}
         for g in games:
             if g.week != week or g.home_team not in tracked_set or g.away_team not in tracked_set:
                 continue
             key = f"{g.away_team}@{g.home_team}"
             gl = lines.get((g.home_team, g.away_team))
-            if gl is not None:
-                betting[key] = {**_gamelines_dict(gl),
-                                "vegas_spread": odds_norm.consensus_spread(gl)}
+            if gl is not None and gl.observations:
+                # The snapshot freezes ONLY the prediction-time observation (in the hash);
+                # the full series goes to the append-only store, not snapshot.json.
+                obs = asdict(gl.observations[0])
+                betting[key] = {"home_team": g.home_team, "away_team": g.away_team,
+                                "kickoff": gl.kickoff, "observation": obs,
+                                "vegas_spread": obs["consensus_spread"]}
+                slate_lines[key] = asdict(gl)
                 game_coverage[key] = {"betting_lines": "odds"}
             else:
                 betting[key] = {"home_team": g.home_team, "away_team": g.away_team,
-                                "lines": [], "vegas_spread": None}
+                                "kickoff": None, "observation": None, "vegas_spread": None}
                 game_coverage[key] = {"betting_lines": "missing"}
+            # Schedule intel for both participants. Neutral-site games have no team
+            # home venue, so their game venue (and thus travel/tz/altitude) is unknown
+            # → recorded missing, not the home team's venue (which would be wrong).
+            game_venue = None if g.neutral_site else venues.get(g.home_team)
+            for t, opp, is_home in ((g.home_team, g.away_team, True),
+                                    (g.away_team, g.home_team, False)):
+                schedule_intel[t] = compute_schedule_intel(
+                    t, opp, week, g.start_date, is_home, game_venue,
+                    games_dicts, venues, sp_ratings)
+            # Honest coverage: the physical intel resolves only with venue coordinates.
+            has_geo = bool(game_venue and game_venue.get("latitude") is not None)
+            game_coverage[key]["schedule_intel"] = "derived" if has_geo else "missing"
 
         data = {
             "teams": teams_data,
-            "games": [asdict(g) for g in games],
+            "games": games_dicts,
             "advanced_stats": {t: asdict(a) for t, a in advanced.items()},
+            "sp_ratings": sp_ratings,
+            "venues": venues,
+            "schedule_intel": schedule_intel,
             "betting_lines": betting,
         }
         snapshot_id = compute_snapshot_id(data)
@@ -132,6 +167,10 @@ class SnapshotBuilder:
                                   calendar_warnings)
         write_snapshot(week, {"meta": meta, "data": data}, manifest, year=year,
                        base=self.base_dir)
+        # Seed the append-only line-observation store (observation #1). This is OUTSIDE
+        # the snapshot hash — it does not affect snapshot_id or rerun reproducibility.
+        if slate_lines:
+            record_observation(week, slate_lines, year=year, base=self.base_dir)
         logger.info("Built snapshot %s (week %d): %d teams, %d slate games, coverage %.1f%%",
                     snapshot_id, week, len(tracked), len(betting),
                     manifest["summary"]["coverage_pct"])
@@ -192,8 +231,3 @@ def _teams_with_season_stats(raw_season: list[dict]) -> set[str]:
         if name:
             teams.add(name)
     return teams
-
-
-def _gamelines_dict(gl: Any) -> dict[str, Any]:
-    return {"home_team": gl.home_team, "away_team": gl.away_team,
-            "lines": [asdict(ln) for ln in gl.lines]}
