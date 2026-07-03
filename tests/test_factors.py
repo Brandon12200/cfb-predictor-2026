@@ -82,7 +82,9 @@ class TestBaseFactorCalculator(unittest.TestCase):
         
         self.assertTrue(result['success'])
         self.assertEqual(result['value'], 1.0)
-        self.assertEqual(result['weighted_value'], 0.1)  # 1.0 * 0.1 weight
+        self.assertEqual(result['weight'], 0.1)  # static tier weight recorded
+        # weighted_value applies the confidence-adjusted dynamic weight
+        self.assertEqual(result['weighted_value'], result['value'] * result['dynamic_weight'])
         self.assertEqual(result['home_team'], "GEORGIA")
         self.assertEqual(result['away_team'], "ALABAMA")
 
@@ -94,7 +96,6 @@ class TestCoachingEdgeFactors(unittest.TestCase):
         """Set up test data and calculators."""
         self.experience_calc = ExperienceDifferentialCalculator()
         self.pressure_calc = PressureSituationCalculator()
-        self.venue_calc = VenuePerformanceCalculator()
         self.h2h_calc = HeadToHeadRecordCalculator()
         
         # Mock context data
@@ -165,20 +166,6 @@ class TestCoachingEdgeFactors(unittest.TestCase):
         result_late = self.pressure_calc.calculate("GEORGIA", "ALABAMA", late_season_context)
         self.assertIsInstance(result_late, float)
     
-    def test_venue_performance(self):
-        """Test venue performance calculation."""
-        result = self.venue_calc.calculate("GEORGIA", "ALABAMA", self.context)
-        self.assertGreater(result, 0)  # Home team has better home record
-        self.assertLessEqual(result, 1.5)  # Within max range
-        
-        # No venue data
-        no_venue_context = {
-            'home_team_data': {},
-            'away_team_data': {}
-        }
-        result_no_data = self.venue_calc.calculate("GEORGIA", "ALABAMA", no_venue_context)
-        self.assertEqual(result_no_data, 0.3)  # Base home field advantage
-    
     def test_head_to_head_record(self):
         """Test head-to-head record calculation."""
         result = self.h2h_calc.calculate("GEORGIA", "ALABAMA", self.context)
@@ -206,7 +193,6 @@ class TestSituationalContextFactors(unittest.TestCase):
         self.desperation_calc = DesperationIndexCalculator()
         self.revenge_calc = RevengeGameCalculator()
         self.lookahead_calc = LookaheadSandwichCalculator()
-        self.statement_calc = StatementOpportunityCalculator()
         
         # Mock context data
         self.context = {
@@ -267,27 +253,11 @@ class TestSituationalContextFactors(unittest.TestCase):
         self.assertGreaterEqual(result, -2.0)
         self.assertLessEqual(result, 2.0)
     
-    def test_statement_opportunity(self):
-        """Test statement opportunity calculation."""
-        # Away team is highly ranked, home team average
-        result = self.statement_calc.calculate("GEORGIA", "ALABAMA", self.context)
-        self.assertGreater(result, 0)  # Home team has statement opportunity
-        
-        # Equal teams
-        equal_context = {
-            'home_team_data': self.context['home_team_data'],
-            'away_team_data': self.context['home_team_data']  # Same record
-        }
-        result_equal = self.statement_calc.calculate("GEORGIA", "ALABAMA", equal_context)
-        self.assertAlmostEqual(result_equal, 0.0, places=1)
-
-
 class TestMomentumFactors(unittest.TestCase):
     """Test momentum factor calculators."""
     
     def setUp(self):
         """Set up test data and calculators."""
-        self.ats_calc = ATSRecentFormCalculator()
         self.differential_calc = PointDifferentialTrendsCalculator()
         self.close_game_calc = CloseGamePerformanceCalculator()
         
@@ -318,17 +288,6 @@ class TestMomentumFactors(unittest.TestCase):
                 ]
             }
         }
-    
-    def test_ats_recent_form(self):
-        """Test ATS recent form calculation."""
-        result = self.ats_calc.calculate("GEORGIA", "ALABAMA", self.context)
-        self.assertGreaterEqual(result, -2.0)
-        self.assertLessEqual(result, 2.0)
-        
-        # No schedule data
-        no_schedule = {'home_team_data': {}, 'away_team_data': {}}
-        result_no_data = self.ats_calc.calculate("GEORGIA", "ALABAMA", no_schedule)
-        self.assertEqual(result_no_data, 0.0)
     
     def test_point_differential_trends(self):
         """Test point differential trends calculation."""

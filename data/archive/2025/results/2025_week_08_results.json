@@ -1,0 +1,309 @@
+{
+  "week": 8,
+  "season": 2025,
+  "recorded_date": "2025-10-18",
+  "results": [
+    {
+      "game_id": "FLORIDA_STATE_STANFORD_week8",
+      "home_team": "STANFORD",
+      "away_team": "FLORIDA STATE",
+      "home_score": 20,
+      "away_score": 13,
+      "vegas_spread": 17.5,
+      "contrarian_spread": 18.5,
+      "confidence": 65.5,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "PITTSBURGH_SYRACUSE_week8",
+      "home_team": "SYRACUSE",
+      "away_team": "PITTSBURGH",
+      "home_score": 13,
+      "away_score": 30,
+      "vegas_spread": 9.5,
+      "contrarian_spread": 10.5,
+      "confidence": 66.5,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "SMU_CLEMSON_week8",
+      "home_team": "CLEMSON",
+      "away_team": "SMU",
+      "home_score": 24,
+      "away_score": 35,
+      "vegas_spread": -5.5,
+      "contrarian_spread": -4.4,
+      "confidence": 66.4,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "GEORGIA_TECH_DUKE_week8",
+      "home_team": "DUKE",
+      "away_team": "GEORGIA TECH",
+      "home_score": 18,
+      "away_score": 27,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.6,
+      "confidence": 66.2,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "CINCINNATI_OKLAHOMA_STATE_week8",
+      "home_team": "OKLAHOMA STATE",
+      "away_team": "CINCINNATI",
+      "home_score": 17,
+      "away_score": 49,
+      "vegas_spread": 23.5,
+      "contrarian_spread": 24.5,
+      "confidence": 66.8,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "WEST_VIRGINIA_UCF_week8",
+      "home_team": "UCF",
+      "away_team": "WEST VIRGINIA",
+      "home_score": 45,
+      "away_score": 13,
+      "vegas_spread": -7.5,
+      "contrarian_spread": -6.5,
+      "confidence": 66.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "TEXAS_TECH_ARIZONA_STATE_week8",
+      "home_team": "ARIZONA STATE",
+      "away_team": "TEXAS TECH",
+      "home_score": 26,
+      "away_score": 22,
+      "vegas_spread": 6.5,
+      "contrarian_spread": 7.4,
+      "confidence": 67.2,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "UTAH_BYU_week8",
+      "home_team": "BYU",
+      "away_team": "UTAH",
+      "home_score": 24,
+      "away_score": 21,
+      "vegas_spread": 3.5,
+      "contrarian_spread": 4.5,
+      "confidence": 65.5,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "BAYLOR_TCU_week8",
+      "home_team": "TCU",
+      "away_team": "BAYLOR",
+      "home_score": 42,
+      "away_score": 36,
+      "vegas_spread": -3.0,
+      "contrarian_spread": -2.0,
+      "confidence": 65.5,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "ARIZONA_HOUSTON_week8",
+      "home_team": "HOUSTON",
+      "away_team": "ARIZONA",
+      "home_score": 31,
+      "away_score": 28,
+      "vegas_spread": 1.5,
+      "contrarian_spread": 2.4,
+      "confidence": 67.3,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MICHIGAN_STATE_INDIANA_week8",
+      "home_team": "INDIANA",
+      "away_team": "MICHIGAN STATE",
+      "home_score": 38,
+      "away_score": 13,
+      "vegas_spread": -27.5,
+      "contrarian_spread": -26.5,
+      "confidence": 66.9,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "OHIO_STATE_WISCONSIN_week8",
+      "home_team": "WISCONSIN",
+      "away_team": "OHIO STATE",
+      "home_score": 0,
+      "away_score": 34,
+      "vegas_spread": 25.5,
+      "contrarian_spread": 26.6,
+      "confidence": 68.2,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "OREGON_RUTGERS_week8",
+      "home_team": "RUTGERS",
+      "away_team": "OREGON",
+      "home_score": 10,
+      "away_score": 56,
+      "vegas_spread": 17.5,
+      "contrarian_spread": 18.5,
+      "confidence": 67.7,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "NEBRASKA_MINNESOTA_week8",
+      "home_team": "MINNESOTA",
+      "away_team": "NEBRASKA",
+      "home_score": 24,
+      "away_score": 6,
+      "vegas_spread": 7.0,
+      "contrarian_spread": 7.9,
+      "confidence": 67.2,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "WASHINGTON_MICHIGAN_week8",
+      "home_team": "MICHIGAN",
+      "away_team": "WASHINGTON",
+      "home_score": 24,
+      "away_score": 7,
+      "vegas_spread": -5.0,
+      "contrarian_spread": -3.9,
+      "confidence": 65.8,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "PURDUE_NORTHWESTERN_week8",
+      "home_team": "NORTHWESTERN",
+      "away_team": "PURDUE",
+      "home_score": 19,
+      "away_score": 0,
+      "vegas_spread": -3.0,
+      "contrarian_spread": -2.0,
+      "confidence": 67.1,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "PENN_STATE_IOWA_week8",
+      "home_team": "IOWA",
+      "away_team": "PENN STATE",
+      "home_score": 25,
+      "away_score": 24,
+      "vegas_spread": -3.0,
+      "contrarian_spread": -2.0,
+      "confidence": 65.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MARYLAND_UCLA_week8",
+      "home_team": "UCLA",
+      "away_team": "MARYLAND",
+      "home_score": 20,
+      "away_score": 17,
+      "vegas_spread": -3.0,
+      "contrarian_spread": -2.1,
+      "confidence": 67.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "TEXAS_KENTUCKY_week8",
+      "home_team": "KENTUCKY",
+      "away_team": "TEXAS",
+      "home_score": 13,
+      "away_score": 16,
+      "vegas_spread": 12.5,
+      "contrarian_spread": 13.6,
+      "confidence": 66.5,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "MISSISSIPPI_STATE_FLORIDA_week8",
+      "home_team": "FLORIDA",
+      "away_team": "MISSISSIPPI STATE",
+      "home_score": 23,
+      "away_score": 21,
+      "vegas_spread": -9.5,
+      "contrarian_spread": -8.4,
+      "confidence": 67.1,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "TENNESSEE_ALABAMA_week8",
+      "home_team": "ALABAMA",
+      "away_team": "TENNESSEE",
+      "home_score": 37,
+      "away_score": 20,
+      "vegas_spread": -8.5,
+      "contrarian_spread": -7.4,
+      "confidence": 67.7,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "TEXAS_A&M_ARKANSAS_week8",
+      "home_team": "ARKANSAS",
+      "away_team": "TEXAS A&M",
+      "home_score": 42,
+      "away_score": 45,
+      "vegas_spread": 7.5,
+      "contrarian_spread": 8.5,
+      "confidence": 64.4,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MISSISSIPPI_GEORGIA_week8",
+      "home_team": "GEORGIA",
+      "away_team": "MISSISSIPPI",
+      "home_score": 43,
+      "away_score": 35,
+      "vegas_spread": -7.0,
+      "contrarian_spread": -6.0,
+      "confidence": 69.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "OKLAHOMA_SOUTH_CAROLINA_week8",
+      "home_team": "SOUTH CAROLINA",
+      "away_team": "OKLAHOMA",
+      "home_score": 26,
+      "away_score": 7,
+      "vegas_spread": 5.0,
+      "contrarian_spread": 5.9,
+      "confidence": 65.6,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "LSU_VANDERBILT_week8",
+      "home_team": "VANDERBILT",
+      "away_team": "LSU",
+      "home_score": 31,
+      "away_score": 24,
+      "vegas_spread": -2.0,
+      "contrarian_spread": -1.1,
+      "confidence": 68.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MISSOURI_AUBURN_week8",
+      "home_team": "AUBURN",
+      "away_team": "MISSOURI",
+      "home_score": 17,
+      "away_score": 23,
+      "vegas_spread": 1.5,
+      "contrarian_spread": 2.4,
+      "confidence": 65.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "USC_NOTRE_DAME_week8",
+      "home_team": "NOTRE DAME",
+      "away_team": "USC",
+      "home_score": 34,
+      "away_score": 24,
+      "vegas_spread": -9.5,
+      "contrarian_spread": -8.5,
+      "confidence": 68.2,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    }
+  ],
+  "summary": {
+    "total_games": 27,
+    "games_with_results": 27,
+    "games_with_predictions": 27
+  }
+}

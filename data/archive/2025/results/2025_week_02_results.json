@@ -1,0 +1,144 @@
+{
+  "week": 2,
+  "season": 2025,
+  "recorded_date": "2025-09-10",
+  "results": [
+    {
+      "game_id": "VIRGINIA_NC_STATE_week2",
+      "home_team": "NC STATE",
+      "away_team": "VIRGINIA",
+      "home_score": 35,
+      "away_score": 31,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.5,
+      "confidence": 65.2,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MISSISSIPPI_KENTUCKY_week2",
+      "home_team": "KENTUCKY",
+      "away_team": "MISSISSIPPI",
+      "home_score": 23,
+      "away_score": 30,
+      "vegas_spread": 10.0,
+      "contrarian_spread": 11.0,
+      "confidence": 67.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "ILLINOIS_DUKE_week2",
+      "home_team": "DUKE",
+      "away_team": "ILLINOIS",
+      "home_score": 19,
+      "away_score": 45,
+      "vegas_spread": 3.0,
+      "contrarian_spread": 4.0,
+      "confidence": 66.3,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "BAYLOR_SMU_week2",
+      "home_team": "SMU",
+      "away_team": "BAYLOR",
+      "home_score": 45,
+      "away_score": 48,
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.5,
+      "confidence": 64.9,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "VANDERBILT_VIRGINIA_TECH_week2",
+      "home_team": "VIRGINIA TECH",
+      "away_team": "VANDERBILT",
+      "home_score": 20,
+      "away_score": 44,
+      "vegas_spread": -1.5,
+      "contrarian_spread": -0.5,
+      "confidence": 65.5,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "STANFORD_BYU_week2",
+      "home_team": "BYU",
+      "away_team": "STANFORD",
+      "home_score": 27,
+      "away_score": 3,
+      "vegas_spread": -18.5,
+      "contrarian_spread": -17.5,
+      "confidence": 69.1,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "IOWA_IOWA_STATE_week2",
+      "home_team": "IOWA STATE",
+      "away_team": "IOWA",
+      "home_score": 16,
+      "away_score": 13,
+      "vegas_spread": -3.0,
+      "contrarian_spread": -2.0,
+      "confidence": 66.7,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "OKLAHOMA_STATE_OREGON_week2",
+      "home_team": "OREGON",
+      "away_team": "OKLAHOMA STATE",
+      "home_score": 69,
+      "away_score": 3,
+      "vegas_spread": -28.5,
+      "contrarian_spread": -27.5,
+      "confidence": 70.3,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "KANSAS_MISSOURI_week2",
+      "home_team": "MISSOURI",
+      "away_team": "KANSAS",
+      "home_score": 42,
+      "away_score": 31,
+      "vegas_spread": -6.5,
+      "contrarian_spread": -5.5,
+      "confidence": 67.4,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "ARIZONA_STATE_MISSISSIPPI_STATE_week2",
+      "home_team": "MISSISSIPPI STATE",
+      "away_team": "ARIZONA STATE",
+      "home_score": 24,
+      "away_score": 20,
+      "vegas_spread": 6.5,
+      "contrarian_spread": 7.5,
+      "confidence": 68.2,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "MICHIGAN_OKLAHOMA_week2",
+      "home_team": "OKLAHOMA",
+      "away_team": "MICHIGAN",
+      "home_score": 24,
+      "away_score": 13,
+      "vegas_spread": -5.0,
+      "contrarian_spread": -4.0,
+      "confidence": 67.0,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "BOSTON_COLLEGE_MICHIGAN_STATE_week2",
+      "home_team": "MICHIGAN STATE",
+      "away_team": "BOSTON COLLEGE",
+      "home_score": 42,
+      "away_score": 40,
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.5,
+      "confidence": 65.8,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    }
+  ],
+  "summary": {
+    "total_games": 12,
+    "games_with_results": 12,
+    "games_with_predictions": 12
+  }
+}

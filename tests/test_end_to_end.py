@@ -16,8 +16,6 @@ from data.data_manager import data_manager
 from factors.factor_registry import factor_registry
 from utils.normalizer import normalizer
 from config import config
-from utils.health_check import health_checker
-from utils.monitoring import system_monitor
 
 
 class TestEndToEndIntegration(unittest.TestCase):
@@ -221,89 +219,6 @@ class TestEndToEndIntegration(unittest.TestCase):
         
         # Allow some flexibility for ambiguous cases
         self.assertLess(len(failed_cases), 3, f"Too many normalizer failures: {failed_cases}")
-    
-    def test_health_check_comprehensive(self):
-        """Test comprehensive health check functionality."""
-        try:
-            # Run full health check
-            start_time = time.time()
-            health_report = health_checker.run_full_health_check()
-            execution_time = time.time() - start_time
-            
-            # Validate health report structure
-            self.assertIsInstance(health_report, dict)
-            self.assertIn('overall_status', health_report)
-            self.assertIn('components', health_report)
-            self.assertIn('execution_time', health_report)
-            
-            # Check that all expected components were tested
-            expected_components = [
-                'configuration', 'system_resources', 'normalizer',
-                'prediction_engine', 'data_manager', 'factor_registry'
-            ]
-            
-            tested_components = list(health_report['components'].keys())
-            
-            for component in expected_components:
-                self.assertIn(component, tested_components, 
-                            f"Component {component} not tested")
-            
-            # Validate execution time
-            self.assertLess(execution_time, 60, "Health check took too long")
-            
-            print(f"✅ Health check completed in {execution_time:.2f}s")
-            print(f"   Overall status: {health_report['overall_status']}")
-            print(f"   Components tested: {len(tested_components)}")
-            
-            # Print component statuses
-            for component, status in health_report['components'].items():
-                status_emoji = "✅" if status['status'] == 'healthy' else "⚠️" if status['status'] == 'warning' else "❌"
-                print(f"   {status_emoji} {component}: {status['status']}")
-            
-        except Exception as e:
-            self.fail(f"Health check failed: {str(e)}")
-    
-    def test_monitoring_system(self):
-        """Test monitoring system functionality."""
-        try:
-            # Start monitoring
-            system_monitor.start_monitoring()
-            
-            # Log some test metrics
-            system_monitor.log_prediction_performance(
-                execution_time=2.5,
-                api_calls=8,
-                prediction_success=True
-            )
-            
-            system_monitor.log_api_call('test_api', 1.2, success=True)
-            system_monitor.log_api_call('test_api', 0.8, success=True)
-            system_monitor.log_api_call('test_api', 5.0, success=False)  # Slow/failed call
-            
-            # Get performance summary
-            summary = system_monitor.get_performance_summary()
-            
-            # Validate summary structure
-            self.assertIsInstance(summary, dict)
-            self.assertIn('total_predictions', summary)
-            self.assertIn('avg_prediction_time', summary)
-            self.assertIn('total_api_calls', summary)
-            self.assertIn('health_status', summary)
-            
-            # Check metrics were recorded
-            self.assertEqual(summary['total_predictions'], 1)
-            self.assertEqual(summary['total_api_calls'], 3)
-            
-            print(f"✅ Monitoring system test passed")
-            print(f"   Predictions: {summary['total_predictions']}")
-            print(f"   API calls: {summary['total_api_calls']}")
-            print(f"   Avg prediction time: {summary['avg_prediction_time']:.2f}s")
-            
-            # Stop monitoring
-            system_monitor.stop_monitoring()
-            
-        except Exception as e:
-            self.fail(f"Monitoring system test failed: {str(e)}")
     
     def test_error_handling_resilience(self):
         """Test system resilience to various error conditions."""

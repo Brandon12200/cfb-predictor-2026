@@ -30,3 +30,12 @@ Binding owner decisions made outside the resolved SPEC §16 set. Each entry reco
 - CLAUDE.md's "nothing AI-related may be committed" rule removed; `.claude/` config + docs now commit normally.
 **Surviving constraint:** `"includeCoAuthoredBy": false` stays set and commit messages / PR text contain **no AI attribution** — history can't be easily scrubbed once the repo is published.
 **Rationale:** Committing the agent infrastructure and decision docs makes future agent sessions reproducible and the engineering showcase legible, while the private-until-review posture plus the no-attribution constraint protects the publishable history.
+
+---
+
+## D4 — Phase 0 makes the full test suite green offline
+**Date:** 2026-07-02
+**Context:** The squashed `Initial commit: 2026 season rebuild` baked in code/test drift: the committed suite has ~18 genuine pre-existing failures (stale tests referencing removed classes e.g. `ATSRecentFormCalculator`; tests asserting old API shapes e.g. `validate_api_keys`; bugs inside dead-code modules) and a large block of tests that make **real network calls** through a sleeping rate limiter, so the suite cannot run offline/deterministically. This contradicts SPEC Phase 0 acceptance ("all existing tests pass") and the README's "305 tests" claim. Verified: stashing all Phase-0 changes reproduces the identical failure count, so the drift predates this work.
+**Decision:** Get the **entire** suite green and offline within Phase 0 (owner choice over the lighter "quarantine network tests" option): delete dead modules with their tests (item 5); fix or remove stale unit tests; and mock all client/network calls (and neutralize rate-limiter sleeps) via a shared test fixture layer so `make test` runs the full suite deterministically with no network.
+**Note:** This front-runs part of Phase 1's snapshot/no-network architecture (SPEC §5). Phase 1 still owns the canonical `engine passes a no-network test` enforcement; the Phase 0 mocking layer is an interim guard, not the permanent data architecture.
+**Rationale:** A trustworthy green suite is the guard rail for the `main.py` decomposition (item 6) and every later phase; leaving a broken baseline would undermine the freeze/audit-trail credibility the project is built on.

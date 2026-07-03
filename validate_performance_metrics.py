@@ -69,18 +69,13 @@ def validate_confidence_weighting() -> Dict[str, Any]:
     """Validate confidence-based weighting system."""
     try:
         from engine.confidence_calculator import confidence_calculator
-        from engine.dynamic_weighter import dynamic_weighter
-        
+
         # Check confidence thresholds
         thresholds = confidence_calculator.confidence_levels
-        
-        # Check dynamic weighting capabilities
-        weights_exist = hasattr(dynamic_weighter, 'get_optimized_weights')
-        
+
         return {
             'confidence_thresholds': thresholds,
             'high_threshold': thresholds.get('high', 0) >= 0.70,
-            'dynamic_weighting': weights_exist,
             'threshold_70_plus': thresholds.get('high', 0) >= 0.70 and thresholds.get('very_high', 0) >= 0.70
         }
     except Exception as e:

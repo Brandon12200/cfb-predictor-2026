@@ -1,0 +1,89 @@
+{
+  "week": 3,
+  "season": 2025,
+  "recorded_date": "2025-09-19",
+  "results": [
+    {
+      "game_id": "BOSTON_COLLEGE_STANFORD_week3",
+      "home_team": "STANFORD",
+      "away_team": "BOSTON COLLEGE",
+      "home_score": 30,
+      "away_score": 20,
+      "vegas_spread": 14.0,
+      "contrarian_spread": 15.0,
+      "confidence": 69.0,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "USC_PURDUE_week3",
+      "home_team": "PURDUE",
+      "away_team": "USC",
+      "home_score": 17,
+      "away_score": 33,
+      "vegas_spread": 20.5,
+      "contrarian_spread": 21.5,
+      "confidence": 65.2,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "ARKANSAS_MISSISSIPPI_week3",
+      "home_team": "MISSISSIPPI",
+      "away_team": "ARKANSAS",
+      "home_score": 41,
+      "away_score": 35,
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.6,
+      "confidence": 65.5,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "FLORIDA_LSU_week3",
+      "home_team": "LSU",
+      "away_team": "FLORIDA",
+      "home_score": 20,
+      "away_score": 10,
+      "vegas_spread": -6.5,
+      "contrarian_spread": -5.5,
+      "confidence": 67.9,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "VANDERBILT_SOUTH_CAROLINA_week3",
+      "home_team": "SOUTH CAROLINA",
+      "away_team": "VANDERBILT",
+      "home_score": 7,
+      "away_score": 31,
+      "vegas_spread": -3.0,
+      "contrarian_spread": -2.0,
+      "confidence": 65.9,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    },
+    {
+      "game_id": "GEORGIA_TENNESSEE_week3",
+      "home_team": "TENNESSEE",
+      "away_team": "GEORGIA",
+      "home_score": 41,
+      "away_score": 44,
+      "vegas_spread": -7.0,
+      "contrarian_spread": -5.9,
+      "confidence": 65.7,
+      "prediction_type": "SLIGHT_CONTRARIAN"
+    },
+    {
+      "game_id": "TEXAS_A&M_NOTRE_DAME_week3",
+      "home_team": "NOTRE DAME",
+      "away_team": "TEXAS A&M",
+      "home_score": 40,
+      "away_score": 41,
+      "vegas_spread": -6.5,
+      "contrarian_spread": -5.5,
+      "confidence": 67.9,
+      "prediction_type": "CONSENSUS_ALIGNMENT"
+    }
+  ],
+  "summary": {
+    "total_games": 7,
+    "games_with_results": 7,
+    "games_with_predictions": 7
+  }
+}

@@ -131,18 +131,18 @@ class TestConfig(unittest.TestCase):
         config = Config()
         status = config.validate_api_keys()
         
-        self.assertFalse(status['odds_api'])
-        self.assertEqual(status['espn_api'], 'optional')
-        
+        self.assertFalse(status['odds_api']['configured'])
+        self.assertEqual(status['espn_api']['role'], 'fallback')
+
         # With API keys
         os.environ['ODDS_API_KEY'] = 'test_key'
         os.environ['ESPN_API_KEY'] = 'test_espn_key'
-        
+
         config = Config()
         status = config.validate_api_keys()
-        
-        self.assertTrue(status['odds_api'])
-        self.assertTrue(status['espn_api'])
+
+        self.assertTrue(status['odds_api']['configured'])
+        self.assertTrue(status['espn_api']['configured'])
     
     def test_get_rate_limit(self):
         """Test rate limit retrieval."""

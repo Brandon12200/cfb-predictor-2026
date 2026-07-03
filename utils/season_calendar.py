@@ -1,0 +1,63 @@
+"""Season calendar loading and date->week inference (Phase 0 interim, D1).
+
+Fixes the silent week-1 default in the old ``main._get_current_week``: omitting
+``--week`` used to analyze games with week-1 context, producing different results
+than passing the correct week. Here the week is derived from the date via
+``data/season_calendar_2026.json``; when the date falls outside the season we
+raise rather than guess. Phase 4.5 folds this calendar into ``season.yaml``.
+
+Pure and network-free so it is deterministically testable.
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import date, datetime
+from pathlib import Path
+
+_CALENDAR_PATH = Path(__file__).resolve().parent.parent / "data" / "season_calendar_2026.json"
+
+
+class WeekInferenceError(Exception):
+    """Raised when the CFB week cannot be determined from the date."""
+
+
+def load_calendar(path: Path | str = _CALENDAR_PATH) -> dict:
+    """Load the season calendar JSON (season, weeks -> {start, end})."""
+    with open(path) as f:
+        return json.load(f)
+
+
+def infer_week_for_date(today: date, calendar: dict | None = None) -> int:
+    """Return the week whose inclusive [start, end] range contains ``today``.
+
+    Raises ``WeekInferenceError`` when ``today`` is outside every week range.
+    """
+    cal = calendar if calendar is not None else load_calendar()
+    weeks = cal["weeks"]
+    for wk, span in weeks.items():
+        start = date.fromisoformat(span["start"])
+        end = date.fromisoformat(span["end"])
+        if start <= today <= end:
+            return int(wk)
+    season = cal.get("season", "?")
+    first = weeks[min(weeks, key=lambda k: int(k))]["start"]
+    last = weeks[max(weeks, key=lambda k: int(k))]["end"]
+    raise WeekInferenceError(
+        f"Cannot infer CFB week: {today.isoformat()} is outside the {season} "
+        f"season ({first} .. {last}). Re-run with an explicit --week."
+    )
+
+
+def resolve_week(explicit: int | None, today: date | None = None,
+                 calendar: dict | None = None) -> int:
+    """Return ``explicit`` if provided, else infer the week from ``today``.
+
+    This is the single point that guarantees an omitted week resolves to the
+    same value an explicit correct ``--week`` would supply.
+    """
+    if explicit is not None:
+        return explicit
+    if today is None:
+        today = datetime.now().date()
+    return infer_week_for_date(today, calendar)

@@ -71,6 +71,9 @@ class RateLimiter:
             bool: True if call can be made immediately
         """
         with self._lock:
+            # An explicit zero limit means no calls are permitted.
+            if self.calls_per_minute == 0 or self.calls_per_day == 0:
+                return False
             current_time = time.time()
             return self._calculate_wait_time(current_time) == 0
     
@@ -88,7 +91,7 @@ class RateLimiter:
             minute_remaining = max(0, self.calls_per_minute - len(self.minute_calls))
             day_remaining = None
             
-            if self.calls_per_day:
+            if self.calls_per_day is not None:
                 day_remaining = max(0, self.calls_per_day - len(self.day_calls))
             
             return {
@@ -117,8 +120,9 @@ class RateLimiter:
         
         wait_times = []
         
-        # Check minute limit
-        if len(self.minute_calls) >= self.calls_per_minute:
+        # Check minute limit (guard zero/empty to avoid IndexError; a zero
+        # per-minute limit is treated as "no calls" by can_make_call).
+        if self.calls_per_minute and len(self.minute_calls) >= self.calls_per_minute:
             oldest_call = self.minute_calls[0]
             minute_wait = oldest_call + 60 - current_time
             if minute_wait > 0:

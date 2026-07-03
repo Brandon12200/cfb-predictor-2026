@@ -17,8 +17,12 @@ class FactorType(Enum):
     MODIFIER = "modifier"    # Multiplicative factors that enhance other signals
 
 
-class FactorConfidence(Enum):
-    """Confidence levels for factor signals."""
+class FactorConfidence(float, Enum):
+    """Confidence levels for factor signals.
+
+    Subclasses ``float`` so members are JSON-serializable (as their numeric
+    value) wherever prediction/shadow output is written to disk.
+    """
     VERY_HIGH = 0.9   # Extremely confident contrarian signal
     HIGH = 0.75       # Strong signal
     MEDIUM = 0.5      # Moderate signal

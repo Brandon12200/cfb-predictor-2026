@@ -1,0 +1,70 @@
+{
+  "season": 2026,
+  "note": "Phase 0 interim date->week calendar (decision D1). Weeks are Saturday-anchored from Week 0 = 2026-08-29 (SPEC 16.2), each spanning Sunday..Saturday. Dates outside all ranges are off-season and must hard-fail week inference. Phase 4.5 folds this into season.yaml; boundaries are correctable data.",
+  "weeks": {
+    "0": {
+      "start": "2026-08-23",
+      "end": "2026-08-29"
+    },
+    "1": {
+      "start": "2026-08-30",
+      "end": "2026-09-05"
+    },
+    "2": {
+      "start": "2026-09-06",
+      "end": "2026-09-12"
+    },
+    "3": {
+      "start": "2026-09-13",
+      "end": "2026-09-19"
+    },
+    "4": {
+      "start": "2026-09-20",
+      "end": "2026-09-26"
+    },
+    "5": {
+      "start": "2026-09-27",
+      "end": "2026-10-03"
+    },
+    "6": {
+      "start": "2026-10-04",
+      "end": "2026-10-10"
+    },
+    "7": {
+      "start": "2026-10-11",
+      "end": "2026-10-17"
+    },
+    "8": {
+      "start": "2026-10-18",
+      "end": "2026-10-24"
+    },
+    "9": {
+      "start": "2026-10-25",
+      "end": "2026-10-31"
+    },
+    "10": {
+      "start": "2026-11-01",
+      "end": "2026-11-07"
+    },
+    "11": {
+      "start": "2026-11-08",
+      "end": "2026-11-14"
+    },
+    "12": {
+      "start": "2026-11-15",
+      "end": "2026-11-21"
+    },
+    "13": {
+      "start": "2026-11-22",
+      "end": "2026-11-28"
+    },
+    "14": {
+      "start": "2026-11-29",
+      "end": "2026-12-05"
+    },
+    "15": {
+      "start": "2026-12-06",
+      "end": "2026-12-12"
+    }
+  }
+}

@@ -1,0 +1,493 @@
+{
+  "week": 13,
+  "season": 2025,
+  "generated_date": "2025-11-21T00:00:00.000Z",
+  "prediction_count": 25,
+  "predictions": [
+    {
+      "game_id": "MIAMI_VIRGINIA_TECH_week13",
+      "week": 13,
+      "home_team": "VIRGINIA TECH",
+      "away_team": "MIAMI",
+      "vegas_spread": 18.0,
+      "contrarian_spread": 19.0,
+      "predicted_edge": 1.0,
+      "edge_direction": "home",
+      "confidence": 67.2,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 1.0
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "DUKE_NORTH_CAROLINA_week13",
+      "week": 13,
+      "home_team": "NORTH CAROLINA",
+      "away_team": "DUKE",
+      "vegas_spread": 7.0,
+      "contrarian_spread": 7.9,
+      "predicted_edge": 0.94,
+      "edge_direction": "home",
+      "confidence": 66.9,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.94
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "FLORIDA_STATE_NC_STATE_week13",
+      "week": 13,
+      "home_team": "NC STATE",
+      "away_team": "FLORIDA STATE",
+      "vegas_spread": 5.5,
+      "contrarian_spread": 6.5,
+      "predicted_edge": 0.96,
+      "edge_direction": "home",
+      "confidence": 66.7,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.96
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "LOUISVILLE_SMU_week13",
+      "week": 13,
+      "home_team": "SMU",
+      "away_team": "LOUISVILLE",
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.6,
+      "predicted_edge": 0.9,
+      "edge_direction": "away",
+      "confidence": 67.3,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.9
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "PITTSBURGH_GEORGIA_TECH_week13",
+      "week": 13,
+      "home_team": "GEORGIA TECH",
+      "away_team": "PITTSBURGH",
+      "vegas_spread": -2.5,
+      "contrarian_spread": -1.6,
+      "predicted_edge": 0.9,
+      "edge_direction": "away",
+      "confidence": 65.8,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.9
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "KANSAS_STATE_UTAH_week13",
+      "week": 13,
+      "home_team": "UTAH",
+      "away_team": "KANSAS STATE",
+      "vegas_spread": -17.5,
+      "contrarian_spread": -16.5,
+      "predicted_edge": 1.0,
+      "edge_direction": "away",
+      "confidence": 67.2,
+      "recommendation": "LEAN - UTAH (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.02
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "OKLAHOMA_STATE_UCF_week13",
+      "week": 13,
+      "home_team": "UCF",
+      "away_team": "OKLAHOMA STATE",
+      "vegas_spread": -13.5,
+      "contrarian_spread": -12.5,
+      "predicted_edge": 1.03,
+      "edge_direction": "away",
+      "confidence": 67.9,
+      "recommendation": "LEAN - UCF (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.03
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "BAYLOR_ARIZONA_week13",
+      "week": 13,
+      "home_team": "ARIZONA",
+      "away_team": "BAYLOR",
+      "vegas_spread": -7.0,
+      "contrarian_spread": -6.0,
+      "predicted_edge": 0.98,
+      "edge_direction": "away",
+      "confidence": 66.9,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.98
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "ARIZONA_STATE_COLORADO_week13",
+      "week": 13,
+      "home_team": "COLORADO",
+      "away_team": "ARIZONA STATE",
+      "vegas_spread": 7.0,
+      "contrarian_spread": 8.0,
+      "predicted_edge": 0.98,
+      "edge_direction": "home",
+      "confidence": 65.8,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.99
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "KANSAS_IOWA_STATE_week13",
+      "week": 13,
+      "home_team": "IOWA STATE",
+      "away_team": "KANSAS",
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.5,
+      "predicted_edge": 0.96,
+      "edge_direction": "away",
+      "confidence": 66.1,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.96
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "BYU_CINCINNATI_week13",
+      "week": 13,
+      "home_team": "CINCINNATI",
+      "away_team": "BYU",
+      "vegas_spread": 2.5,
+      "contrarian_spread": 3.4,
+      "predicted_edge": 0.94,
+      "edge_direction": "home",
+      "confidence": 65.6,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.94
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "TCU_HOUSTON_week13",
+      "week": 13,
+      "home_team": "HOUSTON",
+      "away_team": "TCU",
+      "vegas_spread": -1.5,
+      "contrarian_spread": -0.6,
+      "predicted_edge": 0.93,
+      "edge_direction": "away",
+      "confidence": 67.3,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.93
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "RUTGERS_OHIO_STATE_week13",
+      "week": 13,
+      "home_team": "OHIO STATE",
+      "away_team": "RUTGERS",
+      "vegas_spread": -32.5,
+      "contrarian_spread": -31.5,
+      "predicted_edge": 1.05,
+      "edge_direction": "away",
+      "confidence": 67.7,
+      "recommendation": "LEAN - OHIO STATE (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.04
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "MICHIGAN_STATE_IOWA_week13",
+      "week": 13,
+      "home_team": "IOWA",
+      "away_team": "MICHIGAN STATE",
+      "vegas_spread": -16.5,
+      "contrarian_spread": -15.5,
+      "predicted_edge": 1.01,
+      "edge_direction": "away",
+      "confidence": 69.1,
+      "recommendation": "LEAN - IOWA (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.01
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "MICHIGAN_MARYLAND_week13",
+      "week": 13,
+      "home_team": "MARYLAND",
+      "away_team": "MICHIGAN",
+      "vegas_spread": 14.0,
+      "contrarian_spread": 15.1,
+      "predicted_edge": 1.11,
+      "edge_direction": "home",
+      "confidence": 67.8,
+      "recommendation": "LEAN - MARYLAND (home) - 1.1 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.11
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "WASHINGTON_UCLA_week13",
+      "week": 13,
+      "home_team": "UCLA",
+      "away_team": "WASHINGTON",
+      "vegas_spread": 10.5,
+      "contrarian_spread": 11.5,
+      "predicted_edge": 0.96,
+      "edge_direction": "home",
+      "confidence": 67.1,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.96
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "USC_OREGON_week13",
+      "week": 13,
+      "home_team": "OREGON",
+      "away_team": "USC",
+      "vegas_spread": -10.0,
+      "contrarian_spread": -8.9,
+      "predicted_edge": 1.05,
+      "edge_direction": "away",
+      "confidence": 68.9,
+      "recommendation": "LEAN - OREGON (home) - 1.1 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.05
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "NEBRASKA_PENN_STATE_week13",
+      "week": 13,
+      "home_team": "PENN STATE",
+      "away_team": "NEBRASKA",
+      "vegas_spread": -8.5,
+      "contrarian_spread": -7.5,
+      "predicted_edge": 1.03,
+      "edge_direction": "away",
+      "confidence": 67.8,
+      "recommendation": "LEAN - PENN STATE (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.06
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "ILLINOIS_WISCONSIN_week13",
+      "week": 13,
+      "home_team": "WISCONSIN",
+      "away_team": "ILLINOIS",
+      "vegas_spread": 8.5,
+      "contrarian_spread": 9.4,
+      "predicted_edge": 0.93,
+      "edge_direction": "home",
+      "confidence": 67.2,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.93
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "MINNESOTA_NORTHWESTERN_week13",
+      "week": 13,
+      "home_team": "NORTHWESTERN",
+      "away_team": "MINNESOTA",
+      "vegas_spread": -3.5,
+      "contrarian_spread": -2.6,
+      "predicted_edge": 0.89,
+      "edge_direction": "away",
+      "confidence": 66.9,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.9
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "ARKANSAS_TEXAS_week13",
+      "week": 13,
+      "home_team": "TEXAS",
+      "away_team": "ARKANSAS",
+      "vegas_spread": -8.5,
+      "contrarian_spread": -7.4,
+      "predicted_edge": 1.06,
+      "edge_direction": "away",
+      "confidence": 63.3,
+      "recommendation": "LEAN - TEXAS (home) - 1.1 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.07
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "KENTUCKY_VANDERBILT_week13",
+      "week": 13,
+      "home_team": "VANDERBILT",
+      "away_team": "KENTUCKY",
+      "vegas_spread": -8.5,
+      "contrarian_spread": -7.6,
+      "predicted_edge": 0.92,
+      "edge_direction": "away",
+      "confidence": 65.6,
+      "recommendation": "CONSENSUS - Consider market consensus, minimal contrarian edge",
+      "prediction_type": "CONSENSUS_ALIGNMENT",
+      "factor_breakdown": {
+        "situational_context": 0.93
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "MISSOURI_OKLAHOMA_week13",
+      "week": 13,
+      "home_team": "OKLAHOMA",
+      "away_team": "MISSOURI",
+      "vegas_spread": -6.5,
+      "contrarian_spread": -5.5,
+      "predicted_edge": 1.01,
+      "edge_direction": "away",
+      "confidence": 67.0,
+      "recommendation": "LEAN - OKLAHOMA (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.0
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "TENNESSEE_FLORIDA_week13",
+      "week": 13,
+      "home_team": "FLORIDA",
+      "away_team": "TENNESSEE",
+      "vegas_spread": 4.0,
+      "contrarian_spread": 5.0,
+      "predicted_edge": 1.02,
+      "edge_direction": "home",
+      "confidence": 66.7,
+      "recommendation": "LEAN - FLORIDA (home) - 1.0 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.01
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    },
+    {
+      "game_id": "SYRACUSE_NOTRE_DAME_week13",
+      "week": 13,
+      "home_team": "NOTRE DAME",
+      "away_team": "SYRACUSE",
+      "vegas_spread": -36.0,
+      "contrarian_spread": -34.9,
+      "predicted_edge": 1.09,
+      "edge_direction": "away",
+      "confidence": 68.2,
+      "recommendation": "LEAN - NOTRE DAME (home) - 1.1 point slight edge",
+      "prediction_type": "SLIGHT_CONTRARIAN",
+      "factor_breakdown": {
+        "situational_context": 1.09
+      },
+      "data_quality": 100.0,
+      "variance_analysis": {},
+      "timestamp": "2025-11-21T00:00:00.000Z"
+    }
+  ],
+  "system_stats": {
+    "total_games_analyzed": 25,
+    "games_with_edges": 26,
+    "hit_rate": 1.0,
+    "average_confidence": 67.0,
+    "average_edge_size": 1.0,
+    "slight_contrarian_count": 11,
+    "consensus_count": 14,
+    "insufficient_data_count": 0
+  }
+}
