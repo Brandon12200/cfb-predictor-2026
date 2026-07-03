@@ -13,7 +13,7 @@ import logging
 import time
 from typing import Optional, Dict, Any
 
-from data.conferences import get_conference_map
+from data.team_registry import get_conference_map
 from cli.args import parse_arguments
 
 # Heavy imports moved to main() to allow logging setup first

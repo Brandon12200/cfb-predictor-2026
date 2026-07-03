@@ -299,8 +299,10 @@ class ConfidenceCalculator:
     
     def _is_major_conference_game(self, home_team_data: Dict, away_team_data: Dict) -> bool:
         """Check if this is a major conference game (more efficient markets)."""
-        major_conferences = {'SEC', 'BIG TEN', 'BIG 12', 'ACC', 'PAC-12'}
-        
+        # Conference names come from the single sourced registry, not a hardcoded set.
+        from data.team_registry import get_p4_conference_names
+        major_conferences = get_p4_conference_names()
+
         home_conf = home_team_data.get('info', {}).get('conference', {}).get('name', '')
         away_conf = away_team_data.get('info', {}).get('conference', {}).get('name', '')
         

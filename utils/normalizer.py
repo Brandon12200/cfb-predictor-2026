@@ -7,6 +7,8 @@ import re
 from typing import Dict, List, Optional, Set
 from difflib import get_close_matches
 
+from data.team_registry import get_fbs_canonical_names, get_fcs_names
+
 
 class TeamNameNormalizer:
     """
@@ -200,65 +202,14 @@ class TeamNameNormalizer:
         return all_names
     
     def _build_team_mappings(self) -> Dict[str, str]:
-        """Build core team mappings (normalized name -> normalized name)."""
-        teams = [
-            # SEC
-            'ALABAMA', 'ARKANSAS', 'AUBURN', 'FLORIDA', 'GEORGIA', 'KENTUCKY',
-            'LSU', 'MISSISSIPPI', 'MISSISSIPPI STATE', 'MISSOURI', 'SOUTH CAROLINA',
-            'TENNESSEE', 'TEXAS', 'TEXAS A&M', 'VANDERBILT', 'OKLAHOMA',
-            
-            # BIG TEN
-            'ILLINOIS', 'INDIANA', 'IOWA', 'MARYLAND', 'MICHIGAN', 'MICHIGAN STATE',
-            'MINNESOTA', 'NEBRASKA', 'NORTHWESTERN', 'OHIO STATE', 'PENN STATE',
-            'PURDUE', 'RUTGERS', 'WISCONSIN', 'OREGON', 'WASHINGTON', 'UCLA', 'USC',
-            
-            # BIG 12
-            'BAYLOR', 'IOWA STATE', 'KANSAS', 'KANSAS STATE', 'OKLAHOMA STATE',
-            'TCU', 'TEXAS TECH', 'WEST VIRGINIA', 'CINCINNATI', 'HOUSTON',
-            'UCF', 'BYU', 'COLORADO', 'UTAH', 'ARIZONA', 'ARIZONA STATE',
-            
-            # ACC
-            'BOSTON COLLEGE', 'CLEMSON', 'DUKE', 'FLORIDA STATE', 'GEORGIA TECH',
-            'LOUISVILLE', 'MIAMI', 'NC STATE', 'NORTH CAROLINA', 'PITTSBURGH',
-            'SYRACUSE', 'VIRGINIA', 'VIRGINIA TECH', 'WAKE FOREST', 'NOTRE DAME',
-            'CAL', 'STANFORD', 'SMU',
-            
-            # PAC-12 (remaining)
-            'WASHINGTON STATE', 'OREGON STATE',
-            
-            # GROUP OF 5 - AAC
-            'EAST CAROLINA', 'MEMPHIS', 'NAVY', 'SOUTH FLORIDA', 'TEMPLE',
-            'TULANE', 'TULSA', 'FAU', 'NORTH TEXAS', 'RICE', 'UAB', 'UTSA',
-            
-            # GROUP OF 5 - MOUNTAIN WEST
-            'AIR FORCE', 'BOISE STATE', 'COLORADO STATE', 'FRESNO STATE',
-            'HAWAII', 'NEVADA', 'NEW MEXICO', 'SAN DIEGO STATE', 'SAN JOSE STATE',
-            'UNLV', 'UTAH STATE', 'WYOMING',
-            
-            # GROUP OF 5 - MAC
-            'AKRON', 'BALL STATE', 'BOWLING GREEN', 'BUFFALO', 'CENTRAL MICHIGAN',
-            'EASTERN MICHIGAN', 'KENT STATE', 'MIAMI (OH)', 'NORTHERN ILLINOIS',
-            'OHIO', 'TOLEDO', 'WESTERN MICHIGAN',
-            
-            # GROUP OF 5 - SUN BELT
-            'APPALACHIAN STATE', 'ARKANSAS STATE', 'COASTAL CAROLINA', 'GEORGIA SOUTHERN',
-            'GEORGIA STATE', 'JAMES MADISON', 'LOUISIANA', 'LOUISIANA MONROE',
-            'MARSHALL', 'OLD DOMINION', 'SOUTH ALABAMA', 'SOUTHERN MISS',
-            'TEXAS STATE', 'TROY',
-            
-            # GROUP OF 5 - C-USA
-            'CHARLOTTE', 'FLORIDA INTERNATIONAL', 'LIBERTY', 'LOUISIANA TECH',
-            'MIDDLE TENNESSEE', 'NEW MEXICO STATE', 'SAM HOUSTON', 'UTEP',
-            'WESTERN KENTUCKY', 'JACKSONVILLE STATE',
-            
-            # INDEPENDENTS
-            'ARMY', 'UMASS', 'UCONN',
-            
-            # ADDITIONAL TEAMS COMMONLY IN BETTING
-            'KENNESAW STATE', 'SAM HOUSTON'
-        ]
-        
-        return {team: team for team in teams}
+        """Core canonical FBS names (normalized name -> itself).
+
+        Sourced from the season team registry (SPEC §5.5), which is built from CFBD
+        `/teams?year=YYYY` — no longer a hardcoded list. Canonical names are the
+        registry's UPPERCASE form; CFBD's per-source spellings resolve to them via
+        the alias mappings below.
+        """
+        return {team: team for team in get_fbs_canonical_names()}
     
     def _build_espn_mappings(self) -> Dict[str, str]:
         """Build ESPN API format mappings."""
@@ -647,142 +598,13 @@ class TeamNameNormalizer:
         return aliases
     
     def _build_fcs_teams(self) -> Set[str]:
-        """Build set of FCS teams to filter out."""
-        fcs_teams = {
-            # Common FCS teams that appear in early season matchups
-            'KENNESAW STATE', 'KENNESAW', 'KSU OWLS',
-            'ELON', 'ELON PHOENIX',
-            'WEBER STATE', 'WEBER',
-            'MONTANA STATE', 'MONTANA', 'MONTANA GRIZZLIES',
-            'NORTH DAKOTA', 'NORTH DAKOTA STATE', 'NDSU',
-            'SOUTH DAKOTA', 'SOUTH DAKOTA STATE', 'SDSU',
-            'PORTLAND STATE', 'PSU VIKINGS',
-            'NORTHERN ARIZONA', 'NAU',
-            'IDAHO STATE', 'ISU BENGALS',
-            'ILLINOIS STATE', 'ISU REDBIRDS',
-            'JAMES MADISON', 'JMU',  # Note: JMU is now FBS but often still in FCS data
-            'DELAWARE', 'DELAWARE STATE',
-            'VILLANOVA', 'NOVA',
-            'RICHMOND', 'RICHMOND SPIDERS',
-            'WILLIAM & MARY', 'WILLIAM AND MARY',
-            'FURMAN', 'FURMAN PALADINS',
-            'SAMFORD', 'SAMFORD BULLDOGS',
-            'CHATTANOOGA', 'UTC',
-            'CITADEL', 'THE CITADEL',
-            'VMI', 'VIRGINIA MILITARY',
-            'WOFFORD', 'WOFFORD TERRIERS',
-            'MERCER', 'MERCER BEARS',
-            'GARDNER-WEBB', 'GARDNER WEBB',
-            'PRESBYTERIAN', 'PC',
-            'CAMPBELL', 'CAMPBELL FIGHTING CAMELS',
-            'STETSON', 'STETSON HATTERS',
-            'VALPARAISO', 'VALPO',
-            'DAVIDSON', 'DAVIDSON WILDCATS',
-            'DRAKE', 'DRAKE BULLDOGS',
-            'BUTLER', 'BUTLER BULLDOGS',
-            'MOREHEAD STATE', 'MOREHEAD',
-            'TENNESSEE STATE', 'TSU',
-            'TENNESSEE TECH', 'TTU',
-            'EASTERN KENTUCKY', 'EKU',
-            'EASTERN ILLINOIS', 'EIU',
-            'SOUTHEAST MISSOURI', 'SEMO',
-            'SOUTHERN ILLINOIS', 'SIU',
-            'NORTHERN IOWA', 'UNI',
-            'YOUNGSTOWN STATE', 'YSU',
-            'MISSOURI STATE', 'MOSTATE',
-            'INDIANA STATE', 'ISU SYCAMORES',
-            'WESTERN ILLINOIS', 'WIU',
-            'NORTH DAKOTA FIGHTING HAWKS',
-            'SOUTH DAKOTA COYOTES',
-            'IDAHO VANDALS',  # Idaho dropped to FCS
-            'PORTLAND STATE VIKINGS',
-            'NORTHERN ARIZONA LUMBERJACKS',
-            'ILLINOIS STATE REDBIRDS',
-            'WEBER STATE WILDCATS',
-            'SOUTHERN UTAH', 'SUU',
-            'NORTHERN COLORADO', 'UNC BEARS',
-            'SACRAMENTO STATE', 'SAC STATE',
-            'CAL POLY', 'CALIFORNIA POLYTECHNIC',
-            'UC DAVIS', 'CALIFORNIA DAVIS',
-            'EASTERN WASHINGTON', 'EWU',
-            'IDAHO', 'IDAHO VANDALS',
-            'MONTANA STATE BOBCATS',
-            'ALABAMA STATE', 'ASU HORNETS',
-            'ALABAMA A&M', 'AAMU',
-            'ALCORN STATE', 'ALCORN',
-            'BETHUNE-COOKMAN', 'BETHUNE COOKMAN', 'BCU',
-            'FLORIDA A&M', 'FAMU',
-            'GRAMBLING', 'GRAMBLING STATE',
-            'JACKSON STATE', 'JSU TIGERS',
-            'MISSISSIPPI VALLEY', 'MVSU',
-            'PRAIRIE VIEW', 'PRAIRIE VIEW A&M', 'PVAMU',
-            'SOUTHERN', 'SOUTHERN UNIVERSITY', 'SU',
-            'TEXAS SOUTHERN', 'TXSO',
-            'ARKANSAS-PINE BLUFF', 'UAPB',
-            'NORFOLK STATE', 'NSU',
-            'NORTH CAROLINA A&T', 'NC A&T', 'NCAT',
-            'NORTH CAROLINA CENTRAL', 'NCCU',
-            'SOUTH CAROLINA STATE', 'SCSU',
-            'DELAWARE STATE', 'DSU',
-            'HOWARD', 'HOWARD BISON',
-            'MORGAN STATE', 'MSU BEARS',
-            'SAVANNAH STATE', 'SSU',
-            'MAINE', 'MAINE BLACK BEARS',
-            'NEW HAMPSHIRE', 'UNH',
-            'RHODE ISLAND', 'URI',
-            'STONY BROOK', 'SBU',
-            'ALBANY', 'UALBANY',
-            'TOWSON', 'TOWSON TIGERS',
-            'MONMOUTH', 'MONMOUTH HAWKS',
-            'SACRED HEART', 'SHU',
-            'WAGNER', 'WAGNER SEAHAWKS',
-            'DUQUESNE', 'DUQUESNE DUKES',
-            'ROBERT MORRIS', 'RMU',
-            'SAINT FRANCIS', 'ST FRANCIS', 'SFU',
-            'CENTRAL CONNECTICUT', 'CCSU',
-            'LONG ISLAND', 'LIU',
-            'BRYANT', 'BRYANT BULLDOGS',
-            'COLUMBIA', 'COLUMBIA LIONS',
-            'CORNELL', 'CORNELL BIG RED',
-            'DARTMOUTH', 'DARTMOUTH BIG GREEN',
-            'HARVARD', 'HARVARD CRIMSON',
-            'PENN', 'PENNSYLVANIA', 'UPENN',
-            'PRINCETON', 'PRINCETON TIGERS',
-            'YALE', 'YALE BULLDOGS',
-            'BROWN', 'BROWN BEARS',
-            'GEORGETOWN', 'GEORGETOWN HOYAS',
-            'BUCKNELL', 'BUCKNELL BISON',
-            'COLGATE', 'COLGATE RAIDERS',
-            'FORDHAM', 'FORDHAM RAMS',
-            'HOLY CROSS', 'HC',
-            'LAFAYETTE', 'LAFAYETTE LEOPARDS',
-            'LEHIGH', 'LEHIGH MOUNTAIN HAWKS',
-            'MARIST', 'MARIST RED FOXES',
-            'AUSTIN PEAY', 'APSU',
-            'MURRAY STATE', 'MSU RACERS',
-            'TENNESSEE MARTIN', 'UTM',
-            'MCNEESE', 'MCNEESE STATE',
-            'NICHOLLS', 'NICHOLLS STATE',
-            'NORTHWESTERN STATE', 'NSU DEMONS',
-            'SOUTHEASTERN LOUISIANA', 'SELU',
-            'HOUSTON BAPTIST', 'HBU',
-            'INCARNATE WORD', 'UIW',
-            'LAMAR', 'LAMAR CARDINALS',
-            'SAM HOUSTON', 'SAM HOUSTON STATE', 'SHSU',
-            'STEPHEN F AUSTIN', 'SFA',
-            'ABILENE CHRISTIAN', 'ACU',
-            'CENTRAL ARKANSAS', 'UCA',
-            'TARLETON STATE', 'TARLETON',
-            'UTAH TECH', 'DIXIE STATE',
-            'SOUTHERN UTAH THUNDERBIRDS',
-            'HAMPTON', 'HAMPTON PIRATES',
-            'CHARLESTON SOUTHERN', 'CSU BUCCANEERS',
-            'COASTAL CAROLINA', 'CCU',  # Now FBS but sometimes in FCS data
-            'LIBERTY', 'LIBERTY FLAMES',  # Now FBS but sometimes in FCS data
-        }
-        
-        # Convert all to uppercase for consistent matching
-        return {team.upper() for team in fcs_teams}
+        """FCS school names to filter out (SPEC §5.5).
+
+        Sourced from the season team registry (CFBD `/teams` rows with
+        `classification == "fcs"`), not a hardcoded list. School names are the
+        UPPERCASE match key `is_fcs_team` checks after `_clean_input`.
+        """
+        return set(get_fcs_names())
     
     def is_fcs_team(self, team_name: str) -> bool:
         """
