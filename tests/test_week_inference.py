@@ -67,7 +67,7 @@ class TestWeekInference(unittest.TestCase):
         self.assertEqual(weeks["0"]["end"], "2026-08-29")
         # Ranges are contiguous and ordered (no gaps/overlaps).
         ordered = sorted(weeks.items(), key=lambda kv: int(kv[0]))
-        for (_, prev), (_, cur) in zip(ordered, ordered[1:]):
+        for (_, prev), (_, cur) in zip(ordered, ordered[1:], strict=False):
             prev_end = date.fromisoformat(prev["end"])
             cur_start = date.fromisoformat(cur["start"])
             self.assertEqual((cur_start - prev_end).days, 1)
