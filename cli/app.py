@@ -334,7 +334,7 @@ def check_configuration() -> bool:
     print(f"  Debug mode: {config.debug}")
     print(f"  Log level: {config.log_level}")
     print(f"  Cache TTL: {config.cache_ttl}s")
-    print(f"  Rate limits: Odds API {config.rate_limit_odds}/day, ESPN {config.rate_limit_espn}/min")
+    print(f"  Odds API budget: {config.odds_monthly_budget} credits/month (D5); ESPN {config.rate_limit_espn}/min")
     
     # Check factor weights
     total_weight = config.coaching_edge_weight + config.situational_context_weight + config.momentum_factors_weight

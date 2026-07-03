@@ -133,6 +133,7 @@ class ScheduleGame:
     away_points: int | None = None
     start_date: str | None = None
     completed: bool = False
+    neutral_site: bool = False
 
 
 @dataclass
@@ -153,12 +154,23 @@ class BookLine:
 
 
 @dataclass
+class LineObservation:
+    """One "as-of T" reading of a game's book lines (SPEC §5.4.3). `fetched_at` is when
+    this reading was taken; `consensus_spread` is the mean home spread across books."""
+    fetched_at: str
+    lines: list[BookLine] = field(default_factory=list)
+    consensus_spread: float | None = None
+
+
+@dataclass
 class GameLines:
-    """All book lines for one game (`market_sentiment`). Line-movement history is
-    `missing` in core Phase 1 (D6/SCHEMA §4) — only current + opening are present."""
+    """A game's line-observation series (1c). The snapshot freezes only observation #1
+    (the prediction-time reading, in the content hash); the full series lives in the
+    append-only `data/lines/` store — closing line = last observation before `kickoff`."""
     home_team: str
     away_team: str
-    lines: list[BookLine] = field(default_factory=list)
+    kickoff: str | None = None
+    observations: list[LineObservation] = field(default_factory=list)
 
 
 @dataclass

@@ -89,8 +89,10 @@ check("no hardcoded conference lists in application code (data/utils/engine/fact
 prov = reg.provenance
 check("registry artifact has provenance", prov.get("source") == "cfbd"
       and bool(prov.get("fetched_at")), str({k: prov.get(k) for k in ("source", "year")}))
-check("D1 calendar corroboration runs (loud warning, not silent)",
-      len(reg.corroborate_calendar()) > 0)
+# D8: the calendar is regenerated from CFBD, so corroboration must now be silent (0 warnings).
+_cal_warnings = reg.corroborate_calendar()
+check("calendar corroboration returns 0 warnings (D8 — regenerated from CFBD)",
+      len(_cal_warnings) == 0, f"{len(_cal_warnings)} warning(s)")
 
 # === 1b — snapshot-first data layer + engine cutover =========================
 # safe_api_call + all neutral/default fabrication removed from application code.
@@ -134,10 +136,31 @@ for name in ("test_full_prediction_runs_with_all_networking_disabled",
     present = name in (ROOT / "tests" / "test_no_network.py").read_text()
     check(f"acceptance test present: {name}", present)
 
-# === 1c — recorded now, satisfied by the next slice ==========================
-todo("1c: schedule-intelligence unit tests (travel/rest/timezone) with fixtures")
-todo("1c: closing-line 'as-of T' capture + Odds budget guard")
-todo("1c: migrate results_fetcher + schedule_client off v1 cfbd_client.get_games")
+# === 1c — schedule intelligence + closing lines + inspection tooling =========
+# Schedule-intelligence fixture unit tests (SPEC §5 acceptance: travel/rest/timezone).
+si_tests = (ROOT / "tests" / "test_schedule_intel.py").read_text()
+for name in ("test_haversine_known_city_pair", "test_road_game_travel_and_westward_tz",
+             "test_short_week_flag", "test_utc_offset_dst_aware", "test_bye_detection"):
+    check(f"schedule-intel fixture test present: {name}", name in si_tests)
+check("data/schedule_intel.py provides compute_schedule_intel",
+      "def compute_schedule_intel" in (ROOT / "data" / "schedule_intel.py").read_text())
+
+# Closing-line 'as-of T' capture: append-only store + snapshot immutability.
+check("append-only line store exists (data/snapshot/lines.py)",
+      (ROOT / "data" / "snapshot" / "lines.py").exists())
+check("closing-line append leaves snapshot_id unchanged (immutability test present)",
+      "test_append_does_not_change_snapshot_id_or_bytes" in
+      (ROOT / "tests" / "test_lines.py").read_text())
+check("D8 calendar: season_calendar has no Week 0",
+      "0" not in json.loads((ROOT / "data" / "season_calendar_2026.json").read_text())["weeks"])
+
+# v1 CFBD client shim retired; consumers on v2.
+v1_gone = not (ROOT / "data" / "cfbd_client.py").exists()
+v1_refs = [p.relative_to(ROOT).as_posix() for p in
+           [*(ROOT / "data").rglob("*.py"), *(ROOT / "utils").rglob("*.py")]
+           if "data.cfbd_client" in p.read_text() or "CFBDataClient" in p.read_text()]
+check("v1 data/cfbd_client.py deleted; no v1 references remain",
+      v1_gone and not v1_refs, ", ".join(v1_refs) or "clean")
 
 # --- Report -------------------------------------------------------------------
 print("Phase 1 acceptance checks:")
@@ -154,6 +177,7 @@ suite_ok = suite.returncode == 0
 print(f"  [{'PASS' if suite_ok else 'FAIL'}] full test suite")
 failed += not suite_ok
 
-print(f"\n{'ALL 1a+1b CHECKS PASSED' if failed == 0 else f'{failed} CHECK(S) FAILED'}"
-      f" ({len(pending)} pending for 1c)")
+_pending_note = f" ({len(pending)} pending)" if pending else " — Phase 1 data layer complete"
+print(f"\n{'ALL PHASE 1 CHECKS PASSED' if failed == 0 else f'{failed} CHECK(S) FAILED'}"
+      f"{_pending_note}")
 sys.exit(1 if failed else 0)

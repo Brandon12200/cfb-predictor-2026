@@ -121,12 +121,35 @@ def test_empty_fbs_artifact_raises(tmp_path):
 
 
 # -- calendar corroboration (D1, loud warning not hard-fail) ------------------
-def test_corroborate_calendar_reports_real_offset(real_registry):
-    # The hand-built Sunday-anchored calendar differs from CFBD by design; the
-    # corroboration must surface those as warnings (not silently pass, not raise).
-    warnings = real_registry.corroborate_calendar()
-    assert warnings, "expected calendar corroboration to surface the known offset"
-    assert any("week 0" in w for w in warnings)  # week 0 absent from CFBD
+def test_corroborate_calendar_clean_after_d8(real_registry):
+    # Post-D8 the production calendar is regenerated from CFBD, so corroboration is
+    # silent (0 warnings). A mismatch fixture is exercised separately below.
+    assert real_registry.corroborate_calendar() == []
+
+
+def test_corroborate_calendar_flags_a_real_mismatch(tmp_path):
+    # Guard the mechanism itself: a hand calendar that disagrees with CFBD must warn.
+    teams = tmp_path / "teams.json"
+    teams.write_text(json.dumps({
+        "_provenance": {}, "fbs": [{"school": "Georgia", "conference": "SEC",
+                                    "alternateNames": []}], "fcs": [],
+    }))
+    cal = tmp_path / "cal.json"
+    cal.write_text(json.dumps({"_provenance": {}, "weeks": [
+        {"week": 1, "seasonType": "regular", "startDate": "2026-08-29T07:00:00Z",
+         "endDate": "2026-09-08T06:59:00Z"}]}))
+    import data.team_registry as R
+    reg = TeamRegistry(teams_artifact=teams, calendar_artifact=cal)
+    # Point the corroboration at a hand calendar whose week-1 start disagrees with CFBD.
+    orig = R._SEASON_CALENDAR
+    bad = tmp_path / "hand.json"
+    bad.write_text(json.dumps({"weeks": {"1": {"start": "2026-09-01", "end": "2026-09-07"}}}))
+    R._SEASON_CALENDAR = bad
+    try:
+        warnings = reg.corroborate_calendar()
+    finally:
+        R._SEASON_CALENDAR = orig
+    assert any("week 1" in w for w in warnings)
 
 
 def test_corroborate_calendar_missing_artifact_is_quiet(tmp_path):

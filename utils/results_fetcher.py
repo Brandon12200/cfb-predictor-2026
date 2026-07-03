@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 
 from data.espn_client import ESPNStatsClient
-from data.cfbd_client import CFBDataClient
+from data.clients.cfbd_v2 import get_cfbd_v2_client
 from utils.normalizer import normalizer as team_name_normalizer
 
 
@@ -19,7 +19,10 @@ class ResultsFetcher:
     
     def __init__(self):
         self.espn_client = ESPNStatsClient()
-        self.cfbd_client = CFBDataClient()
+        try:
+            self.cfbd_client = get_cfbd_v2_client()  # v2 /games (raw shape); v1 client retired (1c)
+        except Exception:
+            self.cfbd_client = None
     
     def fetch_game_results(self, week: int, season: int = 2025) -> List[Dict]:
         """
@@ -179,11 +182,12 @@ class ResultsFetcher:
                 # Only process completed games
                 if not game.get('completed', False):
                     continue
-                
-                home_team = game.get('home_team', '')
-                away_team = game.get('away_team', '')
-                home_points = game.get('home_points', 0)
-                away_points = game.get('away_points', 0)
+
+                # CFBD v2 /games is camelCase (homeTeam/homePoints/startDate).
+                home_team = game.get('homeTeam', '')
+                away_team = game.get('awayTeam', '')
+                home_points = game.get('homePoints', 0)
+                away_points = game.get('awayPoints', 0)
                 
                 if home_team and away_team and (home_points > 0 or away_points > 0):
                     result = {
@@ -193,7 +197,7 @@ class ResultsFetcher:
                         'home_score': int(home_points) if home_points else 0,
                         'away_score': int(away_points) if away_points else 0,
                         'actual_margin': int(home_points or 0) - int(away_points or 0),
-                        'game_date': game.get('start_date', ''),
+                        'game_date': game.get('startDate', ''),
                         'week': week,
                         'season': season,
                         'status': 'final',

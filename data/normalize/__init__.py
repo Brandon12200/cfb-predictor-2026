@@ -17,6 +17,7 @@ from data.normalize.models import (  # noqa: F401
     DerivedMetrics,
     GameContext,
     GameLines,
+    LineObservation,
     ScheduleGame,
     TeamData,
     TeamInfo,

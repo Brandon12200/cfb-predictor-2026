@@ -114,21 +114,44 @@ def test_normalize_venue_parses_elevation_string():
 
 
 # -- Odds converter -----------------------------------------------------------
-def _event(home, away, points):
-    return {"home_team": home, "away_team": away, "bookmakers": [
+def _event(home, away, points, commence="2026-08-30T23:30:00Z"):
+    return {"home_team": home, "away_team": away, "commence_time": commence, "bookmakers": [
         {"key": prov, "markets": [{"key": "spreads", "outcomes": [
             {"name": home, "point": pt}, {"name": away, "point": -pt}]}]}
         for prov, pt in points]}
 
 
-def test_normalize_lines_and_consensus():
+def test_normalize_lines_observation_with_kickoff_and_consensus():
     events = [_event("Georgia", "Clemson", [("fanduel", -3.5), ("draftkings", -3.0)])]
-    lines = odds.normalize_lines(events)
+    lines = odds.normalize_lines(events, fetched_at="2026-08-26T12:00:00Z")
     gl = lines[("GEORGIA", "CLEMSON")]
-    assert {ln.provider for ln in gl.lines} == {"fanduel", "draftkings"}
-    assert odds.consensus_spread(gl) == -3.2  # mean(-3.5,-3.0) rounded
+    assert gl.kickoff == "2026-08-30T23:30:00Z"
+    assert len(gl.observations) == 1
+    obs = gl.observations[0]
+    assert obs.fetched_at == "2026-08-26T12:00:00Z"
+    assert {ln.provider for ln in obs.lines} == {"fanduel", "draftkings"}
+    assert obs.consensus_spread == -3.2  # mean(-3.5,-3.0) rounded
 
 
 def test_consensus_none_when_no_book_posted():
-    gl = odds.normalize_lines([_event("Georgia", "Clemson", [])])[("GEORGIA", "CLEMSON")]
-    assert odds.consensus_spread(gl) is None  # missing, not fabricated 0.0
+    gl = odds.normalize_lines([_event("Georgia", "Clemson", [])],
+                              fetched_at="2026-08-26T12:00:00Z")[("GEORGIA", "CLEMSON")]
+    assert gl.observations[0].consensus_spread is None  # missing, not fabricated 0.0
+
+
+def test_closing_observation_is_last_before_kickoff():
+    entry = {"kickoff": "2026-08-30T23:30:00Z", "observations": [
+        {"fetched_at": "2026-08-26T12:00:00Z", "consensus_spread": -3.0},
+        {"fetched_at": "2026-08-30T22:00:00Z", "consensus_spread": -4.5},   # closest before kickoff
+        {"fetched_at": "2026-09-01T00:00:00Z", "consensus_spread": -5.0}]}  # after kickoff → excluded
+    closing = odds.closing_observation(entry)
+    assert closing["consensus_spread"] == -4.5
+
+
+def test_closing_observation_at_kickoff_boundary_is_included():
+    # An observation taken exactly at kickoff counts as "before" (at-or-before), and
+    # mixed Z / +00:00 timestamp formats compare correctly.
+    entry = {"kickoff": "2026-08-30T23:30:00Z", "observations": [
+        {"fetched_at": "2026-08-30T23:30:00+00:00", "consensus_spread": -6.0},
+        {"fetched_at": "2026-08-30T23:31:00+00:00", "consensus_spread": -9.0}]}  # after kickoff
+    assert odds.closing_observation(entry)["consensus_spread"] == -6.0
