@@ -1,0 +1,29 @@
+# CFB Contrarian Predictor — 2026
+
+Rule-based college football spread model. Frozen weights, git audit trail, forward-tested only.
+**The authoritative build plan is `docs/SPEC.md`; the agentic build process is §14 (Agentic Implementation Guide) within it. Read both — the relevant SPEC phase and §14 — before any work.**
+
+## Commands
+- `make test` — full test suite (must pass before any commit)
+- `make verify-phase-N` — executable acceptance criteria for phase N (Phase 0 creates these targets)
+- `make lint` — ruff + mypy on new code
+
+## Binding principles (never violate; full definitions in docs/SPEC.md)
+1. **Data Recency Principle:** team-quality inputs use current-season data only. Prior seasons only for market-behavior calibration and roster-continuity-aware priors (SPEC §2).
+2. **No hardcoded team/conference names** anywhere in application code. All membership comes from the season team registry (SPEC §5.5).
+3. **Freeze discipline:** after tag `v2026-frozen` exists, `factors/`, `engine/`, and weight/threshold config are immutable for the season.
+4. **No fabricated data:** missing data is recorded as missing with provenance — never neutral-filled (SPEC §5.2).
+5. Files under `data/predictions/`, `data/results/`, `data/archive/` are append-only historical artifacts. Never edit or delete.
+
+## Workflow
+- One phase = one branch (`phase-N-short-name`) = one PR. Plan before implementing.
+- A phase is done only when `make verify-phase-N` passes; paste its output in the PR as evidence.
+- Keep docs current as you work: `docs/SCHEMA.md`, `docs/CODE_AUDIT.md`, `docs/PIPELINE.md`, `docs/CALIBRATION_LOG.md`, `docs/DECISIONS.md`.
+- SPEC §16 contains resolved, binding owner decisions — follow them. When the spec is ambiguous on anything NOT covered there: ask the owner, then record the answer in `docs/DECISIONS.md`. Never invent a resolution.
+- `.claude/` config (agents, settings.json, hooks), `CLAUDE.md`, and docs are committed normally (repo is private; may be published Aug 2026). Only machine-local/secret bits stay ignored: `.claude/settings.local.json`, `.claude/memory/`, `CLAUDE.local.md`, `.env*`. **Surviving constraint (D3):** commit messages and PR descriptions contain no AI attribution or tool references, and `includeCoAuthoredBy` stays `false` — history can't be easily scrubbed once published.
+
+## Owner-only decisions (propose, never decide)
+Calibration/weight changes, the freeze itself, changes to SPEC §16 decisions, anything that costs money (API tiers).
+
+## Language & style
+Python 3.11+ only (decided — do not propose rewrites). Typed on new code. JSON on disk is the source of truth; no databases.

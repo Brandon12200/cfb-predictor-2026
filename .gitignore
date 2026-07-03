@@ -1,36 +1,78 @@
-# Environment Variables
+# ============================================================
+# CFB Predictor 2026 — .gitignore
+# NOTE: docs/, reports/, CLAUDE.md, and .claude/ (except local
+# settings) are deliberately TRACKED. The old blanket "*.md"
+# ignore rule is gone — markdown docs are load-bearing here.
+# ============================================================
+
+# Environment variables & secrets
 .env
 .env.local
 .env.*.local
+api_keys.txt
+secrets.txt
+*.pem
+*.key
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
 build/
 develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
-parts/
 sdist/
-var/
 wheels/
 *.egg-info/
-.installed.cfg
 *.egg
 MANIFEST
 
-# Virtual Environment
+# Virtual environments (both the dir form and a stray FILE named venv)
+venv
 venv/
 env/
 ENV/
 .venv/
+.python-version
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.cache/
+*.cache
+.ipynb_checkpoints
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Project runtime artifacts (regenerable; NOT the tracked data)
+data/cache/
+output/
+logs/
+*.log
+*.tmp
+*.temp
+temp/
+tmp/
+*.bak
+*.backup
+
+# Local-only Claude Code state. Per D3 (docs/DECISIONS.md), .claude/ config,
+# CLAUDE.md, and docs are now COMMITTED — only machine-local and secret
+# bits stay ignored.
+.claude/settings.local.json
+.claude/memory/
+CLAUDE.local.md
 
 # IDE
 .vscode/
@@ -48,69 +90,15 @@ ENV/
 ehthumbs.db
 Thumbs.db
 
-# Logs
-*.log
-logs/
-
-# Cache
-.cache/
-*.cache
-
-# Coverage reports
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# API Keys and Secrets
-api_keys.txt
-secrets.txt
-*.pem
-*.key
-
-# Data files (optional - uncomment if you don't want to track data)
-# data/*.json
-# data/*.csv
-# *.db
-# *.sqlite
-
-# Temporary files
-*.tmp
-*.temp
-temp/
-tmp/
-
-# Node modules (if you add any JS tools)
+# Node (if JS tooling ever appears)
 node_modules/
 
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# Backup files
-*.bak
-*.backup
-
-# Planning documents
-DEVELOPMENT.md
-cfb_predictor_spec.md
-implementation_plan.md
-
-# Virtual Environment
-venv/
-htmlcov/
-
-# Learning folder
-learning/
-
-# Markdown files except README
-*.md
-!README.md
+# ============================================================
+# Intentionally NOT ignored (do not re-add):
+#   *.md                    -> docs, reports, CLAUDE.md must commit
+#   data/predictions/       -> the audit trail
+#   data/results/           -> the audit trail
+#   data/snapshots/         -> reproducibility bundles + provenance
+#   data/projections/       -> season drift tracking
+#   reports/                -> committed by the weekly pipeline
+# ============================================================
