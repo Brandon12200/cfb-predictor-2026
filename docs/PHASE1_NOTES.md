@@ -6,11 +6,12 @@ Working handoff notes for Phase 1 (SPEC §5). Companion to the approved plan (se
 exploration so no session has to re-derive it.
 
 ## Current status (branch `phase-1-data-layer`)
-- **Done (commit 5f364e9):** `data/clients/cfbd_v2.py` — dumb fetch-parse-raise CFBD **v2** client, live-verified against Tier 1; `tests/test_cfbd_v2_client.py` (7 mocked); D5/D6 in `docs/DECISIONS.md`; lint scope extended to `data/clients/`. Suite: 286 passed, 5 skipped, offline.
-- **Next (1a):** `data/team_registry.py` (see §5.5 + SCHEMA §5) → then finish `docs/SCHEMA.md` dataclasses in `data/normalize/`.
-- **Then 1b:** snapshot builder + provenance + gut `safe_api_call`/neutral-fill + engine-reads-snapshot + no-network test + reproducibility contract.
-- **Then 1c:** schedule intelligence + closing-line "as-of T" capture + `cfb data inspect`/`status`.
-- **Deferred → 1.5:** availability reports + line-movement history.
+- **Done (commit 5f364e9):** `data/clients/cfbd_v2.py` — dumb fetch-parse-raise CFBD **v2** client, live-verified against Tier 1; `tests/test_cfbd_v2_client.py`; D5/D6 in `docs/DECISIONS.md`.
+- **Done (1a — team registry):** `data/team_registry.py` + committed `data/registry/{fbs_teams_2026.json,calendar_2026.json}` (provenance-stamped; D7). Added `CFBDv2Client.get_teams`. Retired `data/conferences.py`, `schedule_client._get_hardcoded_conference`, and the normalizer's `_build_team_mappings`/`_build_fcs_teams` (now sourced from the registry; public API unchanged). `validate_membership_counts` + `corroborate_calendar` (D1) + diff-aware `refresh_registry`. Tests: `test_team_registry.py` (17), `test_registry_reconciliation.py` (9), fixture `tests/fixtures/legacy_normalizer_vocab.json`. `scripts/verify_phase_1.py` + `make verify-phase-1` (1a checks pass; 1b/1c PENDING). Suite: **312 passed, 5 skipped**, offline; lint/mypy clean.
+- **Next (1a — schema):** canonical dataclasses in `data/normalize/` matching `docs/SCHEMA.md`.
+- **Then 1b:** snapshot builder + provenance + gut `safe_api_call`/neutral-fill + engine-reads-snapshot + no-network test + reproducibility contract. **Wire `validate_membership_counts` (hard-fail) + `corroborate_calendar` (warn) into the first snapshot build (SPEC §5.5.2).**
+- **Then 1c:** schedule intelligence (venue lat/long/elev/tz already in the registry artifact) + closing-line "as-of T" capture + `cfb data inspect`/`status`.
+- **Deferred → 1.5:** availability reports + line-movement history; normalizer alias/ESPN/Odds **format** dicts (staged — need ESPN/Odds client sampling; CFBD `alternateNames` already captured via `registry.get_aliases`).
 
 ## Deletion map — what Phase 1 REMOVES (SPEC §5.2 acceptance: these must not exist)
 `safe_api_call` decorator + all neutral/default fabrication. Verify with grep at the end.
@@ -19,11 +20,13 @@ exploration so no session has to re-derive it.
 - `data/espn_client.py`: `_get_neutral_team_data` `:771-778`; `_get_neutral_coaching_data` `:780-790`; `_get_neutral_stats_data` `:792-808`; `_estimate_coaching_experience` `:765-769` (hardcoded 5).
 - Status sentinels `'neutral_fallback'`/`'default_fallback'`/`'cfbd_data'` leak through quality/source logic — remove with the provenance manifest.
 
-## Hardcoded team/conference lists to retire (registry replaces all)
-- `data/conferences.py` (interim Phase-0 module — fold into `data/team_registry.py`).
-- `data/schedule_client.py::_get_hardcoded_conference` `:410-452` (Phase-0 residual; the Phase-0 verify grep only covered `cli/`+`main.py`).
-- `utils/normalizer.py` hardcoded dicts: `_build_team_mappings` `:202-261`, `_build_espn_mappings` `:263-344`, `_build_odds_mappings` `:345-388`, `_build_alias_mappings` `:389-647`, `_build_fcs_teams` `:649-786`. Keep the public API (`normalize`, `is_fcs_team`, `is_fbs_vs_fcs_matchup`); source its data from the registry (CFBD `/teams/fbs.alternateNames`).
-- Extend `scripts/verify_phase_*` grep for `'BIG TEN':` etc. to `data/`, `utils/normalizer.py`, `schedule_client`.
+## Hardcoded team/conference lists — retirement status (registry replaces membership)
+- ✅ `data/conferences.py` — **deleted** (folded into `data/team_registry.py`; 3 importers repointed: `cli/app.py`, `data/schedule_client.py`, `scripts/verify_phase_0.py`).
+- ✅ `data/schedule_client.py::_get_hardcoded_conference` — **deleted**; the `_extract_conference_name` fallback now normalizes then calls `registry.get_team_conference`.
+- ✅ `utils/normalizer.py` `_build_team_mappings` + `_build_fcs_teams` — **re-sourced** from `registry.get_fbs_canonical_names()` / `get_fcs_names()` (public API unchanged). Canonical went 134→138 (adds the 4 new FBS members; bonus: `normalize('Missouri State')` no longer fuzzy-matches to `MISSISSIPPI STATE`).
+- ⏳ `_build_espn_mappings`, `_build_odds_mappings`, `_build_alias_mappings` — **staged** (name-format plumbing, not membership; need ESPN/Odds client sampling to re-source safely). `registry.get_aliases()` exposes CFBD `alternateNames` ready for this.
+- ✅ `engine/confidence_calculator.py::_is_major_conference_game` — the last hardcoded `{'SEC','BIG TEN',...}` set (a pre-existing initial-commit residual, surfaced by the code review) now reads `registry.get_p4_conference_names()`.
+- ✅ `scripts/verify_phase_1.py` greps **all application code** (`data/`, `utils/`, `engine/`, `factors/`, `cli/`, `main.py`) for `BIG TEN`/`PAC-12` conference-name literals (not colon-anchored — catches sets/lists/dict-keys), excluding only the sanctioned `data/team_registry.py` (documented `P4_CONFERENCES`/`EXPECTED_COUNTS_2026`). `verify_phase_0` updated: ACC check now `CAL` (canonical) not `CALIFORNIA`.
 
 ## The 3 network-bypassing factors (move behind the snapshot in 1b)
 - `factors/scheduling_fatigue.py:94` → `get_games` → snapshot `games`

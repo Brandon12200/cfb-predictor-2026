@@ -14,7 +14,7 @@ from config import config
 from utils.rate_limiter import rate_limiter_manager
 from data.cache_manager import cache_manager
 from utils.normalizer import normalizer
-from data.conferences import get_p4_conference_names
+from data.team_registry import get_p4_conference_names, get_team_conference
 
 
 class CFBScheduleClient:
@@ -397,60 +397,19 @@ class CFBScheduleClient:
                         self.logger.debug(f"Found conference in competitor: {conf_name}")
                         return conf_name
         
-        # Hardcode P4 teams based on team name if ESPN data is missing
-        team_name = team_data.get('displayName', '').upper()
-        hardcoded_conf = self._get_hardcoded_conference(team_name)
-        if hardcoded_conf:
-            self.logger.debug(f"Using hardcoded conference for {team_name}: {hardcoded_conf}")
-            return hardcoded_conf
-        
-        self.logger.debug(f"No conference found for {team_name}, using Independent")
+        # No conference in the ESPN payload — fall back to the season registry (the
+        # single sourced home for membership) via the normalizer. Returns the
+        # tracked-slate conference key (P4 or INDEPENDENT), else 'Independent'.
+        display = team_data.get('displayName', '')
+        canonical = normalizer.normalize(display)
+        registry_conf = get_team_conference(canonical) if canonical else None
+        if registry_conf:
+            self.logger.debug(f"Registry conference for {display}: {registry_conf}")
+            return registry_conf
+
+        self.logger.debug(f"No conference found for {display}, using Independent")
         return 'Independent'
-    
-    def _get_hardcoded_conference(self, team_name: str) -> Optional[str]:
-        """Get conference for known P4 teams when ESPN data is missing."""
-        p4_teams = {
-            # SEC
-            'ALABAMA': 'SEC', 'ARKANSAS': 'SEC', 'AUBURN': 'SEC', 'FLORIDA': 'SEC',
-            'GEORGIA': 'SEC', 'KENTUCKY': 'SEC', 'LSU': 'SEC', 'MISSISSIPPI': 'SEC',
-            'MISSISSIPPI STATE': 'SEC', 'MISSOURI': 'SEC', 'SOUTH CAROLINA': 'SEC',
-            'TENNESSEE': 'SEC', 'TEXAS': 'SEC', 'TEXAS A&M': 'SEC', 'VANDERBILT': 'SEC',
-            'OKLAHOMA': 'SEC',
-            
-            # BIG TEN
-            'ILLINOIS': 'BIG TEN', 'INDIANA': 'BIG TEN', 'IOWA': 'BIG TEN', 'MARYLAND': 'BIG TEN',
-            'MICHIGAN': 'BIG TEN', 'MICHIGAN STATE': 'BIG TEN', 'MINNESOTA': 'BIG TEN',
-            'NEBRASKA': 'BIG TEN', 'NORTHWESTERN': 'BIG TEN', 'OHIO STATE': 'BIG TEN',
-            'PENN STATE': 'BIG TEN', 'PURDUE': 'BIG TEN', 'RUTGERS': 'BIG TEN',
-            'WISCONSIN': 'BIG TEN', 'OREGON': 'BIG TEN', 'WASHINGTON': 'BIG TEN',
-            'UCLA': 'BIG TEN', 'USC': 'BIG TEN',
-            
-            # BIG 12
-            'BAYLOR': 'BIG 12', 'IOWA STATE': 'BIG 12', 'KANSAS': 'BIG 12',
-            'KANSAS STATE': 'BIG 12', 'OKLAHOMA STATE': 'BIG 12', 'TCU': 'BIG 12',
-            'TEXAS TECH': 'BIG 12', 'WEST VIRGINIA': 'BIG 12', 'CINCINNATI': 'BIG 12',
-            'HOUSTON': 'BIG 12', 'UCF': 'BIG 12', 'BYU': 'BIG 12', 'COLORADO': 'BIG 12',
-            'UTAH': 'BIG 12', 'ARIZONA': 'BIG 12', 'ARIZONA STATE': 'BIG 12',
-            
-            # ACC
-            'BOSTON COLLEGE': 'ACC', 'CLEMSON': 'ACC', 'DUKE': 'ACC', 'FLORIDA STATE': 'ACC',
-            'GEORGIA TECH': 'ACC', 'LOUISVILLE': 'ACC', 'MIAMI': 'ACC', 'NC STATE': 'ACC',
-            'NORTH CAROLINA': 'ACC', 'PITTSBURGH': 'ACC', 'SYRACUSE': 'ACC',
-            'VIRGINIA': 'ACC', 'VIRGINIA TECH': 'ACC', 'WAKE FOREST': 'ACC',
-            'NOTRE DAME': 'ACC'
-        }
-        
-        # Try exact match first
-        if team_name in p4_teams:
-            return p4_teams[team_name]
-        
-        # Try partial matches for common variations
-        for p4_team, conf in p4_teams.items():
-            if p4_team in team_name or any(word in team_name for word in p4_team.split()):
-                return conf
-        
-        return None
-    
+
     def _extract_ranking(self, competitor: Dict) -> Optional[int]:
         """Extract AP/CFP ranking if available."""
         rankings = competitor.get('rankings', [])

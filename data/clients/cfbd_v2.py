@@ -67,6 +67,13 @@ class CFBDv2Client:
         `alternateNames` aliases. This is the canonical team-registry source."""
         return self._get("/teams/fbs", {"year": year})
 
+    def get_teams(self, year: int) -> list[dict]:
+        """ALL teams for a season across every division (FBS + FCS + …), each with
+        `classification`, `conference`, and `alternateNames`. One call yields both
+        the FBS registry (membership + aliases) and the FCS set that `is_fcs_team`
+        needs — cheaper than two division-scoped calls against the shared budget."""
+        return self._get("/teams", {"year": year})
+
     def get_calendar(self, year: int) -> list[dict]:
         """Season weeks with startDate/endDate/seasonType — corroborates D1."""
         return self._get("/calendar", {"year": year})

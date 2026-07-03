@@ -94,3 +94,28 @@ not run offline. Per D4 the full suite is now green and deterministic offline.
   skipped with a Phase 1 reference and should be re-enabled there.
 
 **Result:** `279 passed, 5 skipped, 0 failed` in ~5s, offline.
+
+## Phase 1a — team registry migration (SPEC §5.5)
+
+Replaced hardcoded, divergent membership with the CFBD-sourced season registry
+(`data/team_registry.py`, D7). Deletions are recoverable via git history.
+
+**Deleted**
+- `data/conferences.py` — the interim Phase-0 single-source, folded into the registry.
+- `data/schedule_client.py::_get_hardcoded_conference` (was `:410-452`) — the
+  ESPN-fallback conference lookup now normalizes then queries the registry.
+
+**Re-sourced (kept public API, replaced hardcoded bodies)**
+- `utils/normalizer.py::_build_team_mappings` / `_build_fcs_teams` — now read
+  `registry.get_fbs_canonical_names()` (138) / `get_fcs_names()` (127). The alias /
+  ESPN / Odds **format** dicts are intentionally retained (name-format plumbing, not
+  membership) and staged to a later Phase-1 slice.
+
+**Added**
+- `CFBDv2Client.get_teams(year)` (all-division `/teams`, one call → FBS + FCS split).
+- Committed provenance-stamped artifacts `data/registry/{fbs_teams_2026.json,calendar_2026.json}`.
+- Tests: `test_team_registry.py` (17), `test_registry_reconciliation.py` (9),
+  fixture `tests/fixtures/legacy_normalizer_vocab.json` (frozen pre-migration vocab).
+- `scripts/verify_phase_1.py` + `make verify-phase-1`.
+
+**Result:** `312 passed, 5 skipped, 0 failed`, offline; lint + mypy clean on new code.

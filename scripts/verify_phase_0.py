@@ -65,18 +65,21 @@ check("omitted week == explicit week for same date",
       resolve_week(None, today=in_season) == resolve_week(6, today=in_season) == 6)
 
 # 5. Conference membership resolves through one module; ACC corrected to 17.
-from data.conferences import get_conference_map  # noqa: E402
+from data.team_registry import get_conference_map  # noqa: E402
 
 conf = get_conference_map()
 check("ACC has 17 members", len(conf["ACC"]) == 17, f"got {len(conf['ACC'])}")
-check("ACC includes Stanford, California, SMU",
-      all(t in conf["ACC"] for t in ("STANFORD", "CALIFORNIA", "SMU")))
+# California's canonical name is CAL (the normalizer's authoritative form; the
+# Phase-1 registry retired data/conferences.py, which had used 'CALIFORNIA').
+check("ACC includes Stanford, Cal, SMU",
+      all(t in conf["ACC"] for t in ("STANFORD", "CAL", "SMU")))
 
 # No hardcoded conference membership lists survive in the CLI/entry code — a
-# 'BIG TEN': [...] dict-key literal must only live in data/conferences.py.
+# 'BIG TEN': [...] dict-key literal. Phase 1 (verify_phase_1) extends this grep to
+# data/ + the normalizer; the season registry is now the single sourced home.
 conf_literals = [p.name for p in [ROOT / "main.py", *(ROOT / "cli").glob("*.py")]
                  if "'BIG TEN':" in p.read_text() or '"BIG TEN":' in p.read_text()]
-check("no hardcoded conference lists outside data/conferences.py",
+check("no hardcoded conference lists in main.py/cli",
       not conf_literals, ", ".join(conf_literals) or "none")
 
 # 6. Required Phase 0 docs exist.

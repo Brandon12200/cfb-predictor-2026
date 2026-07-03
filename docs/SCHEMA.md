@@ -92,17 +92,42 @@ behavior, not a defect.
 
 ---
 
-## 5. Team registry surface (SPEC §5.5) — replaces `data/conferences.py`
+## 5. Team registry surface (SPEC §5.5) — **built in 1a**, replaces `data/conferences.py`
 
-The canonical registry (`data/team_registry.py`, built from CFBD `/teams/fbs?year=YYYY`,
-cached in the snapshot with provenance) must provide the current interim surface:
-`get_conference_map()`, `get_all_tracked_teams()`, `get_team_conference(team)`,
-`get_p4_conference_names()` — plus season-start count validation (2026: SEC 16,
-Big Ten 18, Big 12 16, ACC 17, tracked independents incl. Notre Dame) and the
-D1 calendar corroboration (`/calendar?year=2026` vs `data/season_calendar_2026.json`).
-Canonical team-name form is the normalizer's UPPERCASE. CFBD `/teams/fbs` returns
-`alternateNames` per team — the alias source that retires the normalizer's
-hardcoded alias dicts.
+`data/team_registry.py` is the single sourced home for season membership. It loads
+two committed, provenance-stamped artifacts and answers all membership/name queries
+offline; a live CFBD fetch happens only in `refresh_registry` (see D7).
+
+**Artifacts** (`data/registry/`, each with a `_provenance` header — `source`, `endpoint`,
+`year`, `fetched_at`, counts):
+- `fbs_teams_2026.json` — `fbs`: 138 full CFBD `/teams` rows (incl. `location` venue
+  object for 1c: lat/long/elevation/timezone/dome); `fcs`: 127 trimmed rows.
+- `calendar_2026.json` — 16 CFBD `/calendar` week rows (for the D1 corroboration).
+
+**Surface (drop-in for the retired `conferences.py`):** `get_conference_map()` (P4 +
+`INDEPENDENT` bucket → sorted canonical names), `get_all_tracked_teams()`,
+`get_team_conference(team)` (tracked-slate key or `None`), `get_p4_conference_names()`.
+**Normalizer data source:** `get_fbs_canonical_names()` (138), `get_fcs_names()` (127),
+`get_aliases(canonical)`, `iter_fbs()`.
+
+**Name reconciliation:** canonical form is the normalizer's existing UPPERCASE vocabulary.
+`canonical_name(school)` = `CANONICAL_OVERRIDES.get(school, school.upper())`; the 8
+overrides and the enumerated `NEW_FBS_MEMBERS_2026` (4 recent FCS→FBS transitions) are
+the human review checkpoint, gated by `tests/test_registry_reconciliation.py` (structural:
+exact / override / new-member, **no implicit fuzzy**). `conference_key()` maps CFBD's
+title-case conference names ("Big Ten") to the canonical UPPERCASE key ("BIG TEN").
+
+**Validation (built + unit-tested in 1a; wired into the snapshot build in 1b):**
+`validate_membership_counts()` hard-fails on 2026 count drift (SEC 16, Big Ten 18,
+Big 12 16, ACC 17, ≥1 tracked independent); `corroborate_calendar()` emits loud
+warnings (not a hard fail) where the hand-built `season_calendar_2026.json` week
+boundaries diverge from CFBD `/calendar` — currently a systematic ~1-day offset + no
+week 0 in CFBD, surfaced rather than silently trusted (D1).
+
+**Retirement status:** membership + FCS lists retired in 1a. The normalizer's alias /
+ESPN / Odds **format** dicts (`_build_alias/_espn/_odds_mappings`) stay for now (they need
+ESPN/Odds client sampling) and are staged to a later Phase-1 slice — CFBD `alternateNames`
+is captured in the artifact (`get_aliases`) ready to feed that step.
 
 ---
 
