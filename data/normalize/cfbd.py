@@ -31,6 +31,13 @@ def _int(value: Any) -> int | None:
         return None
 
 
+def _float(value: Any) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def normalize_games(raw_games: list[dict]) -> list[ScheduleGame]:
     """CFBD `/games` rows → canonical league-wide season games (scheduling_fatigue)."""
     out: list[ScheduleGame] = []
@@ -107,6 +114,29 @@ def normalize_sp_ratings(raw_rows: list[dict]) -> dict[str, dict[str, Any]]:
             "ranking": _int(row.get("ranking")),
             "offense_rating": offense.get("rating"),
             "defense_rating": defense.get("rating"),
+        }
+    return out
+
+
+def normalize_returning_production(raw_rows: list[dict]) -> dict[str, dict[str, Any]]:
+    """CFBD `/player/returning` rows → {canonical_team: {overall, usage, ...}}.
+
+    A Phase-2 roster-continuity preseason prior (D10). `overall` = `percentPPA`, the
+    standard returning-production fraction (share of last year's PPA returning); the
+    sub-splits are kept for explainability. Preseason this endpoint is often empty
+    (like SP+) — those teams simply don't appear and are recorded `missing`, never
+    neutral-filled; the prior then falls back to flat baseline with max uncertainty."""
+    out: dict[str, dict[str, Any]] = {}
+    for row in raw_rows:
+        team = _norm(row.get("team"))
+        if team is None:
+            continue
+        out[team] = {
+            "overall": _float(row.get("percentPPA")),
+            "usage": _float(row.get("usage")),
+            "passing": _float(row.get("percentPassingPPA")),
+            "rushing": _float(row.get("percentRushingPPA")),
+            "receiving": _float(row.get("percentReceivingPPA")),
         }
     return out
 

@@ -8,7 +8,7 @@
         "kickoff": "2026-09-05T19:30:00Z",
         "observation": {
           "consensus_spread": -7.2,
-          "fetched_at": "2026-07-03T22:45:30.849872+00:00",
+          "fetched_at": "2026-07-03T23:37:10.031577+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -60,7 +60,7 @@
         "kickoff": "2026-09-05T19:30:00Z",
         "observation": {
           "consensus_spread": -7.5,
-          "fetched_at": "2026-07-03T22:45:30.849872+00:00",
+          "fetched_at": "2026-07-03T23:37:10.031577+00:00",
           "lines": [
             {
               "provider": "draftkings",
@@ -107,7 +107,7 @@
         "kickoff": "2026-09-05T23:30:00Z",
         "observation": {
           "consensus_spread": -11.3,
-          "fetched_at": "2026-07-03T22:45:30.849872+00:00",
+          "fetched_at": "2026-07-03T23:37:10.031577+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -154,7 +154,7 @@
         "kickoff": "2026-09-04T00:00:00Z",
         "observation": {
           "consensus_spread": -7.3,
-          "fetched_at": "2026-07-03T22:45:30.849872+00:00",
+          "fetched_at": "2026-07-03T23:37:10.031577+00:00",
           "lines": [
             {
               "provider": "draftkings",
@@ -201,7 +201,7 @@
         "kickoff": "2026-09-06T23:30:00Z",
         "observation": {
           "consensus_spread": -5.7,
-          "fetched_at": "2026-07-03T22:45:30.849872+00:00",
+          "fetched_at": "2026-07-03T23:37:10.031577+00:00",
           "lines": [
             {
               "provider": "draftkings",
@@ -238,7 +238,7 @@
         "kickoff": "2026-09-05T01:00:00Z",
         "observation": {
           "consensus_spread": 22.6,
-          "fetched_at": "2026-07-03T22:45:30.849872+00:00",
+          "fetched_at": "2026-07-03T23:37:10.031577+00:00",
           "lines": [
             {
               "provider": "draftkings",
@@ -280,7 +280,7 @@
         "kickoff": "2026-08-29T19:30:00Z",
         "observation": {
           "consensus_spread": -5.8,
-          "fetched_at": "2026-07-03T22:45:30.849872+00:00",
+          "fetched_at": "2026-07-03T23:37:10.031577+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -332,7 +332,7 @@
         "kickoff": "2026-08-29T16:00:00Z",
         "observation": {
           "consensus_spread": -6.8,
-          "fetched_at": "2026-07-03T22:45:30.849872+00:00",
+          "fetched_at": "2026-07-03T23:37:10.031577+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -384,7 +384,7 @@
         "kickoff": "2026-09-07T23:30:00Z",
         "observation": {
           "consensus_spread": 2.8,
-          "fetched_at": "2026-07-03T22:45:30.849872+00:00",
+          "fetched_at": "2026-07-03T23:37:10.031577+00:00",
           "lines": [
             {
               "provider": "draftkings",
@@ -426,7 +426,7 @@
         "kickoff": "2026-09-06T23:30:00Z",
         "observation": {
           "consensus_spread": -20.5,
-          "fetched_at": "2026-07-03T22:45:30.849872+00:00",
+          "fetched_at": "2026-07-03T23:37:10.031577+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -7810,6 +7810,7 @@
         "week": 15
       }
     ],
+    "returning_production": {},
     "schedule_intel": {
       "AUBURN": {
         "altitude": null,
@@ -16162,8 +16163,8 @@
     }
   },
   "meta": {
-    "built_at": "2026-07-03T22:45:31.181147+00:00",
-    "snapshot_id": "770279313640d3ed",
+    "built_at": "2026-07-03T23:37:10.472163+00:00",
+    "snapshot_id": "c86311adcba8c096",
     "week": 1,
     "year": 2026
   }

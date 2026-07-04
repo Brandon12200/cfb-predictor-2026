@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 # Per-team field-groups the manifest accounts for (100% coverage).
 _TEAM_FIELD_GROUPS = ("info", "coaching", "stats", "schedule", "advanced_stats",
-                      "venue", "sp_rating")
+                      "venue", "sp_rating", "returning_production")
 
 
 class SnapshotBuilder:
@@ -75,6 +75,10 @@ class SnapshotBuilder:
         raw_sp = self._fetch("sp_ratings", lambda: self.cfbd.get_sp_ratings(year), sources)
         sp_ratings = cfbd.normalize_sp_ratings(raw_sp or [])
 
+        raw_rp = self._fetch("returning_production",
+                             lambda: self.cfbd.get_returning_production(year), sources)
+        returning_production = cfbd.normalize_returning_production(raw_rp or [])
+
         raw_odds = self._fetch("betting_lines",
                                lambda: self.odds.get_ncaaf_spreads(), sources)
         lines = odds_norm.normalize_lines(raw_odds or [], sources["betting_lines"]["fetched_at"])
@@ -110,6 +114,7 @@ class SnapshotBuilder:
                 "advanced_stats": "cfbd" if team in advanced else "missing",
                 "venue": "registry" if team in venues else "missing",
                 "sp_rating": "cfbd" if team in sp_ratings else "missing",
+                "returning_production": "cfbd" if team in returning_production else "missing",
             }
 
         # 5. Slate games: betting-line + schedule-intel coverage (both teams tracked).
@@ -155,6 +160,7 @@ class SnapshotBuilder:
             "games": games_dicts,
             "advanced_stats": {t: asdict(a) for t, a in advanced.items()},
             "sp_ratings": sp_ratings,
+            "returning_production": returning_production,
             "venues": venues,
             "schedule_intel": schedule_intel,
             "betting_lines": betting,

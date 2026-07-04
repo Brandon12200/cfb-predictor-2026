@@ -101,6 +101,7 @@ node_modules/
 #   data/results/           -> the audit trail
 #   data/snapshots/         -> reproducibility bundles + provenance
 #   data/lines/             -> append-only line-observation series (closing lines / CLV)
+#   data/ratings/           -> derived per-week power ratings (D13; inspection + projections)
 #   data/projections/       -> season drift tracking
 #   reports/                -> committed by the weekly pipeline
 # ============================================================

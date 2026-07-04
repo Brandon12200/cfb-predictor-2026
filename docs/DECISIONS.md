@@ -75,3 +75,41 @@ Binding owner decisions made outside the resolved SPEC §16 set. Each entry reco
 **Context:** The Phase-0 interim `data/season_calendar_2026.json` (D1) used hand-built, Saturday-anchored Sunday–Saturday weeks with a **Week 0** (per SPEC §16.2, "Week 0 = 2026-08-29"). 1b's D1 corroboration (`corroborate_calendar()` vs CFBD `/calendar?year=2026`) surfaced 16 warnings: a systematic boundary offset (weeks 2–15) plus **CFBD has no Week 0** — it folds the Aug-29 openers into **week 1** (its week-1 window 08-29→09-08). Two independent week-numbering systems (the hand calendar vs CFBD's `week` field, which the snapshot slate filter uses) is a permanent off-by-one hazard at the season opener.
 **Decision:** Regenerate `data/season_calendar_2026.json` from CFBD `/calendar` as the source of truth, adopting CFBD's regular-season week numbering. **There is no Week 0 for 2026** — the Aug-29 opener games are **week 1**. Weeks are `[start, end]` inclusive and non-overlapping (`start` = CFBD `startDate`; `end` = day before the next week's start). This **supersedes SPEC §16.2's Week-0 convention** for 2026. **Owner-approved amendment** (ratified by approving the 1c plan) — an explicit audit-trail choice, not drift. `corroborate_calendar()` now returns **zero** warnings; `verify-phase-1` asserts it.
 **Implications:** The opener games remain fully in scope, just named week 1 — no games are dropped. **Freeze timing is unchanged in substance:** the `v2026-frozen` tag must still precede the first prediction run — now "before the late-August week-1 build" (~Aug 24 target). The disappearance of the "Week 0" label must not relax that. `resolve_week`/`test_week_inference` updated to the new boundaries; Phase 4.5 folds this calendar into `season.yaml`.
+
+---
+
+## D9 — In-house Elo formulation + constants (Phase 2a) — **RATIFIED (owner, 2026-07-03)**
+**Date:** 2026-07-03
+**Context:** SPEC §6.1/§16.4 require an in-house, transparent Elo (not a public-rating blend). The constants must NOT be borrowed from another sport's Elo — FiveThirtyEight's NFL model starts from carried-over priors and only needs small in-season corrections; a flat-prior, current-season-only, ~12-game CFB system is the opposite regime, and a naive K=20 compresses ratings so badly the model-vs-market diagnostic becomes noise (invisible until October).
+**Decision (structure — fixed):** classic Elo (400-scale logistic), completed 2026 games only (never seeded from 2025), MOV dampener `ln(|margin|+1)·mov_c/(mov_b·|ΔR_winner|+mov_c)`, **decaying K** `K(n)=k_late+(k_early−k_late)·exp(−n/k_decay_games)` (n = the two teams' avg games played; shares the games-played curve with D11), zero-sum updates (mean stays at baseline 1500), determinism via completed-only games sorted by `(week, start_date, home, away)`.
+**Proposed constants** (`EloConfig`, `engine/power_ratings.py`), gated by the dispersion acceptance test and recorded in `CALIBRATION_LOG.md`: `k_early=64, k_late=22, k_decay_games=6, mov_c=2.2, mov_b=0.0018, hfa_elo=50 (=2.5 pts), elo_per_point=20`. Dispersion evidence: synthetic double round-robin (7 teams, true strengths −15…+15, incl. strong-vs-strong) recovers **30.8 pts** top-vs-bottom neutral (band 24–40), rank-fidelity r=0.998; naive K=20 gave ~19.7.
+**Governance:** calibration is owner-only (§14.3). Proposed with the dispersion-test evidence and **ratified by the owner 2026-07-03** (CALIBRATION_LOG entry marked RATIFIED). Frozen at `v2026-frozen`.
+
+---
+
+## D10 — Preseason prior source: hybrid (SP+ preferred, returning-production fallback) — **CONFIRMED (owner)**
+**Date:** 2026-07-03
+**Context:** CFBD's 2026 preseason SP+ **and** returning production are both still empty at the planning date (verified live). The prior is needed only so weeks 1–3 output isn't garbage (roster-continuity-aware, permitted carve-out to the Data Recency Principle).
+**Decision (owner-selected via the Phase-2 plan question):** **Hybrid.** Fetch returning production into the snapshot now (new `returning_production` field-group); the prior code prefers preseason **SP+ automatically** when present (its `rating` is a point value → Elo offset), else a **bounded** returning-production continuity nudge (±`prior_rp_max_elo`=40 Elo, ~±2 pts; NOT a talent ranking), else honest **flat** baseline with max uncertainty. Robust to SP+ staying empty at freeze; auto-activates when CFBD posts either source — **data, not code**. Per-team `prior_source` recorded in the ratings export.
+**Implication verified at build time:** since BOTH sources are empty now, the current-date prior is flat-for-all with `rating_uncertainty=1.0` — correct honest state, not a defect.
+
+---
+
+## D11 — `rating_uncertainty` + early-season cap (Phase 2a) — **RATIFIED (owner, 2026-07-03)**
+**Date:** 2026-07-03
+**Context:** SPEC §6.2 requires an early-season mode (weeks 1–3): widen bands, more NO_BET, cap rating-derived signal influence, expose `rating_uncertainty` in every output.
+**Decision:** Per-matchup `rating_uncertainty` ∈ `[uncertainty_floor, 1]` decays from 1.0 (0 games, pure prior) to `uncertainty_floor=0.2` by `uncertainty_games_full=5` games, inflated ×`rp_prior_uncertainty_penalty=1.15` for any **non-SP+** prior (returning-production OR flat — both are weaker seeds than SP+, so both are at least as uncertain); the matchup takes the max (less-established side dominates). The pricer scales the **rating differential** (NOT home-field or schedule — those are structural) by `rating_signal_weight = rating_signal_floor + (1−floor)·(1−uncertainty)`, `rating_signal_floor=0.4` (floor, not 0, so a strong SP+ prior still shows through preseason; the ENGINE widens bands/NO_BETs on high uncertainty). Constants proposed in `CALIBRATION_LOG.md`, owner-ratified, frozen at the tag.
+
+---
+
+## D12 — spread → win-probability σ (Phase 2) — **RATIFIED (owner, 2026-07-03)**
+**Date:** 2026-07-03
+**Context:** §6.5 requires a documented spread→win-prob conversion (in `docs/SCHEMA.md`) for projected win totals. 13.5 is the NFL margin SD; CFB's is wider.
+**Decision:** `P(win)=Φ(margin/σ)`, **σ (`margin_sigma`) = 16.0**. Measured from CFB: the 2025 P4 archive market-residual SD (`actual_margin + vegas_spread`, mean≈0) is 14.1, lifted for our noisier-than-market model + the wider full-slate margins. Using 2025 margins is **Data-Recency-compliant** (a sport-level statistical constant, not team-quality data — noted in CALIBRATION_LOG). Proposed with evidence; owner-ratified; used by the 2b projections.
+
+---
+
+## D13 — Phase-2 split + ratings/projection storage posture — **CONFIRMED (owner)**
+**Date:** 2026-07-03
+**Context:** SPEC §6.5/§6.6 mark projections + belief-drift + `cfb project` as cut-first/freeze-exempt (§15); ratings + pricer + hypothetical are freeze-disciplined.
+**Decision (owner-selected via the Phase-2 plan question):** **Split 2a / 2b** (mirrors 1a/1b/1c). 2a (this work): ratings + pricer + hypothetical + model-vs-market logging + `data/ratings/`. 2b: projections + drift + `cfb project` + `data/projections/`. **Storage:** `data/ratings/2026_week_NN.json` and `data/projections/2026_week_NN.json` are **committed (not gitignored)**; the immutable-history hook is extended to `data/ratings/`. Ratings are a **derived export** — the prediction path recomputes ratings from the snapshot (memoized by `snapshot_id`) and never reads `data/ratings/`, preserving the 1b reproducibility contract.

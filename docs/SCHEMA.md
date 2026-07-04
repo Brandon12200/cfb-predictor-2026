@@ -163,8 +163,56 @@ is captured in the artifact (`get_aliases`) ready to feed that step.
 - The betting line is load-bearing: no spread ⇒ empty context ⇒ engine skips the prediction.
 - Stdlib **dataclasses** (not pydantic) per the minimal-deps policy.
 
-## Planned — Phase 2 (power rating layer, SPEC §6)
-To be documented here when Phase 2 lands (`docs/PHASE2_NOTES.md` has the plan):
-- **Power-rating record** schema (`data/ratings/2026_week_NN.json`: per-team rating, `rating_uncertainty`, preseason-prior source/provenance) and the **projection** schema (`data/projections/2026_week_NN.json`).
-- **spread → win-probability conversion** (the exact constant/curve) — SPEC §6.5 requires it live in this file.
-- Model spread vs. Vegas spread (the model-vs-market diagnostic) as a logged field on real-game output.
+## 6. Phase 2 — Power rating layer (SPEC §6)
+
+### 6.1 Power-rating record (`data/ratings/2026_week_NN.json`, D13)
+A **derived** artifact (written by `scripts/update_ratings.py`) for inspection + the 2b
+projections. **Not read on the prediction path** — the engine recomputes ratings from the
+snapshot via `engine.matchup_pricer.compute_ratings_for_snapshot` (memoized by
+`snapshot_id`), so the reproducibility contract (§3) is untouched. Byte-reproducible:
+`generated_at` is frozen from the snapshot's `built_at`.
+
+```
+{ "meta": { "snapshot_id", "week", "year", "generated_at" (= snapshot built_at),
+            "engine": "power_ratings", "elo_config": {…EloConfig…} },
+  "ratings": { "<TEAM>": { "rating": float, "rating_uncertainty": 0–1,
+                           "games_played": int, "prior_source": "sp+"|"returning_production"|"flat",
+                           "prior_elo": float }, … } }
+```
+
+### 6.2 In-house Elo (D9) + hybrid preseason prior (D10)
+`engine/power_ratings.py` — classic Elo, current-season completed games only (never seeded
+from 2025), MOV-dampened, **decaying K** (high early → low late), zero-sum updates (mean
+stays at baseline 1500). Constants live in the frozen `EloConfig` (owner-ratified via the
+dispersion acceptance test; see `CALIBRATION_LOG.md`). Preseason prior is hybrid: **SP+
+`rating` preferred** (a point value → Elo offset `rating*elo_per_point`), else a bounded
+**returning-production** continuity nudge (±`prior_rp_max_elo`), else honest **flat** baseline.
+Missing SP+/RP is recorded, never fabricated (binding principle 4).
+
+### 6.3 `rating_uncertainty` + early-season cap (D11)
+Per-matchup scalar in `[floor, 1]`, driven by games played (decays 1.0 → `uncertainty_floor`
+by `uncertainty_games_full`), inflated for the RP-fallback prior. The pricer scales the
+**rating differential** (not home-field/schedule) by `rating_signal_weight = floor +
+(1−floor)·(1−uncertainty)` so weeks 1–3 lean on physical/scheduling signals; the engine
+widens bands / NO_BETs on high uncertainty.
+
+### 6.4 Matchup-pricer output — model spread (`engine/matchup_pricer.py`, §6.3)
+`model_spread = rating differential (early-season-capped) + home-field + schedule-intel
+adjustments`. **Sign convention:** `model_spread` is the home spread, **negative = home
+favored** (matches `vegas_spread`); `home_margin` = predicted points home wins by. Schedule
+adjustment (from `compute_schedule_intel`, `ScheduleAdjustmentConfig` — Phase-2 baseline,
+Phase-3 recalibrates): bye, short-week, travel/timezone, altitude, in points favoring home.
+
+### 6.5 Model-vs-market diagnostic (real-game output, §6.6)
+`_build_prediction_result` adds, **diagnostic-only** (does NOT drive the 2026 edge/rec):
+`power_rating_spread`, `model_vs_market_gap` (= `power_rating_spread − vegas_spread`),
+`rating_uncertainty`, `power_rating_breakdown`, `power_rating_caveats`.
+
+### 6.6 spread → win-probability conversion (D12, required here by §6.5)
+`spread_to_win_prob(margin_points)` uses the **normal CDF**:
+`P(win) = Φ(margin_points / margin_sigma)`, with **`margin_sigma` = 16.0 points**. σ is
+grounded in CFB, not the NFL 13.5: the 2025 P4 archive **market-residual SD is 14.1**
+(`actual_margin + vegas_spread`, mean ≈ 0), lifted for our noisier-than-market model + the
+wider full-slate margins. Using 2025 margins for σ is **Data-Recency-compliant** — a
+sport-level statistical constant, not team-quality data. Used by the 2b projections to sum
+per-game win probabilities into projected win totals.

@@ -106,6 +106,22 @@ def test_normalize_advanced_stats_keyed_by_canonical_team():
     assert out["MISSISSIPPI"].offense["successRate"] == 0.5
 
 
+def test_normalize_returning_production_keyed_by_canonical_with_overall():
+    rows = [{"team": "Ole Miss", "percentPPA": 0.63, "usage": 0.55,
+             "percentPassingPPA": 0.2, "percentRushingPPA": 0.5, "percentReceivingPPA": 0.8}]
+    out = cfbd.normalize_returning_production(rows)
+    assert "MISSISSIPPI" in out
+    assert out["MISSISSIPPI"]["overall"] == 0.63  # percentPPA is the headline RP fraction
+    assert out["MISSISSIPPI"]["usage"] == 0.55
+
+
+def test_normalize_returning_production_drops_unresolved_and_tolerates_nulls():
+    out = cfbd.normalize_returning_production(
+        [{"team": None, "percentPPA": 0.5}, {"team": "Georgia", "percentPPA": None}])
+    assert list(out) == ["GEORGIA"]
+    assert out["GEORGIA"]["overall"] is None  # missing stays None, never fabricated
+
+
 def test_normalize_venue_parses_elevation_string():
     v = cfbd.normalize_venue({"name": "Sanford", "latitude": 33.9, "longitude": -83.4,
                               "elevation": "220.5", "timezone": "America/New_York",
