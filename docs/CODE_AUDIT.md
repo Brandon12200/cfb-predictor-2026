@@ -263,3 +263,38 @@ game (a **pre-existing Phase-1 normalizer gap** in the CFBD `/games` feed, track
 `make verify-phase-2` **ALL PHASE 2 CHECKS PASSED — Phase 2 complete** (0 pending). Preseason
 projections are near-uniform (~6 wins; variation from schedule length only) — the honest state;
 the drift view differentiates from ~weeks 4–6. Market win total (§6.5) deferred — no futures source.
+
+---
+
+## Phase 3a — Foundations: decomposed pricer + calibration evidence (SPEC §7; branch `phase-3a-foundations`)
+
+**Added**
+- `analytics/calibration_evidence.py` (freeze-exempt) + `scripts/build_calibration_evidence.py` →
+  committed `data/calibration/2025_evidence.json`: joins the 300-game archive and reports
+  confidence/edge/type → realized **ATS%** with **Wilson 95% intervals**. **Read-only, no fit**
+  (SPEC §3/§12). ATS convention reuses the canonical `scripts/calculate_accuracy.py`
+  (`home covers S iff margin+S>0`); verified sane (overall contrarian ATS **46.6%**, not the
+  flipped-convention 15%).
+- `scripts/verify_phase_3.py` + `make verify-phase-3` (3a PASS; 3b/3c/3d PENDING).
+
+**Changed (D15 decomposition, while 2a unfrozen)**
+- `engine/matchup_pricer.py::PricedMatchup` gains `base_margin`/`base_spread` (team quality) with
+  `total = base + schedule_adjustment` (test-pinned). `engine/prediction_engine.py` diagnostic now
+  exposes `model_vs_market_gap` = **base** gap (the only gap a confirming rule may use) +
+  `model_vs_market_gap_total` (labeled) — the D15 circularity prohibition, test-guarded.
+- Coefficient relocation to the factor-owned single source is sequenced into **3b** (the physical
+  factor is the second consumer — the meaningful move point; no throwaway 3a rename).
+
+**Deviation (D16, deliberate):** the §7 "full-slate dry run over an archived **2025** week"
+acceptance is satisfied by running the new engine over the committed **2026** week-1 snapshot (a
+real slate); the 2025 archive carries the calibration weight. No 2025 snapshot is built (Odds
+historical is paid; year-parameterizing the builder isn't worth it). Recorded as D16.
+
+**Finding for 3c (carry forward):** the archive's **confidence is almost entirely 60–70 with tiny
+edges (<2)** — near-zero variance. So it strongly supports **L4** (flat sub-50% ATS on marginal
+bets) but gives **thin evidence for confidence-tier boundaries** (L3) and no edge-size gradient for
+a floor. 3c tier/floor calibration must lean on reasoning + the NEW system's distribution, and each
+entry's confidence language must match the (wide) interval width.
+
+**Result:** offline suite **441 passed / 4 skipped**; lint + mypy clean (22 typed source files);
+`make verify-phase-3` **ALL PHASE 3 CHECKS PASSED (7 pending — 3b/3c/3d)**; `-1`/`-2` stay green.

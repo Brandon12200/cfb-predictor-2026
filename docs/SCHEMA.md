@@ -196,17 +196,29 @@ by `uncertainty_games_full`), inflated for the RP-fallback prior. The pricer sca
 (1−floor)·(1−uncertainty)` so weeks 1–3 lean on physical/scheduling signals; the engine
 widens bands / NO_BETs on high uncertainty.
 
-### 6.4 Matchup-pricer output — model spread (`engine/matchup_pricer.py`, §6.3)
-`model_spread = rating differential (early-season-capped) + home-field + schedule-intel
-adjustments`. **Sign convention:** `model_spread` is the home spread, **negative = home
-favored** (matches `vegas_spread`); `home_margin` = predicted points home wins by. Schedule
-adjustment (from `compute_schedule_intel`, `ScheduleAdjustmentConfig` — Phase-2 baseline,
-Phase-3 recalibrates): bye, short-week, travel/timezone, altitude, in points favoring home.
+### 6.4 Matchup-pricer output — **decomposed** spread (`engine/matchup_pricer.py`, §6.3, **D15**)
+`price()` returns a decomposed spread so each consumer takes the honest lane:
+- **`base`** = rating differential (early-season-capped) + home-field — **team quality only**
+  (`base_margin`, positive = home favored; `base_spread = −base_margin`).
+- **`schedule_adjustment`** (`schedule_component`) = the physical component (bye, short-week,
+  travel/timezone, altitude) from `compute_schedule_intel`.
+- **`total`** = `base + schedule_adjustment` (`home_margin`; `model_spread = −home_margin`).
+  Test-pinned: `base_margin + schedule_component == home_margin`.
+**Sign convention:** spreads are home-perspective, **negative = home favored** (matches
+`vegas_spread`). **Consumers:** hypothetical mode → **`total`** (travel must show); the
+model-vs-market diagnostic + any confirming-signal rule → the **`base`** lane (§6.5). Schedule
+coefficients are a **single calibrated source** shared by the pricer and the Phase-3 physical
+factor (no parallel copy; D15).
 
-### 6.5 Model-vs-market diagnostic (real-game output, §6.6)
+### 6.5 Model-vs-market diagnostic (real-game output, §6.6, **D15**)
 `_build_prediction_result` adds, **diagnostic-only** (does NOT drive the 2026 edge/rec):
-`power_rating_spread`, `model_vs_market_gap` (= `power_rating_spread − vegas_spread`),
-`rating_uncertainty`, `power_rating_breakdown`, `power_rating_caveats`.
+`power_rating_spread` (= total), `power_rating_base_spread` (team quality),
+`model_vs_market_gap` (= **`base_spread − vegas_spread`** — the BASE gap; the ONLY gap a
+confirming-signal rule may use), `model_vs_market_gap_total` (= `total − vegas`, **labeled**,
+diagnostic-only — never confirms a schedule factor), `rating_uncertainty`,
+`power_rating_breakdown`, `power_rating_caveats`. **Circularity rule (D15):** a schedule/physical
+factor must not be confirmed by a gap that contains the same schedule signal — the base gap
+excludes schedule and satisfies this by construction.
 
 ### 6.6 spread → win-probability conversion (D12, required here by §6.5)
 `spread_to_win_prob(margin_points)` uses the **normal CDF**:

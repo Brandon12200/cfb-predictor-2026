@@ -60,10 +60,19 @@ class PricedMatchup:
 
     home_team: str
     away_team: str
-    model_spread: float           # home spread, NEGATIVE = home favored (Vegas convention)
-    home_margin: float            # predicted points home wins by (positive = home favored)
+    model_spread: float           # = total_spread; home spread, NEGATIVE = home favored (Vegas conv.)
+    home_margin: float            # = total margin; predicted points home wins by (+ = home favored)
     rating_component: float       # early-season-weighted rating margin (points, home persp)
-    schedule_component: float     # net physical adjustment (points, home persp)
+    schedule_component: float     # = schedule_adjustment; net physical adjustment (points, home persp)
+    # D15 decomposition. In MARGIN space (positive = home favored): total = base +
+    # schedule_adjustment, i.e. home_margin = base_margin + schedule_component. In SPREAD space
+    # the sign flips (spread = −margin), so model_spread = base_spread − schedule_component — a
+    # SUBTRACTION. base = team quality (Elo diff + HFA); schedule_adjustment = physical. Consumers
+    # pick the honest lane: hypothetical → total; the model-vs-market diagnostic + any
+    # confirming-signal rule → the BASE gap (base_spread − vegas), which excludes schedule so it
+    # can't confirm a schedule factor with itself.
+    base_margin: float            # rating_component + home field (team quality only, + = home)
+    base_spread: float            # = −base_margin (home spread; the diagnostic/confirm lane)
     rating_uncertainty: float
     neutral_site: bool
     home_rating: float
@@ -80,6 +89,9 @@ class PricedMatchup:
             "away_team": self.away_team,
             "model_spread": round(self.model_spread, 2),
             "home_margin": round(self.home_margin, 2),
+            "base_spread": round(self.base_spread, 2),
+            "base_margin": round(self.base_margin, 2),
+            "schedule_adjustment": round(self.schedule_component, 2),
             "rating_component": round(self.rating_component, 2),
             "schedule_component": round(self.schedule_component, 2),
             "rating_uncertainty": round(self.rating_uncertainty, 3),
@@ -226,8 +238,11 @@ def price(home: str, away: str, *, ratings: dict[str, TeamRating],
     schedule_component, schedule_parts = schedule_adjustment(
         home_intel, away_intel, neutral_site, sched_cfg)
 
-    home_margin = rating_component + hfa_points + schedule_component
-    model_spread = -home_margin  # home favored → negative spread (Vegas convention)
+    # D15 decomposition: base (team quality) + schedule_adjustment = total.
+    base_margin = rating_component + hfa_points
+    base_spread = -base_margin
+    home_margin = base_margin + schedule_component  # total margin
+    model_spread = -home_margin  # total spread; home favored → negative (Vegas convention)
 
     # Caveats — the honest state, surfaced for the CLI/engine.
     if hr.prior_source == "flat" or ar.prior_source == "flat":
@@ -249,6 +264,7 @@ def price(home: str, away: str, *, ratings: dict[str, TeamRating],
         home_team=home, away_team=away,
         model_spread=model_spread, home_margin=home_margin,
         rating_component=rating_component, schedule_component=schedule_component,
+        base_margin=base_margin, base_spread=base_spread,
         rating_uncertainty=uncertainty, neutral_site=neutral_site,
         home_rating=hr.rating, away_rating=ar.rating,
         home_prior_source=hr.prior_source, away_prior_source=ar.prior_source,

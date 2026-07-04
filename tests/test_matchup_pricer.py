@@ -103,6 +103,33 @@ def test_neutral_site_ignores_altitude():
     assert "altitude" not in parts
 
 
+def test_decomposition_base_plus_schedule_equals_total():
+    # D15: total = base (team quality) + schedule_adjustment; base excludes schedule.
+    ratings = {"GEORGIA": _rating("GEORGIA", 1500), "USC": _rating("USC", 1500)}
+    venues = {"GEORGIA": ATHENS, "USC": LA}
+    season = [{"week": 1, "home_team": "GEORGIA", "away_team": "USC",
+               "start_date": "2026-09-12T16:00:00Z", "completed": False}]
+    p = price("GEORGIA", "USC", ratings=ratings, season_games=season, venues=venues,
+              week=2, game_date="2026-09-12")
+    assert abs(p.base_margin + p.schedule_component - p.home_margin) < 1e-9   # total = base + schedule
+    assert abs(p.base_spread + p.base_margin) < 1e-9                          # base_spread = -base_margin
+    assert abs(p.base_margin - (p.rating_component + p.breakdown["hfa_points"])) < 1e-9
+    # Schedule fires here (USC travels east, 3 tz) → base and total genuinely differ.
+    assert p.schedule_component > 0
+    assert abs(p.base_spread - p.model_spread) > 1e-6
+    d = p.to_dict()
+    # spread form: a home-favoring schedule margin makes the spread MORE negative.
+    assert abs(d["base_spread"] - d["schedule_adjustment"] - d["model_spread"]) < 0.02
+
+
+def test_neutral_site_base_equals_total_when_no_schedule():
+    # No venues → no schedule adjustment → base == total (nothing physical to separate).
+    ratings = {"A": _rating("A", 1560), "B": _rating("B", 1500)}
+    p = price("A", "B", ratings=ratings, season_games=[], venues={}, week=8)
+    assert p.schedule_component == 0
+    assert abs(p.base_spread - p.model_spread) < 1e-9
+
+
 def test_travel_favours_home_with_real_venues():
     # LA team travels to Athens (2 zones east); model spread shifts toward home.
     ratings = {"GEORGIA": _rating("GEORGIA", 1500), "USC": _rating("USC", 1500)}

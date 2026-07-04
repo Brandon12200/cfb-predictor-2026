@@ -167,18 +167,26 @@ class PredictionEngine:
             self.logger.warning("Power-rating pricing failed for %s @ %s: %s", away, home, exc)
             return None
 
-        gap = None
+        # D15: the model-vs-market GAP used as a diagnostic and as any confirming signal is the
+        # BASE gap (team quality only, excludes schedule) — so a schedule factor is never confirmed
+        # by a gap containing the same schedule signal. The total gap is logged too, LABELED, and
+        # must NOT be used to confirm a schedule/physical factor.
+        base_gap = total_gap = None
         if vegas_spread is not None:
-            gap = round(priced.model_spread - vegas_spread, 2)
+            base_gap = round(priced.base_spread - vegas_spread, 2)
+            total_gap = round(priced.model_spread - vegas_spread, 2)
         return {
-            'power_rating_spread': round(priced.model_spread, 2),
-            'model_vs_market_gap': gap,
+            'power_rating_spread': round(priced.model_spread, 2),        # total (full model spread)
+            'power_rating_base_spread': round(priced.base_spread, 2),    # team quality only
+            'model_vs_market_gap': base_gap,          # BASE gap — the ONLY gap a confirming rule may use
+            'model_vs_market_gap_total': total_gap,   # includes schedule — diagnostic only, never confirms
             'rating_uncertainty': round(priced.rating_uncertainty, 3),
             'power_rating_breakdown': {
                 'home_rating': round(priced.home_rating, 1),
                 'away_rating': round(priced.away_rating, 1),
                 'rating_component': priced.rating_component,
                 'home_field': priced.breakdown['hfa_points'],
+                'base_margin': round(priced.base_margin, 2),
                 'schedule_component': priced.schedule_component,
                 'rating_signal_weight': priced.rating_signal_weight,
                 'home_prior_source': priced.home_prior_source,
@@ -293,7 +301,9 @@ class PredictionEngine:
             # Power rating (SPEC §6.3/§6.6) — DIAGNOSTIC ONLY in 2026: logged alongside,
             # does NOT drive the contrarian edge/recommendation.
             'power_rating_spread': (power_rating or {}).get('power_rating_spread'),
+            'power_rating_base_spread': (power_rating or {}).get('power_rating_base_spread'),
             'model_vs_market_gap': (power_rating or {}).get('model_vs_market_gap'),
+            'model_vs_market_gap_total': (power_rating or {}).get('model_vs_market_gap_total'),
             'rating_uncertainty': (power_rating or {}).get('rating_uncertainty'),
             'power_rating_breakdown': (power_rating or {}).get('power_rating_breakdown'),
             'power_rating_caveats': (power_rating or {}).get('power_rating_caveats'),
