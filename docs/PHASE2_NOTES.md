@@ -8,9 +8,28 @@ Kickoff/handoff doc for Phase 2. Companion to `docs/SPEC.md` §6 (authoritative)
 
 - **Phase 1 (data layer) is COMPLETE and merged to `main`:** 1a registry (PR #1/#2),
   1b snapshot-first + engine cutover (PR #3), 1c schedule-intel + closing lines +
-  tooling (PR #4). `make verify-phase-1` → **ALL PHASE 1 CHECKS PASSED**. Suite: 376
-  passed / 4 skipped, offline; lint + mypy clean.
-- **Phase 2 has not started.** One phase = one branch (`phase-2-...`) = one PR to main.
+  tooling (PR #4). `make verify-phase-1` → **ALL PHASE 1 CHECKS PASSED**.
+- **Phase 2a (ratings + pricer + hypothetical + model-vs-market) is BUILT** on branch
+  `phase-2a-power-ratings` (D13 split). `make verify-phase-2` → **ALL PHASE 2 CHECKS
+  PASSED (2 pending — 2b)**. Suite: 410 passed / 4 skipped, offline; lint + mypy clean.
+  Owner decisions recorded as **D9–D13** (`docs/DECISIONS.md`); D9/D11/D12 calibration
+  constants **PROPOSED with evidence** in `docs/CALIBRATION_LOG.md`, pending ratification.
+- **Phase 2b (season projections + belief-drift + `cfb project`)** — freeze-exempt,
+  cut-first (§15); a follow-up branch/PR after 2a merges. The two PENDING verify items.
+
+### What 2a shipped
+- `engine/power_ratings.py` — in-house decaying-K Elo (D9), hybrid SP+/returning-production
+  prior (D10), `rating_uncertainty` + early-season cap (D11), `spread_to_win_prob` (D12).
+- `engine/matchup_pricer.py` — `price()` (rating diff + HFA + schedule-intel), identical
+  path for real + hypothetical; `compute_ratings_for_snapshot` (memoized by `snapshot_id`,
+  prediction path reads ONLY the snapshot); `build_ratings_export`.
+- Snapshot gains a `returning_production` field-group (both SP+ **and** RP empty at this
+  date → flat prior for all, `rating_uncertainty=1.0`, honest); week-1 fixture rebuilt.
+- `main.py hypothetical` CLI (table/json/neutral/show-factors); real predictions gain
+  `power_rating_spread` + `model_vs_market_gap` + `rating_uncertainty` (diagnostic only).
+- `scripts/update_ratings.py` → committed, hook-protected `data/ratings/2026_week_NN.json`.
+- `scripts/verify_phase_2.py` + `make verify-phase-2`; docs (SCHEMA §6, DECISIONS D9–D13,
+  CALIBRATION_LOG, this file).
 
 ## What Phase 2 delivers (SPEC §6)
 

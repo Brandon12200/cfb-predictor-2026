@@ -189,3 +189,40 @@ are recoverable via git history.
 - `.claude/hooks/{protect_immutable,guard_bash}.py`: append-only protection extended to `data/lines/`.
 
 **Result:** offline suite green; `make verify-phase-1` **ALL PHASE 1 CHECKS PASSED**.
+
+---
+
+## Phase 2a — Power rating layer, pricer, hypothetical (SPEC §6; branch `phase-2a-power-ratings`)
+
+**Added**
+- `engine/power_ratings.py` — in-house transparent Elo (D9): decaying K, MOV dampener,
+  zero-sum updates over completed games only (never seeded from 2025); hybrid preseason prior
+  (D10: SP+ preferred → returning-production fallback → flat); `rating_uncertainty` + early-season
+  cap (D11); `spread_to_win_prob` (D12). All constants in the frozen `EloConfig` (PROPOSED,
+  `CALIBRATION_LOG.md`). Pure + deterministic.
+- `engine/matchup_pricer.py` — `price()` (rating diff + HFA + `compute_schedule_intel`
+  adjustments), identical for real + hypothetical; `compute_ratings_for_snapshot` (memoized by
+  `snapshot_id`; the prediction path reads ONLY the snapshot); `build_ratings_export`;
+  `ScheduleAdjustmentConfig` (conservative Phase-2 baseline; Phase 3 recalibrates).
+- Snapshot `returning_production` field-group (`data/normalize/cfbd.normalize_returning_production`,
+  builder + manifest, 100% covered). Week-1 fixture rebuilt (hash changed). **Both SP+ and RP are
+  empty at this date → flat prior for all, `rating_uncertainty=1.0`, honest (never fabricated).**
+- `main.py hypothetical` CLI (`cli/app.run_hypothetical`, routed before the flat parser;
+  full subcommands are Phase 4.5) — table/json/neutral-site/show-factors, no Vegas line.
+- `scripts/update_ratings.py` → committed `data/ratings/2026_week_NN.json` (derived; not on the
+  prediction path). `data/snapshot/store.{available_weeks,latest_snapshot_week}`.
+- `scripts/verify_phase_2.py` + `make verify-phase-2`.
+
+**Changed**
+- `data/data_manager.get_game_context`: surfaces `sp_ratings`/`returning_production`/`venues` +
+  the game's `neutral_site`/`game_date` for the pricer.
+- `engine/prediction_engine`: `_compute_power_rating` + `_build_prediction_result` add
+  `power_rating_spread`, `model_vs_market_gap`, `rating_uncertainty`, breakdown, caveats —
+  **diagnostic only** (§6.6), additive, does not touch the contrarian edge (bit-identical rerun
+  still holds).
+- `.claude/hooks/protect_immutable.py`: append-only protection extended to `data/ratings/`.
+- `.gitignore`: `data/ratings/` documented as intentionally NOT ignored.
+
+**Result:** offline suite **410 passed / 4 skipped**; lint + mypy clean; `make verify-phase-2`
+**ALL PHASE 2 CHECKS PASSED** (2 pending — 2b projections). Model-vs-market on the real week-1
+slate correctly reads high gaps at `rating_uncertainty=1.0` (no team-quality data preseason).

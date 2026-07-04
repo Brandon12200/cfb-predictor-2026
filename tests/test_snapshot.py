@@ -38,6 +38,12 @@ class _FakeCFBD:
         return [{"team": "Georgia", "rating": 22.4, "ranking": 3,
                  "offense": {"rating": 40.1}, "defense": {"rating": 17.7}}]
 
+    def get_returning_production(self, year):
+        # Only Alabama posts returning production (exercises the missing case).
+        return [{"team": "Alabama", "percentPPA": 0.71, "usage": 0.6,
+                 "percentPassingPPA": 0.8, "percentRushingPPA": 0.5,
+                 "percentReceivingPPA": 0.7}]
+
 
 class _FakeOdds:
     last_quota = {"remaining": 490, "used": 10}
@@ -101,7 +107,7 @@ def test_manifest_covers_every_team_and_field_group(tmp_path):
     assert set(teams_cov) == {"GEORGIA", "CLEMSON", "ALABAMA", "DUKE"}
     for cov in teams_cov.values():
         assert set(cov) == {"info", "coaching", "stats", "schedule", "advanced_stats",
-                            "venue", "sp_rating"}
+                            "venue", "sp_rating", "returning_production"}
         assert all(v in ("cfbd", "registry", "missing") for v in cov.values())
     # coverage accounting is exact — no field unaccounted (100%).
     s = manifest["summary"]
@@ -119,6 +125,9 @@ def test_missing_recorded_honestly_not_fabricated(tmp_path):
     # Only Georgia/Clemson have venues; only Georgia has an SP+ rating.
     assert cov["GEORGIA"]["venue"] == "registry" and cov["ALABAMA"]["venue"] == "missing"
     assert cov["GEORGIA"]["sp_rating"] == "cfbd" and cov["DUKE"]["sp_rating"] == "missing"
+    # Only Alabama posts returning production.
+    assert cov["ALABAMA"]["returning_production"] == "cfbd"
+    assert cov["GEORGIA"]["returning_production"] == "missing"
 
 
 def test_betting_line_coverage_and_vegas_spread(tmp_path):

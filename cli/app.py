@@ -998,13 +998,150 @@ def run_p4_predictions(week: int, min_edge: float = 1.0, min_confidence: float =
         return []
 
 
+def _confidence_label(uncertainty: float) -> str:
+    """Qualitative confidence from rating uncertainty (hypothetical output)."""
+    if uncertainty >= 0.66:
+        return "LOW"
+    if uncertainty >= 0.4:
+        return "MEDIUM"
+    return "HIGH"
+
+
+def run_hypothetical(argv: list) -> int:
+    """`main.py hypothetical` (SPEC §6.4): price any matchup with the in-house power
+    rating — model spread, factor breakdown, confidence, caveats. No Vegas line needed.
+    Prices off the freshest built snapshot (reads ONLY the snapshot, offline)."""
+    import json
+    from datetime import date as _date
+
+    parser = argparse.ArgumentParser(
+        prog="main.py hypothetical",
+        description="Price a hypothetical matchup with the in-house power rating.")
+    parser.add_argument("--home", required=True)
+    parser.add_argument("--away", required=True)
+    parser.add_argument("--neutral-site", action="store_true")
+    parser.add_argument("--venue", help="Venue team key (e.g. a neutral host); defaults to home.")
+    parser.add_argument("--date", help="Game date YYYY-MM-DD (schedule-intel + week inference).")
+    parser.add_argument("--week", type=int, help="Override the snapshot week to price from.")
+    parser.add_argument("--show-factors", action="store_true")
+    parser.add_argument("--format", choices=["table", "json"], default="table")
+    parser.add_argument("--year", type=int, default=2026)
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--quiet", action="store_true")
+    args = parser.parse_args(argv)
+
+    setup_logging(args.debug, args.quiet)
+    _ensure_imports()
+
+    from data.snapshot.store import (
+        SnapshotNotFoundError,
+        latest_snapshot_week,
+        load_snapshot,
+    )
+    from engine.matchup_pricer import compute_ratings_for_snapshot, price
+    from utils.season_calendar import resolve_week
+
+    home = normalizer.normalize(args.home)
+    away = normalizer.normalize(args.away)
+    if not home:
+        print(f"Could not resolve home team '{args.home}'. Check spelling.")
+        return 1
+    if not away:
+        print(f"Could not resolve away team '{args.away}'. Check spelling.")
+        return 1
+    if home == away:
+        print("Home and away teams cannot be the same.")
+        return 1
+
+    # Resolve which snapshot to price from: explicit --week, else infer from --date/today,
+    # then use the freshest built snapshot at or before that week.
+    game_date = None
+    if args.date:
+        try:
+            game_date = _date.fromisoformat(args.date)
+        except ValueError:
+            print(f"Invalid --date '{args.date}' (expected YYYY-MM-DD).")
+            return 1
+    try:
+        target_week = resolve_week(args.week, game_date)
+    except Exception:  # noqa: BLE001 — date outside the season is not fatal here
+        target_week = None
+    week = latest_snapshot_week(args.year, not_after=target_week)
+    if week is None:
+        week = latest_snapshot_week(args.year)
+    if week is None:
+        print(f"No snapshot built for {args.year}. Run `python scripts/build_snapshot.py --week N`.")
+        return 1
+
+    try:
+        snap = load_snapshot(week, args.year)
+    except SnapshotNotFoundError as exc:
+        print(str(exc))
+        return 1
+    data = snap["data"]
+    ratings = compute_ratings_for_snapshot(snap)
+    priced = price(
+        home, away, ratings=ratings, season_games=data.get("games", []),
+        venues=data.get("venues", {}), sp_ratings=data.get("sp_ratings", {}),
+        returning_production=data.get("returning_production", {}),
+        week=snap["meta"].get("week"), game_date=args.date,
+        neutral_site=args.neutral_site, venue=args.venue)
+
+    if args.format == "json":
+        payload = priced.to_dict()
+        payload["snapshot_id"] = snap["meta"].get("snapshot_id")
+        payload["snapshot_week"] = week
+        payload["confidence"] = _confidence_label(priced.rating_uncertainty)
+        print(json.dumps(payload, indent=2, default=str))
+        return 0
+
+    _print_hypothetical(priced, snap, week, args.show_factors)
+    return 0
+
+
+def _print_hypothetical(p, snap: dict, week: int, show_factors: bool) -> None:
+    """Readable hypothetical output, mirroring the real-game format (spread, factors,
+    confidence, caveats)."""
+    site = "neutral site" if p.neutral_site else f"@ {p.home_team}"
+    fav, by = (p.home_team, -p.model_spread) if p.model_spread < 0 else (p.away_team, p.model_spread)
+    print(f"\nHypothetical: {p.away_team} {site} — priced from {snap['meta'].get('year')} "
+          f"week {week} snapshot ({snap['meta'].get('snapshot_id', '')[:12]})")
+    print(f"  Model spread : {p.home_team} {p.model_spread:+.1f}")
+    if abs(p.model_spread) < 1e-9:
+        print("  Pick'em (no model edge)")
+    else:
+        print(f"  Model favors : {fav} by {by:.1f}")
+    print(f"  Components    : rating {p.rating_component:+.1f} (weight "
+          f"{p.rating_signal_weight:.0%}, uncertainty {p.rating_uncertainty:.2f}) | "
+          f"home field {p.breakdown['hfa_points']:+.1f} | schedule {p.schedule_component:+.1f}")
+    print(f"  Ratings       : {p.home_team} {p.home_rating:.0f} ({p.home_prior_source}) | "
+          f"{p.away_team} {p.away_rating:.0f} ({p.away_prior_source})")
+    print(f"  Confidence    : {_confidence_label(p.rating_uncertainty)}")
+    if p.caveats:
+        print("  Caveats:")
+        for c in p.caveats:
+            print(f"    - {c}")
+    if show_factors:
+        print("  Schedule factors (points, + favors home):")
+        for k, v in (p.breakdown.get("schedule") or {}).items():
+            print(f"    {k:12s}: {v:+.2f}")
+        if not p.breakdown.get("schedule"):
+            print("    (none active)")
+        print(f"  home intel: {p.breakdown.get('home_intel')}")
+        print(f"  away intel: {p.breakdown.get('away_intel')}")
+
+
 def main() -> int:
     """
     Main entry point for the College Football Market Edge Platform CLI.
-    
+
     Returns:
         int: Exit code (0 for success, 1 for error)
     """
+    # `hypothetical` is a Phase-2 subcommand routed before the (flat) legacy parser;
+    # the full subcommand CLI lands in Phase 4.5.
+    if len(sys.argv) > 1 and sys.argv[1] == "hypothetical":
+        return run_hypothetical(sys.argv[2:])
     try:
         # Parse arguments
         args = parse_arguments()

@@ -105,11 +105,18 @@ class PredictionEngine:
             
             # Step 4.5: Analyze factor variance for disagreement detection
             variance_analysis = variance_detector.analyze_factor_variance(factor_results)
-            
+
+            # Step 4.6: Price the matchup with the in-house power rating (SPEC §6.3/§6.6).
+            # DIAGNOSTIC ONLY in 2026: the model-vs-market gap is logged alongside, it does
+            # NOT drive the contrarian edge/recommendation (§6.6).
+            power_rating = self._compute_power_rating(
+                home_normalized, away_normalized, week, vegas_spread, context)
+
             # Step 5: Build comprehensive result
             result = self._build_prediction_result(
                 home_normalized, away_normalized, week,
-                vegas_spread, factor_results, prediction_result, context, variance_analysis
+                vegas_spread, factor_results, prediction_result, context, variance_analysis,
+                power_rating
             )
             
             # Track successful prediction
@@ -133,8 +140,55 @@ class PredictionEngine:
         finally:
             self.prediction_stats['total_predictions'] += 1
     
-    def _calculate_contrarian_prediction(self, vegas_spread: Optional[float], 
-                                       factor_results: Dict[str, Any], 
+    def _compute_power_rating(self, home: str, away: str, week: Optional[int],
+                              vegas_spread: Optional[float],
+                              context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Price the matchup with the in-house power rating and return the diagnostic
+        fields (SPEC §6.3/§6.6). Reads ONLY the snapshot data already on `context`;
+        ratings are recomputed (memoized by `snapshot_id`) so reruns are bit-identical.
+        Returns None if the context wasn't snapshot-assembled (e.g. minimal test context)."""
+        snapshot_id = context.get('snapshot_id')
+        games = context.get('games')
+        if not snapshot_id or games is None:
+            return None
+        try:
+            from engine.matchup_pricer import compute_ratings_for_snapshot, price
+            sp = context.get('sp_ratings', {})
+            rp = context.get('returning_production', {})
+            snap = {"meta": {"snapshot_id": snapshot_id},
+                    "data": {"games": games, "sp_ratings": sp, "returning_production": rp}}
+            ratings = compute_ratings_for_snapshot(snap)
+            priced = price(
+                home, away, ratings=ratings, season_games=games,
+                venues=context.get('venues', {}), sp_ratings=sp, returning_production=rp,
+                week=week, game_date=context.get('game_date'),
+                neutral_site=bool(context.get('neutral_site')))
+        except Exception as exc:  # noqa: BLE001 — diagnostic must never break a prediction
+            self.logger.warning("Power-rating pricing failed for %s @ %s: %s", away, home, exc)
+            return None
+
+        gap = None
+        if vegas_spread is not None:
+            gap = round(priced.model_spread - vegas_spread, 2)
+        return {
+            'power_rating_spread': round(priced.model_spread, 2),
+            'model_vs_market_gap': gap,
+            'rating_uncertainty': round(priced.rating_uncertainty, 3),
+            'power_rating_breakdown': {
+                'home_rating': round(priced.home_rating, 1),
+                'away_rating': round(priced.away_rating, 1),
+                'rating_component': priced.rating_component,
+                'home_field': priced.breakdown['hfa_points'],
+                'schedule_component': priced.schedule_component,
+                'rating_signal_weight': priced.rating_signal_weight,
+                'home_prior_source': priced.home_prior_source,
+                'away_prior_source': priced.away_prior_source,
+            },
+            'power_rating_caveats': priced.caveats,
+        }
+
+    def _calculate_contrarian_prediction(self, vegas_spread: Optional[float],
+                                       factor_results: Dict[str, Any],
                                        context: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate the contrarian prediction using factor adjustments."""
         # Get both additive and multiplicative adjustments
@@ -209,7 +263,8 @@ class PredictionEngine:
     def _build_prediction_result(self, home_team: str, away_team: str, week: Optional[int],
                                vegas_spread: Optional[float], factor_results: Dict[str, Any],
                                prediction_result: Dict[str, Any], context: Dict[str, Any],
-                               variance_analysis: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+                               variance_analysis: Optional[Dict[str, Any]] = None,
+                               power_rating: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Build comprehensive prediction result."""
         # Frozen from the snapshot's build time so `predict rerun` is bit-identical
         # (reproducibility contract, SCHEMA §3). A missing timestamp means the context
@@ -234,7 +289,16 @@ class PredictionEngine:
             # Market data
             'vegas_spread': vegas_spread,
             'contrarian_spread': prediction_result.get('contrarian_spread'),
-            
+
+            # Power rating (SPEC §6.3/§6.6) — DIAGNOSTIC ONLY in 2026: logged alongside,
+            # does NOT drive the contrarian edge/recommendation.
+            'power_rating_spread': (power_rating or {}).get('power_rating_spread'),
+            'model_vs_market_gap': (power_rating or {}).get('model_vs_market_gap'),
+            'rating_uncertainty': (power_rating or {}).get('rating_uncertainty'),
+            'power_rating_breakdown': (power_rating or {}).get('power_rating_breakdown'),
+            'power_rating_caveats': (power_rating or {}).get('power_rating_caveats'),
+
+
             # Edge analysis
             'edge_size': prediction_result.get('edge_size'),
             'edge_direction': prediction_result.get('edge_direction'),

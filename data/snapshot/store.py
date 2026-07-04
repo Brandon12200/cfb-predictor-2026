@@ -49,6 +49,29 @@ def load_snapshot(week: int, year: int = 2026, base: Path | None = None) -> dict
     return json.loads(path.read_text())
 
 
+def available_weeks(year: int = 2026, base: Path | None = None) -> list[int]:
+    """Sorted week numbers that have a built snapshot on disk."""
+    root = base or _SNAPSHOTS_DIR
+    weeks: list[int] = []
+    for p in root.glob(f"{year}_week_*"):
+        if (p / "snapshot.json").exists():
+            try:
+                weeks.append(int(p.name.split("_week_")[1]))
+            except (ValueError, IndexError):
+                continue
+    return sorted(weeks)
+
+
+def latest_snapshot_week(year: int = 2026, base: Path | None = None,
+                         not_after: int | None = None) -> int | None:
+    """The most recent built week (≤ `not_after` if given), or None if none exist.
+    Used to price hypotheticals/projections off the freshest available ratings."""
+    weeks = available_weeks(year, base)
+    if not_after is not None:
+        weeks = [w for w in weeks if w <= not_after]
+    return weeks[-1] if weeks else None
+
+
 def load_manifest(week: int, year: int = 2026, base: Path | None = None) -> dict[str, Any]:
     path = snapshot_dir(week, year, base) / "manifest.json"
     if not path.exists():

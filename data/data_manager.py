@@ -94,7 +94,18 @@ class DataManager:
             "games": data.get("games", []),
             "advanced_stats": data.get("advanced_stats", {}),
             "betting_lines": data.get("betting_lines", {}),
+            # Phase-2 power-rating inputs (the pricer recomputes ratings from these, keyed
+            # by snapshot_id — prediction path reads ONLY the snapshot).
+            "sp_ratings": data.get("sp_ratings", {}),
+            "returning_production": data.get("returning_production", {}),
+            "venues": data.get("venues", {}),
         }
+        # The specific game's neutral-site / date for the matchup pricer.
+        game = next((g for g in data.get("games", [])
+                     if g.get("home_team") == home and g.get("away_team") == away
+                     and (week is None or g.get("week") == week)), None)
+        context["neutral_site"] = bool(game.get("neutral_site")) if game else False
+        context["game_date"] = game.get("start_date") if game else None
         report = self._data_quality_report(context)
         context["data_quality"] = report["score"]
         context["data_quality_report"] = report
