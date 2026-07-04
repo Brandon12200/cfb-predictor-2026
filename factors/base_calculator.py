@@ -192,15 +192,32 @@ class BaseFactorCalculator(ABC):
         
         return float(value)
     
+    def _neutral_value(self) -> float:
+        """The no-op output for this factor: 1.0 for a multiplicative modifier, else 0.0.
+
+        A multiplicative modifier's value IS a multiplier centered on 1.0 (D19), so 1.0 —
+        not 0.0 — is its "no effect" point. Additive factors are neutral at 0.0.
+        """
+        return 1.0 if self.is_multiplicative else 0.0
+
     def apply_threshold(self, value: float) -> float:
         """
-        Apply activation threshold to factor value.
-        
-        If absolute value is below threshold, return 0.
+        Apply the activation threshold to a factor value.
+
+        Activation is measured as the distance from the factor's NEUTRAL value (0.0 additive,
+        1.0 multiplicative). A value within ``activation_threshold`` of neutral is a no-op and
+        collapses to the neutral value. This is what keeps a dormant multiplicative modifier at
+        1.0 from being counted as activated (which would inflate ``factors_activated`` and, via
+        the registry, dilute ``avg_confidence``). Behaviour is unchanged for additive factors
+        (neutral 0.0 ⇒ ``abs(value - 0.0)`` == ``abs(value)``).
         """
-        if abs(value) < self.activation_threshold:
-            self.logger.debug(f"Factor {self.name} below threshold: {abs(value):.3f} < {self.activation_threshold}")
-            return 0.0
+        neutral = self._neutral_value()
+        if abs(value - neutral) < self.activation_threshold:
+            self.logger.debug(
+                f"Factor {self.name} within threshold of neutral: "
+                f"{abs(value - neutral):.3f} < {self.activation_threshold}"
+            )
+            return neutral
         return value
     
     def get_dynamic_weight(self, confidence: FactorConfidence) -> float:
@@ -238,6 +255,7 @@ class BaseFactorCalculator(ABC):
         result = {
             'factor_name': self.name,
             'factor_type': self.factor_type.value,
+            'category': self.category,
             'home_team': home_team,
             'away_team': away_team,
             'value': 0.0,
@@ -267,13 +285,20 @@ class BaseFactorCalculator(ABC):
             # Apply threshold
             threshold_value = self.apply_threshold(raw_value)
             
-            # Check if factor activated after threshold. A zero (no signal) or sub-threshold
-            # value means the factor did not fire — it must NOT count as activated (otherwise
-            # non-firing factors, e.g. an absent physical signal, inflate the primary-signal
-            # count and drag avg_confidence toward zero).
-            if threshold_value == 0.0:
-                reason = ("No signal" if raw_value == 0.0
+            # Check if factor activated after threshold. A value AT the factor's neutral
+            # (0.0 additive, 1.0 multiplicative) means it did not fire — it must NOT count as
+            # activated (otherwise non-firing factors, e.g. an absent physical signal or a
+            # dormant multiplicative modifier at 1.0, inflate the primary-signal count and
+            # dilute avg_confidence).
+            neutral = self._neutral_value()
+            if threshold_value == neutral:
+                reason = ("No signal" if raw_value == neutral
                           else f"Below activation threshold ({self.activation_threshold})")
+                # Report the factor's neutral output (0.0 additive, 1.0 multiplicative) so
+                # `value` stays within get_output_range(). The factor is not activated, so the
+                # registry skips it in both the additive sum and the multiplicative product;
+                # additive behaviour is unchanged (neutral 0.0 == the previous default).
+                result['value'] = neutral
                 result['reasoning'] = [reason]
                 result['success'] = True
                 return result

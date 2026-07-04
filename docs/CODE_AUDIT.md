@@ -334,18 +334,20 @@ DONE, merged as PR #12 / Bug #7 / D19.)*
 
 ## Consolidated 3c/3d carry-forward (the single canonical list)
 
-Items discovered this session that 3c/3d must fold in. **Both cleanup items land inside 3c's
+Items discovered this session that 3c/3d must fold in. **Both cleanup items landed inside 3c's
 confidence-tier rework** (it redefines confidence anyway):
-1. **`ExperienceDifferential` crashes on missing coaching data** (`'<' not supported between int and
-   NoneType`) — the preseason norm — and is only caught+zeroed by `safe_calculate`. "Crashes caught by
-   a wrapper" ≠ "handles missing data"; add explicit `None`-handling. (`factors/coaching_edge.py`.)
-2. **Dormant-modifier activation bookkeeping.** `base_calculator.apply_threshold` marks a value
-   `activated` when `abs(value) >= threshold`, so a dormant `MarketSentiment` at **1.0** is counted as
-   activated — inflating `factors_activated` and slightly diluting `avg_confidence` on every prediction.
-   Multiplicative-factor activation should key on **`abs(value − 1.0)`**, not raw magnitude. Harmless to
-   spreads (multiplier is 1.0); matters for the confidence distribution 3c calibrates.
+1. ✅ **DONE (3c)** — **`ExperienceDifferential` crashed on missing coaching data** (`'<' not supported
+   between int and NoneType`) — the preseason norm — only caught+zeroed by `safe_calculate`. Now reads
+   with no default and returns **0.0 honest-missing** when any of experience/tenure is absent/`None`,
+   removing the old `.get(key, 5)` neutral-fill too (CALIBRATION_LOG 3c.8).
+2. ✅ **DONE (3c)** — **Dormant-modifier activation bookkeeping.** `base_calculator.apply_threshold` now
+   measures activation as distance from the factor's **neutral** value (`abs(value − 1.0)` multiplicative,
+   `abs(value)` additive), so a dormant `MarketSentiment` at 1.0 is **not** counted activated
+   (CALIBRATION_LOG 3c.7).
 3. **(3d) prediction schema v2 + 2025 converter + 2026 dry-run acceptance** — the remaining Phase-3 slice
-   after 3c (see `docs/SPEC.md` §7 and the approved plan).
+   after 3c (see `docs/SPEC.md` §7). 3c surfaces `prediction_type`/`no_bet`/`confidence_tier` in-object +
+   reports and carries them through the storage writer (not silently dropped); 3d owns the on-disk
+   `schema_version` + converter + logging NO_BET games for grading.
 
 ## MarketSentiment wiring fix (Bug #7) — 2026-07-04
 
@@ -366,3 +368,64 @@ Standalone follow-up (not a phase). Root cause of the D17 artifact; fixed before
 
 **Result:** offline suite **456 passed / 4 skipped**; `make lint` clean; `make verify-phase-3` all
 checks PASS (budget now over 14 additive factors, physical 56%); `-1`/`-2` green.
+
+---
+
+## Phase 3c — situational discipline (L2) + NO_BET (L4) + confidence tiers (L3), 2026-07-04
+
+Branch `phase-3c-situational-nobet-confidence`. Consolidated CALIBRATION_LOG batch (PROPOSED —
+propose→pause→ratify). Owner scope decision D20. See CALIBRATION_LOG "Phase 3c" for every number.
+
+**Neutralized (fabrication — binding #2/#4; the MD5-hash-of-team-name ± hardcoded-team template, Bugs
+#12–14 on top of Bug #7)** — deletions recoverable via git history:
+- `factors/situational_context.py`: `DesperationIndex._simulate_desperation` (hash + `bubble_/playoff_/
+  struggling_teams`) + the shared-context mutation; `RevengeGame._estimate_recent_loss_revenge` hardcoded
+  rivalry table. Both return **0.0 honest-missing** when real record / prior-meeting data is absent.
+- `factors/momentum_factors.py`: `PointDifferentialTrends._simulate_differential_trend` and
+  `CloseGamePerformance._simulate_clutch_performance` (hash + `elite_/struggling_/clutch_/anti_clutch_
+  teams`). Both honest-missing (0.0) without ≥3 / any completed games.
+- `factors/coaching_edge.py`: `PressureSituation` hash base-pressure + `popular_teams` + the HFA
+  double-count → the factor is **dormant** (returns 0.0); `ExperienceDifferential` None-crash + the
+  `.get(key, 5)` neutral-fill → honest-missing 0.0.
+
+**Changed (mechanics):**
+- `factors/base_calculator.py`: `apply_threshold` + the activation gate key on distance from the factor's
+  **neutral** value (`_neutral_value`: 1.0 multiplicative / 0.0 additive); result dict carries `category`.
+- `factors/factor_registry.py`: new pure `confirm_situational(factor_results, base_gap)` (L2 gate) +
+  `calculate_all_factors` refactored into **compute → confirm → aggregate** phases so the gate runs before
+  `total_adjustment`/counts/`avg_confidence`. Desperation registry threshold 2.0 → 1.0 (was == max output).
+- `engine/prediction_engine.py`: computes the **base gap before the factors** and injects
+  `context['model_vs_market_gap']` (D15 base-only) — **the base gap now feeds the edge via the L2 gate,
+  superseding the 3a diagnostic-only property for the confirmation path** (rerun determinism holds). New
+  `NO_BET` prediction type via `_evaluate_no_bet` (edge/confidence/variance floors, §16.3 no volume
+  target) and A/B/C `_confidence_tier`; module-level 3c calibration constants.
+- `utils/prediction_storage.py`, `cli/app.py`, `output/formatter.py`: `prediction_type`/`no_bet`/
+  `confidence_tier` carried through the writer + surfaced in renders (not silently dropped; persisted
+  schema-v2 is 3d).
+
+**Guardrails/tests:** `scripts/verify_phase_3.py` — the 3 `todo()` 3c checks flipped to real assertions:
+the **factors/-scoped hash/random extermination tripwire**, L2 gate, both cleanups, **wk1 dry-run all
+NO_BET** (selectivity, not breakage), synthetic **tier-monotonicity**, and the CALIBRATION_LOG batch
+presence. New `tests/test_phase3c.py` (25 tests) + added to `LINT_PATHS`.
+
+**Architecture invariant (new, permanent):** a calibration/logic change that lets the base gap or a
+physical factor gate a situational contribution must keep `confirm_situational` reading the **base** gap
+only (never `model_vs_market_gap_total`) — the D15 circularity prohibition, now load-bearing on the edge.
+The base gap must be passed in the **factor sign convention** (positive favours home = `vegas −
+base_spread` = `context['base_gap_favors_home']`), NOT the diagnostic `base_spread − vegas` (inverted).
+
+**Code-review NO-GO, caught + fixed before merge (commit `3c30fd9`):** the `code-reviewer` subagent found
+the L2 gate initially compared the situational factor sign against the *diagnostic* base gap (`base_spread
+− vegas`), which is inverted vs the factor convention — so it confirmed/withheld situational factors
+**backwards**. Fixed by injecting `vegas − base_spread` for confirmation + an end-to-end sign regression
+test (`tests/test_phase3c.py::test_base_gap_confirmation_sign_end_to_end`). The unit tests missed it
+because they fed `confirm_situational` hand-picked gaps, never a real rating differential — the reviewer
+checkpoint earned its keep.
+
+**Follow-up (tracked, not 3c-blocking):** `factors/factor_registry.py` + `engine/prediction_engine.py`
+carry substantial new 3c logic but aren't in `Makefile` `LINT_PATHS`/`TYPED_PATHS` (adding them pulls in
+~200 pre-existing whitespace/style errors unrelated to 3c). New code carries type hints; fold the files
+into CI lint in a dedicated cleanup, consistent with the 3a/3b precedent of not retro-linting legacy files.
+
+**Result:** offline suite **483 passed / 4 skipped**; `make lint` clean; `make verify-phase-3` PASS
+(1 pending — 3d); `-1`/`-2` green. Dry-run: 10/10 NO_BET (honest preseason, no signal).

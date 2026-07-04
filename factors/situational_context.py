@@ -47,36 +47,45 @@ class DesperationIndexCalculator(BaseFactorCalculator):
         home_data = context.get('home_team_data', {})
         away_data = context.get('away_team_data', {})
         week = context.get('week')
-        
-        # Add team names for simulation
-        home_data['team_name'] = home_team
-        away_data['team_name'] = away_team
-        
-        # Calculate desperation scores for each team
+
+        # Calculate desperation scores for each team from their real W-L record.
         home_desperation = self._calculate_team_desperation(home_data, week)
         away_desperation = self._calculate_team_desperation(away_data, week)
-        
+
+        # Honest-missing (binding principle #4): desperation is a function of a real
+        # W-L record. Preseason — and any week whose results aren't yet in the snapshot —
+        # has no record, so the differential is not computable. Return 0.0 (no signal),
+        # NEVER a fabricated value. The factor is dormant until real records arrive; it is
+        # measured for real by Phase-4 attribution in 2026.
+        if home_desperation is None or away_desperation is None:
+            return 0.0
+
         # Desperation differential (positive = home team more desperate)
         desperation_diff = home_desperation - away_desperation
-        
+
         # Scale the differential
         scaled_diff = self._scale_desperation_differential(desperation_diff)
-        
+
         return self.validate_output(scaled_diff)
     
-    def _calculate_team_desperation(self, team_data: Dict, week: Optional[int]) -> float:
-        """Calculate desperation score for a team."""
+    def _calculate_team_desperation(self, team_data: Dict, week: Optional[int]) -> Optional[float]:
+        """Calculate a team's desperation score from its real W-L record.
+
+        Returns None (honest-missing) when no current record exists — the caller then
+        emits no signal. There is deliberately no fabricated fallback (the old MD5-hash /
+        hardcoded-team-list simulation was removed in Phase 3c as a binding #2/#4 violation
+        and a Bug-#7-class phantom).
+        """
         if week is None:
             week = 8  # Default mid-season
-        
+
         # Get current record
         derived_metrics = team_data.get('derived_metrics', {})
         current_record = derived_metrics.get('current_record', {})
-        
+
         if not current_record:
-            # Simulate desperation based on team and week
-            return self._simulate_desperation(team_data.get('team_name', ''), week)
-        
+            return None
+
         wins = current_record.get('wins', 0)
         losses = current_record.get('losses', 0)
         games_remaining = max(0, 12 - (wins + losses))  # Estimate games remaining
@@ -97,60 +106,6 @@ class DesperationIndexCalculator(BaseFactorCalculator):
         desperation_score += late_season_desperation * 0.3
         
         return min(max(desperation_score, 0.0), 1.0)
-    
-    def _simulate_desperation(self, team_name: str, week: int) -> float:
-        """Simulate desperation score based on team and week."""
-        import hashlib
-        
-        if not team_name:
-            return 0.5
-        
-        # Generate team-specific desperation pattern
-        team_hash = hashlib.md5(f"{team_name}_desperation_{week}".encode()).hexdigest()
-        base_desperation = 0.5  # Neutral base
-        
-        # Week-based desperation increases
-        if week >= 10:
-            base_desperation += 0.2  # Late season pressure
-        elif week >= 8:
-            base_desperation += 0.1
-        elif week <= 3:
-            base_desperation -= 0.1  # Early season, less desperation
-        
-        # Team-specific patterns
-        # Teams typically fighting for bowl eligibility
-        bubble_teams = ['ILLINOIS', 'MARYLAND', 'PURDUE', 'VIRGINIA', 'BOSTON COLLEGE',
-                       'DUKE', 'WAKE FOREST', 'KANSAS', 'ARIZONA STATE', 'COLORADO']
-        
-        # Elite teams with playoff aspirations
-        playoff_teams = ['GEORGIA', 'ALABAMA', 'OHIO STATE', 'MICHIGAN', 'TEXAS',
-                         'PENN STATE', 'OREGON', 'WASHINGTON', 'FLORIDA STATE']
-        
-        # Struggling programs
-        struggling_teams = ['VANDERBILT', 'KENT STATE', 'UMASS', 'NEW MEXICO STATE',
-                           'CONNECTICUT', 'AKRON', 'TEMPLE']
-        
-        if team_name.upper() in bubble_teams:
-            # Bowl bubble teams have high desperation weeks 8-11
-            if 8 <= week <= 11:
-                base_desperation += 0.3
-            else:
-                base_desperation += 0.1
-        elif team_name.upper() in playoff_teams:
-            # Playoff teams have desperation for perfect seasons
-            hash_val = int(team_hash[:2], 16)
-            if hash_val < 128:  # Simulate undefeated ~50% of time
-                base_desperation += 0.25  # Pressure to stay undefeated
-            else:
-                base_desperation += 0.15  # One-loss pressure
-        elif team_name.upper() in struggling_teams:
-            # Struggling teams have low desperation (playing for pride)
-            base_desperation -= 0.2
-        
-        # Add team-specific variation
-        team_var = (int(team_hash[2:4], 16) % 40 - 20) / 100.0
-        
-        return min(max(base_desperation + team_var, 0.0), 1.0)
     
     def _calculate_bowl_eligibility_desperation(self, wins: int, losses: int, games_remaining: int, week: int) -> float:
         """Calculate desperation related to bowl eligibility."""
@@ -293,21 +248,15 @@ class RevengeGameCalculator(BaseFactorCalculator):
         return revenge_score
     
     def _estimate_recent_loss_revenge(self, team: str, opponent: str) -> float:
-        """Estimate revenge factor from recent losses."""
-        # Placeholder implementation - would need historical game data
-        # For now, assign random revenge factors based on team matchups
-        
-        # Common revenge scenarios (hardcoded examples)
-        revenge_scenarios = {
-            ('GEORGIA', 'ALABAMA'): 0.3,  # Georgia seeking revenge vs Alabama
-            ('ALABAMA', 'GEORGIA'): 0.2,
-            ('MICHIGAN', 'OHIO STATE'): 0.4,
-            ('OHIO STATE', 'MICHIGAN'): 0.3,
-            ('TEXAS', 'OKLAHOMA'): 0.3,
-            ('OKLAHOMA', 'TEXAS'): 0.3
-        }
-        
-        return revenge_scenarios.get((team, opponent), 0.0)
+        """Revenge from a recent loss to this opponent.
+
+        Requires real prior-meeting results, which have no data source in 2026 core
+        (deferred). Honest-missing (binding #4): 0.0 until that data exists — the old
+        hardcoded rivalry table (binding #2 violation, a Bug-#7-class phantom) was
+        removed in Phase 3c. With the other sub-signals also unsourced, RevengeGame is
+        dormant (0.0) until real prior-meeting data arrives; measured in 2026 (Phase 4).
+        """
+        return 0.0
     
     def _estimate_coaching_connections(self, team: str, opponent: str, context: Dict) -> float:
         """Estimate revenge factor from coaching connections."""

@@ -171,7 +171,14 @@ class OutputFormatter:
         confidence_level = confidence_assessment.get('confidence_level', 'Unknown')
         confidence_emoji = self._get_confidence_emoji(confidence_level)
         summary_lines.append(f"  {confidence_emoji} Confidence: {confidence_level}")
-        
+
+        # Phase 3c: A/B/C confidence tier (L3) / NO_BET verdict (L4)
+        if prediction_result.get('no_bet'):
+            reason = prediction_result.get('no_bet_reason') or 'below betting floors'
+            summary_lines.append(f"  {self._emoji('warning')} NO BET — {reason}")
+        elif prediction_result.get('confidence_tier'):
+            summary_lines.append(f"  {self._emoji('trophy')} Confidence Tier: {prediction_result['confidence_tier']}")
+
         # Recommendation
         recommendation = edge_classification.recommended_action
         summary_lines.append(f"  🎯 Recommendation: {recommendation}")
@@ -405,8 +412,10 @@ class OutputFormatter:
                 edge_emoji = self._get_edge_size_emoji(edge_size)
                 conf_emoji = self._get_confidence_emoji_from_score(confidence)
                 
+                tier = result.get('confidence_tier')
+                tier_str = f" | Tier {tier}" if tier else (" | NO BET" if result.get('no_bet') else "")
                 summary_lines.append(f"  {i}. {edge_emoji} {away_team} @ {home_team}")
-                summary_lines.append(f"     Edge: {edge_size:.1f} pts | Conf: {conf_emoji} | {recommendation}")
+                summary_lines.append(f"     Edge: {edge_size:.1f} pts | Conf: {conf_emoji}{tier_str} | {recommendation}")
                 summary_lines.append("")
         else:
             summary_lines.append(f"No games found with edges >= {min_edge} points")
