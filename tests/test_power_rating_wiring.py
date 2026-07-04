@@ -55,6 +55,31 @@ def test_power_rating_is_diagnostic_only(monkeypatch):
     assert without["power_rating_spread"] is None
 
 
+def test_model_vs_market_gap_uses_base_not_total_when_schedule_fires():
+    # D15 circularity guard: when a schedule adjustment is present (USC travels 3 tz east to
+    # Athens), the confirming-signal lane `model_vs_market_gap` must be the BASE gap (team
+    # quality, excludes schedule) — NOT the total gap. A schedule factor can't be confirmed by
+    # a gap that already contains the same schedule signal.
+    athens = {"name": "Sanford", "latitude": 33.9497, "longitude": -83.3733,
+              "elevation": 220.0, "timezone": "America/New_York"}
+    la = {"name": "Coliseum", "latitude": 34.0141, "longitude": -118.2879,
+          "elevation": 50.0, "timezone": "America/Los_Angeles"}
+    games = [{"week": 2, "home_team": "GEORGIA", "away_team": "USC", "home_points": None,
+              "away_points": None, "completed": False, "start_date": "2026-09-12",
+              "neutral_site": False}]
+    context = {"snapshot_id": "d15_gap_test", "games": games, "sp_ratings": {},
+               "returning_production": {}, "venues": {"GEORGIA": athens, "USC": la},
+               "neutral_site": False, "game_date": "2026-09-12"}
+    pr = prediction_engine._compute_power_rating("GEORGIA", "USC", 2, -3.0, context)
+    assert pr is not None
+    # schedule fired → the two gaps genuinely differ
+    assert pr["model_vs_market_gap"] != pr["model_vs_market_gap_total"]
+    # the confirming lane is the BASE gap (excludes schedule)
+    assert abs(pr["model_vs_market_gap"] - (pr["power_rating_base_spread"] - (-3.0))) < 0.02
+    # the labeled total gap includes schedule (diagnostic only, never confirms)
+    assert abs(pr["model_vs_market_gap_total"] - (pr["power_rating_spread"] - (-3.0))) < 0.02
+
+
 def test_missing_snapshot_context_skips_power_rating_gracefully():
     # A minimal context without snapshot_id/games must not crash; fields are None.
     ctx = make_context(home="GEORGIA", away="ALABAMA", week=2)

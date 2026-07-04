@@ -125,3 +125,21 @@ Binding owner decisions made outside the resolved SPEC §16 set. Each entry reco
 - **Market win total (§6.5) deferred:** no futures data source in 2026 core (Odds free tier has no season win totals) → recorded **not-available** (honest-missing), never fabricated. Revisit if a source is added.
 - **Reproducibility/immutability:** projections are a derived export (never on the prediction path); `data/projections/` is committed and the immutable-history hook is extended to it (same posture as `data/ratings/`, D13). A per-week `meta.schema_version` lets the season-spanning drift/history reader tolerate schema evolution (2b is freeze-exempt, so a later week's file may add a field).
 **Implication verified:** preseason (SP+/RP empty → flat priors), projections are near-uniform (~6 wins, variation from schedule length only) — the honest "no signal yet" state; the drift view earns value from ~weeks 4–6.
+
+---
+
+## D15 — Decomposed-and-shared pricer + circularity prohibition (Phase 3a) — **CONFIRMED (owner)**
+**Date:** 2026-07-03
+**Context:** Phase 2's pricer applies schedule intel (bye/short-week/travel/altitude) to the model spread; Phase 3 adds physical FACTORS that adjust the Vegas line for the contrarian bet. The pricer is diagnostic-only in 2026 (factors alone drive recommendations), so there is no double-count in the bet. The real trap is SPEC §6/§7's **model-vs-market gap as a confirming signal** (the L2 fix): if the model spread contains the same bye/travel adjustment, using the gap to confirm a schedule factor is **circular** — confirming a signal with itself.
+**Decision (owner, via the Phase-3 plan):**
+1. **Decompose, don't merge or delete.** `engine/matchup_pricer.price()` returns a decomposed spread: `base` (Elo diff + HFA — team quality only), `schedule_adjustment` (physical), `total = base + schedule_adjustment` (test-pinned: `base_margin + schedule_component == home_margin`).
+2. **Consumers pick the honest lane:** hypothetical mode → `total` (travel must show); the model-vs-market diagnostic → the **`base` gap** (`base_spread − vegas`; the total gap is logged too, LABELED); any Phase-3 **confirming-signal rule → the `base` gap ONLY, never `total`**.
+3. **Explicit circularity prohibition (written rule + test):** *a schedule/physical factor must not be confirmed by a gap that contains the same schedule signal.* The `base` gap excludes schedule → satisfies it by construction. The engine exposes `model_vs_market_gap` = **base** gap (the only gap a confirming rule may use) + `model_vs_market_gap_total` (labeled, diagnostic-only). A test proves the two differ when schedule fires and that the confirming lane reads base.
+4. **One source of truth for schedule coefficients:** Phase-3's calibrated schedule coefficients **supersede** the 2a `ScheduleAdjustmentConfig` (as CALIBRATION_LOG promised); the pricer's `schedule_adjustment` consumes those same values — **no parallel copy**. Both lanes freeze together at the tag. *(Sequencing: the decomposition landed in 3a while 2a is unfrozen; the coefficient relocation to the factor-owned source lands in 3b with the physical factor that becomes the second consumer — the single meaningful move point, avoiding a throwaway 3a rename.)*
+
+---
+
+## D16 — Phase-3 "2025 dry-run" vehicle = the 2026 snapshot (owner, via plan)
+**Date:** 2026-07-03
+**Context:** SPEC §7 acceptance wants a "full-slate dry run over an archived 2025 week," but no 2025 input snapshots exist and Odds-API historical lines are paid (10×); building a faithful 2025 snapshot means year-parameterizing the builder + CFBD `/lines`.
+**Decision:** Satisfy the dry-run by running the new schema-v2 engine over the **existing committed 2026 week-1 snapshot** (proves sensible schema-v2 output over a real slate). Calibration **evidence** comes from the 300-game 2025 archive via `analytics/calibration_evidence.py`. The deviation from the "2025 week" literal is a documented, deliberate choice (recorded in `CODE_AUDIT.md`) — the archive still carries the 2025 weight; the dry-run only needs a realistic slate.
