@@ -9,13 +9,37 @@ Kickoff/handoff doc for Phase 2. Companion to `docs/SPEC.md` §6 (authoritative)
 - **Phase 1 (data layer) is COMPLETE and merged to `main`:** 1a registry (PR #1/#2),
   1b snapshot-first + engine cutover (PR #3), 1c schedule-intel + closing lines +
   tooling (PR #4). `make verify-phase-1` → **ALL PHASE 1 CHECKS PASSED**.
-- **Phase 2a (ratings + pricer + hypothetical + model-vs-market) is BUILT** on branch
-  `phase-2a-power-ratings` (D13 split). `make verify-phase-2` → **ALL PHASE 2 CHECKS
-  PASSED (2 pending — 2b)**. Suite: 410 passed / 4 skipped, offline; lint + mypy clean.
-  Owner decisions recorded as **D9–D13** (`docs/DECISIONS.md`); D9/D11/D12 calibration
-  constants **PROPOSED with evidence** in `docs/CALIBRATION_LOG.md`, pending ratification.
-- **Phase 2b (season projections + belief-drift + `cfb project`)** — freeze-exempt,
-  cut-first (§15); a follow-up branch/PR after 2a merges. The two PENDING verify items.
+- **Phase 2a (ratings + pricer + hypothetical + model-vs-market) is COMPLETE + merged**
+  (PR #5, `main`). Owner decisions **D9–D13**; D9/D11/D12 calibration **RATIFIED
+  2026-07-03** (`docs/CALIBRATION_LOG.md`).
+- **Phase 2b (season projections + belief-drift + `cfb project`) is BUILT** on branch
+  `phase-2b-projections` (freeze-exempt, cut-first §15). `make verify-phase-2` → **ALL
+  PHASE 2 CHECKS PASSED — Phase 2 complete** (0 pending). Owner decision **D14**; no new
+  calibration (reuses D12 σ=16). **Phase 2 is now fully delivered.**
+
+### What 2b shipped
+- `analytics/projections.py::build_projections(snapshot, cfg)` — pure roll-up: price every
+  remaining game, sum win probs (`spread_to_win_prob`) into per-**FBS**-team projected win
+  totals; `meta.schema_version` + frozen `generated_at`; experimental flag. Freeze-exempt
+  (new `analytics/` package, NOT `engine/`).
+- `scripts/build_projections.py` → committed, hook-protected `data/projections/2026_week_NN.json`.
+- `main.py project [--team X] [--history] [--format json]` — projected-win-total table + Δwk /
+  Δpreseason drift + risers/fallers; per-team per-game breakdown; schema-evolution-tolerant reader.
+- Preseason (SP+/RP empty → flat priors): projections near-uniform ~6 wins — the honest state;
+  drift earns value from ~weeks 4–6. Market win total (§6.5) deferred (no futures source).
+
+### Known coverage gap (surfaced by 2b, NOT caused by it — Phase-1 follow-up)
+The committed week-1 snapshot's `games` is **FBS-vs-FBS only** (FCS opponents' games are dropped
+upstream in `normalize_games` when the FCS name doesn't resolve), and **4 FBS teams have no
+resolved FBS-vs-FBS game**: `APPALACHIAN STATE`, `CAL`, `LOUISIANA MONROE`, `UMASS`. Root cause
+is a **pre-existing Phase-1 normalizer/alias gap** for these teams' names in the CFBD `/games`
+feed (their canonical registry names exist, but the game-feed spellings don't resolve). 2b does
+not silently drop them: `build_projections` includes every FBS team, marks the unscheduled ones
+`schedule_missing: true` with `projected_wins: null`, records them in `meta.coverage.unscheduled`,
+and `main.py project` surfaces the gap in a coverage note + `verify_phase_2` reports it.
+**Tracking:** fix in a Phase-1 normalizer follow-up (candidate: the deferred slice-1.5
+alias/ESPN/Odds format work) — add the missing game-feed aliases so these teams' games resolve.
+Not a 2b blocker (projections are experimental).
 
 ### What 2a shipped
 - `engine/power_ratings.py` — in-house decaying-K Elo (D9), hybrid SP+/returning-production

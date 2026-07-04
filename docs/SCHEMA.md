@@ -216,3 +216,43 @@ grounded in CFB, not the NFL 13.5: the 2025 P4 archive **market-residual SD is 1
 wider full-slate margins. Using 2025 margins for σ is **Data-Recency-compliant** — a
 sport-level statistical constant, not team-quality data. Used by the 2b projections to sum
 per-game win probabilities into projected win totals.
+
+### 6.7 Season projection record (`data/projections/2026_week_NN.json`, Phase 2b, D14)
+A **derived, experimental** artifact (`analytics/projections.py::build_projections`, written by
+`scripts/build_projections.py`). Pure computation over the snapshot + the 2a pricer — zero API
+cost, deterministic, byte-reproducible (`generated_at` frozen from the snapshot's `built_at`).
+**Never drives bet recommendations** (SPEC §6.5). Committed + immutable-history-hook-protected
+(like `data/ratings/`). Read by `main.py project`.
+
+```
+{ "meta": { "schema_version" (int; drift/history reader keys off it to tolerate schema
+                               evolution across weeks), "snapshot_id", "week", "year",
+            "generated_at" (= snapshot built_at), "engine": "power_ratings",
+            "margin_sigma", "experimental": true, "counts": <convention string>,
+            "coverage": { "fbs_total", "scheduled", "unscheduled": [<TEAM>…] } },
+  "teams": { "<FBS TEAM>": { "rating", "rating_uncertainty",
+              "wins_so_far", "losses_so_far", "remaining",
+              "projected_wins", "projected_losses", "schedule_missing" (bool),
+              "games": [ { "week", "opponent", "is_home", "neutral_site",
+                           "model_spread" (team-perspective; null for completed),
+                           "win_prob", "completed", "won" }, … ] }, … } }
+```
+- **Coverage is explicit — no team silently dropped.** *Every* FBS team appears; a team with no
+  games in the snapshot gets `schedule_missing: true`, `projected_wins: null`, empty `games`,
+  and is listed in `meta.coverage.unscheduled`. `main.py project` shows it as "—" with a
+  coverage note. (Current snapshot: 134/138 scheduled — 4 teams have no resolved FBS-vs-FBS
+  game; a pre-existing Phase-1 data/normalizer gap surfaced, not caused, here.)
+
+- **Scope:** only **FBS** teams are projected (registry-scoped, no hardcoded names). Opponents
+  absent from ratings (incl. FCS) are priced from the flat baseline prior via the pricer
+  fallback — they get a `win_prob` for the FBS team's row but are not themselves projected.
+- **Counting convention (stated so an external comparison isn't misread as a model
+  discrepancy):** `projected_wins` = `wins_so_far` + Σ(remaining-game `win_prob`) over **all
+  scheduled games incl. FCS opponents, regular season only** (matches the snapshot `games`).
+  External totals (media/market) are sometimes FBS-only or include postseason — a mismatch
+  there is a convention difference, not a model error.
+- **Preseason state (not a defect):** with SP+/RP empty, all priors are flat → projections are
+  near-uniform (~6 wins; variation comes from schedule length/home games, not team quality).
+  The drift/risers-fallers view earns its keep from ~weeks 4–6 as ratings differentiate.
+- **Market win total (§6.5) deferred:** no futures data source in 2026 core → recorded
+  not-available (honest-missing), never fabricated.

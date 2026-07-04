@@ -1131,6 +1131,177 @@ def _print_hypothetical(p, snap: dict, week: int, show_factors: bool) -> None:
         print(f"  away intel: {p.breakdown.get('away_intel')}")
 
 
+# --------------------------------------------------------------------------- #
+# `main.py project` — experimental season projections + belief drift (SPEC §6.5)
+# --------------------------------------------------------------------------- #
+def _projections_dir():
+    from pathlib import Path
+    return Path(__file__).resolve().parent.parent / "data" / "projections"
+
+
+def _projection_weeks(year: int) -> list:
+    weeks = []
+    for p in _projections_dir().glob(f"{year}_week_*.json"):
+        try:
+            weeks.append(int(p.stem.split("_week_")[1]))
+        except (ValueError, IndexError):
+            continue
+    return sorted(weeks)
+
+
+def _load_projection(year: int, week: int) -> dict:
+    import json
+    return json.loads((_projections_dir() / f"{year}_week_{week:02d}.json").read_text())
+
+
+def _proj_wins(projection: dict, team: str):
+    """Defensive across schema evolution: tolerate older files missing a team/field."""
+    return (projection.get("teams", {}).get(team) or {}).get("projected_wins")
+
+
+def run_project(argv: list) -> int:
+    """`main.py project` (SPEC §6.5): render experimental season win-total projections +
+    week-over-week belief drift from the committed `data/projections/` files (offline; build
+    them with `scripts/build_projections.py`). Experimental — never drives bet recommendations."""
+    import json
+
+    parser = argparse.ArgumentParser(
+        prog="main.py project",
+        description="Experimental season win-total projections + belief drift (never drives bets).")
+    parser.add_argument("--team", help="One team's per-game breakdown + drift history.")
+    parser.add_argument("--history", action="store_true", help="Week-by-week projected wins.")
+    parser.add_argument("--week", type=int, help="As-of week (default: latest available file).")
+    parser.add_argument("--format", choices=["table", "json"], default="table")
+    parser.add_argument("--year", type=int, default=2026)
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--quiet", action="store_true")
+    args = parser.parse_args(argv)
+    setup_logging(args.debug, args.quiet)
+
+    weeks = _projection_weeks(args.year)
+    if not weeks:
+        print(f"No projections for {args.year}. Run `python scripts/build_projections.py --week N`.")
+        return 1
+    week = args.week if args.week is not None else weeks[-1]
+    if week not in weeks:
+        print(f"No projection file for {args.year} week {week}. Available: {weeks}")
+        return 1
+
+    latest = _load_projection(args.year, week)
+    prior_weeks = [w for w in weeks if w < week]
+    prev = _load_projection(args.year, prior_weeks[-1]) if prior_weeks else None
+    preseason = _load_projection(args.year, weeks[0]) if weeks[0] < week else None
+
+    if args.team:
+        _ensure_imports()
+        team = normalizer.normalize(args.team)
+        if not team or team not in latest.get("teams", {}):
+            print(f"No projection for team '{args.team}'"
+                  + (f" (resolved '{team}')" if team else "") + ".")
+            return 1
+        return _project_team(args, team, latest, week, weeks)
+
+    # Slate view: team | rating | proj wins | Δwk | Δpre, sorted by projected wins.
+    rows = []
+    for t, r in latest.get("teams", {}).items():
+        pw = r.get("projected_wins")
+        dw = (pw - _proj_wins(prev, t)) if prev and _proj_wins(prev, t) is not None and pw is not None else None
+        dp = (pw - _proj_wins(preseason, t)) if preseason and _proj_wins(preseason, t) is not None and pw is not None else None
+        rows.append({"team": t, "rating": r.get("rating"), "projected_wins": pw,
+                     "delta_week": None if dw is None else round(dw, 2),
+                     "delta_preseason": None if dp is None else round(dp, 2)})
+    rows.sort(key=lambda x: (x["projected_wins"] is None, -(x["projected_wins"] or 0)))
+
+    if args.format == "json":
+        print(json.dumps({"year": args.year, "week": week,
+                          "experimental": latest.get("meta", {}).get("experimental", True),
+                          "has_drift": prev is not None, "teams": rows}, indent=2))
+        return 0
+    if args.history:
+        return _project_history(args, weeks, latest)
+    _print_projection_table(rows, week, latest, prev is not None)
+    return 0
+
+
+def _print_projection_table(rows: list, week: int, latest: dict, has_drift: bool) -> None:
+    print(f"\nSeason projections — {latest['meta'].get('year')} as of week {week} "
+          f"(EXPERIMENTAL — never drives bets; SPEC §6.5)")
+    if not has_drift:
+        print("  (only one week of projections so far — drift begins once week 2 exists.)")
+    print(f"  {'TEAM':<20} {'RATING':>7} {'PROJ W':>7} {'ΔWK':>6} {'ΔPRE':>6}")
+    for r in rows:
+        dw = "  —" if r["delta_week"] is None else f"{r['delta_week']:+.2f}"
+        dp = "  —" if r["delta_preseason"] is None else f"{r['delta_preseason']:+.2f}"
+        pw = "—" if r["projected_wins"] is None else f"{r['projected_wins']:.2f}"
+        print(f"  {r['team']:<20} {r['rating']:>7.0f} {pw:>7} {dw:>6} {dp:>6}")
+    movers = [r for r in rows if r["delta_week"] is not None]
+    if movers:
+        risers = sorted(movers, key=lambda x: -x["delta_week"])[:5]
+        fallers = sorted(movers, key=lambda x: x["delta_week"])[:5]
+        print("\n  Biggest risers (Δ vs last week): "
+              + ", ".join(f"{r['team']} {r['delta_week']:+.2f}" for r in risers if r["delta_week"] > 0))
+        print("  Biggest fallers: "
+              + ", ".join(f"{r['team']} {r['delta_week']:+.2f}" for r in fallers if r["delta_week"] < 0))
+    cov = latest.get("meta", {}).get("coverage", {})
+    unscheduled = cov.get("unscheduled") or []
+    if unscheduled:
+        print(f"\n  Coverage: {cov.get('scheduled')}/{cov.get('fbs_total')} FBS teams projected. "
+              f"No schedule data (shown as —): {', '.join(unscheduled)} "
+              f"(known snapshot gap; see docs/PHASE2_NOTES.md).")
+
+
+def _project_team(args, team: str, latest: dict, week: int, weeks: list) -> int:
+    import json
+    # Defensive across schema evolution: an older week's file may predate a field, so use
+    # `.get` with defaults everywhere (matches the slate/history reader; SPEC §6.5 2b).
+    rec = latest["teams"].get(team, {})
+    history = [(w, _proj_wins(_load_projection(args.year, w), team)) for w in weeks]
+    if args.format == "json":
+        print(json.dumps({"team": team, "week": week, "record": rec,
+                          "history": [{"week": w, "projected_wins": pw} for w, pw in history]},
+                         indent=2))
+        return 0
+    print(f"\n{team} — {latest['meta'].get('year')} projection as of week {week} (EXPERIMENTAL)")
+    if rec.get("schedule_missing"):
+        print("  No schedule data for this team in the snapshot — cannot project win total "
+              "(known coverage gap; see docs/PHASE2_NOTES.md).")
+        return 0
+    pw, pl = rec.get("projected_wins"), rec.get("projected_losses")
+    pw_s = "—" if pw is None else f"{pw:.2f}"
+    pl_s = "—" if pl is None else f"{pl:.2f}"
+    unc = rec.get("rating_uncertainty")
+    unc_s = "—" if unc is None else f"{unc:.2f}"
+    print(f"  rating {rec.get('rating', 0):.0f} (uncertainty {unc_s}) | "
+          f"record {rec.get('wins_so_far', 0)}-{rec.get('losses_so_far', 0)} | "
+          f"remaining {rec.get('remaining', 0)} | projected {pw_s}-{pl_s}")
+    drift = " ".join(f"wk{w}:{p:.2f}" for w, p in history if p is not None)
+    print(f"  drift: {drift}")
+    print(f"  {'WK':>3} {'OPP':<20} {'SITE':<8} {'SPREAD':>7} {'WIN%':>6}  RESULT")
+    for g in rec.get("games", []):
+        site = "neutral" if g.get("neutral_site") else ("home" if g.get("is_home") else "away")
+        spread = "—" if g.get("model_spread") is None else f"{g['model_spread']:+.1f}"
+        res = "" if not g.get("completed") else ("W" if g.get("won") else "L")
+        wp = g.get("win_prob")
+        wp_s = "  — " if wp is None else f"{wp * 100:>4.0f}%"
+        print(f"  {g.get('week', ''):>3} {g.get('opponent', ''):<20} {site:<8} {spread:>7} "
+              f"{wp_s:>6}  {res}")
+    return 0
+
+
+def _project_history(args, weeks: list, latest: dict) -> int:
+    teams = sorted(latest.get("teams", {}), key=lambda t: -(_proj_wins(latest, t) or 0))
+    by_week = {w: _load_projection(args.year, w) for w in weeks}
+    print(f"\nProjected wins by week — {latest['meta'].get('year')} (EXPERIMENTAL)")
+    print(f"  {'TEAM':<20} " + " ".join(f"wk{w:>2}" for w in weeks))
+    for t in teams:
+        cells = []
+        for w in weeks:
+            pw = _proj_wins(by_week[w], t)
+            cells.append("  —  " if pw is None else f"{pw:>5.2f}")
+        print(f"  {t:<20} " + " ".join(cells))
+    return 0
+
+
 def main() -> int:
     """
     Main entry point for the College Football Market Edge Platform CLI.
@@ -1138,10 +1309,12 @@ def main() -> int:
     Returns:
         int: Exit code (0 for success, 1 for error)
     """
-    # `hypothetical` is a Phase-2 subcommand routed before the (flat) legacy parser;
-    # the full subcommand CLI lands in Phase 4.5.
+    # `hypothetical`/`project` are Phase-2 subcommands routed before the (flat) legacy
+    # parser; the full subcommand CLI lands in Phase 4.5.
     if len(sys.argv) > 1 and sys.argv[1] == "hypothetical":
         return run_hypothetical(sys.argv[2:])
+    if len(sys.argv) > 1 and sys.argv[1] == "project":
+        return run_project(sys.argv[2:])
     try:
         # Parse arguments
         args = parse_arguments()

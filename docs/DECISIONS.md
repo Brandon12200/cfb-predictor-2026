@@ -113,3 +113,15 @@ Binding owner decisions made outside the resolved SPEC §16 set. Each entry reco
 **Date:** 2026-07-03
 **Context:** SPEC §6.5/§6.6 mark projections + belief-drift + `cfb project` as cut-first/freeze-exempt (§15); ratings + pricer + hypothetical are freeze-disciplined.
 **Decision (owner-selected via the Phase-2 plan question):** **Split 2a / 2b** (mirrors 1a/1b/1c). 2a (this work): ratings + pricer + hypothetical + model-vs-market logging + `data/ratings/`. 2b: projections + drift + `cfb project` + `data/projections/`. **Storage:** `data/ratings/2026_week_NN.json` and `data/projections/2026_week_NN.json` are **committed (not gitignored)**; the immutable-history hook is extended to `data/ratings/`. Ratings are a **derived export** — the prediction path recomputes ratings from the snapshot (memoized by `snapshot_id`) and never reads `data/ratings/`, preserving the 1b reproducibility contract.
+
+---
+
+## D14 — Phase-2b projection scope, freeze-exempt home, market-total deferral (approved via plan)
+**Date:** 2026-07-03
+**Context:** Phase 2b (SPEC §6.5) is freeze-exempt/cut-first. Three implementation choices needed recording; none are calibration (2b reuses the ratified D12 σ=16, adds no constants).
+**Decision (approved by ratifying the Phase-2b plan):**
+- **Freeze-exempt home:** the projection roll-up lives in a **new `analytics/` package** (`analytics/projections.py`), NOT frozen `engine/` — 2b must stay editable after `v2026-frozen`. It calls the frozen `engine.matchup_pricer`/`engine.power_ratings` but is not part of them. Phase 4 expands `analytics/` (CLV, calibration, reports).
+- **Scope:** project **all FBS teams** (scoped via `data.team_registry.get_fbs_canonical_names()` — no hardcoded names), per §6.5's "every remaining game" + the season-long time-lapse purpose. Opponents absent from ratings (incl. FCS) price from the flat baseline prior via the pricer fallback; they are not themselves projected. Counting convention documented in `SCHEMA.md` §6.7: all scheduled games incl. FCS, regular season only.
+- **Market win total (§6.5) deferred:** no futures data source in 2026 core (Odds free tier has no season win totals) → recorded **not-available** (honest-missing), never fabricated. Revisit if a source is added.
+- **Reproducibility/immutability:** projections are a derived export (never on the prediction path); `data/projections/` is committed and the immutable-history hook is extended to it (same posture as `data/ratings/`, D13). A per-week `meta.schema_version` lets the season-spanning drift/history reader tolerate schema evolution (2b is freeze-exempt, so a later week's file may add a field).
+**Implication verified:** preseason (SP+/RP empty → flat priors), projections are near-uniform (~6 wins, variation from schedule length only) — the honest "no signal yet" state; the drift view earns value from ~weeks 4–6.
