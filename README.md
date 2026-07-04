@@ -15,14 +15,18 @@ Measurement is built around **closing line value** — did the model's number be
 
 ## The 2025 baseline
 
-A predecessor model ran frozen through the 2025 season and motivated this rebuild:
+A predecessor model ran frozen through the 2025 season. Its original scorecard reported **57.0% against the spread and +8.82% ROI** over 300 games — and re-grading that record with this repository's own measurement code is precisely why the numbers below are different, and why the rebuild exists.
 
-| Metric | 2025 (Weeks 1–14, 300 games) |
+The original figure came from a script that asked "did the home team beat the model's *own* number?" and counted 171 of 300. That measures the model's directional bias, not a wager you could place: it always bets the home side, and it grades against the model's own spread rather than the market. Graded as an actual strategy — the side the model favored, against the Vegas line, the way you would really bet — the 2025 model went:
+
+| Metric | 2025 (Weeks 1–14, 294 graded bets) |
 |---|---|
-| Against the spread | 57.0% |
-| ROI at −110 | +8.82% |
+| Against the spread | 46.6% |
+| ROI at −110 | −11.0% |
 
-Read this cautiously. Over 300 games the 95% confidence interval on 57% is roughly **51–63%** — suggestive, not conclusive: enough to justify a more careful second version, not enough to claim a durable edge. There are **no 2026 performance figures** in this repository, and there will not be any until games are played and graded in the open. Nothing here is a profit claim.
+That is below break-even (~52.4% at −110). The 95% interval on 46.6% is roughly **41–52%**; the season does not establish that the model beat the market, and the honest reading is that its apparent edge was largely a measurement artifact. There are **no 2026 performance figures** in this repository, and none will appear until games are played and graded in the open. Nothing here is a profit claim.
+
+The reframe is the point. This is a worse result for the old model and a better one for the project: the measurement was made trustworthy enough to overturn its own headline. The harness that produced the 46.6% lives in `analytics/calibration_evidence.py`, every number here is reproducible (see the guided tour), and the 2026 season is the real test — a recalibrated model, frozen in advance, graded under measurement that cannot flatter it.
 
 ## Design principles
 
@@ -157,7 +161,7 @@ GEORGIA — 2026 projection as of week 1 (EXPERIMENTAL)
 
 Road games take a home-field penalty, the neutral-site game prices to a coin flip — the mechanics are visible even while the ratings behind them are still empty.
 
-**The evidence the model is calibrated against.** The frozen weights aren't guesses; they're set against a 300-game archive of the 2025 forward test, reported without flattering it:
+**The evidence the model is calibrated against.** The frozen weights are calibrated against the 300-game 2025 archive where it has evidence, and by documented reasoning where it doesn't (most physical-factor coefficients are the latter — the calibration log labels every constant as measured or reasoned). The harness reports the archive without flattering it:
 
 ```
 $ python scripts/build_calibration_evidence.py
@@ -176,7 +180,7 @@ By predicted edge
   1-2            n=139  ATS=46.8%  ...
 ```
 
-This is the humbling part, and it is the whole reason for the rebuild. Graded honestly, the 2025 model went **46.6% ATS** — below break-even — its confidence score barely moved (293 of 294 bets fell in one 60–70 bucket), and its edges were all tiny. Those three facts are exactly the case for the new version: be selective enough to skip marginal bets (`NO_BET`), make confidence tiers that actually separate, and lean on the physical factors that held up. And note the harness's own instruction — read the intervals, not the point estimates; on small cells they are wide.
+This is the 46.6% from the baseline section, shown here in its detail — and every slice is a lesson for the rebuild. The confidence score barely moved (293 of 294 bets fell in one 60–70 bucket), so the tiers didn't separate good bets from bad. The edges were all tiny (nothing above 2 points), so the model was betting marginal disagreements. Both point the same way: be selective enough to skip the marginal bets (`NO_BET`), make confidence tiers that actually mean something, and lean on the physical factors that held up. And note the harness's own instruction — read the intervals, not the point estimates; on 40–60-game cells they are wide.
 
 Every command here is reproducible: rerun any of them and the output is byte-identical, with no API calls.
 
