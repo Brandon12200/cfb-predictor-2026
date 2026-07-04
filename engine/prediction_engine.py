@@ -214,9 +214,10 @@ class PredictionEngine:
                 'explanation': 'No betting line available for contrarian analysis'
             }
         
-        # Apply factor adjustments to Vegas spread
-        # First apply additive, then multiplicative
-        contrarian_spread = (vegas_spread + total_adjustment) * multiplicative_adjustment
+        # Apply factor adjustments to the Vegas line. The multiplicative modifier scales the
+        # model's EDGE (its disagreement with the market), NOT the Vegas baseline (D19): sentiment
+        # can amplify/dampen our edge, but it must never rescale the market's own number.
+        contrarian_spread = vegas_spread + total_adjustment * multiplicative_adjustment
         
         # Calculate edge size (difference between Vegas and our prediction)
         edge_size = abs(contrarian_spread - vegas_spread)

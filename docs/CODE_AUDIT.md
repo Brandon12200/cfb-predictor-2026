@@ -335,3 +335,26 @@ entry's confidence language must match the (wide) interval width.
 
 **Result:** offline suite **453 passed / 4 skipped**; `make lint` clean (24 typed source files);
 `make verify-phase-3` **ALL PHASE 3 CHECKS PASSED (5 pending — 3c/3d)**; `-1`/`-2` stay green.
+
+## MarketSentiment wiring fix (Bug #7) — 2026-07-04
+
+Standalone follow-up (not a phase). Root cause of the D17 artifact; fixed before 3c.
+- `factors/market_sentiment.py`: `is_multiplicative=True`; range `[0.5,1.5]→[0.85,1.15]`; **dormant
+  gate** (returns 1.0 unless real line-movement data); **removed** the MD5 team-name hash + the
+  spread/week "characteristic" heuristics (`_analyze_game_characteristics` deleted) — binding #4.
+- `factors/base_calculator.py`: multiplicative branch uses the value **directly** as the multiplier.
+- `engine/prediction_engine.py`: multiplier scales **`total_adjustment` only**, not the Vegas baseline.
+- Tests: `test_market_sentiment.py` (hash tokens banned; dormant-1.0; range; flag). One scenario test
+  (`test_playoff_elimination_game_scenario`) had been passing on the phantom edge — corrected to
+  assert the honest no-fabricated-edge behavior.
+- Docs: CALIBRATION_LOG (MSF.1–3 + measured deltas), DECISIONS D19 + **D17 addendum** (reconciliation
+  table, edge_direction sign-convention accounting, L3/L4 restatement).
+
+**3c follow-up (from review):** a multiplicative modifier at its neutral value (1.0) is still marked
+`activated: True` by `base_calculator.apply_threshold` (which tests `abs(value) >= threshold`, not
+deviation from 1.0), so a dormant MarketSentiment now deterministically inflates `factors_activated`
+and slightly dilutes `avg_confidence` on every prediction. Harmless to spreads (multiplier is 1.0),
+but 3c's confidence-tier rework should base multiplicative activation on `abs(value − 1.0)`.
+
+**Result:** offline suite **456 passed / 4 skipped**; `make lint` clean; `make verify-phase-3` all
+checks PASS (budget now over 14 additive factors, physical 56%); `-1`/`-2` green.

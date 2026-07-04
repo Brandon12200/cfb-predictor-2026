@@ -30,10 +30,14 @@ class MarketSentimentCalculator(BaseFactorCalculator):
         self.category = "market"
         self.description = "Detects sharp money moving against public sentiment"
         
-        # Output range for this factor (multiplicative modifier)
-        self._min_output = 0.5   # Can reduce adjustment by 50%
-        self._max_output = 1.5   # Can amplify adjustment by 50%
-        
+        # Multiplicative modifier: its value IS the multiplier applied to total_adjustment
+        # (D19). MODIFIER weights are inert by design — the calibration is the RANGE, not a weight.
+        self.is_multiplicative = True
+        # Output range (the dormant cap for slice 1.5). Ratified 2026-07-03: a fabrication-history
+        # factor with mostly-missing inputs gets a tight cap; widen in 2027 with attribution.
+        self._min_output = 0.85  # Can dampen the model edge by 15%
+        self._max_output = 1.15  # Can amplify the model edge by 15%
+
         # Hierarchical system configuration
         self.factor_type = FactorType.MODIFIER
         self.activation_threshold = 0.1  # Low threshold for modifiers
@@ -99,78 +103,51 @@ class MarketSentimentCalculator(BaseFactorCalculator):
                 vegas_spread = cfbd_spread
             else:
                 return 1.0  # Can't analyze without any spread data
-        
-        # Implement game-specific market sentiment analysis
-        # Since we don't have real line movement data, create realistic variations
-        # based on game characteristics that would affect market sentiment
-        
+
+        # Honest gate (D19, binding principle #4): real market sentiment needs line-movement
+        # history, which is deferred to slice 1.5 (D6/SCHEMA §4). Absent it, the factor is
+        # DORMANT — a neutral 1.0 (no effect on the model edge), NEVER a signal manufactured
+        # from a team-name hash or spread/week heuristics. The multiplier activates only once
+        # real movement data exists; the tightened range is its cap for that day.
+        if not self._has_line_movement(home_team, away_team, context):
+            return 1.0
+
         sentiment_score = self._analyze_game_sentiment(home_team, away_team, vegas_spread, context)
-        
-        # Convert sentiment score to modifier
-        modifier = 1.0 + (sentiment_score * 0.4)  # Scale to 0.6-1.4 range
-        
-        # Log significant market sentiment
-        if abs(modifier - 1.0) > 0.1:
+
+        # Map the [-1, 1] real-movement sentiment into the ratified [0.85, 1.15] multiplier cap.
+        modifier = 1.0 + (sentiment_score * (self._max_output - 1.0))
+
+        if abs(modifier - 1.0) > 0.05:
             sentiment_type = "amplifies" if modifier > 1.0 else "dampens"
-            self.logger.debug(f"Market sentiment {sentiment_type} prediction for {home_team} vs {away_team} (×{modifier:.2f})")
-        
-        # Ensure within bounds
+            self.logger.debug(f"Market sentiment {sentiment_type} the model edge for {home_team} vs {away_team} (×{modifier:.2f})")
+
         return max(self._min_output, min(self._max_output, modifier))
     
-    def _analyze_game_sentiment(self, home_team: str, away_team: str, 
+    def _analyze_game_sentiment(self, home_team: str, away_team: str,
                                vegas_spread: float, context: Dict) -> float:
         """
-        Analyze game-specific characteristics that affect market sentiment.
-        
-        Returns sentiment score: -1.0 to +1.0
-        Positive = amplify contrarian signal, Negative = dampen signal
+        Sentiment score from REAL market signals only: -1.0 to +1.0
+        (positive = amplify the model edge, negative = dampen it).
+
+        Only reached once real line-movement data exists (``calculate`` gates on it). No
+        game-characteristic heuristics and no team-name hash — those manufactured signal from
+        nothing and are removed (D19, binding principle #4).
         """
         sentiment_factors = []
-        
-        # PRIMARY: Real line movement detection using CFBD data
+
         line_movement_signal = self._detect_actual_line_movement(home_team, away_team, context)
         if line_movement_signal != 0.0:
             sentiment_factors.append(line_movement_signal)
             self.logger.debug(f"Line movement signal: {line_movement_signal:.2f} for {away_team} @ {home_team}")
-        
-        # NEW: Line freeze / trap game detection
+
         trap_signal = self._detect_line_freeze(home_team, away_team, context)
         if trap_signal > 0.0:
             sentiment_factors.append(trap_signal * 0.8)  # Strong contrarian signal
             self.logger.debug(f"Trap game signal: {trap_signal:.2f} for {away_team} @ {home_team}")
-        
-        # SECONDARY: Game characteristic analysis (fallback when no line data)
-        characteristic_signals = self._analyze_game_characteristics(home_team, away_team, vegas_spread, context)
-        sentiment_factors.extend(characteristic_signals)
-        
-        # Calculate overall sentiment
+
         if not sentiment_factors:
             return 0.0
-        
-        # Weight factors with line movement getting priority
-        if line_movement_signal != 0.0:
-            # Line movement gets 70% weight, characteristics get 30%
-            line_weight = 0.7
-            char_weight = 0.3 / len(characteristic_signals) if characteristic_signals else 0
-            
-            weighted_sentiment = (line_movement_signal * line_weight + 
-                                sum(characteristic_signals) * char_weight)
-        else:
-            # No line movement, use characteristics only
-            weighted_sentiment = sum(sentiment_factors) / len(sentiment_factors)
-        
-        # Add deterministic variation based on team names for consistency. Uses a
-        # stable hash (not Python's PYTHONHASHSEED-randomized hash()) so predictions
-        # are bit-identical across process reruns (reproducibility contract, SCHEMA §3).
-        import hashlib
-        digest = hashlib.md5(f"{home_team}_{away_team}".encode()).hexdigest()
-        team_hash = int(digest[:8], 16) % 1000
-        hash_adjustment = (team_hash / 1000 - 0.5) * 0.2  # -0.10 to +0.10
-        
-        final_sentiment = weighted_sentiment + hash_adjustment
-        
-        # Clamp to range
-        return max(-1.0, min(1.0, final_sentiment))
+        return max(-1.0, min(1.0, sum(sentiment_factors) / len(sentiment_factors)))
     
     def _detect_actual_line_movement(self, home_team: str, away_team: str, context: Dict) -> float:
         """
@@ -257,49 +234,6 @@ class MarketSentimentCalculator(BaseFactorCalculator):
             # Line moved toward underdog (sharp money)
             # Market is becoming more efficient, less contrarian value
             return -signal_strength * 0.5  # Reduced penalty for sharp action
-    
-    def _analyze_game_characteristics(self, home_team: str, away_team: str, 
-                                    vegas_spread: Optional[float], context: Dict) -> List[float]:
-        """
-        Analyze game characteristics when line movement data unavailable.
-        
-        Returns list of sentiment factors.
-        """
-        factors = []
-        
-        # Handle None vegas_spread
-        if vegas_spread is None:
-            vegas_spread = 0  # Default to pick'em
-        
-        # Factor 1: Spread size analysis
-        spread_magnitude = abs(vegas_spread)
-        if spread_magnitude > 14:
-            factors.append(0.3)  # Large spreads favor contrarian
-        elif spread_magnitude > 7:
-            factors.append(0.1)  # Medium spreads slight contrarian
-        elif spread_magnitude < 3:
-            factors.append(-0.2)  # Pick'em games often efficient
-        
-            
-        # Factor 3: Week-based sentiment
-        week = context.get('week')
-        if week is None:
-            week = 1  # Default to week 1 if not provided
-        if week == 1:
-            factors.append(-0.3)  # Week 1 highly unpredictable, market careful
-        elif week <= 3:
-            factors.append(0.1)   # Early season still has public bias
-        elif week >= 10:
-            factors.append(0.2)   # Late season desperation creates opportunity
-        
-        # Factor 4: Spread type patterns
-        is_half_point = abs(vegas_spread % 1) == 0.5
-        if is_half_point:
-            factors.append(-0.1)  # Sharp money likely involved
-        else:
-            factors.append(0.1)   # Round numbers attract public
-        
-        return factors
     
     def _get_cfbd_current_spread(self, home_team: str, away_team: str, context: Dict) -> Optional[float]:
         """

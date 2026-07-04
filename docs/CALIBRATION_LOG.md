@@ -202,5 +202,54 @@ get a CALIBRATION_LOG record, not just a commit message. Deterministic; suite gr
 
 ---
 
+## MarketSentiment wiring fix (Bug #7) — **RATIFIED** (owner, 2026-07-04)
+
+Standalone follow-up to the 3b review finding. Three coupled defects, all pre-existing (on `main`
+and in the 2025-era model); this is the **mechanical root cause of the D17 artifact** (see the D17
+addendum in DECISIONS). Fixed **before 3c** so NO_BET floors and confidence tiers calibrate against a
+clean model, not a phantom.
+
+### MSF.1 — Multiplicative wiring (behavior-change class)
+`MarketSentimentCalculator.is_multiplicative` was never set, so a value **centered on 1.0** was summed
+**additively** — injecting a ≈+1.0 constant into `total_adjustment` on essentially every game.
+- `is_multiplicative = True`; the value is now used **directly as the multiplier**
+  (`base_calculator.py`: multiplicative branch = `validated_value`, no re-centering).
+- Applied to **`total_adjustment` only** — `contrarian = vegas + total_adjustment · m`
+  (`prediction_engine.py`), never `(vegas + total_adjustment) · m`. Sentiment scales the model's
+  **edge**, never the market's own number (D19). This also removes a second latent distortion that
+  was dormant only because the flag was unset.
+- **MODIFIER factors are weightless by design**: `get_dynamic_weight` returns 1.0 for MODIFIER, so
+  `self.weight` is inert — a modifier is calibrated by its **range**, not a weight. It is now removed
+  from additive accounting (the additive budget is over the **14 non-modifier factors**; physical
+  share is **56%**, max single ~11%, physical:situational 4:1 — all still inside the tripwire).
+
+### MSF.2 — Team-name hash removed (binding principle #4)
+`_analyze_game_sentiment` added `hash_adjustment = (md5(home_away) % 1000 / 1000 − 0.5)·0.2` (±0.10)
+plus spread-size/week heuristics — a signal **manufactured from nothing**, mislabeled "market
+sentiment." Both are deleted. **This produced the stdev-0.066 wiggle** around the +1 constant seen in
+the 2025 archive (the factors were otherwise silent). Locked out by a source-scan test.
+
+### MSF.3 — Dormant until real data + tightened range (`reasoned`)
+- **Dormant gate:** with line-movement history deferred to slice 1.5 (D6), the factor now returns a
+  neutral **1.0 (no effect)** whenever no real movement data exists — the honest state of a factor
+  whose inputs haven't arrived, matching the physical factors' missing-data behavior.
+- **Range `[0.5, 1.5] → [0.85, 1.15]`** (evidence-class `reasoned`): the ratified **cap for when
+  slice 1.5 brings real movement**. Halving/1.5×-ing an edge is huge leverage for a factor with a
+  fabrication history; a first-season cap errs tight, widened in 2027 with attribution. Inactive now
+  (the factor is dormant at 1.0), but ratified consciously so the leverage is on the record.
+
+### Measured before/after (2026 wk1 dry-run slate, 10 games with lines)
+| | contrarian − vegas (edge) |
+|---|---|
+| **before** (phantom) | 0.93 … 1.15 — **~1.0 on every game** |
+| **after** (fixed) | 0.00 … 0.15 — **0 where no factor fires**, small where physical fires |
+
+Mean contrarian-spread shift **+0.97, on 10/10 games**. The MarketSentiment multiplier is **1.0 on
+every game** (correctly dormant). **Rerun contract:** the fix is *supposed* to break bit-identity vs
+the old model — determinism *within* the corrected model holds (pure function of the snapshot); these
+deltas are the evidence, not a regression.
+
+---
+
 *Phase 3c/3d will add the situational-threshold / NO_BET / confidence-tier / schema entries here,
 each evidence-class-labeled, under the same propose→approve rule.*

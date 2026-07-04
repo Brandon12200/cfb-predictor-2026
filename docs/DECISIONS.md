@@ -170,3 +170,33 @@ Binding owner decisions made outside the resolved SPEC §16 set. Each entry reco
 **Context:** Phase 3b makes the schedule-intelligence coefficients a single source (D15) consumed by both the matchup pricer's model-spread schedule adjustment and the six contrarian physical factors. Two of the six sub-signals — `sandwich` (a ranked opponent in an adjacent week) and `consecutive_road` (cumulative road wear) — are not straightforwardly "how good is this team in this game."
 **Decision:** the pricer's model spread consumes only the **fatigue/location** subset (`bye`, `short_week`, `travel`/tz, `altitude`). **`sandwich` and `consecutive_road` are contrarian-only** — they are physical *factors* that adjust the contrarian line but do **not** feed the team-quality model spread. Rationale (owner): a letdown/look-ahead spot is a **market-mispricing hypothesis, not a team-quality fact**; the model spread should price how good a team is, and bet the motivational edge separately. `physical_adjustments()` (the pricer's call) deliberately excludes them; the two factors read the shared coefficients directly.
 **Also ratified in the same batch (see CALIBRATION_LOG Phase 3b):** `travel_cap` trimmed 2.0 → 1.5 (0.6 HFA, humility on an unmeasured extreme); physical reweight to 52% additive share framed as **demotion of measured non-signal** (situational noise L2 + contrarian-adds-nothing D17), not promotion on 2025 authority; `MarketSentiment` 35% → 6% additive; the base-calculator activation fix (raw 0.0 → not activated) logged as behavior-changing; `StyleMismatch`/`MarketSentiment` re-categorized `matchup`/`market` so the contribution-budget ratio measures physical vs the motivational factors; budget bounds (single-factor < 15%, physical:situational ≥ 2:1) ratified as a drift **tripwire**.
+
+---
+
+## D19 — MarketSentiment: multiplicative on the edge, dormant until real data, no fabrication (Bug #7 fix) — **RATIFIED (owner, 2026-07-04)**
+**Date:** 2026-07-04
+**Context:** The 3b review surfaced that `MarketSentimentCalculator` never set `is_multiplicative`; investigation found three coupled defects (all pre-existing) that together were the mechanical root cause of the D17 artifact (see the D17 addendum).
+**Decision:**
+- **Multiplicative, used directly, on the edge only.** `is_multiplicative = True`; the value is the multiplier (no re-centering); it scales **`total_adjustment` only** — `contrarian = vegas + total_adjustment · m`, never `(vegas + total_adjustment) · m`. Sentiment may amplify/dampen the model's *disagreement* with the market; it must never rescale the market's own number.
+- **MODIFIER factors are weightless by design.** `self.weight` is inert for modifiers (`get_dynamic_weight` returns 1.0); a modifier is calibrated by its **range**, not a weight, and is excluded from additive-budget accounting.
+- **No fabrication (#4).** The team-name MD5 hash and the spread/week "characteristic" heuristics — signal manufactured from nothing — are removed.
+- **Dormant until real data.** With line-movement history deferred to slice 1.5 (D6), the factor returns neutral **1.0 (no effect)** whenever no real movement exists — the honest state of a factor whose inputs haven't arrived.
+- **Range `[0.5, 1.5] → [0.85, 1.15]`** (`reasoned`): the ratified cap for when slice 1.5 brings real movement; a first-season, fabrication-history factor gets a tight cap, widened in 2027 with attribution.
+**Evidence:** on the 2026 wk1 dry-run slate the fix removes a **+0.97-pt mean shift on 10/10 games**; edges collapse from ~1.0-everywhere to 0–0.15 (0 where no factor fires). Rerun is intentionally not bit-identical vs the old model; determinism within the corrected model holds.
+
+## D17 addendum — root cause of the 2025 artifact identified (Bug #7) — **RATIFIED (owner, 2026-07-04)**
+**Date:** 2026-07-04
+D17 established that the 57.0% headline was a measurement artifact. This addendum records the **mechanical cause**, found while fixing the MarketSentiment wiring (D19).
+**The 2025 "contrarian" model was a near-constant +1.0 shove, not a set of factor signals.** Across all 300 archive predictions, `contrarian_spread − vegas_spread` has **mean 0.986, median exactly 1.000, stdev 0.066**, and **300/300** games land within ±0.5 of +1.0. The constant is MarketSentiment's additive-vs-multiplicative bug (a 1.0-centered multiplier summed as points); the tiny stdev-0.066 wiggle around it was the now-removed team-name hash + spread/week heuristics. The factor system was otherwise effectively silent.
+**It reconciles the D17 diagnostic table exactly** (always-home, canonical cover rule):
+
+| always-home graded against | result |
+|---|---|
+| the model's contrarian spread | **57.0%** (171-129) |
+| contrarian **minus the +1 phantom** | **54.2%** (161-136) |
+| the Vegas line directly | **54.4%** (160-134) |
+
+Removing the +1 collapses 57.0% onto the independent Vegas number — **the entire 57-vs-54.4 gap in the D17 table *is* the phantom.**
+**edge_direction accounting.** All 300 signed edges are +1.0 (home-ward in spread space), yet the stored `edge_direction` splits 120 home / 180 away. That split is **100% determined by the sign of each game's Vegas line** (home-favored → "away" 180×; away-favored → "home" 113×; 7 boundary cases), i.e. the constant phantom mechanically bets the underdog every game, refracted through which side the line favored. It was never a directional signal.
+**L3/L4 restatement.** The 2025 confidence and edge distributions L3/L4 rested on were phantom-contaminated: the "155-ish sub-1pt / rest 1–2pt" edge bucket (**0 games above 2pt**) was the constant, not hundreds of real marginal disagreements. Their *directives survive as design principles* — L4: don't fire on marginal edges; L3: confidence should rank ATS — but their **"2025 evidence" is now understood as measurement of the bug**, not of the market. Per the 3c constraint, the harness's confidence→ATS and edge→ATS tables may NOT be cited as measured evidence.
+**Why it's in the log:** D17 said the headline was an artifact; this says *why*, and proves it to the decimal. Bug #7 — the most explanatory finding yet: the 2025 model wasn't a weak contrarian edge, it was one wiring bug applied 300 times.
