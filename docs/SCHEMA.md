@@ -90,8 +90,9 @@ so appending a closing line leaves `snapshot_id` and every rerun byte-identical 
 by `test_append_does_not_change_snapshot_id_or_bytes`).
 
 **As built (1b):** the engine's result `timestamp` is set from the snapshot's `built_at`
-(`prediction_engine._build_prediction_result`), and `market_sentiment`'s deterministic
-team-hash uses stable `hashlib.md5` (not PYTHONHASHSEED-randomized `hash()`). Because the
+(`prediction_engine._build_prediction_result`). (The `market_sentiment` team-name `hashlib.md5`
+"variation" that this paragraph once cited was a fabrication and was **removed in the Bug #7 fix,
+D19** — the factor is deterministic simply because it is dormant at 1.0.) Because the
 snapshot-first flow has no wall-clock "live" prediction to diverge from, two snapshot-based
 predictions are in practice identical over the **full** payload — `test_two_reruns_are_bit_identical`
 asserts byte-equality including `timestamp`. `VOLATILE_FIELDS` remains the documented contract
@@ -100,22 +101,22 @@ for any future comparison against a wall-clock-stamped record (e.g. the storage 
 
 ---
 
-## 4. `market_sentiment` in core Phase 1 (documented deliberate state)
+## 4. `market_sentiment` — dormant multiplicative modifier until slice 1.5 (D19, was Bug #7)
 
-Line-movement history is deferred to slice 1.5 (D6). In core Phase 1 the factor
-consumes only the **prediction-time spread** (Odds API) plus, where present,
-**CFBD's opening line**. **Line-movement is recorded as `missing` in the
-manifest.** On missing movement the factor **reduces its contribution and applies
-a confidence penalty** — it never fabricates a movement of 0. This is intended
-behavior, not a defect.
+Line-movement history is deferred to slice 1.5 (D6), and it is the factor's **only** real signal.
+Until it arrives, `market_sentiment` is a **dormant multiplicative modifier: it returns a neutral
+1.0 (no effect on the model edge)** — it does not fabricate a signal. When real movement lands, its
+value is the multiplier applied to `total_adjustment` (not the Vegas baseline), clamped to the
+ratified `[0.85, 1.15]` cap. See CALIBRATION_LOG *MarketSentiment wiring fix* + DECISIONS D19.
 
-**Public-betting share is also unavailable** (no free data source) and is therefore
-UNAVAILABLE, not simulated: the trap/line-freeze/reverse-line-movement signals that
-depend on it return no-signal (0.0). The prior implementation fabricated a public
-betting % from hardcoded team-popularity/rivalry lists + `random`/`hashlib` noise — all
-removed in 1b (SPEC §5.2, binding principles #2/#4). The factor now runs only on real
-signals: spread size/week/spread-type characteristics, cross-book steam dispersion, and
-the deferred missing line-movement state.
+**Superseded (was Bug #7, fixed in D19):** an earlier implementation, while dormant, still
+manufactured a signal from a **team-name `hashlib.md5` hash** and **spread-size/week/spread-type
+heuristics** (dressed up as "sentiment"), and — worse — never set `is_multiplicative`, so a
+1.0-centered multiplier was summed **additively**, injecting a ≈+1.0 constant into every prediction
+(the mechanical root cause of the D17 artifact). All of that is removed: the hash and the
+`_analyze_game_characteristics` heuristics are deleted (binding #4), and the wiring is multiplicative.
+**Public-betting share** remains UNAVAILABLE (no free source) — trap/line-freeze/reverse-line-movement
+signals return no-signal (0.0), never simulated.
 
 ---
 

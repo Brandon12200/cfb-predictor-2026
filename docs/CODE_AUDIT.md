@@ -311,7 +311,9 @@ entry's confidence language must match the (wide) interval width.
   each separate in `factor_breakdown`. `tests/test_physical_coefficients.py` + `test_physical_factors.py`.
 
 **Changed (calibration batch — CALIBRATION_LOG Phase 3b; owner-ratified)**
-- Reweight to physical (52% additive share); `MarketSentiment` 35%→6%; `travel_cap` 2.0→1.5.
+- Reweight to physical (52% additive share at 3b time; **renormalizes to 56% after the Bug #7 fix
+  excludes the modifier** — D19); `MarketSentiment` "35%→6%" (a **runtime no-op**: MODIFIER weight is
+  inert; see D19); `travel_cap` 2.0→1.5.
 - `StyleMismatch`/`MarketSentiment` re-categorized `matchup`/`market` (grouping only, so the
   contribution-budget ratio measures physical vs the motivational factors).
 - `factors/base_calculator.py::safe_calculate`: raw-`0.0` value → **not activated** (was activated).
@@ -323,18 +325,27 @@ entry's confidence language must match the (wide) interval width.
 - `LookaheadSandwichCalculator` (situational) — superseded by the physical `Sandwich` factor;
   audited free of hardcoded rivalry lists. Three tests re-pointed to the physical `Sandwich`.
 
-**Carry-forward for 3c/3d cleanup**
-- **`ExperienceDifferential` crashes on missing coaching data** (`'<' not supported between int and
-  NoneType`) — the preseason norm — and is only caught+zeroed by `safe_calculate`. "Crashes caught by
-  a wrapper" ≠ "handles missing data"; add explicit `None`-handling (surfaced while measuring the
-  MarketSentiment follow-up).
-- **MarketSentiment `is_multiplicative` wiring** is a ratified standalone follow-up (see CALIBRATION_LOG
-  MarketSentiment note): its weight is inert (MODIFIER), and it injects a ≈+1 additive phantom — the
-  mechanical root cause of the D17 artifact. Fixed before 3c so NO_BET floors calibrate against the
-  corrected model.
-
 **Result:** offline suite **453 passed / 4 skipped**; `make lint` clean (24 typed source files);
 `make verify-phase-3` **ALL PHASE 3 CHECKS PASSED (5 pending — 3c/3d)**; `-1`/`-2` stay green.
+*(MarketSentiment `is_multiplicative` wiring — the 3b-review follow-up once listed here — is now
+DONE, merged as PR #12 / Bug #7 / D19.)*
+
+---
+
+## Consolidated 3c/3d carry-forward (the single canonical list)
+
+Items discovered this session that 3c/3d must fold in. **Both cleanup items land inside 3c's
+confidence-tier rework** (it redefines confidence anyway):
+1. **`ExperienceDifferential` crashes on missing coaching data** (`'<' not supported between int and
+   NoneType`) — the preseason norm — and is only caught+zeroed by `safe_calculate`. "Crashes caught by
+   a wrapper" ≠ "handles missing data"; add explicit `None`-handling. (`factors/coaching_edge.py`.)
+2. **Dormant-modifier activation bookkeeping.** `base_calculator.apply_threshold` marks a value
+   `activated` when `abs(value) >= threshold`, so a dormant `MarketSentiment` at **1.0** is counted as
+   activated — inflating `factors_activated` and slightly diluting `avg_confidence` on every prediction.
+   Multiplicative-factor activation should key on **`abs(value − 1.0)`**, not raw magnitude. Harmless to
+   spreads (multiplier is 1.0); matters for the confidence distribution 3c calibrates.
+3. **(3d) prediction schema v2 + 2025 converter + 2026 dry-run acceptance** — the remaining Phase-3 slice
+   after 3c (see `docs/SPEC.md` §7 and the approved plan).
 
 ## MarketSentiment wiring fix (Bug #7) — 2026-07-04
 
@@ -350,11 +361,8 @@ Standalone follow-up (not a phase). Root cause of the D17 artifact; fixed before
 - Docs: CALIBRATION_LOG (MSF.1–3 + measured deltas), DECISIONS D19 + **D17 addendum** (reconciliation
   table, edge_direction sign-convention accounting, L3/L4 restatement).
 
-**3c follow-up (from review):** a multiplicative modifier at its neutral value (1.0) is still marked
-`activated: True` by `base_calculator.apply_threshold` (which tests `abs(value) >= threshold`, not
-deviation from 1.0), so a dormant MarketSentiment now deterministically inflates `factors_activated`
-and slightly dilutes `avg_confidence` on every prediction. Harmless to spreads (multiplier is 1.0),
-but 3c's confidence-tier rework should base multiplicative activation on `abs(value − 1.0)`.
+**3c follow-up (from review):** the dormant-modifier activation-bookkeeping quirk is recorded in the
+*Consolidated 3c/3d carry-forward* list above (item 2).
 
 **Result:** offline suite **456 passed / 4 skipped**; `make lint` clean; `make verify-phase-3` all
 checks PASS (budget now over 14 additive factors, physical 56%); `-1`/`-2` green.

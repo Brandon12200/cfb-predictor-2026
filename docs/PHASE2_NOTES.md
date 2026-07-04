@@ -96,7 +96,8 @@ sp_ratings, venues, schedule_intel, betting_lines`.
   diagnostic (§6.6). Closing spreads for CLV live in the append-only `data/lines/` store (Phase 4).
 - **`data/team_registry.py`** — every FBS team + `get_venue(team)` (for hypotheticals at any venue).
 - **Reproducibility contract (SCHEMA §3):** predictions embed `snapshot_id`; result timestamp is
-  frozen from the snapshot; `market_sentiment` uses stable hashlib. **The pricer must be deterministic**
+  frozen from the snapshot. (The `market_sentiment` "stable hashlib" once cited here was a fabrication,
+  **removed in D19 / Bug #7**; determinism no longer depends on it.) **The pricer must be deterministic**
   (a rating for a given snapshot is fixed). Bit-identical rerun test guards it.
 - **`engine/prediction_engine.py`** — where the pricer/rating integrate (the model spread + model-vs-market
   gap join the result). Reads context via `data_manager.get_game_context` (snapshot-only, no network).

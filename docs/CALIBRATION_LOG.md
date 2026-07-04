@@ -132,6 +132,13 @@ note below). MarketSentiment's real effect is a ≈+1 additive phantom independe
 in the standalone follow-up. So the *effective* additive budget is over the **14 non-modifier factors**;
 `market` is listed here for continuity with the (mistaken) pre-fix accounting.
 
+**Post-D19 (Bug #7 fix) renormalization — the current-on-`main` numbers:** once `MarketSentiment` is
+excluded from additive accounting (`is_multiplicative=True`), the shares renormalize over the 14
+additive factors: **physical 56%**, situational 14%, coaching 12%, matchup 10%, momentum 7%; max single
+factor ~11% (Bye/Travel tied); physical:situational still 4:1 — all inside the tripwire. The **52%**
+above is the correct at-3b-time figure (computed over 15, with MarketSentiment then wrongly additive);
+`verify-phase-3` measures the live **56%**.
+
 Biggest single factor among the real additive factors: **ByeAdvantage/TravelBurden ~10%** (tied, 0.16
 each); physical:situational **4 : 1**.
 

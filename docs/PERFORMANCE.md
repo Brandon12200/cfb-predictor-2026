@@ -1,5 +1,12 @@
 # College Football Market Edge Platform - Performance Benchmarks & Metrics
 
+> **⚠ STALE — pre-Phase-1 artifact, do not trust.** These are Phase-0-era operational benchmarks
+> (response times, cache/API usage, "fallback activation") from the *old live-fetch, neutral-fill*
+> architecture that Phase 1 deleted (SPEC §5.2 — there are no fallbacks now; the engine reads
+> snapshots offline). Nothing here is a model-accuracy claim (for 2025 model performance see
+> `docs/DECISIONS.md` D17 + addendum: 46.6% ATS, a phantom-driven artifact). Left in place as a
+> historical marker; a future perf pass should rewrite or delete it. Not maintained for 3c.
+
 ## System Performance (Measured August 2025)
 
 ### Response Times
