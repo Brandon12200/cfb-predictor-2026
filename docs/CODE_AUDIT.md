@@ -323,5 +323,15 @@ entry's confidence language must match the (wide) interval width.
 - `LookaheadSandwichCalculator` (situational) — superseded by the physical `Sandwich` factor;
   audited free of hardcoded rivalry lists. Three tests re-pointed to the physical `Sandwich`.
 
+**Carry-forward for 3c/3d cleanup**
+- **`ExperienceDifferential` crashes on missing coaching data** (`'<' not supported between int and
+  NoneType`) — the preseason norm — and is only caught+zeroed by `safe_calculate`. "Crashes caught by
+  a wrapper" ≠ "handles missing data"; add explicit `None`-handling (surfaced while measuring the
+  MarketSentiment follow-up).
+- **MarketSentiment `is_multiplicative` wiring** is a ratified standalone follow-up (see CALIBRATION_LOG
+  MarketSentiment note): its weight is inert (MODIFIER), and it injects a ≈+1 additive phantom — the
+  mechanical root cause of the D17 artifact. Fixed before 3c so NO_BET floors calibrate against the
+  corrected model.
+
 **Result:** offline suite **453 passed / 4 skipped**; `make lint` clean (24 typed source files);
 `make verify-phase-3` **ALL PHASE 3 CHECKS PASSED (5 pending — 3c/3d)**; `-1`/`-2` stay green.

@@ -125,10 +125,15 @@ Additive-weight shares (normalized), current → ratified:
 | coaching (3) | 10% | 12% |
 | matchup (StyleMismatch) | — | 10% |
 | momentum (2) | 4% | 7% |
-| market (MarketSentiment) | 35% | 6% |
+| market (MarketSentiment) | 35%† | 6%† |
 
-Biggest single factor: **MarketSentiment 35% → ByeAdvantage/TravelBurden ~10%** (tied, 0.16 each);
-physical:situational **4 : 1**.
+† **Nominal weight share only — inert at runtime** (MODIFIER weight is ignored; see the MarketSentiment
+note below). MarketSentiment's real effect is a ≈+1 additive phantom independent of its weight, addressed
+in the standalone follow-up. So the *effective* additive budget is over the **14 non-modifier factors**;
+`market` is listed here for continuity with the (mistaken) pre-fix accounting.
+
+Biggest single factor among the real additive factors: **ByeAdvantage/TravelBurden ~10%** (tied, 0.16
+each); physical:situational **4 : 1**.
 
 **Why physical is set this high — the honest framing (owner):** this is *not* backing a proven
 winner. Physical-dominant is **maximum allocation to the best-reasoned but unverified hypothesis**.
@@ -138,19 +143,29 @@ the reweight is **demotion of demonstrated non-signal**, not promotion on 2025 a
 weight has to live somewhere. That is the sentence 2027-us will want when judging whether 52% was
 right.
 
-**MarketSentiment 35% → 6%** (least controversial number here): 1b deleted this factor's fabricated
-line-movement sim and its hashed public-betting engine; what remains runs on honest cross-book
-statistics, with movement legitimately missing until slice 1.5. A factor whose main historical
-inputs were fabrications should not be a third of the model. 6% is appropriate for what it currently
-is. **Runtime-accuracy note (pre-existing, surfaced in 3b review):** despite its `MODIFIER` type,
-`MarketSentimentCalculator` never sets `is_multiplicative = True`, so at runtime it is treated as an
-**additive** factor — and its `calculate()` returns a multiplier in [0.5, 1.5] **centered on 1.0**,
-so it injects a roughly-constant offset into `total_adjustment` every game rather than scaling the
-other factors. This bug predates 3b (it is on `main`); the reweight from 35% → 6% **substantially
-shrinks** the resulting distortion but does not fix the wiring. Wiring the multiplicative role
-(`is_multiplicative = True`) is a **behavior change on every prediction** and is therefore deferred
-to a ratified follow-up (natural home: the market factor's slice-1.5 rework / 3c), not silently
-flipped here.
+**MarketSentiment (the intended `35% → 6%` change is a RUNTIME NO-OP — corrected below):** 1b deleted
+this factor's fabricated line-movement sim and its hashed public-betting engine; what remains runs on
+honest cross-book statistics, with movement legitimately missing until slice 1.5. A factor whose main
+historical inputs were fabrications should not be a third of the model — hence the intent to demote it.
+**But the weight change has no runtime effect,** and honesty requires saying so here rather than after
+merge:
+- `MarketSentimentCalculator` is `factor_type=MODIFIER`, and `get_dynamic_weight` returns a **flat
+  1.0 for MODIFIER factors, ignoring `self.weight`** (`base_calculator.py:221-223`). Verified: setting
+  its weight to 0.10 vs 0.9 yields **identical** output. So the ratified 1.0 → 0.10 reweight changed
+  nothing at runtime; MODIFIER weights are inert **by design**, and the additive-budget shares above
+  that include `market` are nominal for this one factor.
+- Worse, it never sets `is_multiplicative = True`, so despite its type it is summed **additively**;
+  and its `calculate()` returns a multiplier in [0.5, 1.5] **centered on 1.0**, so it injects a
+  **roughly-constant ≈ +1.0 additive shove into `total_adjustment` on essentially every game**
+  (measured mean +0.99, stdev 0.07 across the 2025 archive). This is a **pre-existing bug (on `main`,
+  and in the 2025-era model)**, not introduced by 3b.
+- **This is the mechanical root cause of the D17 artifact** (see the D17 addendum): the constant +1
+  is exactly the 57.0%-vs-54.4% gap in the D17 diagnostic table, and it manufactured the entire
+  small-edge distribution L4 rested on.
+
+The real fix (`is_multiplicative = True` + use the multiplier directly + apply it to `total_adjustment`
+only + tighten the range) is a **behavior change on every prediction** and is therefore a **standalone
+ratified follow-up PR** with its own measured before/after evidence — not silently flipped here.
 
 ### 3b.3 — Category taxonomy (enables the budget gate)
 
