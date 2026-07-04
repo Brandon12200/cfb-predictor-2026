@@ -1,107 +1,68 @@
 #!/usr/bin/env python3
-"""
-Calculate accuracy of the CFB Contrarian Predictor engine.
+"""Grade the contrarian model's against-the-spread accuracy (see docs/DECISIONS.md D17).
 
-Accuracy Definition:
-- actual_spread = home_score - away_score
-- home_covered = actual_spread > -contrarian_spread
-- accuracy = games_where_home_covered / total_games
+Two numbers, clearly separated:
+
+- **Contrarian ATS (the headline)** — the placeable strategy: bet the side the model favored
+  (`edge_direction`) against the **Vegas** line. This is what "against the spread" means.
+- **Home-vs-model-spread diagnostic** — did the home team cover the model's OWN contrarian
+  number (always betting home, graded against the model's spread). A home-rating **bias**
+  signal, NOT a placeable bet. It is the source of the retired 57.0% headline (D17); kept and
+  honestly labeled because it explains that number.
+
+Reads `data/predictions/` + `data/results/`.
 """
 
-import json
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-def load_results(results_dir: Path) -> list[dict]:
-    """Load all results files and return flattened list of game results."""
-    all_results = []
-
-    for results_file in sorted(results_dir.glob("*_results.json")):
-        with open(results_file) as f:
-            data = json.load(f)
-            week = data["week"]
-            for game in data["results"]:
-                game["week"] = week
-                all_results.append(game)
-
-    return all_results
+from scripts.grading import (  # noqa: E402
+    contrarian_ats,
+    home_covered_model_spread_diagnostic,
+    load_joined,
+)
 
 
-def calculate_home_covered(game: dict) -> bool:
-    """Determine if home team covered the contrarian spread."""
-    actual_spread = game["home_score"] - game["away_score"]
-    return actual_spread > -game["contrarian_spread"]
+def _pct(wins: int, n: int) -> str:
+    return f"{wins / n:.1%}" if n else "n/a"
 
 
-def calculate_accuracy(results: list[dict]) -> dict:
-    """Calculate overall and per-week accuracy."""
-    # Overall accuracy
-    total_games = len(results)
-    games_covered = sum(1 for game in results if calculate_home_covered(game))
-    overall_accuracy = games_covered / total_games if total_games > 0 else 0
+def main() -> int:
+    root = Path(__file__).resolve().parent.parent
+    pairs = load_joined(str(root / "data" / "predictions"), str(root / "data" / "results"))
+    if not pairs:
+        print("No joined predictions/results found under data/predictions + data/results.")
+        return 1
 
-    # Per-week accuracy
-    weekly_stats = {}
-    for game in results:
-        week = game["week"]
-        if week not in weekly_stats:
-            weekly_stats[week] = {"total": 0, "covered": 0}
-        weekly_stats[week]["total"] += 1
-        if calculate_home_covered(game):
-            weekly_stats[week]["covered"] += 1
+    outcomes = contrarian_ats(pairs)
+    wins = outcomes.count("win")
+    losses = outcomes.count("loss")
+    pushes = outcomes.count("push")
+    graded = wins + losses
 
-    weekly_accuracy = {
-        week: stats["covered"] / stats["total"]
-        for week, stats in sorted(weekly_stats.items())
-    }
+    diag = [home_covered_model_spread_diagnostic(r) for _, r in pairs]
+    dv = [d for d in diag if d is not None]
+    dcov = sum(1 for d in dv if d)
 
-    return {
-        "overall": {
-            "total_games": total_games,
-            "games_covered": games_covered,
-            "accuracy": overall_accuracy,
-        },
-        "weekly": {
-            week: {
-                "total_games": weekly_stats[week]["total"],
-                "games_covered": weekly_stats[week]["covered"],
-                "accuracy": acc,
-            }
-            for week, acc in weekly_accuracy.items()
-        },
-    }
-
-
-def main():
-    project_root = Path(__file__).parent.parent
-    results_dir = project_root / "data" / "results"
-
-    results = load_results(results_dir)
-    accuracy = calculate_accuracy(results)
-
-    # Print results
-    print("=" * 50)
-    print("CFB Contrarian Predictor - Accuracy Report")
-    print("=" * 50)
+    print("=" * 60)
+    print("CFB Contrarian Predictor — Accuracy Report")
+    print("=" * 60)
     print()
-
-    print("OVERALL ACCURACY")
-    print("-" * 30)
-    print(f"Total Games:   {accuracy['overall']['total_games']}")
-    print(f"Games Covered: {accuracy['overall']['games_covered']}")
-    print(f"Accuracy:      {accuracy['overall']['accuracy']:.1%}")
+    print("CONTRARIAN ATS  (the placeable strategy: model's side vs the Vegas line)")
+    print("-" * 60)
+    print(f"Graded bets:  {graded}   (of {len(pairs)} joined; {pushes} pushes excluded)")
+    print(f"Wins-Losses:  {wins}-{losses}")
+    print(f"ATS:          {_pct(wins, graded)}   (break-even ~52.4% at -110)")
     print()
-
-    print("WEEKLY BREAKDOWN")
-    print("-" * 30)
-    print(f"{'Week':<6} {'Games':<8} {'Covered':<10} {'Accuracy':<10}")
-    print("-" * 30)
-
-    for week, stats in accuracy["weekly"].items():
-        print(f"{week:<6} {stats['total_games']:<8} {stats['games_covered']:<10} {stats['accuracy']:.1%}")
-
+    print("HOME-vs-MODEL-SPREAD DIAGNOSTIC  (bias signal, NOT a bet — see D17)")
+    print("-" * 60)
+    print("  Did the home team cover the model's OWN contrarian number (always betting home)?")
+    print(f"  Home covered: {dcov}/{len(dv)} = {_pct(dcov, len(dv))}   <- the retired 57% headline")
     print()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

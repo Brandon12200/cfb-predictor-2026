@@ -1,129 +1,68 @@
 #!/usr/bin/env python3
-"""
-Calculate ROI of the CFB Contrarian Predictor engine.
+"""ROI of the contrarian model at -110 (see docs/DECISIONS.md D17).
 
-Assumptions:
-- Flat $100 bets on every game
-- Standard -110 odds (bet $100 to win $90.91)
+Headlines the **placeable strategy** — flat $100 bets on the side the model favored
+(`edge_direction`) against the Vegas line — and reports the **home-vs-model-spread bias
+diagnostic** (always betting home vs the model's own number) separately, honestly labeled,
+because it produced the retired +8.82% figure. Reads `data/predictions/` + `data/results/`.
 
-Formula:
-- Win: profit $90.91
-- Loss: lose $100
-- Total wagered = total_games × $100
-- Profit = (wins × 90.91) - (losses × 100)
-- ROI = profit / total_wagered
+Flat $100 bets at -110: a win nets +$90.91, a loss -$100; pushes are no-action.
 """
 
-import json
+import sys
 from pathlib import Path
 
-BET_AMOUNT = 100.00
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from scripts.grading import (  # noqa: E402
+    contrarian_ats,
+    home_covered_model_spread_diagnostic,
+    load_joined,
+)
+
+BET = 100.00
 WIN_PROFIT = 90.91
 
 
-def load_results(results_dir: Path) -> list[dict]:
-    """Load all results files and return flattened list of game results."""
-    all_results = []
-
-    for results_file in sorted(results_dir.glob("*_results.json")):
-        with open(results_file) as f:
-            data = json.load(f)
-            week = data["week"]
-            for game in data["results"]:
-                game["week"] = week
-                all_results.append(game)
-
-    return all_results
+def _roi(wins: int, losses: int) -> tuple[float, float]:
+    n = wins + losses
+    profit = wins * WIN_PROFIT - losses * BET
+    return profit, (profit / (n * BET)) if n else 0.0
 
 
-def calculate_home_covered(game: dict) -> bool:
-    """Determine if home team covered the contrarian spread."""
-    actual_spread = game["home_score"] - game["away_score"]
-    return actual_spread > -game["contrarian_spread"]
+def main() -> int:
+    root = Path(__file__).resolve().parent.parent
+    pairs = load_joined(str(root / "data" / "predictions"), str(root / "data" / "results"))
+    if not pairs:
+        print("No joined predictions/results found under data/predictions + data/results.")
+        return 1
 
+    outcomes = contrarian_ats(pairs)
+    w, losses = outcomes.count("win"), outcomes.count("loss")
+    profit, roi = _roi(w, losses)
 
-def calculate_roi_stats(games: list[dict]) -> dict:
-    """Calculate ROI statistics for a set of games."""
-    total_games = len(games)
-    wins = sum(1 for game in games if calculate_home_covered(game))
-    losses = total_games - wins
+    diag = [d for d in (home_covered_model_spread_diagnostic(r) for _, r in pairs) if d is not None]
+    dw = sum(1 for d in diag if d)
+    _, droi = _roi(dw, len(diag) - dw)
 
-    total_wagered = total_games * BET_AMOUNT
-    profit = (wins * WIN_PROFIT) - (losses * BET_AMOUNT)
-    roi = profit / total_wagered if total_wagered > 0 else 0
-
-    return {
-        "total_games": total_games,
-        "wins": wins,
-        "losses": losses,
-        "total_wagered": total_wagered,
-        "profit": profit,
-        "roi": roi,
-    }
-
-
-def calculate_roi(results: list[dict]) -> dict:
-    """Calculate overall and per-week ROI."""
-    # Overall ROI
-    overall = calculate_roi_stats(results)
-
-    # Per-week ROI
-    games_by_week = {}
-    for game in results:
-        week = game["week"]
-        if week not in games_by_week:
-            games_by_week[week] = []
-        games_by_week[week].append(game)
-
-    weekly = {
-        week: calculate_roi_stats(games)
-        for week, games in sorted(games_by_week.items())
-    }
-
-    return {"overall": overall, "weekly": weekly}
-
-
-def main():
-    project_root = Path(__file__).parent.parent
-    results_dir = project_root / "data" / "results"
-
-    results = load_results(results_dir)
-    roi = calculate_roi(results)
-
-    # Print results
     print("=" * 60)
-    print("CFB Contrarian Predictor - ROI Report")
+    print("CFB Contrarian Predictor — ROI Report  (flat $100 @ -110)")
     print("=" * 60)
-    print(f"Bet Amount: ${BET_AMOUNT:.2f} | Win Profit: ${WIN_PROFIT:.2f} | Odds: -110")
     print()
-
-    print("OVERALL ROI")
-    print("-" * 40)
-    print(f"Total Games:   {roi['overall']['total_games']}")
-    print(f"Wins:          {roi['overall']['wins']}")
-    print(f"Losses:        {roi['overall']['losses']}")
-    print(f"Total Wagered: ${roi['overall']['total_wagered']:,.2f}")
-    print(f"Profit:        ${roi['overall']['profit']:+,.2f}")
-    print(f"ROI:           {roi['overall']['roi']:+.2%}")
-    print()
-
-    print("WEEKLY BREAKDOWN")
+    print("CONTRARIAN ROI  (the placeable strategy: model's side vs the Vegas line)")
     print("-" * 60)
-    print(f"{'Week':<6} {'W-L':<8} {'Wagered':<12} {'Profit':<12} {'ROI':<10}")
-    print("-" * 60)
-
-    for week, stats in roi["weekly"].items():
-        wl = f"{stats['wins']}-{stats['losses']}"
-        print(
-            f"{week:<6} "
-            f"{wl:<8} "
-            f"${stats['total_wagered']:>8,.2f}   "
-            f"${stats['profit']:>+8,.2f}   "
-            f"{stats['roi']:>+7.2%}"
-        )
-
+    print(f"Wins-Losses:  {w}-{losses}   (pushes = no action)")
+    print(f"Wagered:      ${(w + losses) * BET:,.2f}")
+    print(f"Profit:       ${profit:+,.2f}")
+    print(f"ROI:          {roi:+.2%}")
     print()
+    print("HOME-vs-MODEL-SPREAD DIAGNOSTIC  (bias signal, NOT a bet — see D17)")
+    print("-" * 60)
+    print(f"  Always betting home vs the model's own number: {dw}-{len(diag) - dw}, "
+          f"ROI {droi:+.2%}   <- the retired +8.82% headline")
+    print()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
