@@ -127,7 +127,8 @@ Additive-weight shares (normalized), current → ratified:
 | momentum (2) | 4% | 7% |
 | market (MarketSentiment) | 35% | 6% |
 
-Biggest single factor: **MarketSentiment 35% → ByeAdvantage 10%**; physical:situational **4 : 1**.
+Biggest single factor: **MarketSentiment 35% → ByeAdvantage/TravelBurden ~10%** (tied, 0.16 each);
+physical:situational **4 : 1**.
 
 **Why physical is set this high — the honest framing (owner):** this is *not* backing a proven
 winner. Physical-dominant is **maximum allocation to the best-reasoned but unverified hypothesis**.
@@ -140,8 +141,16 @@ right.
 **MarketSentiment 35% → 6%** (least controversial number here): 1b deleted this factor's fabricated
 line-movement sim and its hashed public-betting engine; what remains runs on honest cross-book
 statistics, with movement legitimately missing until slice 1.5. A factor whose main historical
-inputs were fabrications should not be a third of the model. 6% additive + its multiplicative
-modifier role is appropriate for what it currently is.
+inputs were fabrications should not be a third of the model. 6% is appropriate for what it currently
+is. **Runtime-accuracy note (pre-existing, surfaced in 3b review):** despite its `MODIFIER` type,
+`MarketSentimentCalculator` never sets `is_multiplicative = True`, so at runtime it is treated as an
+**additive** factor — and its `calculate()` returns a multiplier in [0.5, 1.5] **centered on 1.0**,
+so it injects a roughly-constant offset into `total_adjustment` every game rather than scaling the
+other factors. This bug predates 3b (it is on `main`); the reweight from 35% → 6% **substantially
+shrinks** the resulting distortion but does not fix the wiring. Wiring the multiplicative role
+(`is_multiplicative = True`) is a **behavior change on every prediction** and is therefore deferred
+to a ratified follow-up (natural home: the market factor's slice-1.5 rework / 3c), not silently
+flipped here.
 
 ### 3b.3 — Category taxonomy (enables the budget gate)
 
