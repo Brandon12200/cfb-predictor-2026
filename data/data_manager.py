@@ -16,6 +16,7 @@ from typing import Any
 from config import config
 from data.cache_manager import cache_manager
 from data.normalize.models import TeamData
+from data.schedule_intel import compute_schedule_intel
 from data.snapshot.store import SnapshotNotFoundError, load_snapshot
 from utils.normalizer import normalizer
 
@@ -106,6 +107,17 @@ class DataManager:
                      and (week is None or g.get("week") == week)), None)
         context["neutral_site"] = bool(game.get("neutral_site")) if game else False
         context["game_date"] = game.get("start_date") if game else None
+        # Phase-3 physical factors read the schedule-intel table; compute it ONCE here (the same
+        # pure function the pricer uses on its offline path — identical intel). Non-neutral games
+        # play at the home venue; neutral games have no acclimation edge (game_venue None).
+        _venues, _games = data.get("venues", {}), data.get("games", [])
+        _sp = data.get("sp_ratings", {})
+        _game_venue = None if context["neutral_site"] else _venues.get(home)
+        context["home_intel"] = compute_schedule_intel(
+            home, away, week or 1, context["game_date"], not context["neutral_site"],
+            _game_venue, _games, _venues, _sp)
+        context["away_intel"] = compute_schedule_intel(
+            away, home, week or 1, context["game_date"], False, _game_venue, _games, _venues, _sp)
         report = self._data_quality_report(context)
         context["data_quality"] = report["score"]
         context["data_quality_report"] = report

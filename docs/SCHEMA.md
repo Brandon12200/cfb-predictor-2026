@@ -45,7 +45,7 @@ Phase 1 reproduces this from the snapshot instead of live fetches.
 
 ### Out-of-band datasets (3 factors fetch these live today — the determinism gap)
 These bypass the context dict and hit CFBD directly at prediction time; the snapshot must pre-fetch them:
-- **season games** — `scheduling_fatigue.py:94` `get_games(year, team)`; per-game reads `week, awayTeam, homeTeam, homePoints, awayPoints, startDate`.
+- **season games** — read from the snapshot's `games` (context), never live. Phase 3b's **physical factor layer** (`factors/scheduling_fatigue.py`: `ByeAdvantage`, `ShortWeek`, `TravelBurden`, `Altitude`, `ConsecutiveRoad`, `Sandwich`) reads the per-team **`home_intel`/`away_intel`** tables that `data_manager.get_game_context` precomputes once via `data.schedule_intel.compute_schedule_intel` — not a direct `get_games` call. (Retired: the pre-1c `SchedulingFatigueCalculator` and situational `LookaheadSandwich`.)
 - **advanced season stats** — `style_mismatch.py:108` `get_advanced_stats(year, team)`; reads offense/defense `successRate, explosiveness, ppa, plays, havoc.total, standardDowns/passingDowns/rushingPlays/passingPlays successRate, powerSuccess, stuffRate`.
 - **betting lines** — `market_sentiment.py:167` `get_betting_lines(year, week)`; reads per-book `spread, spreadOpen, provider`.
 
@@ -207,8 +207,11 @@ widens bands / NO_BETs on high uncertainty.
 **Sign convention:** spreads are home-perspective, **negative = home favored** (matches
 `vegas_spread`). **Consumers:** hypothetical mode → **`total`** (travel must show); the
 model-vs-market diagnostic + any confirming-signal rule → the **`base`** lane (§6.5). Schedule
-coefficients are a **single calibrated source** shared by the pricer and the Phase-3 physical
-factor (no parallel copy; D15).
+coefficients live in a **single calibrated source** (`factors/physical_coefficients.py`, D15)
+consumed by the pricer's model-spread subset here AND the six Phase-3b contrarian physical
+factors — no parallel copy. The pricer's `physical_adjustments()` is the **fatigue/location**
+subset (bye, short-week, travel/tz, altitude); `consecutive_road` and `sandwich` are
+**contrarian-only** physical factors and do NOT feed the model spread (D18).
 
 ### 6.5 Model-vs-market diagnostic (real-game output, §6.6, **D15**)
 `_build_prediction_result` adds, **diagnostic-only** (does NOT drive the 2026 edge/rec):

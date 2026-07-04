@@ -22,7 +22,7 @@ class PointDifferentialTrendsCalculator(BaseFactorCalculator):
     
     def __init__(self):
         super().__init__()
-        self.weight = 0.07  # 7% of total (35% of momentum's 20%)
+        self.weight = 0.06  # 3b reweight (docs/CALIBRATION_LOG.md)
         self.category = "momentum_factors"
         self.description = "Point differential trends analysis"
         self._min_output = -2.0
@@ -238,7 +238,7 @@ class CloseGamePerformanceCalculator(BaseFactorCalculator):
     
     def __init__(self):
         super().__init__()
-        self.weight = 0.06  # 6% of total (30% of momentum's 20%)
+        self.weight = 0.05  # 6% of total (30% of momentum's 20%)
         self.category = "momentum_factors"
         self.description = "Close game performance and clutch factor analysis"
         self._min_output = -1.5

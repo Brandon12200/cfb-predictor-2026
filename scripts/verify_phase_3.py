@@ -90,14 +90,64 @@ _dec = (ROOT / "docs" / "DECISIONS.md").read_text()
 check("D15 (decomposed pricer) + D16 (2026 dry-run vehicle) recorded",
       "## D15 " in _dec and "## D16 " in _dec)
 
-# === 3b / 3c / 3d — PENDING (freeze-disciplined; ratify before the tag) ======
-todo("physical factors from schedule-intel; each sub-signal in factor_breakdown (L1, 3b)")
-todo("reweight toward physical + factor-contribution-budget gate (L1, 3b) — CALIBRATION_LOG batch")
+# === 3b — physical factor layer + reweight (L1), owner-ratified 2026-07-03 ====
+from collections import defaultdict as _dd  # noqa: E402
+
+from factors.factor_registry import factor_registry  # noqa: E402
+from factors.physical_coefficients import DEFAULT_PHYSICAL_COEFFICIENTS as _PC  # noqa: E402
+from factors.physical_coefficients import altitude_points as _ap  # noqa: E402
+from factors.physical_coefficients import bye_points as _bp  # noqa: E402
+from factors.physical_coefficients import physical_adjustments as _padj  # noqa: E402
+from factors.physical_coefficients import short_week_points as _swp  # noqa: E402
+from factors.physical_coefficients import travel_points as _tp  # noqa: E402
+
+_PHYS = {"ByeAdvantage", "ShortWeek", "TravelBurden", "Altitude", "ConsecutiveRoad", "Sandwich"}
+_loaded = set(factor_registry.factors)
+check("6 physical sub-signal factors registered; old SchedulingFatigue + LookaheadSandwich retired",
+      _PHYS <= _loaded and "SchedulingFatigue" not in _loaded and "LookaheadSandwich" not in _loaded,
+      f"{sorted(_PHYS & _loaded)}")
+
+# Each physical sub-signal appears separately in factor_breakdown on a firing context (SPEC §7.2).
+_ctx = {"home_intel": {"bye": True, "altitude": 7000.0, "time_zones_crossed": 0},
+        "away_intel": {"short_week": True, "time_zones_crossed": 3, "consecutive_road_games": 3,
+                       "sandwich_spot": True},
+        "neutral_site": False, "vegas_spread": -3.0}
+_fb = set(factor_registry.calculate_all_factors("HOME", "AWAY", _ctx)["factors"])
+check("each physical sub-signal appears separately in factor_breakdown (SPEC §7.2)", _PHYS <= _fb)
+
+# Pricer/factor single source (D15): model-spread subset == Σ shared fatigue/location fns; the two
+# contrarian-only signals stay out of the model spread.
+_hi, _ai = {"bye": True, "altitude": 7000.0}, {"short_week": True, "time_zones_crossed": 3}
+_total, _parts = _padj(_hi, _ai, False)
+_manual = _bp(_hi, _ai) + _swp(_hi, _ai) + _tp(_hi, _ai) + _ap(_hi, False)
+check("pricer schedule adjustment == Σ shared fatigue/location coefficients (D15 single source)",
+      abs(_total - _manual) < 1e-9 and "consecutive_road" not in _parts and "sandwich" not in _parts)
+
+# Contribution budget (weight-based tripwire, ratified): physical dominant, no runaway factor.
+_add = {n: f for n, f in factor_registry.factors.items() if not f.is_multiplicative}
+_tw = sum(f.weight for f in _add.values())
+_cat = _dd(float)
+for _n, _f in _add.items():
+    _cat[_f.category] += _f.weight / _tw
+_max_single = max(f.weight / _tw for f in _add.values())
+_ratio = _cat["physical"] / _cat["situational_context"]
+check("factor-contribution budget: no single factor >15%, physical:situational >=2:1 (tripwire)",
+      _max_single < 0.15 and _ratio >= 2.0,
+      f"max single {_max_single:.0%}, physical {_cat['physical']:.0%}, phys:sit {_ratio:.1f}:1")
+
+check("travel_cap ratified at 1.5 (0.6 HFA — humility on an unmeasured extreme)",
+      abs(_PC.travel_cap - 1.5) < 1e-9)
+
+_cal = (ROOT / "docs" / "CALIBRATION_LOG.md").read_text()
+check("CALIBRATION_LOG carries the 3b batch (coefficients, reweight, budget, retirements, base-calc fix)",
+      "Phase 3b" in _cal and "travel_cap" in _cal and "activation" in _cal.lower())
+
+# === 3c / 3d — PENDING (freeze-disciplined; ratify before the tag) ============
 todo("situational thresholds + confirming-factor via base gap (L2, 3c)")
 todo("NO_BET first-class prediction type — edge/confidence/variance floors (L4, 3c)")
 todo("confidence v2 A/B/C tiers, monotonic-ATS% gated (L3, 3c) — CALIBRATION_LOG batch")
 todo("prediction schema v2 + 2025 converter + 2026 dry-run acceptance (3d)")
-todo("CALIBRATION_LOG evidence-class-labeled entry for every changed number (3b/3c)")
+todo("CALIBRATION_LOG evidence-class-labeled entry for every changed number (3c)")
 
 # --- Report -------------------------------------------------------------------
 print("Phase 3 acceptance checks:")

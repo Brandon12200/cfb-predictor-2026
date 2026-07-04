@@ -269,7 +269,7 @@ class TestPerformanceRequirements(unittest.TestCase):
         
         self.assertLess(execution_time, 1.0, 
                        f"Factor calculation took {execution_time:.2f}s, too slow")
-        self.assertEqual(results['summary']['factors_calculated'], 11)
+        self.assertEqual(results['summary']['factors_calculated'], 15)  # 3b: +6 physical, −old SchedulingFatigue, −LookaheadSandwich
 
 
 class TestErrorHandling(unittest.TestCase):

@@ -26,8 +26,8 @@ class MarketSentimentCalculator(BaseFactorCalculator):
         super().__init__()
         
         # MODIFIER factor: 100% of MODIFIER category's 10% = 10% total weight
-        self.weight = 1.0
-        self.category = "situational_context"
+        self.weight = 0.10
+        self.category = "market"
         self.description = "Detects sharp money moving against public sentiment"
         
         # Output range for this factor (multiplicative modifier)

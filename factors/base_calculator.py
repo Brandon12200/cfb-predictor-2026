@@ -267,9 +267,14 @@ class BaseFactorCalculator(ABC):
             # Apply threshold
             threshold_value = self.apply_threshold(raw_value)
             
-            # Check if factor activated after threshold
-            if threshold_value == 0.0 and raw_value != 0.0:
-                result['reasoning'] = [f"Below activation threshold ({self.activation_threshold})"]
+            # Check if factor activated after threshold. A zero (no signal) or sub-threshold
+            # value means the factor did not fire — it must NOT count as activated (otherwise
+            # non-firing factors, e.g. an absent physical signal, inflate the primary-signal
+            # count and drag avg_confidence toward zero).
+            if threshold_value == 0.0:
+                reason = ("No signal" if raw_value == 0.0
+                          else f"Below activation threshold ({self.activation_threshold})")
+                result['reasoning'] = [reason]
                 result['success'] = True
                 return result
             

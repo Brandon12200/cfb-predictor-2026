@@ -4,14 +4,13 @@ schedule intel with the right sign, and caps the rating signal early season."""
 
 from __future__ import annotations
 
-from engine.matchup_pricer import (
-    DEFAULT_SCHEDULE_CONFIG,
-    ScheduleAdjustmentConfig,
-    compute_ratings_for_snapshot,
-    price,
-    schedule_adjustment,
-)
+from engine.matchup_pricer import compute_ratings_for_snapshot, price
 from engine.power_ratings import DEFAULT_CONFIG, TeamRating, compute_ratings
+from factors.physical_coefficients import (
+    DEFAULT_PHYSICAL_COEFFICIENTS,
+    PhysicalCoefficients,
+    physical_adjustments,
+)
 
 # Real venue fixtures for travel/altitude.
 ATHENS = {"name": "Sanford", "latitude": 33.9497, "longitude": -83.3733,
@@ -82,23 +81,23 @@ def test_schedule_adjustment_bye_short_week_travel_altitude():
     # Home off a bye, away on a short week, away crossed 2 zones, home at altitude.
     home_intel = {"bye": True, "short_week": False, "time_zones_crossed": 0, "altitude": 7220.0}
     away_intel = {"bye": False, "short_week": True, "time_zones_crossed": 2, "altitude": 7220.0}
-    adj, parts = schedule_adjustment(home_intel, away_intel, neutral_site=False)
-    assert parts["bye"] == DEFAULT_SCHEDULE_CONFIG.bye_value
-    assert parts["short_week"] == DEFAULT_SCHEDULE_CONFIG.short_week_penalty  # away short → favors home
+    adj, parts = physical_adjustments(home_intel, away_intel, neutral_site=False)
+    assert parts["bye"] == DEFAULT_PHYSICAL_COEFFICIENTS.bye_value
+    assert parts["short_week"] == DEFAULT_PHYSICAL_COEFFICIENTS.short_week_penalty  # away short → favors home
     assert parts["travel"] > 0  # away crossed more zones → favors home
-    assert parts["altitude"] == DEFAULT_SCHEDULE_CONFIG.altitude_value
+    assert parts["altitude"] == DEFAULT_PHYSICAL_COEFFICIENTS.altitude_value
     assert adj == sum(parts.values()) > 0
 
 
 def test_schedule_adjustment_is_symmetric_in_sign():
     # Mirror image: away off a bye, home on a short week → net favors away (negative).
-    adj, _ = schedule_adjustment(
+    adj, _ = physical_adjustments(
         {"bye": False, "short_week": True}, {"bye": True, "short_week": False}, neutral_site=False)
     assert adj < 0
 
 
 def test_neutral_site_ignores_altitude():
-    adj, parts = schedule_adjustment(
+    adj, parts = physical_adjustments(
         {"altitude": 7220.0}, {"altitude": 7220.0}, neutral_site=True)
     assert "altitude" not in parts
 
@@ -189,6 +188,6 @@ def test_ratings_cache_respects_cfg():
 
 
 def test_custom_schedule_config_scales_adjustment():
-    cfg = ScheduleAdjustmentConfig(bye_value=3.0)
-    adj, parts = schedule_adjustment({"bye": True}, {"bye": False}, False, cfg)
+    cfg = PhysicalCoefficients(bye_value=3.0)
+    adj, parts = physical_adjustments({"bye": True}, {"bye": False}, False, cfg)
     assert parts["bye"] == 3.0 and adj == 3.0

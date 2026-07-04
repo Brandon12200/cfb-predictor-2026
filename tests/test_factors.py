@@ -16,7 +16,6 @@ from factors.coaching_edge import (
 from factors.situational_context import (
     DesperationIndexCalculator,
     RevengeGameCalculator,
-    LookaheadSandwichCalculator
 )
 from factors.momentum_factors import (
     PointDifferentialTrendsCalculator,
@@ -192,7 +191,6 @@ class TestSituationalContextFactors(unittest.TestCase):
         """Set up test data and calculators."""
         self.desperation_calc = DesperationIndexCalculator()
         self.revenge_calc = RevengeGameCalculator()
-        self.lookahead_calc = LookaheadSandwichCalculator()
         
         # Mock context data
         self.context = {
@@ -242,17 +240,7 @@ class TestSituationalContextFactors(unittest.TestCase):
         rivalry_result = self.revenge_calc.calculate("MICHIGAN", "OHIO STATE", self.context)
         self.assertIsInstance(rivalry_result, float)
     
-    def test_lookahead_sandwich(self):
-        """Test lookahead/sandwich game calculation."""
-        # This requires schedule data
-        schedule_context = dict(self.context)
-        schedule_context['home_team_data']['schedule'] = []
-        schedule_context['away_team_data']['schedule'] = []
-        
-        result = self.lookahead_calc.calculate("GEORGIA", "ALABAMA", schedule_context)
-        self.assertGreaterEqual(result, -2.0)
-        self.assertLessEqual(result, 2.0)
-    
+
 class TestMomentumFactors(unittest.TestCase):
     """Test momentum factor calculators."""
     
@@ -343,7 +331,8 @@ class TestFactorIntegration(unittest.TestCase):
         """Test that all factors belong to valid categories."""
         from factors.factor_registry import factor_registry
         
-        valid_categories = {'coaching_edge', 'situational_context', 'momentum_factors'}
+        valid_categories = {'coaching_edge', 'situational_context', 'momentum_factors',
+                            'physical', 'matchup', 'market'}
         
         for name, factor in factor_registry.factors.items():
             self.assertIn(factor.category, valid_categories, 
