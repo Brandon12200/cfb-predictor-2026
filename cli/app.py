@@ -951,7 +951,11 @@ def run_p4_predictions(week: int, min_edge: float = 1.0, min_confidence: float =
                         factor_breakdown=factor_breakdown,
                         data_quality=data_quality,
                         week=week,
-                        rationale=reasoning
+                        rationale=reasoning,
+                        # Phase 3c L3/L4 pass-through (not silently dropped; full schema is 3d)
+                        prediction_type=result.get('prediction_type'),
+                        no_bet=result.get('no_bet'),
+                        confidence_tier=result.get('confidence_tier')
                     )
                     
                     predictions.append(prediction)
@@ -982,7 +986,9 @@ def run_p4_predictions(week: int, min_edge: float = 1.0, min_confidence: float =
             for i, pred in enumerate(predictions, 1):
                 print(f"{i:2d}. {pred['recommendation']}")
                 print(f"     Game: {pred['away_team']} @ {pred['home_team']}")
-                print(f"     Edge: {pred['predicted_edge']:.1f} pts | Confidence: {pred['confidence']:.1f}%")
+                tier = pred.get('confidence_tier')
+                tier_str = f" | Tier {tier}" if tier else (" | NO BET" if pred.get('no_bet') else "")
+                print(f"     Edge: {pred['predicted_edge']:.1f} pts | Confidence: {pred['confidence']:.1f}%{tier_str}")
                 if pred.get('bet_rationale'):
                     print(f"     Rationale: {pred['bet_rationale']}")
                 print()

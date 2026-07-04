@@ -258,5 +258,219 @@ deltas are the evidence, not a regression.
 
 ---
 
-*Phase 3c/3d will add the situational-threshold / NO_BET / confidence-tier / schema entries here,
-each evidence-class-labeled, under the same propose→approve rule.*
+## Phase 3c — Situational discipline (L2) + NO_BET (L4) + confidence tiers (L3)  — **RATIFIED** (owner, 2026-07-04)
+
+*(3c.5 NO_BET floors was bounced once for a missing selectivity scale-check, then ratified as restated once the in-season selectivity was measured — see the entry.)*
+
+Consolidated batch. Evidence class **`reasoned`** throughout unless a constant rests on
+model-independent market data — after Bug #7 the 2025 archive's confidence→ATS and edge→ATS tables
+are **inadmissible** (SPEC §3): no number below is fit to them. The monotonic-ATS%-by-tier property
+is a **structural sanity check on the NEW model's dry-run output**, never a 2025-evidence gate. Every
+magnitude is scale-checked against the ratified **~2.5-pt HFA** (D9).
+
+**Batch scope note — the fabrication sweep grew (owner-ratified this session, D20).** Recon for the
+L2 situational work found the Bug-#7 fabrication pattern — an **MD5-hash-of-team-name ± hardcoded team
+lists**, emitted whenever real data is absent — was **one author's template in six places**:
+`MarketSentiment` (Bug #7, already fixed / D19), `DesperationIndex`, `RevengeGame`, momentum
+`PointDifferentialTrends` + `CloseGamePerformance`, and coaching `PressureSituation`. Calibrating 3c's
+floors/tiers against a model still running three live hash engines would re-create the very
+producer/consumer trap the wiring fix was sequenced to avoid, so the owner ratified neutralising **all**
+of it in this batch (the widened tripwire is repo-wide by design). **Bugs #12–14** for the tally
+(desperation-hash, momentum-hash ×2 grouped, pressure-hash).
+
+### 3c.1 — Situational + momentum + coaching neutralization (behavior-change; binding #2/#4)
+
+Not calibration constants — the removal of manufactured signal. Each factor keeps its honest
+real-data path and returns **0.0 (honest-missing / dormant)** when the real inputs are absent, exactly
+like the physical factors' missing-data behaviour and the D19 MarketSentiment fix.
+
+| Factor | Removed (fabrication) | Honest path that survives | Preseason/dry-run state |
+|---|---|---|---|
+| `DesperationIndex` | `_simulate_desperation` (MD5 hash + `bubble_/playoff_/struggling_teams` lists); shared-context mutation | bowl-eligibility / playoff / late-season math from a **real W-L record** | dormant (no record) |
+| `RevengeGame` | hardcoded 6-team `revenge_scenarios` rivalry table | (none sourced in 2026 core) | dormant → 0.0 |
+| `PointDifferentialTrends` | `_simulate_differential_trend` (hash + `elite_/struggling_teams`) | real recent point-differential trend (≥3 completed games) | dormant (no games) |
+| `CloseGamePerformance` | `_simulate_clutch_performance` (hash + `clutch_/anti_clutch_teams`) | real close-game history | dormant (no games) |
+| `PressureSituation` | hash base-pressure, hardcoded `popular_teams`, **a home-field term that double-counted the pricer HFA** | — see 3c.2 (dormant) | dormant → 0.0 |
+| `ExperienceDifferential` | `.get(key, 5)` **neutral-fill** default (masked missing coaches AND crashed on present-`None`) | real coach experience/tenure differential | dormant (no coaching data) |
+
+**Measured before/after (2026 wk1 dry-run, 10 games with lines — D16 vehicle):**
+- **BEFORE (`main`, post-Bug-#7):** fabricated momentum fired on real slates — `PointDifferentialTrends`
+  activated (hash values, e.g. **+1.42**) in **3/10** games, `CloseGamePerformance` in **2/10**; and the
+  dormant `MarketSentiment` multiplier (1.0) was **wrongly counted `activated` in 10/10** games (diluting
+  `avg_confidence` on every prediction). All 10 typed `CONSENSUS_ALIGNMENT`.
+- **AFTER (3c):** **zero** fabricated-factor activations; `MarketSentiment` correctly not-activated
+  (0/10); edges collapse to **0.00–0.14** (unchanged in magnitude — the phantoms were small/offsetting
+  on this slate, but they were real activations that would matter on other slates and contaminated the
+  activation/confidence counts everywhere). All 10 typed `NO_BET` (see 3c.5).
+- **Rerun contract:** like D19, the fix is *meant* to break bit-identity vs `main`; determinism within
+  the corrected model holds (pure function of the snapshot).
+
+### 3c.2 — `PressureSituation` disposition: DORMANT  (`reasoned` — owner rider 1)  — **RATIFIED** (owner, 2026-07-04)
+
+The factor was almost entirely fabricated. Stripping the hash + `popular_teams` + the HFA-double-count
+leaves only thin week-of-season and spread heuristics that **overlap `DesperationIndex`** (record-based
+motivation) and the market factors, and whose home-field term **double-counted the pricer's ~2.5-pt
+HFA**. The honest argument is that this residue does **not** earn an independent reasoned coefficient, so
+rather than let it ride in as residue of the fix, the proposed disposition is **dormant** — the factor
+returns 0.0 until a genuine coaching-pressure signal exists (revisit with 2026 attribution in 2027).
+*(Alternative considered and rejected: a week/spread `reasoned` heuristic — rejected as overlapping +
+double-counting.)*
+
+### 3c.3 — Situational activation threshold: `DesperationIndex` 2.0 → **1.0**  (`reasoned`)  — **RATIFIED** (owner, 2026-07-04)
+
+The old threshold **equalled the factor's max output (±2.0)**, so it could fire only at exact saturation
+(never, in practice) — a latent bug, not selectivity. **1.0** (half of max range, = **0.4 × HFA** in
+output space) lets a genuine desperation differential fire; the real L2 selectivity now comes from the
+confirmation gate (3c.4), not an unreachable threshold. `RevengeGame`'s threshold (1.5) is **moot** — the
+factor is dormant (0.0) until real prior-meeting data exists. Scale check: 1.0 output ≈ 0.4 × HFA — a
+situational factor, gated, capped well below home field. **Applies in-season only** (dormant on the
+dry-run), so it is not dry-run-measurable — a reasoned constant to be measured by Phase-4 attribution.
+
+### 3c.4 — L2 confirming-signal gate  (`reasoned` / structural — SPEC §7.3, D15)  — **RATIFIED** (owner, 2026-07-04)
+
+> **The rating's only path into the edge is as a veto on situational factors — it can subtract noise, never inject signal.** (Owner, verbatim: the eyes-open acknowledgment that this supersedes the 3a diagnostic-only property, and the boundary 2027 must not mistake for license.)
+
+
+An activated **situational** factor contributes only if its direction is confirmed by **(a)** the
+model-vs-market **BASE** gap (D15 — the base gap ONLY, never the total gap, so a factor is never
+confirmed by a gap carrying its own schedule signal), or **(b)** at least one activated **physical**
+factor of the same sign. Unconfirmed situational signals are withheld (de-activated before aggregation,
+so `total_adjustment`, the signal counts, and `avg_confidence` all reflect the gate). All values share
+the additive spread-space where positive favours home, so "agree in direction" = same sign. This is the
+primary L2 selectivity mechanism; it raises the bar on solo motivational guesses (SPEC §7.3's "raise
+thresholds and/or require a confirming factor"). **Architecture note:** the engine now computes the base
+gap **before** the factors and injects it on the context — so the base gap, previously diagnostic-only
+(3a), now legitimately feeds the edge via this gate. Rerun determinism is unaffected (pure function of
+the snapshot). Pure, test-covered (`confirm_situational`).
+
+### 3c.5 — NO_BET floors (L4)  (`reasoned` — SPEC §7.4, §16.3)  — **RATIFIED as restated** (owner, 2026-07-04, after one bounce for the selectivity scale-check)
+
+`NO_BET` is a first-class prediction type, emitted when **ANY** of three floors is breached — purely
+threshold-driven, **no weekly volume target** (§16.3). NO_BET games keep their hypothetical pick
+(`contrarian_spread` + edge) so they are still logged and graded ("what would have happened").
+
+**The three floors (RATIFIED values):**
+
+| # | Floor | Value / condition | Evidence class |
+|---|---|---|---|
+| 1 | **edge (dynamic gate)** | the **existing dynamic, confidence-aware `min_edge_threshold`** — **0.75** pts (≥2 primary signals & conf ≥0.7), **1.0** pts (≥1 primary or conf ≥0.6), else **1.5** pts. Retained **as-is**. NO_BET if `edge < min_edge_threshold`. | `reasoned` (inherited) |
+| 2 | **confidence (static floor under the dynamic gate)** | `NO_BET_CONFIDENCE_FLOOR = 0.50` on the [0.15, 0.95] `confidence_score` — **set to the B/C tier boundary** (see the C-tier consequence below). NO_BET if `confidence < 0.50`. | `reasoned` |
+| 3 | **variance** | hard gate: `variance_level == 'extreme'` **OR** a primary-factor directional split (`primary_disagreement`) **OR** the detector's `AVOID_OR_MINIMUM` action. | `reasoned` / structural |
+
+**C-tier consequence (owner, stated explicitly):** the confidence floor `0.50` **equals the B/C tier
+boundary** (3c.6). So any prediction whose confidence lands in the C band is below the floor → NO_BET.
+**Tier C is therefore a diagnostic grade, never a bet grade** — a live bet is only ever tier A or B, and
+C appears only on NO_BET games (explaining *why* it was passed: a C = confidence too low, vs a B/A NO_BET
+that was edge- or variance-gated). Encoded: `NO_BET_CONFIDENCE_FLOOR == CONFIDENCE_TIER_B_MIN`, asserted
+in `verify-phase-3`.
+
+**Post-freeze acknowledgment (owner, deliberate):** if in-season selectivity runs **materially quieter**
+than the synthetic below implied, that is **observable via the Phase-4 reports but frozen** — the freeze
+does not reopen on a quiet slate. **Erring quiet is deliberate per L4**: a model that declines a marginal
+edge is behaving as designed, not failing.
+
+**⚠ The missing scale-check — and why this entry is BOUNCED.** The owner asked the entry's version of
+the ×HFA check: *on a real in-season slate, what fraction of games clear these floors?* Measured over
+**330 real 2026 FBS-vs-FBS games** with the **actual full-season schedule intel** (deterministic from the
+schedule — the honest in-season physical-signal distribution; situational/momentum dormant without
+results, sentiment dormant):
+
+| edge floor | in-season bet rate |
+|---|---|
+| 0.05 pts | 26% |
+| 0.08 pts | 21% |
+| 0.10 pts | 4% |
+| **0.75–1.5 pts (proposed)** | **0%** |
+
+**The physical edge distribution maxes at 0.200 pts** (median 0.000, p90 0.094, p99 0.175, mean 0.028);
+even a *synthetically maximal* game with **all six** physical factors firing (raw 6.7 pts) yields an edge
+of **0.528 pts**. So at the proposed floors (0.75–1.5) the model **NO_BETs 100% of games, in-season, at
+any week — it never places a bet.** The floor value is almost irrelevant: the edges live an **order of
+magnitude below** it.
+
+**Root cause (structural, pre-existing):** the contrarian edge is a **normalized-weight × value** sum
+(3b weights are shares that total ~1), so `total_adjustment` is effectively a *weighted average* of
+factor signals — bounded to ~0.1–0.2 pts even when strong physical spots align — while the floor is in
+**points**. The 0.75–1.5 floor is a relic of the pre-Bug-#7 era, when the ≈+1.0 phantom made every
+edge clear ~1.0; with the phantom and the fabrication gone, the model's honest disagreement with Vegas
+is ~0.1 pts (**it essentially agrees with the market** — consistent with D17: the contrarian adjustment
+added nothing over consensus).
+
+**Resolution (owner, 2026-07-04) — option (A): freeze the honest "rarely bets" model.** The owner
+reviewed the selectivity curve and **accepted the evidence**, choosing to keep the **dynamic edge gate
+as-is** (0.75–1.5) rather than lower it to force a bet rate — the model's honest disagreement with an
+efficient market is small, and manufacturing a larger edge (option B, reopening the 3b weight
+magnitudes) would echo the phantom just removed. The confidence floor is set at **0.50** as the static
+floor beneath the dynamic gate (making tier C unbettable, above). **Erring quiet is deliberate** (see the
+post-freeze acknowledgment above): a quieter-than-synthetic in-season slate is observable in the reports
+but does not reopen the freeze. *(The measured caveat is on the record for 2027: the 3b reweight ratified
+factor **shares** + budget bounds but never scale-checked the resulting edge in **points** — whether a
+weighted-**average** aggregation can produce point-scale edges is the open question Phase-4 attribution
+informs. Option B remains available in 2027 with a season of evidence, not reopened now.)*
+
+### 3c.6 — Confidence v2: A/B/C tiers (L3)  (`reasoned` — SPEC §7.5)  — **RATIFIED as reasoned first boundaries** (owner, 2026-07-04)
+
+> **Placeholder-grade confidence (owner):** these boundaries are **reasoned first cuts, not measured**. Phase-4 attribution in 2026 measures whether they *separate anything* (per-tier ATS%/CLV); **2027 re-derives them from that evidence.** They are ratified to be *used and measured*, not asserted as correct — hold them loosely.
+
+
+Tiers key off the engine's `confidence_score` (the persisted [0.15, 0.95] one). Boundaries are
+**`reasoned`** — explicitly NOT fit to the archive confidence→ATS table (inadmissible, SPEC §3):
+
+| Tier | `confidence_score` | Meaning |
+|---|---|---|
+| **A** | ≥ 0.65 | strong conviction |
+| **B** | 0.50 – 0.65 | standard |
+| **C** | < 0.50 | **diagnostic only — never a live bet** (the B/C boundary == the NO_BET confidence floor, 3c.5) |
+
+A `NO_BET` / no-line / error prediction has **no tier** (`None`) — it is a decision not to bet, not a
+graded conviction. The **monotonic-tier property is a structural sanity check on the NEW model's output**
+(verified synthetically over a confidence sweep, in the spirit of the D9 dispersion test), never a
+2025-ATS gate; per-tier ATS%/CLV is what Phase-4 attribution measures in 2026. Tiers are surfaced
+in-object + in reports/CLI; the **on-disk schema-v2 field + 2025 converter are Phase 3d** — 3c carries
+`prediction_type`/`no_bet`/`confidence_tier` through the storage writer so they are not silently dropped
+(surfaced-but-unpersisted is fine for this slice; silently lost is not).
+
+### 3c.7 — Cleanup: multiplicative-modifier activation bookkeeping  (behavior-change)  — **APPROVED** (owner, 2026-07-04)
+
+`base_calculator.apply_threshold` now measures activation as **distance from the factor's neutral value**
+— `1.0` for a multiplicative modifier, `0.0` additive (`abs(value − neutral) < threshold`). A dormant
+`MarketSentiment` at 1.0 is therefore **not** counted `activated` (it was, on 10/10 dry-run games,
+inflating `factors_activated` and diluting `avg_confidence`). Additive behaviour is unchanged
+(neutral 0.0). Harmless to spreads (the multiplier is 1.0 either way); it corrects the confidence
+distribution 3c calibrates.
+
+### 3c.8 — Cleanup: `ExperienceDifferential` — TWO defects fixed  (correctness / behavior-change)  — **APPROVED** (owner, 2026-07-04)
+
+This entry fixes **two distinct defects**, named honestly:
+1. **The None-crash.** `min(None, 15)` crashed on present-but-`None` coaching experience (the preseason
+   norm), only caught+zeroed by `safe_calculate` — "crash caught by a wrapper" ≠ "handles missing data".
+2. **Bug #15 — the `.get(key, 5)` neutral-fill.** A separate, silent defect: absent coaching data was
+   **neutral-filled to a default of 5 years' experience / 3 years' tenure** — a fabricated team-quality
+   input (binding #4), distinct from the crash. It silently invented a mid-career coach for every team
+   with no data, and would have contributed a real (fabricated) differential whenever the two teams'
+   missing-ness differed. **Bug #15 on the tally.**
+
+Fix: read with **no default** so a missing OR `None` value stays `None`, and return **0.0
+honest-missing** when any of experience/tenure is absent/`None` — no crash, no fabricated default. The
+confidence path guards `None` identically.
+
+### 3c.9 — Preseason dormancy inventory  (owner rider 2)
+
+With the situational pair + momentum ×2 + pressure neutralised on top of the D19 sentiment fix, state
+plainly what the model consists of **preseason** (weeks 0–~3, before real results accrue): the **physical
+factors + the power-rating base gap**, essentially — everything data-derived-from-results is dormant, and
+`MarketSentiment` is dormant until slice-1.5 line-movement. This is the design's own logic converging,
+not a defect: an honest model with no current-season signal declines to bet (10/10 NO_BET on the dry-run).
+The early-season quiet is deliberate and ratified as such.
+
+### 3c.10 — DEFERRED: `StyleMismatch` output range  (carried, with a hard due date)  — **RATIFIED as written** (owner, 2026-07-04)
+
+`StyleMismatch`'s ±4.0 range is **1.6 × the ~2.5-pt HFA** — the largest single-factor output range in the
+system, flagged in 3b.4. It is a genuine calibration question, but it is a **`matchup`-factor** question
+(what is the honest cap on a pace/efficiency mismatch from advanced stats?) with **nothing to do with
+L2's situational-threshold reasoning** — folding it in would be scope creep wearing a baton costume.
+**Deferred to 3d or a pre-freeze mini-batch — but MUST be resolved before the `v2026-frozen` tag:** a
+±4.0 range (1.6 × HFA) cannot freeze unexamined. This deferral carries its own due date.
+
+*Every constant above is **RATIFIED** (owner, 2026-07-04) and freezes at `v2026-frozen`, except the
+**3c.10 `StyleMismatch` deferral**, which carries a hard pre-freeze due date.*

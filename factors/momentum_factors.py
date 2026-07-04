@@ -52,32 +52,40 @@ class PointDifferentialTrendsCalculator(BaseFactorCalculator):
         
         home_data = context.get('home_team_data', {})
         away_data = context.get('away_team_data', {})
-        
-        # Add team names for simulation fallback
-        home_data['team_name'] = home_team
-        away_data['team_name'] = away_team
-        
-        # Calculate differential trends for each team
+
+        # Calculate differential trends for each team from real completed games.
         home_trend = self._calculate_team_differential_trend(home_data)
         away_trend = self._calculate_team_differential_trend(away_data)
-        
+
+        # Honest-missing (binding principle #4): a momentum trend needs real recent
+        # results. Preseason — and any team with too few completed games in the snapshot —
+        # has no trend, so the differential is not computable. Return 0.0 (no signal),
+        # NEVER a fabricated value. Dormant until real game data arrives; measured in 2026.
+        if home_trend is None or away_trend is None:
+            return 0.0
+
         # Calculate trend differential (positive favors home team)
         trend_diff = home_trend - away_trend
-        
+
         return self.validate_output(trend_diff)
     
-    def _calculate_team_differential_trend(self, team_data: Dict) -> float:
-        """Calculate point differential trend for a team."""
+    def _calculate_team_differential_trend(self, team_data: Dict) -> Optional[float]:
+        """Calculate a team's point-differential trend from real completed games.
+
+        Returns None (honest-missing) when there is no schedule or fewer than 3 completed
+        games — the caller then emits no signal. The old MD5-hash / hardcoded-team-list
+        simulation was removed in Phase 3c (binding #2/#4 violation, Bug-#7-class phantom).
+        """
         schedule = team_data.get('schedule', [])
-        
-        # If no schedule data, simulate based on team characteristics
+
+        # No schedule -> no trend (honest-missing, never fabricated).
         if not schedule:
-            return self._simulate_differential_trend(team_data)
-        
+            return None
+
         # Get completed games
         completed_games = [g for g in schedule if g.get('completed', False)]
         if len(completed_games) < 3:
-            return self._simulate_differential_trend(team_data)  # Simulate if insufficient data
+            return None  # Insufficient real data -> no signal
         
         # Sort by date and calculate point differentials
         completed_games.sort(key=lambda x: x.get('date', ''))
@@ -117,34 +125,6 @@ class PointDifferentialTrendsCalculator(BaseFactorCalculator):
         consistency_bonus = self._calculate_consistency_bonus(recent_differentials)
         
         return trend_score + consistency_bonus
-    
-    def _simulate_differential_trend(self, team_data: Dict) -> float:
-        """Simulate differential trend based on team characteristics."""
-        import hashlib
-        team_name = team_data.get('team_name', '')
-        
-        if not team_name:
-            return 0.0
-        
-        # Use team name and context to generate consistent but varied trends
-        team_hash = hashlib.md5(f"{team_name}_momentum".encode()).hexdigest()
-        base_trend = (int(team_hash[:8], 16) % 200 - 100) / 100.0  # -1.0 to 1.0
-        
-        # Elite teams tend to have positive trends
-        elite_teams = ['ALABAMA', 'GEORGIA', 'OHIO STATE', 'MICHIGAN', 'TEXAS']
-        if team_name.upper() in elite_teams:
-            base_trend = abs(base_trend) * 0.7  # Positive but not extreme
-        
-        # Struggling teams tend to have negative trends
-        struggling_teams = ['VANDERBILT', 'KENT STATE', 'AKRON', 'UMASS']
-        if team_name.upper() in struggling_teams:
-            base_trend = -abs(base_trend) * 0.5
-        
-        # Add weekly variation
-        week_hash = int(team_hash[8:10], 16)
-        week_variation = (week_hash % 40 - 20) / 100.0
-        
-        return base_trend + week_variation
     
     def _calculate_game_differential(self, game: Dict) -> Optional[float]:
         """Calculate point differential for a single game."""
@@ -265,30 +245,38 @@ class CloseGamePerformanceCalculator(BaseFactorCalculator):
         
         home_data = context.get('home_team_data', {})
         away_data = context.get('away_team_data', {})
-        
-        # Add team names for simulation fallback
-        home_data['team_name'] = home_team
-        away_data['team_name'] = away_team
-        
-        # Calculate close game performance for each team
+
+        # Calculate close game performance for each team from real completed games.
         home_clutch = self._calculate_team_clutch_performance(home_data, context)
         away_clutch = self._calculate_team_clutch_performance(away_data, context)
-        
+
+        # Honest-missing (binding principle #4): clutch performance needs real close-game
+        # history. Preseason — and any team with no completed games in the snapshot — has
+        # none, so the differential is not computable. Return 0.0 (no signal), NEVER a
+        # fabricated value. Dormant until real game data arrives; measured in 2026.
+        if home_clutch is None or away_clutch is None:
+            return 0.0
+
         # Calculate clutch differential (positive favors home team)
         clutch_diff = home_clutch - away_clutch
-        
+
         return self.validate_output(clutch_diff)
     
-    def _calculate_team_clutch_performance(self, team_data: Dict, context: Dict = None) -> float:
-        """Calculate clutch performance score for a team."""
+    def _calculate_team_clutch_performance(self, team_data: Dict, context: Dict = None) -> Optional[float]:
+        """Calculate a team's clutch (close-game) performance from real completed games.
+
+        Returns None (honest-missing) when there is no schedule or no completed games — the
+        caller then emits no signal. The old MD5-hash / hardcoded clutch-team simulation was
+        removed in Phase 3c (binding #2/#4 violation, Bug-#7-class phantom).
+        """
         schedule = team_data.get('schedule', [])
         if not schedule:
-            return self._simulate_clutch_performance(team_data, context)
-        
+            return None
+
         # Get completed games
         completed_games = [g for g in schedule if g.get('completed', False)]
         if not completed_games:
-            return self._simulate_clutch_performance(team_data, context)
+            return None
         
         # Analyze recent games for close game performance
         recent_games = completed_games[-self.config['recent_games_window']:]
@@ -322,55 +310,6 @@ class CloseGamePerformanceCalculator(BaseFactorCalculator):
             clutch_score += blowout_score * 0.2
         
         return clutch_score
-    
-    def _simulate_clutch_performance(self, team_data: Dict, context: Dict = None) -> float:
-        """Simulate clutch performance based on team characteristics."""
-        import hashlib
-        team_name = team_data.get('team_name', '')
-        
-        if not team_name:
-            return 0.0
-        
-        # Generate team-specific clutch rating
-        team_hash = hashlib.md5(f"{team_name}_clutch".encode()).hexdigest()
-        base_clutch = (int(team_hash[:8], 16) % 150 - 75) / 100.0  # -0.75 to 0.75
-        
-        # Teams known for close games/clutch play
-        clutch_teams = {
-            'IOWA': 0.4,      # Known for close, low-scoring games
-            'NORTHWESTERN': 0.3,  # Cardiac Cats reputation
-            'PENN STATE': 0.2,    # Good in close games
-            'WISCONSIN': 0.2,     # Grind-it-out style
-            'MICHIGAN STATE': 0.15  # Tough in close games
-        }
-        
-        # Teams that struggle in close games
-        anti_clutch_teams = {
-            'NEBRASKA': -0.3,     # Recent history of close losses
-            'TEXAS A&M': -0.2,    # Tendency to blow leads
-            'MINNESOTA': -0.15    # Struggle to finish
-        }
-        
-        # Apply team-specific adjustments
-        if team_name.upper() in clutch_teams:
-            base_clutch = abs(base_clutch) * clutch_teams[team_name.upper()]
-        elif team_name.upper() in anti_clutch_teams:
-            base_clutch = abs(base_clutch) * anti_clutch_teams[team_name.upper()]
-        
-        # Spread context - underdogs often play close
-        if context:
-            vegas_spread = context.get('vegas_spread', 0)
-            team_is_home = team_data.get('is_home', False)
-            
-            if (team_is_home and vegas_spread > 7) or (not team_is_home and vegas_spread < -7):
-                # Team is underdog - often keeps games close
-                base_clutch += 0.1
-        
-        # Add some weekly variation
-        week_hash = int(team_hash[8:10], 16)
-        week_variation = (week_hash % 30 - 15) / 100.0
-        
-        return base_clutch + week_variation
     
     def _analyze_game_closeness(self, game: Dict) -> Optional[Dict[str, Any]]:
         """Analyze whether a game was close and the outcome."""

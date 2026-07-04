@@ -13,6 +13,25 @@ from factors.factor_registry import factor_registry
 from utils.normalizer import normalizer
 from engine.variance_detector import variance_detector
 
+# ── Phase 3c calibration constants (PROPOSED — ratified in docs/CALIBRATION_LOG.md; frozen at the
+# tag). Evidence class `reasoned`: NOT fit to the 2025 archive (its confidence/edge distributions
+# are Bug-#7-contaminated, SPEC §3), set by stated argument on the model's own scale and
+# structurally sanity-checked on the NEW model's dry-run output — never tuned to hit an ATS%. ───
+#
+# L4 — NO_BET floors. NO_BET fires when ANY of: the edge is below the (dynamic, confidence-aware)
+# `min_edge_threshold` already computed for the pick; confidence is below the floor below; or the
+# variance detector flags hard factor disagreement.
+NO_BET_CONFIDENCE_FLOOR = 0.50          # = the B/C tier boundary → a bet is only ever tier A or B;
+                                        # tier C (conf < 0.50) is therefore NO_BET, never a bet grade
+NO_BET_VARIANCE_LEVELS = frozenset({'extreme'})        # variance_level that forces NO_BET
+NO_BET_VARIANCE_ACTIONS = frozenset({'AVOID_OR_MINIMUM'})  # variance recommendation.action gate
+#
+# L3 — A/B/C confidence tiers, keyed off confidence_score. Boundaries are reasoned; the
+# monotonic-ATS%-by-tier property is a structural sanity check on the NEW model's output, NOT a
+# 2025-evidence gate (the archive confidence→ATS table is inadmissible, SPEC §3).
+CONFIDENCE_TIER_A_MIN = 0.65            # A: strong-conviction bets
+CONFIDENCE_TIER_B_MIN = 0.50            # B: standard; below B_MIN → tier C (thin, still a bet)
+
 
 class PredictionEngine:
     """
@@ -93,24 +112,30 @@ class PredictionEngine:
                     "No betting line available - cannot calculate contrarian prediction"
                 )
             
-            # Step 3: Calculate all factor adjustments
+            # Step 2.5: Price the matchup with the in-house power rating (SPEC §6.3/§6.6) BEFORE
+            # the factors run, so the L2 confirming-signal gate can read the model-vs-market BASE
+            # gap. The gap remains a diagnostic for the model spread itself (§6.6); its NEW job in
+            # 3c is to CONFIRM situational factors — and only the BASE gap may (D15: it excludes
+            # schedule, so a physical/schedule factor is never confirmed by a gap containing its own
+            # signal). The base gap is injected onto the context; the total gap never confirms.
+            power_rating = self._compute_power_rating(
+                home_normalized, away_normalized, week, vegas_spread, context)
+            context['model_vs_market_gap'] = (
+                power_rating.get('model_vs_market_gap') if power_rating else None)
+
+            # Step 3: Calculate all factor adjustments (situational factors are gated by the
+            # base gap injected above + physical-factor agreement, inside the registry).
             factor_results = self.factor_registry.calculate_all_factors(
                 home_normalized, away_normalized, context
             )
-            
+
             # Step 4: Generate contrarian prediction
             prediction_result = self._calculate_contrarian_prediction(
                 vegas_spread, factor_results, context
             )
-            
+
             # Step 4.5: Analyze factor variance for disagreement detection
             variance_analysis = variance_detector.analyze_factor_variance(factor_results)
-
-            # Step 4.6: Price the matchup with the in-house power rating (SPEC §6.3/§6.6).
-            # DIAGNOSTIC ONLY in 2026: the model-vs-market gap is logged alongside, it does
-            # NOT drive the contrarian edge/recommendation (§6.6).
-            power_rating = self._compute_power_rating(
-                home_normalized, away_normalized, week, vegas_spread, context)
 
             # Step 5: Build comprehensive result
             result = self._build_prediction_result(
@@ -269,6 +294,65 @@ class PredictionEngine:
             'min_edge_threshold': min_edge_threshold
         }
     
+    def _evaluate_no_bet(self, prediction_result: Dict[str, Any], confidence_score: float,
+                         variance_analysis: Optional[Dict[str, Any]]) -> tuple:
+        """L4 NO_BET evaluation (SPEC §7.4). Return (no_bet: bool, reasons: List[str]).
+
+        NO_BET fires when ANY floor is breached — it is purely threshold-driven, with NO weekly
+        volume target (§16.3): the model bets what clears the bar, whether that's 5 games or 30.
+          1. Edge below the (dynamic, confidence-aware) `min_edge_threshold` already computed for
+             the pick — i.e. the existing `has_edge` gate says there is no real edge.
+          2. Confidence below `NO_BET_CONFIDENCE_FLOOR`.
+          3. The variance detector flags hard factor disagreement (extreme variance, a
+             primary-factor directional split, or an AVOID recommendation).
+        """
+        reasons: List[str] = []
+
+        # 1. Edge floor (reuses the existing dynamic threshold; skip the no-line sentinel case).
+        if prediction_result.get('edge_size') is not None and not prediction_result.get('has_edge', False):
+            thr = prediction_result.get('min_edge_threshold')
+            reasons.append(
+                f"edge {prediction_result.get('edge_size', 0.0):.2f} below threshold"
+                + (f" {thr:.2f}" if isinstance(thr, (int, float)) else ""))
+
+        # 2. Confidence floor.
+        if confidence_score < NO_BET_CONFIDENCE_FLOOR:
+            reasons.append(f"confidence {confidence_score:.2f} < {NO_BET_CONFIDENCE_FLOOR:.2f}")
+
+        # 3. Variance hard-disagreement gate.
+        if variance_analysis:
+            level = variance_analysis.get('variance_level', '')
+            directional = variance_analysis.get('directional_agreement') or {}
+            action = (variance_analysis.get('recommendation') or {}).get('action', '')
+            if level in NO_BET_VARIANCE_LEVELS:
+                reasons.append(f"{level} factor variance")
+            if directional.get('primary_disagreement'):
+                reasons.append("primary factors disagree in direction")
+            if action in NO_BET_VARIANCE_ACTIONS:
+                reasons.append(f"variance recommends {action}")
+
+        return (len(reasons) > 0, reasons)
+
+    def _confidence_tier(self, confidence_score: float, prediction_type: str) -> Optional[str]:
+        """L3 A/B/C confidence tier from the confidence score (SPEC §7.5).
+
+        Because the NO_BET confidence floor equals the B/C boundary (`CONFIDENCE_TIER_B_MIN`), a
+        prediction with confidence below B is always NO_BET — so **a BET is only ever tier A or B,
+        and tier C is a diagnostic grade that never labels a bet**. The tier is still computed for a
+        NO_BET game (it explains *why* — a C means "confidence too low", vs a B/A NO_BET which was
+        edge/variance-gated), so C is observable in the reports; only a no-line / error prediction
+        has no meaningful confidence and returns None. Boundaries are `reasoned` (NOT fit to the
+        archive confidence→ATS table, SPEC §3); monotonic-ATS%-by-tier is a structural check on the
+        new model's output, measured by Phase-4 attribution.
+        """
+        if prediction_type in ('NO_BETTING_DATA', 'ERROR'):
+            return None
+        if confidence_score >= CONFIDENCE_TIER_A_MIN:
+            return 'A'
+        if confidence_score >= CONFIDENCE_TIER_B_MIN:
+            return 'B'
+        return 'C'
+
     def _build_prediction_result(self, home_team: str, away_team: str, week: Optional[int],
                                vegas_spread: Optional[float], factor_results: Dict[str, Any],
                                prediction_result: Dict[str, Any], context: Dict[str, Any],
@@ -286,6 +370,28 @@ class PredictionEngine:
                 "bit-identical rerun is NOT guaranteed for this prediction.",
                 away_team, home_team)
             timestamp = datetime.now().isoformat()
+
+        # Confidence, NO_BET (L4) and tier (L3) are decided here, where edge + variance +
+        # confidence are all available together.
+        confidence_score = self._calculate_confidence_score(
+            prediction_result, factor_results, context, variance_analysis)
+        base_type = prediction_result.get('prediction_type', 'UNKNOWN')
+        no_bet, no_bet_reasons = self._evaluate_no_bet(
+            prediction_result, confidence_score, variance_analysis)
+        # NO_BET is a first-class verdict layered on top of the contrarian tier: it overrides the
+        # prediction type (except when there is no line / an error) BUT the hypothetical pick is
+        # preserved (contrarian_spread + edge_*), so NO_BET games are still graded — "what would
+        # have happened" (SPEC §7.4 / §16.3). Purely threshold-driven; no weekly volume target.
+        if no_bet and base_type not in ('NO_BETTING_DATA', 'ERROR'):
+            prediction_type = 'NO_BET'
+            has_edge = False
+        else:
+            prediction_type = base_type
+            has_edge = prediction_result.get('has_edge', False)
+        confidence_tier = self._confidence_tier(confidence_score, prediction_type)
+        recommendation = self._generate_recommendation(
+            prediction_result, factor_results, variance_analysis,
+            no_bet=no_bet, no_bet_reasons=no_bet_reasons)
 
         return {
             # Basic game info
@@ -313,9 +419,12 @@ class PredictionEngine:
             # Edge analysis
             'edge_size': prediction_result.get('edge_size'),
             'edge_direction': prediction_result.get('edge_direction'),
-            'has_edge': prediction_result.get('has_edge', False),
-            'prediction_type': prediction_result.get('prediction_type', 'UNKNOWN'),
-            
+            'has_edge': has_edge,
+            'prediction_type': prediction_type,
+            'no_bet': no_bet,
+            'no_bet_reason': ('; '.join(no_bet_reasons) if no_bet else None),
+            'confidence_tier': confidence_tier,
+
             # Factor analysis
             'total_adjustment': prediction_result.get('total_adjustment', 0.0),
             'factor_breakdown': factor_results.get('factors', {}),
@@ -330,9 +439,9 @@ class PredictionEngine:
             # Variance Analysis
             'variance_analysis': variance_analysis,
             
-            # Recommendation (now incorporates variance)
-            'recommendation': self._generate_recommendation(prediction_result, factor_results, variance_analysis),
-            'confidence_score': self._calculate_confidence_score(prediction_result, factor_results, context, variance_analysis),
+            # Recommendation (incorporates variance + NO_BET)
+            'recommendation': recommendation,
+            'confidence_score': confidence_score,
             
             # Context data
             'context': {
@@ -342,14 +451,22 @@ class PredictionEngine:
             }
         }
     
-    def _generate_recommendation(self, prediction_result: Dict[str, Any], 
+    def _generate_recommendation(self, prediction_result: Dict[str, Any],
                                factor_results: Dict[str, Any],
-                               variance_analysis: Optional[Dict[str, Any]] = None) -> str:
+                               variance_analysis: Optional[Dict[str, Any]] = None,
+                               no_bet: bool = False,
+                               no_bet_reasons: Optional[List[str]] = None) -> str:
         """Generate betting recommendation based on prediction results."""
         prediction_type = prediction_result.get('prediction_type', 'UNKNOWN')
         edge_direction = prediction_result.get('edge_direction', 'neutral')
         edge_size = prediction_result.get('edge_size', 0.0)
-        
+
+        # L4: a NO_BET verdict is the recommendation — the hypothetical pick is still logged and
+        # graded, but the model is explicitly declining to bet it.
+        if no_bet:
+            why = ("; ".join(no_bet_reasons) if no_bet_reasons else "below betting floors")
+            return f"NO BET - {why}"
+
         if prediction_type == 'NO_BETTING_DATA':
             return "Cannot provide recommendation - no betting line available"
         

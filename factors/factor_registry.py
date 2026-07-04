@@ -11,6 +11,53 @@ import inspect
 from config import config
 from factors.base_calculator import BaseFactorCalculator, FactorType, FactorConfidence
 
+SITUATIONAL_CATEGORY = "situational_context"
+PHYSICAL_CATEGORY = "physical"
+
+
+def _sign(x: Optional[float]) -> int:
+    """-1 / 0 / +1 sign of a spread-space value (None -> 0)."""
+    if x is None or x == 0:
+        return 0
+    return 1 if x > 0 else -1
+
+
+def confirm_situational(factor_results: List[Dict[str, Any]],
+                        base_gap: Optional[float]) -> set:
+    """L2 confirming-signal gate (SPEC §7.3, D15).
+
+    Situational signals are motivational hypotheses, not team-quality facts — the L2 lesson is
+    to raise the bar on them. Given every factor's result dict for one matchup and the
+    model-vs-market **BASE** gap (D15 — the base gap only, NEVER the total gap, so a factor is
+    never confirmed by a gap containing its own schedule signal), return the set of situational
+    factor NAMES that are UNCONFIRMED and must not contribute.
+
+    An activated situational factor is CONFIRMED iff its direction agrees with either:
+      (a) the base gap (the model's team-quality disagreement with the market), or
+      (b) at least one activated physical factor.
+    All values live in the same additive spread-adjustment space where positive favors home,
+    so "agree in direction" == "same sign". A situational factor with no directional
+    corroboration is a solo guess and is dropped.
+    """
+    physical_signs = {
+        _sign(fr.get('value'))
+        for fr in factor_results
+        if fr.get('activated') and fr.get('category') == PHYSICAL_CATEGORY
+        and _sign(fr.get('value')) != 0
+    }
+    gap_sign = _sign(base_gap)
+    unconfirmed = set()
+    for fr in factor_results:
+        if not fr.get('activated') or fr.get('category') != SITUATIONAL_CATEGORY:
+            continue
+        s = _sign(fr.get('value'))
+        if s == 0:
+            continue
+        confirmed = (s == gap_sign) or (s in physical_signs)
+        if not confirmed:
+            unconfirmed.add(fr.get('factor_name'))
+    return unconfirmed
+
 
 class FactorRegistry:
     """
@@ -120,7 +167,11 @@ class FactorRegistry:
         # These are the factors that most contradict public perception
         primary_factors = {
             'HeadToHeadRecord': {'threshold': 1.0, 'max_impact': 5.0},      # 20% of total
-            'DesperationIndex': {'threshold': 2.0, 'max_impact': 7.0},      # 20% of total
+            # DesperationIndex threshold 2.0 -> 1.0 (Phase 3c, PROPOSED — CALIBRATION_LOG 3c).
+            # The old 2.0 equalled the factor's max output (±2.0), so it could only fire at exact
+            # saturation (never, in practice). 1.0 lets a genuine half-max desperation differential
+            # fire, and the L2 confirmation gate (confirm_situational) supplies the real selectivity.
+            'DesperationIndex': {'threshold': 1.0, 'max_impact': 7.0},      # 20% of total
             # 'SchedulingFatigue': {'threshold': 1.5, 'max_impact': 3.5},   # 20% of total (to be added)
         }
         
@@ -225,89 +276,53 @@ class FactorRegistry:
         confidence_sum = 0.0
         confidence_count = 0
         
-        # Calculate each factor
+        # ── Phase 1: compute every factor's result (no activation-dependent aggregation yet),
+        # so the L2 confirmation gate below can see ALL factor signs before any situational
+        # contribution is counted or summed. ────────────────────────────────────────────────
         for factor_name, factor in self.factors.items():
             try:
                 # Check if factor can be calculated with available data
                 can_calculate, reason = factor.can_calculate(context)
-                
+
                 if can_calculate:
-                    # Calculate factor with enhanced method
                     factor_result = factor.safe_calculate(home_team, away_team, context)
-                    
-                    # Track performance
                     if factor_result['success']:
                         self.execution_stats['successful_calculations'] += 1
                         results['summary']['factors_successful'] += 1
-                        
-                        # Track activation
-                        if factor_result.get('activated', False):
-                            results['summary']['factors_activated'] += 1
-                            
-                            # Track primary vs secondary
-                            if factor_result.get('factor_type') == FactorType.PRIMARY.value:
-                                results['summary']['primary_signals'] += 1
-                            elif factor_result.get('factor_type') == FactorType.SECONDARY.value:
-                                results['summary']['secondary_signals'] += 1
-                            
-                            # Track confidence
-                            if isinstance(factor_result.get('confidence'), FactorConfidence):
-                                confidence_sum += factor_result['confidence'].value
-                                confidence_count += 1
                     else:
                         self.execution_stats['failed_calculations'] += 1
                         results['summary']['factors_failed'] += 1
-                    
-                    # Add to results
                     results['factors'][factor_name] = factor_result
-                    
-                    # Handle multiplicative vs additive factors
-                    if factor_result['success'] and factor_result.get('activated', False):
-                        if factor_result.get('is_multiplicative', False):
-                            # Store multiplicative factors separately
-                            results['multiplicative_factors'].append(factor_result)
-                            results['summary']['multiplicative_adjustment'] *= factor_result['weighted_value']
-                        else:
-                            # Add to total adjustment (additive)
-                            weighted_val = factor_result.get('weighted_value', 0.0)
-                            if self.use_dynamic_weights:
-                                # Use dynamic weight if enabled
-                                weighted_val = factor_result.get('dynamic_weight', factor.weight) * factor_result.get('value', 0.0)
-                            
-                            results['summary']['total_adjustment'] += weighted_val
-                            
-                            # Track category adjustments
-                            category = factor.category
-                            if category not in results['summary']['category_adjustments']:
-                                results['summary']['category_adjustments'][category] = 0.0
-                            results['summary']['category_adjustments'][category] += weighted_val
-                
                 else:
                     # Factor cannot be calculated
                     results['factors'][factor_name] = {
                         'factor_name': factor_name,
                         'factor_type': factor.factor_type.value,
+                        'category': factor.category,
                         'home_team': home_team,
                         'away_team': away_team,
                         'value': 0.0,
                         'success': False,
+                        'activated': False,
                         'error': f"Cannot calculate: {reason}",
                         'weight': factor.weight,
                         'weighted_value': 0.0,
                         'explanation': f"Insufficient data: {reason}"
                     }
                     results['summary']['factors_failed'] += 1
-                
+
                 results['summary']['factors_calculated'] += 1
-                
+
             except Exception as e:
                 self.logger.error(f"Error calculating factor {factor_name}: {e}")
                 results['factors'][factor_name] = {
                     'factor_name': factor_name,
+                    'category': getattr(factor, 'category', 'unknown'),
                     'home_team': home_team,
                     'away_team': away_team,
                     'value': 0.0,
                     'success': False,
+                    'activated': False,
                     'error': str(e),
                     'weight': factor.weight,
                     'weighted_value': 0.0,
@@ -315,7 +330,59 @@ class FactorRegistry:
                 }
                 results['summary']['factors_failed'] += 1
                 results['summary']['factors_calculated'] += 1
-        
+
+        # ── L2 confirming-signal gate (SPEC §7.3 / D15): de-activate any situational factor whose
+        # direction is NOT confirmed by the model-vs-market BASE gap or an activated physical
+        # factor, BEFORE aggregation — so total_adjustment, the signal counts, and avg_confidence
+        # all reflect the gate. The engine injects the base gap (base only, never total) onto the
+        # context; absent (e.g. a minimal/no-snapshot context) it falls back to physical-only
+        # confirmation. ─────────────────────────────────────────────────────────────────────
+        base_gap = context.get('model_vs_market_gap') if context else None
+        unconfirmed = confirm_situational(list(results['factors'].values()), base_gap)
+        for name in unconfirmed:
+            fr = results['factors'][name]
+            fr['activated'] = False
+            fr['confirmation'] = 'unconfirmed'
+            fr['reasoning'] = list(fr.get('reasoning') or []) + [
+                "Situational signal unconfirmed by the base gap or a physical factor (L2) — "
+                "contribution withheld"
+            ]
+
+        # ── Phase 2: activation-dependent aggregation over the (now gated) results. ──────────
+        for factor_name, factor_result in results['factors'].items():
+            if not factor_result.get('success') or not factor_result.get('activated', False):
+                continue
+
+            results['summary']['factors_activated'] += 1
+
+            # Track primary vs secondary
+            if factor_result.get('factor_type') == FactorType.PRIMARY.value:
+                results['summary']['primary_signals'] += 1
+            elif factor_result.get('factor_type') == FactorType.SECONDARY.value:
+                results['summary']['secondary_signals'] += 1
+
+            # Track confidence (activated factors only)
+            if isinstance(factor_result.get('confidence'), FactorConfidence):
+                confidence_sum += factor_result['confidence'].value
+                confidence_count += 1
+
+            # Handle multiplicative vs additive factors
+            if factor_result.get('is_multiplicative', False):
+                results['multiplicative_factors'].append(factor_result)
+                results['summary']['multiplicative_adjustment'] *= factor_result['weighted_value']
+            else:
+                weighted_val = factor_result.get('weighted_value', 0.0)
+                if self.use_dynamic_weights:
+                    weighted_val = (factor_result.get('dynamic_weight', factor_result.get('weight', 0.0))
+                                    * factor_result.get('value', 0.0))
+
+                results['summary']['total_adjustment'] += weighted_val
+
+                # Track category adjustments
+                category = factor_result.get('category', 'unknown')
+                results['summary']['category_adjustments'].setdefault(category, 0.0)
+                results['summary']['category_adjustments'][category] += weighted_val
+
         # Calculate average confidence
         if confidence_count > 0:
             results['summary']['avg_confidence'] = confidence_sum / confidence_count

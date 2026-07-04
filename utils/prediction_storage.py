@@ -214,14 +214,17 @@ class PredictionStorage:
         
         return sorted(weeks)
     
-    def create_prediction_entry(self, home_team: str, away_team: str, 
+    def create_prediction_entry(self, home_team: str, away_team: str,
                               vegas_spread: str, predicted_edge: float,
                               confidence: float, recommendation: str,
                               factor_breakdown: Dict, data_quality: float,
-                              week: int, rationale: str = "") -> Dict:
+                              week: int, rationale: str = "",
+                              prediction_type: Optional[str] = None,
+                              no_bet: Optional[bool] = None,
+                              confidence_tier: Optional[str] = None) -> Dict:
         """
         Create a properly formatted prediction entry.
-        
+
         Args:
             home_team: Home team name
             away_team: Away team name
@@ -233,13 +236,22 @@ class PredictionStorage:
             data_quality: Data quality score
             week: Week number
             rationale: Optional explanation of the bet
-            
+            prediction_type: Engine prediction type (incl. 'NO_BET'); Phase-3c pass-through.
+            no_bet: L4 NO_BET flag; Phase-3c pass-through.
+            confidence_tier: L3 A/B/C tier (None for NO_BET); Phase-3c pass-through.
+
         Returns:
             Formatted prediction dictionary
+
+        Note (Phase 3c seam): the L3/L4 fields (`prediction_type`, `no_bet`, `confidence_tier`)
+        are carried through here so they are NOT silently dropped, but the persisted-schema
+        formalisation (`schema_version`, the 2025 converter, and logging NO_BET games for
+        grading) is owned by Phase 3d (SPEC §7.6). They are included only when provided, so
+        existing callers are unaffected.
         """
         game_id = f"{away_team.lower().replace(' ', '-')}-vs-{home_team.lower().replace(' ', '-')}-week{week}"
-        
-        return {
+
+        entry = {
             "game_id": game_id,
             "home_team": home_team,
             "away_team": away_team,
@@ -251,6 +263,13 @@ class PredictionStorage:
             "factor_breakdown": {k: round(v, 3) for k, v in factor_breakdown.items()},
             "data_quality": round(data_quality, 1)
         }
+        if prediction_type is not None:
+            entry["prediction_type"] = prediction_type
+        if no_bet is not None:
+            entry["no_bet"] = no_bet
+        if confidence_tier is not None:
+            entry["confidence_tier"] = confidence_tier
+        return entry
     
     def list_stored_weeks(self, season: int = 2025) -> Dict[str, List[int]]:
         """

@@ -142,12 +142,111 @@ _cal = (ROOT / "docs" / "CALIBRATION_LOG.md").read_text()
 check("CALIBRATION_LOG carries the 3b batch (coefficients, reweight, budget, retirements, base-calc fix)",
       "Phase 3b" in _cal and "travel_cap" in _cal and "activation" in _cal.lower())
 
-# === 3c / 3d — PENDING (freeze-disciplined; ratify before the tag) ============
-todo("situational thresholds + confirming-factor via base gap (L2, 3c)")
-todo("NO_BET first-class prediction type — edge/confidence/variance floors (L4, 3c)")
-todo("confidence v2 A/B/C tiers, monotonic-ATS% gated (L3, 3c) — CALIBRATION_LOG batch")
+# === 3c — situational discipline + NO_BET + confidence tiers (L2/L4/L3) ========
+# Fabrication extermination tripwire (owner rider): the MD5-hash-of-team-name + hardcoded-team
+# pattern was ONE author's template in SIX factors (market sentiment #7, desperation, revenge,
+# momentum ×2, coaching pressure — Bugs #12–14). The Phase-1 grep only caught conference-name
+# lists + random.*, so the team-name-hash cousins slipped through. factors/ READ data — they
+# never hash or randomise (the snapshot layer legitimately hashes, which is why this scan is
+# factors/-scoped, not repo-wide). This is the repo-wide extermination tool.
+_FACT_FILES = sorted((ROOT / "factors").rglob("*.py"))
+_fab_tokens = ("hashlib", "md5", "random.")
+_fab_hits = [f"{_pf.relative_to(ROOT).as_posix()}:{_i}"
+             for _pf in _FACT_FILES
+             for _i, _ln in enumerate(_pf.read_text().splitlines(), 1)
+             if any(tok in _ln for tok in _fab_tokens)]
+check("no hash/random fabrication tell-tales anywhere in factors/ (Bug #7/#12–14 tripwire)",
+      not _fab_hits, "; ".join(_fab_hits) if _fab_hits else "clean")
+
+# L2 neutralization — the fabricated fallbacks + hardcoded team tables are gone (binding #2/#4).
+_sit_blob = ((ROOT / "factors" / "situational_context.py").read_text()
+             + (ROOT / "factors" / "momentum_factors.py").read_text()
+             + (ROOT / "factors" / "coaching_edge.py").read_text())
+_removed = ("_simulate_desperation", "_simulate_differential_trend", "_simulate_clutch_performance",
+            "revenge_scenarios", "bubble_teams", "clutch_teams")
+check("situational/momentum/coaching fabrication fallbacks removed (L2 neutralization)",
+      not any(tok in _sit_blob for tok in _removed))
+
+# L2 confirming-signal gate (SPEC §7.3 / D15): a situational factor contributes only if the BASE
+# gap or an activated physical factor agrees in direction; solo situational guesses are withheld.
+from factors.factor_registry import confirm_situational  # noqa: E402
+
+
+def _sit(v):
+    return {"factor_name": "D", "category": "situational_context", "value": v, "activated": True}
+
+
+def _phys(v):
+    return {"factor_name": "P", "category": "physical", "value": v, "activated": True}
+
+
+_l2_ok = (confirm_situational([_sit(1.2)], None) == {"D"}                    # no corroboration -> withheld
+          and confirm_situational([_sit(1.2)], 2.0) == set()                # base gap agrees -> kept
+          and confirm_situational([_sit(1.2)], -2.0) == {"D"}               # base gap disagrees -> withheld
+          and confirm_situational([_sit(1.2), _phys(0.8)], -2.0) == set())  # physical agrees -> kept
+check("L2 confirming-signal gate: situational withheld unless base gap or a physical factor agrees (D15 base-only)",
+      _l2_ok)
+
+# Cleanup items folded into the confidence rework.
+from factors.coaching_edge import ExperienceDifferentialCalculator  # noqa: E402
+from factors.market_sentiment import MarketSentimentCalculator  # noqa: E402
+
+_ms = MarketSentimentCalculator().safe_calculate("A", "B", {"week": 5, "vegas_spread": -3.0})
+check("dormant multiplicative modifier at 1.0 is NOT counted activated (avg_confidence not diluted)",
+      _ms["activated"] is False and abs(_ms["value"] - 1.0) < 1e-9)
+
+_none_ctx = {"coaching_comparison": {"home_coaching": {"head_coach_experience": None, "tenure_years": None},
+                                     "away_coaching": {"head_coach_experience": 5, "tenure_years": 3}}}
+_ed = ExperienceDifferentialCalculator().safe_calculate("A", "B", _none_ctx)
+check("ExperienceDifferential handles None/missing coaching data (honest-missing 0.0, no crash)",
+      _ed["value"] == 0.0 and _ed.get("error") is None)
+
+# L4 NO_BET acceptance — the 2026 wk1 dry-run (D16 vehicle) has no completed games/records, so
+# every factor is dormant and edges collapse; the floors correctly refuse to bet a no-signal slate.
+# Asserting this so nobody mistakes an empty bettable slate for breakage in August — selectivity
+# working as DESIGNED, not a bug.
+_snap_f = ROOT / "data" / "snapshots" / "2026_week_01" / "snapshot.json"
+if _snap_f.exists():
+    import logging as _lg  # noqa: E402
+    from engine.prediction_engine import PredictionEngine  # noqa: E402
+    _lg.disable(_lg.CRITICAL)
+    _eng2 = PredictionEngine()
+    _types = []
+    for _line in json.loads(_snap_f.read_text())["data"]["betting_lines"].values():
+        _h, _a = _line.get("home_team"), _line.get("away_team")
+        if _h and _a:
+            _types.append(_eng2.generate_prediction(_h, _a, week=1).get("prediction_type"))
+    _lg.disable(_lg.NOTSET)
+    check("L4 NO_BET: 2026 wk1 dry-run slate is all NO_BET (no signal preseason — selectivity, not breakage)",
+          len(_types) > 0 and all(t == "NO_BET" for t in _types),
+          f"{_types.count('NO_BET')}/{len(_types)} NO_BET")
+else:
+    check("L4 NO_BET dry-run slate", False, "no 2026 wk1 snapshot")
+
+# L3 confidence tiers — monotonic in confidence_score is a STRUCTURAL sanity check on the NEW
+# model (SPEC §3/§7.5), NEVER a 2025-ATS gate (the archive confidence→ATS table is inadmissible).
+# Synthetic confidence sweep, in the spirit of the D9 dispersion test.
+from engine.prediction_engine import CONFIDENCE_TIER_B_MIN, NO_BET_CONFIDENCE_FLOOR  # noqa: E402
+from engine.prediction_engine import PredictionEngine as _PE  # noqa: E402
+
+_pe = _PE()
+_rank = {"A": 3, "B": 2, "C": 1, None: 0}
+_scores = [i / 100 for i in range(15, 96, 5)]
+_tiers = [_pe._confidence_tier(s, "MODERATE_CONTRARIAN") for s in _scores]
+_l3_ok = (all(_rank[_tiers[i]] <= _rank[_tiers[i + 1]] for i in range(len(_tiers) - 1))
+          # confidence floor == B/C boundary -> tier C is never a live bet grade (only a NO_BET diagnostic)
+          and NO_BET_CONFIDENCE_FLOOR == CONFIDENCE_TIER_B_MIN
+          and _pe._confidence_tier(0.30, "NO_BET") == "C"
+          and _pe._confidence_tier(0.9, "NO_BETTING_DATA") is None)
+check("L3 tiers monotonic in confidence_score; C is a NO_BET diagnostic grade, never a bet (floor==B/C boundary)",
+      _l3_ok)
+
+# The consolidated, evidence-class-labeled 3c batch is recorded.
+check("CALIBRATION_LOG carries the 3c batch (neutralization, thresholds, NO_BET floors, tiers), evidence-class labeled",
+      "Phase 3c" in _cal and "NO_BET" in _cal and "reasoned" in _cal and "neutraliz" in _cal.lower())
+
+# === 3d — PENDING (freeze-disciplined; ratify before the tag) ==================
 todo("prediction schema v2 + 2025 converter + 2026 dry-run acceptance (3d)")
-todo("CALIBRATION_LOG evidence-class-labeled entry for every changed number (3c)")
 
 # --- Report -------------------------------------------------------------------
 print("Phase 3 acceptance checks:")
@@ -164,7 +263,7 @@ suite_ok = suite.returncode == 0
 print(f"  [{'PASS' if suite_ok else 'FAIL'}] full test suite")
 failed += not suite_ok
 
-_pending_note = f" ({len(pending)} pending — 3b/3c/3d)" if pending else " — Phase 3 complete"
+_pending_note = f" ({len(pending)} pending — 3d)" if pending else " — Phase 3 complete"
 print(f"\n{'ALL PHASE 3 CHECKS PASSED' if failed == 0 else f'{failed} CHECK(S) FAILED'}"
       f"{_pending_note}")
 sys.exit(1 if failed else 0)
