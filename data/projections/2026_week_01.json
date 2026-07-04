@@ -423,21 +423,21 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "CINCINNATI",
           "week": 5,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "WEST VIRGINIA",
           "week": 6,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -2234,11 +2234,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "ARIZONA",
           "week": 5,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -2313,8 +2313,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.977,
-      "projected_wins": 6.023,
+      "projected_losses": 5.97,
+      "projected_wins": 6.03,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 12,
@@ -2936,11 +2936,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.3,
+          "model_spread": -3.0,
           "neutral_site": false,
           "opponent": "STANFORD",
           "week": 3,
-          "win_prob": 0.5817,
+          "win_prob": 0.5744,
           "won": null
         },
         {
@@ -3025,8 +3025,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.557,
-      "projected_wins": 5.443,
+      "projected_losses": 5.564,
+      "projected_wins": 5.436,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -4248,11 +4248,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.3,
+          "model_spread": 3.0,
           "neutral_site": false,
           "opponent": "STANFORD",
           "week": 4,
-          "win_prob": 0.4183,
+          "win_prob": 0.4256,
           "won": null
         },
         {
@@ -4337,8 +4337,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.477,
-      "projected_wins": 5.523,
+      "projected_losses": 5.47,
+      "projected_wins": 5.53,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -4826,21 +4826,21 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "USC",
           "week": 11,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "WASHINGTON",
           "week": 12,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -6403,11 +6403,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -5.3,
+          "model_spread": -5.0,
           "neutral_site": false,
           "opponent": "STANFORD",
           "week": 9,
-          "win_prob": 0.6298,
+          "win_prob": 0.6227,
           "won": null
         },
         {
@@ -6452,8 +6452,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.442,
-      "projected_wins": 5.558,
+      "projected_losses": 5.449,
+      "projected_wins": 5.551,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -6709,11 +6709,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -5.3,
+          "model_spread": -5.0,
           "neutral_site": false,
           "opponent": "UCLA",
           "week": 4,
-          "win_prob": 0.6298,
+          "win_prob": 0.6227,
           "won": null
         },
         {
@@ -6779,11 +6779,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "USC",
           "week": 12,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -6933,11 +6933,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "STANFORD",
           "week": 1,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -7042,8 +7042,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.457,
-      "projected_wins": 5.543,
+      "projected_losses": 5.45,
+      "projected_wins": 5.55,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -7257,21 +7257,21 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "OREGON",
           "week": 11,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "UCLA",
           "week": 12,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
@@ -7369,11 +7369,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "UCLA",
           "week": 8,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -7389,21 +7389,21 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "WASHINGTON",
           "week": 11,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "OREGON",
           "week": 12,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
@@ -7418,8 +7418,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.793,
-      "projected_wins": 6.207,
+      "projected_losses": 5.8,
+      "projected_wins": 6.2,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 12,
@@ -8325,11 +8325,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "STANFORD",
           "week": 8,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -8374,8 +8374,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 4.547,
-      "projected_wins": 4.453,
+      "projected_losses": 4.54,
+      "projected_wins": 4.46,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 9,
@@ -9605,11 +9605,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "STANFORD",
           "week": 6,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
@@ -9674,8 +9674,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.92,
-      "projected_wins": 6.08,
+      "projected_losses": 5.928,
+      "projected_wins": 6.072,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 12,
@@ -9879,21 +9879,21 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.3,
+          "model_spread": 3.0,
           "neutral_site": false,
           "opponent": "USC",
           "week": 9,
-          "win_prob": 0.4183,
+          "win_prob": 0.4256,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "OREGON",
           "week": 10,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
@@ -10377,31 +10377,31 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "OHIO STATE",
           "week": 10,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "MICHIGAN",
           "week": 11,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "MICHIGAN STATE",
           "week": 12,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -10416,8 +10416,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.51,
-      "projected_wins": 5.49,
+      "projected_losses": 5.503,
+      "projected_wins": 5.497,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -10601,11 +10601,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "USC",
           "week": 6,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
@@ -10631,11 +10631,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "WASHINGTON",
           "week": 10,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -10805,11 +10805,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "UCLA",
           "week": 3,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -10845,11 +10845,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "WASHINGTON",
           "week": 7,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
@@ -12239,41 +12239,41 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "MIAMI",
           "week": 1,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.3,
+          "model_spread": 3.0,
           "neutral_site": false,
           "opponent": "DUKE",
           "week": 3,
-          "win_prob": 0.4183,
+          "win_prob": 0.4256,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.3,
+          "model_spread": -3.0,
           "neutral_site": false,
           "opponent": "GEORGIA TECH",
           "week": 4,
-          "win_prob": 0.5817,
+          "win_prob": 0.5744,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 5.3,
+          "model_spread": 5.0,
           "neutral_site": false,
           "opponent": "WAKE FOREST",
           "week": 5,
-          "win_prob": 0.3702,
+          "win_prob": 0.3773,
           "won": null
         },
         {
@@ -12289,41 +12289,41 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "NOTRE DAME",
           "week": 6,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "NC STATE",
           "week": 8,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 5.3,
+          "model_spread": 5.0,
           "neutral_site": false,
           "opponent": "LOUISVILLE",
           "week": 9,
-          "win_prob": 0.3702,
+          "win_prob": 0.3773,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.3,
+          "model_spread": 3.0,
           "neutral_site": false,
           "opponent": "VIRGINIA TECH",
           "week": 11,
-          "win_prob": 0.4183,
+          "win_prob": 0.4256,
           "won": null
         },
         {
@@ -12348,8 +12348,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 6.236,
-      "projected_wins": 5.764,
+      "projected_losses": 6.221,
+      "projected_wins": 5.779,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 12,
@@ -14059,21 +14059,21 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "PURDUE",
           "week": 3,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 5.3,
+          "model_spread": 5.0,
           "neutral_site": false,
           "opponent": "MARYLAND",
           "week": 4,
-          "win_prob": 0.3702,
+          "win_prob": 0.3773,
           "won": null
         },
         {
@@ -14099,11 +14099,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "MICHIGAN STATE",
           "week": 8,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
@@ -14139,11 +14139,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "MICHIGAN",
           "week": 12,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -14496,11 +14496,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "PENN STATE",
           "week": 6,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -14516,31 +14516,31 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.3,
+          "model_spread": -3.0,
           "neutral_site": false,
           "opponent": "OHIO STATE",
           "week": 9,
-          "win_prob": 0.5817,
+          "win_prob": 0.5744,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "INDIANA",
           "week": 11,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "MARYLAND",
           "week": 12,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
@@ -15350,11 +15350,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.3,
+          "model_spread": -3.0,
           "neutral_site": false,
           "opponent": "STANFORD",
           "week": 11,
-          "win_prob": 0.5817,
+          "win_prob": 0.5744,
           "won": null
         },
         {
@@ -15379,8 +15379,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.045,
-      "projected_wins": 4.955,
+      "projected_losses": 5.052,
+      "projected_wins": 4.948,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 10,
@@ -15432,11 +15432,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -5.3,
+          "model_spread": -5.0,
           "neutral_site": false,
           "opponent": "STANFORD",
           "week": 5,
-          "win_prob": 0.6298,
+          "win_prob": 0.6227,
           "won": null
         },
         {
@@ -15491,8 +15491,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 4.972,
-      "projected_wins": 5.028,
+      "projected_losses": 4.979,
+      "projected_wins": 5.021,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 10,
@@ -15554,11 +15554,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "PURDUE",
           "week": 7,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
@@ -15574,31 +15574,31 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "PENN STATE",
           "week": 10,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.3,
+          "model_spread": 4.0,
           "neutral_site": false,
           "opponent": "MICHIGAN STATE",
           "week": 11,
-          "win_prob": 0.3941,
+          "win_prob": 0.4013,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "INDIANA",
           "week": 12,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
@@ -15778,11 +15778,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.3,
+          "model_spread": -4.0,
           "neutral_site": false,
           "opponent": "ARIZONA",
           "week": 6,
-          "win_prob": 0.6059,
+          "win_prob": 0.5987,
           "won": null
         },
         {
@@ -15847,8 +15847,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.386,
-      "projected_wins": 5.614,
+      "projected_losses": 5.393,
+      "projected_wins": 5.607,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
