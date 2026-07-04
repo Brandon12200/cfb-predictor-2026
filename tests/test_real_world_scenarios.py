@@ -295,15 +295,15 @@ class TestRealWorldScenarios(unittest.TestCase):
             result = prediction_engine.generate_prediction("GEORGIA", "VANDERBILT", week=11)
             
             self.assertFalse(result.get('error'))
-            
-            # Check if lookahead factor detected potential distraction
-            if 'LookaheadSandwich' in result.get('factor_breakdown', {}):
-                lookahead_factor = result['factor_breakdown']['LookaheadSandwich']
-                # May or may not trigger depending on schedule data availability
-                if lookahead_factor.get('success', False):
-                    # If it triggers, should slightly favor underdog
-                    self.assertLessEqual(lookahead_factor.get('value', 0), 0.5)
-    
+
+            # The physical Sandwich factor (schedule-intel) superseded the retired situational
+            # LookaheadSandwich in 3b; look-ahead/letdown is now a physical/structural signal.
+            if 'Sandwich' in result.get('factor_breakdown', {}):
+                sandwich = result['factor_breakdown']['Sandwich']
+                if sandwich.get('success', False):
+                    self.assertGreaterEqual(sandwich.get('value', 0), -1.5)
+                    self.assertLessEqual(sandwich.get('value', 0), 1.5)
+
     def test_early_season_limited_data(self):
         """Re-enabled (D4): early season = coaching/stats not yet populated, so the
         snapshot honestly reports them missing and data_quality drops — the neutral-fill

@@ -20,7 +20,7 @@ class ExperienceDifferentialCalculator(BaseFactorCalculator):
     
     def __init__(self):
         super().__init__()
-        self.weight = 0.10  # 10% of total (25% of coaching edge's 40%)
+        self.weight = 0.06  # 10% of total (25% of coaching edge's 40%)
         self.category = "coaching_edge"
         self.description = "Coaching experience differential analysis"
         self._min_output = -2.0
@@ -183,7 +183,7 @@ class PressureSituationCalculator(BaseFactorCalculator):
     
     def __init__(self):
         super().__init__()
-        self.weight = 0.10  # 10% of total (25% of coaching edge's 40%)
+        self.weight = 0.06  # 10% of total (25% of coaching edge's 40%)
         self.category = "coaching_edge"
         self.description = "Coaching performance under pressure analysis"
         self._min_output = -2.0
@@ -354,7 +354,7 @@ class HeadToHeadRecordCalculator(BaseFactorCalculator):
     
     def __init__(self):
         super().__init__()
-        self.weight = 0.10  # 10% of total (25% of coaching edge's 40%)
+        self.weight = 0.06  # 10% of total (25% of coaching edge's 40%)
         self.category = "coaching_edge"
         self.description = "Head-to-head coaching record analysis"
         self._min_output = -1.0

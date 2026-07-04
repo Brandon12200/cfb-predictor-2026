@@ -298,3 +298,30 @@ entry's confidence language must match the (wide) interval width.
 
 **Result:** offline suite **441 passed / 4 skipped**; lint + mypy clean (22 typed source files);
 `make verify-phase-3` **ALL PHASE 3 CHECKS PASSED (7 pending — 3b/3c/3d)**; `-1`/`-2` stay green.
+
+## Phase 3b — physical factor layer + reweight (L1), 2026-07-03
+
+**New**
+- `factors/physical_coefficients.py` — the D15 single coefficient source (frozen `PhysicalCoefficients`
+  + per-sub-signal point fns + `physical_adjustments()`). `engine/matchup_pricer.py` now consumes it
+  (behavior-preserving relocation of the 2a `ScheduleAdjustmentConfig`/`schedule_adjustment`).
+- `data/data_manager.py::get_game_context` surfaces `home_intel`/`away_intel` (one
+  `compute_schedule_intel` call each) for the factor path.
+- `factors/scheduling_fatigue.py` rewritten: 6 PRIMARY physical factors (`category="physical"`),
+  each separate in `factor_breakdown`. `tests/test_physical_coefficients.py` + `test_physical_factors.py`.
+
+**Changed (calibration batch — CALIBRATION_LOG Phase 3b; owner-ratified)**
+- Reweight to physical (52% additive share); `MarketSentiment` 35%→6%; `travel_cap` 2.0→1.5.
+- `StyleMismatch`/`MarketSentiment` re-categorized `matchup`/`market` (grouping only, so the
+  contribution-budget ratio measures physical vs the motivational factors).
+- `factors/base_calculator.py::safe_calculate`: raw-`0.0` value → **not activated** (was activated).
+  Behavior-changing (lowers `primary_signals`, raises `avg_confidence` when factors return 0);
+  logged as its own CALIBRATION_LOG entry.
+
+**Retired**
+- `SchedulingFatigueCalculator` (pre-1c crude fatigue heuristic) — replaced by the 6 physical factors.
+- `LookaheadSandwichCalculator` (situational) — superseded by the physical `Sandwich` factor;
+  audited free of hardcoded rivalry lists. Three tests re-pointed to the physical `Sandwich`.
+
+**Result:** offline suite **453 passed / 4 skipped**; `make lint` clean (24 typed source files);
+`make verify-phase-3` **ALL PHASE 3 CHECKS PASSED (5 pending — 3c/3d)**; `-1`/`-2` stay green.

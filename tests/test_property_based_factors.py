@@ -235,7 +235,7 @@ class TestFactorProperties(unittest.TestCase):
                 
                 # Most factors should return 0 for same team
                 # Allow some exceptions for factors that might not apply this rule
-                if result['success'] and factor_name not in ['DesperationIndex', 'LookaheadSandwich']:
+                if result['success'] and factor_name not in ['DesperationIndex']:
                     self.assertAlmostEqual(
                         result['value'], 0.0, places=2,
                         msg=f"{factor_name} should return ~0 for identical teams, got {result['value']}"

@@ -13,11 +13,11 @@ the predicted points by which home wins (positive = home favored).
 **Determinism:** ratings are a pure function of snapshot `data` (memoized by
 `snapshot_id`); the pricer adds only arithmetic → reproducible from a snapshot.
 
-**Freeze / scope note:** the schedule-adjustment coefficients (`ScheduleAdjustmentConfig`)
-are a conservative Phase-2 baseline over the most robust physical signals. Phase 3's
-calibrated factor system (activation thresholds, confirming factors, per-sub-signal
-breakdown) supersedes them; they are proposed for owner ratification like the D9 Elo
-constants and kept intentionally small so a mis-set value can't dominate a model spread.
+**Schedule coefficients (D15, single source):** the model-spread schedule adjustment consumes
+`factors.physical_coefficients.physical_adjustments` — the **same** calibrated coefficients the
+Phase-3 physical factors use, no parallel copy; both lanes freeze together. The pricer's subset is
+fatigue/location (bye, short-week, travel/tz, altitude); `consecutive_road`/`sandwich` are
+contrarian-only factors and do not feed the model spread.
 """
 
 from __future__ import annotations
@@ -36,22 +36,11 @@ from engine.power_ratings import (
     preseason_prior,
     rating_signal_weight,
 )
-
-
-@dataclass(frozen=True)
-class ScheduleAdjustmentConfig:
-    """Proposed (owner-ratified) Phase-2 physical-adjustment coefficients, in POINTS,
-    from the home team's perspective. Bounded and conservative; Phase 3 recalibrates."""
-
-    bye_value: float = 1.0          # prep advantage off a bye (the other team didn't)
-    short_week_penalty: float = 1.0  # < 7 days' rest and the other team isn't
-    tz_per_zone: float = 0.6         # per net time-zone the AWAY team crosses more
-    travel_cap: float = 2.0          # cap on the travel/timezone term
-    altitude_threshold_ft: float = 4000.0  # home acclimated at a high-elevation stadium
-    altitude_value: float = 1.2
-
-
-DEFAULT_SCHEDULE_CONFIG = ScheduleAdjustmentConfig()
+from factors.physical_coefficients import (
+    DEFAULT_PHYSICAL_COEFFICIENTS,
+    PhysicalCoefficients,
+    physical_adjustments,
+)
 
 
 @dataclass(frozen=True)
@@ -104,45 +93,6 @@ class PricedMatchup:
             "breakdown": self.breakdown,
             "caveats": list(self.caveats),
         }
-
-
-# --------------------------------------------------------------------------- #
-# Schedule-intelligence adjustment (pure; POINTS, positive favors home)
-# --------------------------------------------------------------------------- #
-def _clamp(x: float, lo: float, hi: float) -> float:
-    return max(lo, min(hi, x))
-
-
-def schedule_adjustment(home_intel: dict, away_intel: dict, neutral_site: bool,
-                        cfg: ScheduleAdjustmentConfig = DEFAULT_SCHEDULE_CONFIG,
-                        ) -> tuple[float, dict[str, float]]:
-    """Net physical adjustment in points (positive favors home), from the two teams'
-    `compute_schedule_intel` outputs. Uses only robust, non-overlapping signals; missing
-    inputs simply contribute nothing (recorded absent, never fabricated)."""
-    parts: dict[str, float] = {}
-
-    hb, ab = bool(home_intel.get("bye")), bool(away_intel.get("bye"))
-    if hb and not ab:
-        parts["bye"] = cfg.bye_value
-    elif ab and not hb:
-        parts["bye"] = -cfg.bye_value
-
-    hs, as_ = bool(home_intel.get("short_week")), bool(away_intel.get("short_week"))
-    if hs and not as_:
-        parts["short_week"] = -cfg.short_week_penalty
-    elif as_ and not hs:
-        parts["short_week"] = cfg.short_week_penalty
-
-    tz_diff = (away_intel.get("time_zones_crossed") or 0) - (home_intel.get("time_zones_crossed") or 0)
-    if tz_diff:
-        parts["travel"] = _clamp(tz_diff * cfg.tz_per_zone, -cfg.travel_cap, cfg.travel_cap)
-
-    if not neutral_site:
-        elev = home_intel.get("altitude")
-        if elev is not None and elev >= cfg.altitude_threshold_ft:
-            parts["altitude"] = cfg.altitude_value
-
-    return sum(parts.values()), parts
 
 
 # --------------------------------------------------------------------------- #
@@ -203,7 +153,7 @@ def price(home: str, away: str, *, ratings: dict[str, TeamRating],
           week: int | None = None, game_date: Any = None,
           neutral_site: bool = False, venue: str | None = None,
           cfg: EloConfig = DEFAULT_CONFIG,
-          sched_cfg: ScheduleAdjustmentConfig = DEFAULT_SCHEDULE_CONFIG) -> PricedMatchup:
+          sched_cfg: PhysicalCoefficients = DEFAULT_PHYSICAL_COEFFICIENTS) -> PricedMatchup:
     """Price `away @ home` → a `PricedMatchup`. Identical for real and hypothetical
     matchups: a team absent from `ratings` is priced from its preseason prior at
     baseline uncertainty (so any two FBS teams can be priced, even preseason)."""
@@ -235,7 +185,7 @@ def price(home: str, away: str, *, ratings: dict[str, TeamRating],
                                         game_venue, season_games, venues, ratings_for_intel)
     away_intel = compute_schedule_intel(away, home, week or 1, game_date, False,
                                         game_venue, season_games, venues, ratings_for_intel)
-    schedule_component, schedule_parts = schedule_adjustment(
+    schedule_component, schedule_parts = physical_adjustments(
         home_intel, away_intel, neutral_site, sched_cfg)
 
     # D15 decomposition: base (team quality) + schedule_adjustment = total.

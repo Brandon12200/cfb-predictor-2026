@@ -24,8 +24,8 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         super().__init__()
         
         # SECONDARY factor: 50% of SECONDARY category's 30% = 15% total weight
-        self.weight = 0.50
-        self.category = "situational_context"
+        self.weight = 0.15
+        self.category = "matchup"
         self.description = "Identifies exploitable style mismatches between teams"
         
         # Output range for this factor
