@@ -77,16 +77,22 @@ class TestRealWorldScenarios(unittest.TestCase):
             
             # Assertions for playoff elimination scenario
             self.assertFalse(result.get('error'), "Prediction should not fail")
-            
-            # Should detect some edge due to desperation
+
+            # D19: the edge here used to be the MarketSentiment ~+1 phantom, NOT a factor signal —
+            # on this mock no situational factor actually fires, so the honest edge is 0. (Making
+            # desperation genuinely fire is 3c situational-calibration work.) The real guarantee is
+            # that the engine no longer manufactures an edge from nothing.
             edge_size = result.get('edge_size', 0.0)
-            self.assertGreater(edge_size, 0.0, "Should detect some edge from factors")
-            
-            # Confidence should be reasonable despite high stakes
+            # No real factor fires on this mock, so the honest edge is exactly 0 — a tight guard
+            # that would catch any reintroduced phantom, not just a large one.
+            self.assertAlmostEqual(edge_size, 0.0, places=6,
+                                   msg="No fabricated edge when no real factor fires (phantom removed)")
+
+            # Confidence should stay bounded and never overconfident in a high-variance game.
             confidence = result.get('confidence_score', 0.0)
-            self.assertGreater(confidence, 0.4, "Should have reasonable confidence")
+            self.assertGreater(confidence, 0.0)
             self.assertLess(confidence, 0.9, "Should not be overconfident in high-variance game")
-            
+
             # Should mention desperation in factors
             self.assertIn('factor_breakdown', result)
             if 'DesperationIndex' in result['factor_breakdown']:

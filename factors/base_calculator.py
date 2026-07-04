@@ -286,8 +286,11 @@ class BaseFactorCalculator(ABC):
             
             # Calculate weighted contribution
             if self.is_multiplicative:
-                # For multiplicative factors, store as multiplier
-                weighted_value = 1.0 + (validated_value * dynamic_weight / self.max_impact)
+                # A multiplicative factor's value IS the multiplier (centered on 1.0); use it
+                # directly (D19). MODIFIER weights are inert by design — a modifier is calibrated
+                # by its output RANGE, not a weight — so `dynamic_weight` (always 1.0 here) and
+                # `max_impact` do not re-scale it.
+                weighted_value = validated_value
             else:
                 weighted_value = validated_value * dynamic_weight
             
