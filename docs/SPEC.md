@@ -19,14 +19,14 @@ Dual purpose: genuine betting performance research **and** a portfolio-quality e
 
 ## 2. 2025 Baseline (context for all decisions)
 
-Forward-tested, frozen 2025-08-25, weeks 1–14: **300 games, 57.0% ATS, +8.82% ROI at -110, Sharpe 0.093.** 95% CI roughly 51–63%.
+Forward-tested, frozen 2025-08-25, weeks 1–14, 300 games. **The original scorecard reported 57.0% ATS / +8.82% ROI, but that number was a measurement artifact** — `scripts/calculate_accuracy.py`/`calculate_roi.py` graded "did the home team cover the model's *own* number," always betting home against the model's own spread rather than the market. That is a home-rating **bias diagnostic, not a placeable bet.** Re-graded as the actual strategy (the model's favored side vs the Vegas line) with this repo's own harness (`analytics/calibration_evidence.py`), the honest 2025 result is **46.6% ATS / −11.0% ROI over 294 graded bets (95% CI ~41–52%)** — below the ~52.4% break-even. **The 2025 model did not beat the market.** Full side-by-side regrade: `docs/DECISIONS.md` D17.
 
-Empirical learnings from 2025 that are now **binding requirements**, not suggestions:
+The four lessons below were drawn partly from the 57%-world, so each is restated with its status under honest grading. They remain **binding requirements** for 2026:
 
-- **L1 — Physical > motivational.** Scheduling fatigue was the strongest signal; physical/structural factors were more reliably underpriced than motivational ones. → 2026 recalibration must shift weight toward physical factors.
-- **L2 — Situational factors were noisy.** Revenge games and lookahead spots produced high variance. → Raise activation thresholds and/or require confirming factors before they fire.
-- **L3 — Confidence scoring worked.** High-confidence predictions outperformed low-confidence ones. → Make confidence tiers first-class: measure them, report them, and filter on them.
-- **L4 — Too many marginal bets.** → Add explicit `NO_BET` output as a first-class prediction type.
+- **L1 — Physical > motivational (UNVERIFIED by the archive).** The archive stores only category-level factor contributions, and scheduling fatigue sits *inside* the `situational_context` category, so physical-factor attribution cannot be isolated. "Physical was strongest" was a season-level impression, not an archive-derived result. → 2026 still shifts weight toward physical factors, but on **documented reasoning** (rest/travel effects, the priced home-field scale), **not** on 2025 evidence; Phase-4 attribution measures it for the first time in 2026. **3b weight entries may not cite "it worked in 2025."**
+- **L2 — Situational factors were noisy (plausible, not isolable).** Cannot be separated from the physical signal in the archive's category-level data; the whole model was below break-even, consistent with situational noise but not singling it out. → Raising activation thresholds and requiring a confirming factor is prudent regardless.
+- **L3 — Confidence had ranking signal, but too compressed to act on (partially survives).** Confidence was nearly constant (range 63–71). Split at the median, higher-confidence bets did outperform (50.3% vs 42.3% ATS) — a real but soft ranking signal (overlapping intervals on ~150-game halves) — yet even the top half stayed below break-even. The ordering lesson holds; the original "high-confidence predictions won" does not. → Make confidence tiers first-class **with real separation** (Phase 3c), calibrated honestly.
+- **L4 — Too many marginal bets, and the marginal edge was worthless (strengthened).** The contrarian picks (46.5% ATS) did no better than the consensus games (46.7%) — the contrarian adjustment added no measurable value in 2025, on tiny edges, below break-even. → `NO_BET` as a first-class output matters more than the 57%-world implied.
 
 ### Data Recency Principle (binding)
 

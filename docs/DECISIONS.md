@@ -143,3 +143,22 @@ Binding owner decisions made outside the resolved SPEC §16 set. Each entry reco
 **Date:** 2026-07-03
 **Context:** SPEC §7 acceptance wants a "full-slate dry run over an archived 2025 week," but no 2025 input snapshots exist and Odds-API historical lines are paid (10×); building a faithful 2025 snapshot means year-parameterizing the builder + CFBD `/lines`.
 **Decision:** Satisfy the dry-run by running the new schema-v2 engine over the **existing committed 2026 week-1 snapshot** (proves sensible schema-v2 output over a real slate). Calibration **evidence** comes from the 300-game 2025 archive via `analytics/calibration_evidence.py`. The deviation from the "2025 week" literal is a documented, deliberate choice (recorded in `CODE_AUDIT.md`) — the archive still carries the 2025 weight; the dry-run only needs a realistic slate.
+
+---
+
+## D17 — 2025 baseline regraded; the 57% headline was a measurement artifact — **RATIFIED (owner, 2026-07-03)**
+**Date:** 2026-07-03
+**Context:** The 2025 scorecard reported **57.0% ATS / +8.82% ROI** (SPEC §2, README, `scripts/calculate_accuracy.py` + `calculate_roi.py`). The Phase-3a calibration harness independently graded the same 300-game archive at **46.6% ATS**, and the two numbers sat unreconciled — including, briefly, both in the README's front door.
+**Investigation:** graded the archive under both conventions side by side (both use the canonical cover rule `home covers S iff (home_score−away_score)+S>0`):
+
+| bet side \ graded against | model's contrarian spread | Vegas line |
+|---|---|---|
+| **always home** | **57.0%** (171/300) | 54.4% (160/294) |
+| **model's pick side** | 45.0% (135/300) | **46.6%** (137/294) |
+
+**Finding:** the 57% comes from the win condition "the **home** team covered the model's **own** contrarian spread" — it always bets home and grades against the model's own number, not the market. That is a home-rating **bias diagnostic, not a placeable bet**. Graded as the actual contrarian strategy (the model's `edge_direction` side vs the Vegas line), 2025 was **46.6% ATS / −11.0% ROI** (294 graded bets, 6 pushes; 95% CI ~41–52%) — below the ~52.4% break-even. No subset rescues it: contrarian-edge-only games are 46.5%, and the contrarian picks (46.5%) matched the consensus games (46.7%), i.e. the contrarian adjustment added no value.
+**Decision (owner-ratified 2026-07-03):**
+- The honest 2025 baseline is **46.6% ATS / −11.0% ROI**. SPEC §2 and the README are corrected to lead with it.
+- Each L1–L4 lesson is restated in SPEC §2 with its post-regrade status: **L4 strengthened**, **L3 partial** (compressed but real ranking signal), **L2 not isolable**, **L1 unverified** — physical weights rest on documented reasoning, not 2025 authority, and **3b calibration entries citing 2025 performance must use the post-regrade evidence**.
+- The buggy scripts are **relabeled** in a follow-up PR (not silently fixed): keep the always-home diagnostic under an honest name (`home_vs_model_spread_diagnostic`), and make the default "ATS" path measure the placeable strategy. Deleting the old convention would orphan the explanation of where 57% came from.
+**Why it's in the log:** the project's thesis is "can it beat the line without fooling itself." Here its own measurement infrastructure regraded its headline claim and found it didn't hold; the correction is published, with commits to prove it. The model is worse than yesterday's story and the project is stronger for proving it — and this entry is the audit-trail artifact the whole system exists to produce.
