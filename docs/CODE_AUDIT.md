@@ -226,3 +226,40 @@ are recoverable via git history.
 **Result:** offline suite **410 passed / 4 skipped**; lint + mypy clean; `make verify-phase-2`
 **ALL PHASE 2 CHECKS PASSED** (2 pending — 2b projections). Model-vs-market on the real week-1
 slate correctly reads high gaps at `rating_uncertainty=1.0` (no team-quality data preseason).
+
+---
+
+## Phase 2b — Season projections + belief-drift (SPEC §6.5; branch `phase-2b-projections`)
+
+**Added**
+- `analytics/` package (**freeze-exempt**, NOT `engine/`; D14) — `analytics/projections.py::
+  build_projections(snapshot, cfg)`: prices every remaining game with the 2a pricer, sums win
+  probs (`spread_to_win_prob`, D12 σ=16) into per-**FBS**-team projected win totals
+  (registry-scoped, no hardcoded names). Pure, deterministic, byte-reproducible (`generated_at`
+  frozen from snapshot `built_at`); `meta.schema_version` + `experimental: true`.
+- `scripts/build_projections.py` (+ importable `write_projections`) → committed
+  `data/projections/2026_week_NN.json`.
+- `cli/app.py::run_project` (routed before the flat parser, like `run_hypothetical`) — `main.py
+  project [--team X] [--history] [--format json]`: projected-win-total table + Δwk/Δpreseason
+  drift + risers/fallers, per-team per-game breakdown, week-by-week history. Drift/history reader
+  is **schema-evolution-tolerant** (keys off `meta.schema_version`, defensive `.get`).
+- Tests: `tests/test_projections.py` (win-total arithmetic, FBS scoping, determinism, repro),
+  `tests/test_project_cli.py` (render/team/history/json + mixed-schema drift).
+
+**Changed**
+- `.claude/hooks/protect_immutable.py`: append-only protection extended to `data/projections/`.
+- `scripts/verify_phase_2.py`: the two 2b checks flipped from PENDING to real assertions
+  (projection file per built week + reproduces; `cfb project` renders totals + drift).
+- `Makefile`: new `analytics/`/scripts/tests added to `LINT_PATHS`/`TYPED_PATHS`.
+
+**Coverage (pre-commit review follow-up):** `build_projections` includes **every** FBS team; a
+team with no games in the snapshot is surfaced with `schedule_missing: true` + null totals + a
+`meta.coverage.unscheduled` entry (never silently dropped). Current snapshot: **134/138**
+scheduled — `APPALACHIAN STATE`/`CAL`/`LOUISIANA MONROE`/`UMASS` have no resolved FBS-vs-FBS
+game (a **pre-existing Phase-1 normalizer gap** in the CFBD `/games` feed, tracked in
+`PHASE2_NOTES.md`). The `--team` view is defensive (`.get`) so it tolerates schema evolution.
+
+**Result:** offline suite **433 passed / 4 skipped**; lint + mypy clean (20 typed source files);
+`make verify-phase-2` **ALL PHASE 2 CHECKS PASSED — Phase 2 complete** (0 pending). Preseason
+projections are near-uniform (~6 wins; variation from schedule length only) — the honest state;
+the drift view differentiates from ~weeks 4–6. Market win total (§6.5) deferred — no futures source.

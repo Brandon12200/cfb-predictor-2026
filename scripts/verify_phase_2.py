@@ -141,12 +141,51 @@ check("immutable-history hook protects data/ratings/ (D13)",
       "data/ratings/" in (ROOT / ".claude" / "hooks" / "protect_immutable.py").read_text())
 
 # === 2b — season projections + belief-drift (freeze-exempt, cut-first §15) ====
+# A projection file exists for each built snapshot week, is well-formed (experimental flag +
+# schema_version + FBS teams with projected_wins), and reproduces from the snapshot.
+from data.snapshot.store import available_weeks  # noqa: E402
+
 projections_dir = ROOT / "data" / "projections"
-if (projections_dir.exists() and any(projections_dir.glob("2026_week_*.json"))):
-    check("weekly projection files exist for completed weeks (§6.5, 2b)", True)
-else:
-    todo("season projections: data/projections/2026_week_NN.json for completed weeks (2b)")
-todo("cfb project [--team X] renders projected win totals + week-over-week drift (2b)")
+built = available_weeks(2026)
+proj_files = {w for w in built
+              if (projections_dir / f"2026_week_{w:02d}.json").exists()}
+proj_ok = bool(built) and proj_files == set(built)
+proj_detail = f"weeks with projections: {sorted(proj_files)} of built {built}"
+if proj_ok:
+    from analytics.projections import build_projections
+    from data.snapshot.store import load_snapshot
+    w0 = built[-1]
+    on_disk = json.loads((projections_dir / f"2026_week_{w0:02d}.json").read_text())
+    rebuilt = build_projections(load_snapshot(w0, 2026))
+    cov = on_disk["meta"].get("coverage", {})
+    proj_ok = (on_disk == rebuilt and on_disk["meta"]["experimental"] is True
+               and "schema_version" in on_disk["meta"] and bool(on_disk["teams"])
+               and all("projected_wins" in r for r in on_disk["teams"].values())
+               # coverage is explicit (every FBS team present, unscheduled ones surfaced)
+               and len(on_disk["teams"]) == cov.get("fbs_total"))
+    proj_detail = (f"{cov.get('scheduled')}/{cov.get('fbs_total')} FBS teams scheduled "
+                   f"(unscheduled surfaced: {cov.get('unscheduled')}); reproducible; "
+                   f"weeks {sorted(proj_files)}")
+check("weekly projection files exist for every built week + reproduce (§6.5, 2b)",
+      proj_ok, proj_detail)
+
+# `cfb project` (main.py project) renders projected win totals (+ drift when ≥2 weeks).
+proj_cli_ok, proj_cli_detail = False, ""
+try:
+    from cli.app import run_project
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = run_project(["--format", "json", "--quiet"])
+    payload = json.loads(buf.getvalue())
+    proj_cli_ok = (rc == 0 and payload.get("experimental") is True
+                   and isinstance(payload.get("teams"), list) and bool(payload["teams"])
+                   and all("delta_week" in t and "projected_wins" in t for t in payload["teams"]))
+    proj_cli_detail = (f"rendered {len(payload['teams'])} teams, "
+                       f"drift={'on' if payload.get('has_drift') else 'awaiting week 2'}")
+except Exception as exc:  # noqa: BLE001
+    proj_cli_detail = str(exc)
+check("cfb project renders projected win totals + week-over-week drift (2b)",
+      proj_cli_ok, proj_cli_detail)
 
 # --- Report -------------------------------------------------------------------
 print("Phase 2 acceptance checks:")
