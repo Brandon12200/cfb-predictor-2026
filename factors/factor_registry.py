@@ -32,12 +32,16 @@ def confirm_situational(factor_results: List[Dict[str, Any]],
     never confirmed by a gap containing its own schedule signal), return the set of situational
     factor NAMES that are UNCONFIRMED and must not contribute.
 
+    `base_gap` MUST be in the **factor sign convention: positive favours home**. The engine injects
+    `vegas − base_spread` as `context['base_gap_favors_home']` — NOT the diagnostic `base_spread −
+    vegas`, which is inverted (a more-negative model spread means the model favours home MORE).
+    Every factor `value` uses the same positive-favours-home convention, so "agree in direction"
+    == "same sign".
+
     An activated situational factor is CONFIRMED iff its direction agrees with either:
       (a) the base gap (the model's team-quality disagreement with the market), or
       (b) at least one activated physical factor.
-    All values live in the same additive spread-adjustment space where positive favors home,
-    so "agree in direction" == "same sign". A situational factor with no directional
-    corroboration is a solo guess and is dropped.
+    A situational factor with no directional corroboration is a solo guess and is dropped.
     """
     physical_signs = {
         _sign(fr.get('value'))
@@ -337,7 +341,10 @@ class FactorRegistry:
         # all reflect the gate. The engine injects the base gap (base only, never total) onto the
         # context; absent (e.g. a minimal/no-snapshot context) it falls back to physical-only
         # confirmation. ─────────────────────────────────────────────────────────────────────
-        base_gap = context.get('model_vs_market_gap') if context else None
+        # `base_gap_favors_home` is the base gap in the factor sign convention (positive favours
+        # home), injected by the engine (= vegas − base_spread; D15 base-only). Absent on a
+        # minimal/no-snapshot context -> physical-only confirmation.
+        base_gap = context.get('base_gap_favors_home') if context else None
         unconfirmed = confirm_situational(list(results['factors'].values()), base_gap)
         for name in unconfirmed:
             fr = results['factors'][name]

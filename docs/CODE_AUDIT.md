@@ -411,6 +411,21 @@ presence. New `tests/test_phase3c.py` (25 tests) + added to `LINT_PATHS`.
 **Architecture invariant (new, permanent):** a calibration/logic change that lets the base gap or a
 physical factor gate a situational contribution must keep `confirm_situational` reading the **base** gap
 only (never `model_vs_market_gap_total`) — the D15 circularity prohibition, now load-bearing on the edge.
+The base gap must be passed in the **factor sign convention** (positive favours home = `vegas −
+base_spread` = `context['base_gap_favors_home']`), NOT the diagnostic `base_spread − vegas` (inverted).
 
-**Result:** offline suite **481 passed / 4 skipped**; `make lint` clean; `make verify-phase-3` PASS
+**Code-review NO-GO, caught + fixed before merge (commit `3c30fd9`):** the `code-reviewer` subagent found
+the L2 gate initially compared the situational factor sign against the *diagnostic* base gap (`base_spread
+− vegas`), which is inverted vs the factor convention — so it confirmed/withheld situational factors
+**backwards**. Fixed by injecting `vegas − base_spread` for confirmation + an end-to-end sign regression
+test (`tests/test_phase3c.py::test_base_gap_confirmation_sign_end_to_end`). The unit tests missed it
+because they fed `confirm_situational` hand-picked gaps, never a real rating differential — the reviewer
+checkpoint earned its keep.
+
+**Follow-up (tracked, not 3c-blocking):** `factors/factor_registry.py` + `engine/prediction_engine.py`
+carry substantial new 3c logic but aren't in `Makefile` `LINT_PATHS`/`TYPED_PATHS` (adding them pulls in
+~200 pre-existing whitespace/style errors unrelated to 3c). New code carries type hints; fold the files
+into CI lint in a dedicated cleanup, consistent with the 3a/3b precedent of not retro-linting legacy files.
+
+**Result:** offline suite **483 passed / 4 skipped**; `make lint` clean; `make verify-phase-3` PASS
 (1 pending — 3d); `-1`/`-2` green. Dry-run: 10/10 NO_BET (honest preseason, no signal).

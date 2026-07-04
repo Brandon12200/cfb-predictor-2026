@@ -335,13 +335,18 @@ An activated **situational** factor contributes only if its direction is confirm
 model-vs-market **BASE** gap (D15 — the base gap ONLY, never the total gap, so a factor is never
 confirmed by a gap carrying its own schedule signal), or **(b)** at least one activated **physical**
 factor of the same sign. Unconfirmed situational signals are withheld (de-activated before aggregation,
-so `total_adjustment`, the signal counts, and `avg_confidence` all reflect the gate). All values share
-the additive spread-space where positive favours home, so "agree in direction" = same sign. This is the
-primary L2 selectivity mechanism; it raises the bar on solo motivational guesses (SPEC §7.3's "raise
-thresholds and/or require a confirming factor"). **Architecture note:** the engine now computes the base
-gap **before** the factors and injects it on the context — so the base gap, previously diagnostic-only
-(3a), now legitimately feeds the edge via this gate. Rerun determinism is unaffected (pure function of
-the snapshot). Pure, test-covered (`confirm_situational`).
+so `total_adjustment`, the signal counts, and `avg_confidence` all reflect the gate). "Agree in
+direction" = same sign, in the factor convention where **positive favours home**. **Sign convention
+(load-bearing):** the diagnostic `model_vs_market_gap` is `base_spread − vegas`, which is *negative* when
+the model favours home (a more-negative spread = more home-favoured) — the OPPOSITE of the factor
+convention. So the engine injects the gap for confirmation as its negation, **`vegas − base_spread`**
+(`context['base_gap_favors_home']`), positive ⇒ the base read favours home. Comparing a raw
+`base_spread − vegas` here would confirm situational factors *backwards* (a code-review NO-GO, fixed
+before merge; end-to-end sign test in `tests/test_phase3c.py`). This is the primary L2 selectivity
+mechanism; it raises the bar on solo motivational guesses (SPEC §7.3's "raise thresholds and/or require a
+confirming factor"). **Architecture note:** the engine computes the base gap **before** the factors and
+injects it on the context — so the base gap, previously diagnostic-only (3a), now legitimately feeds the
+edge via this gate. Rerun determinism is unaffected (pure function of the snapshot). Pure, test-covered.
 
 ### 3c.5 — NO_BET floors (L4)  (`reasoned` — SPEC §7.4, §16.3)  — **RATIFIED as restated** (owner, 2026-07-04, after one bounce for the selectivity scale-check)
 

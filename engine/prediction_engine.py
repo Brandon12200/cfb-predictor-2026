@@ -120,8 +120,14 @@ class PredictionEngine:
             # signal). The base gap is injected onto the context; the total gap never confirms.
             power_rating = self._compute_power_rating(
                 home_normalized, away_normalized, week, vegas_spread, context)
-            context['model_vs_market_gap'] = (
-                power_rating.get('model_vs_market_gap') if power_rating else None)
+            # The L2 gate needs the base gap in the SAME sign convention as factor values
+            # (positive favours home). The diagnostic `model_vs_market_gap` is `base_spread −
+            # vegas`, which is NEGATIVE when the model's team-quality read favours home more than
+            # the market (a more-negative spread = more home-favoured) — the opposite convention.
+            # So the confirmation gap is its negation, `vegas − base_spread`: positive ⇒ the base
+            # read favours home, matching a positive situational factor value. (D15: base only.)
+            _diag_gap = power_rating.get('model_vs_market_gap') if power_rating else None
+            context['base_gap_favors_home'] = None if _diag_gap is None else round(-_diag_gap, 2)
 
             # Step 3: Calculate all factor adjustments (situational factors are gated by the
             # base gap injected above + physical-factor agreement, inside the registry).
@@ -203,7 +209,9 @@ class PredictionEngine:
         return {
             'power_rating_spread': round(priced.model_spread, 2),        # total (full model spread)
             'power_rating_base_spread': round(priced.base_spread, 2),    # team quality only
-            'model_vs_market_gap': base_gap,          # BASE gap — the ONLY gap a confirming rule may use
+            'model_vs_market_gap': base_gap,          # BASE gap (base_spread−vegas); the ONLY gap the L2
+                                                      # confirming rule may derive from (it uses the
+                                                      # factor-convention NEGATION, base_gap_favors_home)
             'model_vs_market_gap_total': total_gap,   # includes schedule — diagnostic only, never confirms
             'rating_uncertainty': round(priced.rating_uncertainty, 3),
             'power_rating_breakdown': {

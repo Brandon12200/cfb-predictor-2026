@@ -96,6 +96,33 @@ def test_confirm_situational_ignores_dormant_and_nonsituational():
     assert confirm_situational([dormant, matchup], None) == set()
 
 
+def test_base_gap_confirmation_sign_end_to_end():
+    """Guard the base-gap SIGN through the real pricer + the engine's injection formula.
+
+    The diagnostic gap is `base_spread - vegas` (negative when the model favours home); the engine
+    injects its NEGATION (`vegas - base_spread`) as the factor-convention confirmation gap. When the
+    model strongly favours home, a home-favouring situational factor must be CONFIRMED, not withheld.
+    """
+    from engine.matchup_pricer import price
+    from engine.power_ratings import TeamRating
+
+    def tr(t, e):
+        return TeamRating(team=t, rating=e, games_played=6, prior_elo=e, prior_source="sp+")
+
+    p = price("HOME", "AWAY",
+              ratings={"HOME": tr("HOME", 1700), "AWAY": tr("AWAY", 1300)},
+              season_games=[{"week": 1, "home_team": "HOME", "away_team": "AWAY",
+                             "start_date": "2026-09-12T16:00:00Z", "completed": False}],
+              venues={}, week=2, game_date="2026-09-12")
+    vegas = -3.0
+    diag_gap = round(p.base_spread - vegas, 2)          # base_spread - vegas (negative: model favours home)
+    confirm_gap = round(-diag_gap, 2)                    # engine injects vegas - base_spread
+    assert diag_gap < 0 and confirm_gap > 0             # model favours home -> confirmation gap positive
+    # A home-favouring situational factor is CONFIRMED; an away-favouring one is withheld.
+    assert confirm_situational([_sit(1.2)], confirm_gap) == set()
+    assert confirm_situational([_sit(-1.2)], confirm_gap) == {"DesperationIndex"}
+
+
 # ── Cleanup 1: multiplicative modifier activation keys on abs(value - 1.0) ─────────────────────
 
 def test_dormant_modifier_not_activated():
