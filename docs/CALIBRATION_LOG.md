@@ -600,9 +600,16 @@ confirmed against source.
 ### B. Genuinely unlogged calibration constants — **PROPOSED** for ratification (values as-found; ratify / revise)
 
 - **B1 — `_calculate_confidence_score` (`engine/prediction_engine.py:524-573`)** — the formula behind the
-  ratified `confidence_score` that 3c.6/3c.5 key off but never logged: component weights 0.4/0.3/0.2/0.1,
-  edge divisor `/5.0`, variance adjustments `+0.25/+0.1/-0.1/-0.2/-0.3`, clamp `[0.15,0.95]`. **The tier/floor
-  entries assumed this; it must be logged for them to stand.**
+  ratified `confidence_score` that 3c.6/3c.5 key off but never logged. **Audited per-number** (a composite
+  block; each member gets its own disposition):
+  - `data_quality` weight **0.4** — **RATIFIED as drafted (owner, 2026-07-04).** Data completeness is the
+    dominant input to confidence — `confidence_score` should track how much real data backs a prediction
+    above any single factor's signal; 0.4 (40%, the largest single component) encodes that. `reasoned`.
+  - **PROPOSED (awaiting ratification):** the remaining component weights `0.3` (factor success rate) / `0.2`
+    (edge) / `0.1` (betting-data present); the edge-scaling divisor `/5.0`; the variance adjustments
+    `+0.25/+0.1/-0.1/-0.2/-0.3`; the clamp `[0.15, 0.95]`. Each needs its own magnitude argument (or an
+    explicit "inherits the set's reasoning" note). **The tier/floor entries assumed this whole formula; it
+    must be fully logged for them to stand.**
 - **B2 — `factor_registry._configure_factor_hierarchy` overrides** (`:172-196`) — `HeadToHeadRecord {1.0,5.0}`
   (see A1), `ExperienceDifferential {1.0,3.0}`, `PointDifferentialTrends {0.75,3.0}`, `CloseGamePerformance
   {0.5,2.0}` (only `DesperationIndex 1.0` is logged, 3c.3).

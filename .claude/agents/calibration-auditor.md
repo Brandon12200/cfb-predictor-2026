@@ -33,7 +33,15 @@ Check every CALIBRATION_LOG entry against these rules:
    for **numeric literals that behave as calibration constants** (weights, thresholds, ranges, coefficients,
    floors, σ, tier boundaries) and flag **any constant that lacks a CALIBRATION_LOG entry**. A frozen number
    with no logged justification is the failure mode this audit exists to catch. (Ignore obvious
-   non-calibration literals: array indices, rounding digits, HTTP codes, `1e-9` epsilons.)
+   non-calibration literals per the exclusion list.)
+
+6. **Composite ratifications are audited PER-NUMBER.** A condition set, a config block, or a
+   multi-coefficient formula (e.g. `_calculate_confidence_score`'s weights, a factor's `config` dict, the
+   `variance_detector` CV cutoffs) is **not** covered by a single entry that names the block — **each numeric
+   member** must have its own magnitude argument in the log, OR an explicit "**inherits the set's
+   reasoning**" note tying it to a stated argument. Flag any block where some members are logged/ratified but
+   others are only implied by the group (e.g. B1: `data_quality 0.4` RATIFIED while the sibling weights sit
+   unargued). "The block is ratified" is never sufficient for the numbers inside it.
 
 Report findings grouped by severity (**blocker** = must fix before the tag / **should-fix** / **nit**),
 each with a `file:line` (or CALIBRATION_LOG section) and a one-line reason tied to a rule above. End with a
