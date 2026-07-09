@@ -464,8 +464,13 @@ engine is **untouched** — schema v2 is a freeze-exempt serialization concern.
 - `pyproject.toml` — mypy `follow_imports=skip` extended to the untyped legacy modules the new typed
   code imports (`engine.prediction_engine`, `factors.factor_registry`, `factors.style_mismatch`), so
   the new modules are CI-typed without dragging in legacy type debt (same pattern as the data clients).
-- `Makefile` — new files added to `LINT_PATHS`/`TYPED_PATHS`.
+  This makes mypy **skip** those files — it does **not** lint/type-check them.
+- `Makefile` — the **new 3d files** added to `LINT_PATHS`/`TYPED_PATHS`.
+- `docs/FREEZE_PREP.md` (NEW) — durable pre-freeze checklist. The carried-from-3c follow-up to fold
+  `factors/factor_registry.py` + `engine/prediction_engine.py` themselves into CI lint/type is **not**
+  done here (still deferred) and is now tracked there rather than in an evaporating PR body — it must
+  land before the freeze because fixing their style debt *edits* freeze-bound files.
 
-**Result:** offline suite **496 passed / 4 skipped**; `make lint` clean (28 typed files);
+**Result:** offline suite **497 passed / 4 skipped**; `make lint` clean (28 typed files);
 `make verify-phase-3` **ALL PHASE 3 CHECKS PASSED — Phase 3 complete**; `-1`/`-2` green. Dry-run:
 10/10 wk1 NO_BET under schema v2.
