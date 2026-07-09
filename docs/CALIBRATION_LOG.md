@@ -75,6 +75,24 @@ can't dominate a model spread.
 
 ---
 
+## Phase 3 — status: FROZEN-FORM (constants final in all but the tag)
+
+Phase 3 (3a → 3d) is **complete and merged**. Every constant below is **RATIFIED** and in its final
+form; the model is **frozen-form**. **Before the `v2026-frozen` tag** (~2026-08-24, SPEC §3/§16.2): any
+change to a calibration constant, factor logic, or threshold requires **owner ratification** and a new
+CALIBRATION_LOG entry — the same propose→pause→ratify rule that produced these. **After the tag:** the
+freeze is binding — `factors/`, `engine/`, and weight/threshold config are immutable for the season, and
+any output-altering change requires the **documented exception process** (SPEC §3: a dated exception
+entry + a new tag). The formal pre-freeze **calibration audit** (SPEC §14 / `calibration-auditor` agent)
+runs ~2026-08-20 and is on `docs/FREEZE_CHECKLIST.md`.
+
+Evidence-class recap (SPEC §3 Bug-#7 constraint): every Phase-3 entry is **`reasoned`** unless it rests
+on model-independent market data (`hfa_elo`, `margin_sigma`) — the 2025 archive's confidence→ATS /
+edge→ATS tables are **inadmissible**. The `reasoned` entries are measured for real by **Phase-4
+attribution** in 2026, which is what converts them to `measured` for the 2027 recalibration.
+
+---
+
 ## Phase 3b — Physical factor layer + reweight (L1)  — **RATIFIED** (owner, 2026-07-03)
 
 Consolidated batch. Evidence class **`reasoned`** throughout: after the D17 regrade the 2025 model
@@ -498,7 +516,9 @@ calibration; the archive is inadmissible, SPEC §3). Scale-checked against the r
   canonical `AdvancedStats` payload (`offense`/`defense` open dicts) carries **no games-played count** —
   games-played is **not in the factor's data contract**. Worse than "absolute value wrong": the firing
   condition `abs(home_pace − away_pace) > 10` compares **raw season play totals**, whose difference
-  tracks games-played / blowouts / OT, **not tempo** — a Bug-#7-adjacent phantom.
+  tracks games-played / blowouts / OT, **not tempo** — a Bug-#7-adjacent phantom (**Bug #16** on the
+  tally: the running fabrication count is now #7 [MarketSentiment] + #12–14 [the six-factor hash template]
+  + #15 [ExperienceDifferential neutral-fill] + #16 [this pace phantom]).
 
 ### 3d.2 — Pace component → DORMANT (not fixed)  (behavior-change)  — **RATIFIED** (owner, 2026-07-04)
 

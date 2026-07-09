@@ -1,5 +1,11 @@
 # Performance Tracking System - Implementation Plan
 
+> **⚠ Superseded design sketch — superseded by SPEC §8 (Phase 4).** An early two-script tracking plan
+> predating the rebuild; its example JSON references retired factors (`scheduling_fatigue`) and pre-Phase-3
+> weights. The real measurement layer is **SPEC §8** (CLV, Brier/calibration by tier, per-factor
+> attribution, NO_BET selectivity, report generation) built to the ratified **schema v2** conventions in
+> `docs/SCHEMA.md`. Read this only for background intent, not current shape.
+
 ## Overview
 
 A two-script system to automatically track the real-world performance of contrarian betting predictions, providing quantifiable success metrics for the platform.
