@@ -245,8 +245,86 @@ check("L3 tiers monotonic in confidence_score; C is a NO_BET diagnostic grade, n
 check("CALIBRATION_LOG carries the 3c batch (neutralization, thresholds, NO_BET floors, tiers), evidence-class labeled",
       "Phase 3c" in _cal and "NO_BET" in _cal and "reasoned" in _cal and "neutraliz" in _cal.lower())
 
-# === 3d — PENDING (freeze-disciplined; ratify before the tag) ==================
-todo("prediction schema v2 + 2025 converter + 2026 dry-run acceptance (3d)")
+# === 3d — prediction schema v2 + 2025 converter + 2026 dry-run acceptance ======
+from analytics.predictions import build_predictions  # noqa: E402
+from utils.prediction_schema import (  # noqa: E402
+    PREDICTION_SCHEMA_VERSION,
+    V2_RECORD_KEYS,
+    convert_v1_to_v2,
+)
+
+_GOLDEN = ROOT / "docs" / "examples" / "prediction_schema_v2_2026_week_01.json"
+# VOLATILE (per docs/SCHEMA.md): excluded from the golden byte-identity compare — model_version
+# churns per commit until the freeze tag; generated_at is a wall-clock-shaped stamp.
+_VOLATILE_META = ("model_version", "generated_at")
+
+if _GOLDEN.exists() and _snap_f.exists():
+    from data.snapshot.store import load_snapshot as _load_snap  # noqa: E402
+    _golden = json.loads(_GOLDEN.read_text())
+    _live = build_predictions(_load_snap(1, 2026), week=1,
+                              model_version=_golden["meta"].get("model_version"))
+
+    def _strip_volatile(_d):
+        _d = json.loads(json.dumps(_d))
+        for _k in _VOLATILE_META:
+            _d.get("meta", {}).pop(_k, None)
+        return _d
+
+    # (1) Golden-file pin: the live writer reproduces the committed example byte-identical minus
+    # VOLATILE — a standing regression pin on the whole prediction-writing path.
+    check("3d schema-v2 golden example reproduces byte-identical (minus VOLATILE) from the wk1 snapshot",
+          json.dumps(_strip_volatile(_golden), sort_keys=True)
+          == json.dumps(_strip_volatile(_live), sort_keys=True))
+
+    # (2) Schema-v2 shape: version + provenance + per-sub-signal breakdown; the wk1 dry-run is all
+    # NO_BET (the honest preseason state, D16 vehicle).
+    _shape_ok = (
+        _golden["meta"]["schema_version"] == PREDICTION_SCHEMA_VERSION
+        and bool(_golden["meta"].get("model_version"))
+        and len(_golden["predictions"]) > 0
+        and all(r["no_bet"] is True for r in _golden["predictions"])
+        and all(isinstance(r["factor_breakdown"], dict) and len(r["factor_breakdown"]) >= 6
+                for r in _golden["predictions"]))
+    check("3d schema-v2 shape: schema_version=2 + model_version + per-sub-signal factor_breakdown + all NO_BET (wk1)",
+          _shape_ok)
+
+    # (3) Field-inventory parity (1b pattern): golden + live agree on the exact per-record key set
+    # (V2_RECORD_KEYS) AND the per-field value TYPES — the canonical example can't silently diverge
+    # from what the writer emits.
+    _v2keys = set(V2_RECORD_KEYS)
+
+    def _sig(_r):
+        return frozenset((_k, type(_v).__name__) for _k, _v in _r.items())
+    _g_sig = {r["game_id"]: _sig(r) for r in _golden["predictions"]}
+    _l_sig = {r["game_id"]: _sig(r) for r in _live["predictions"]}
+    _parity = (set(_g_sig) == set(_l_sig)
+               and all(set(r) == _v2keys for r in _live["predictions"])
+               and all(set(r) == _v2keys for r in _golden["predictions"])
+               and all(_g_sig[g] == _l_sig[g] for g in _l_sig))
+    check("3d field-inventory parity: golden + live agree on keys and value types (V2_RECORD_KEYS)",
+          _parity)
+else:
+    check("3d schema-v2 golden example + wk1 snapshot present", False,
+          "missing docs/examples golden or wk1 snapshot")
+
+# (4) The 2025 v1->v2 converter round-trips a real archive entry (pure, read-only on the archive).
+_arch = ROOT / "data" / "archive" / "2025" / "predictions" / "2025_week_01.json"
+if _arch.exists():
+    _v1 = json.loads(_arch.read_text())["predictions"][0]
+    _v2 = convert_v1_to_v2(_v1)
+    check("3d 2025 v1->v2 converter round-trips a real archive entry (game_id kept, tier derived, flat breakdown tagged)",
+          _v2["schema_version"] == PREDICTION_SCHEMA_VERSION and _v2["game_id"] == _v1["game_id"]
+          and _v2["no_bet"] is False and _v2["factor_breakdown"].get("_v1_flat") is True)
+else:
+    check("3d 2025 converter round-trip", False, "no data/archive/2025 week-1 predictions")
+
+# StyleMismatch pre-freeze deferral (3c.10) resolved: range tightened to < 1.0x HFA (2.5 pts) +
+# pace-bug disposition, ratified in a Phase-3d CALIBRATION_LOG entry.
+from factors.style_mismatch import StyleMismatchCalculator  # noqa: E402
+
+_sm_lo, _sm_hi = StyleMismatchCalculator().get_output_range()
+check("StyleMismatch output range tightened to < 1.0x HFA (2.5 pts) before freeze (3c.10 resolved in 3d)",
+      max(abs(_sm_lo), abs(_sm_hi)) < 2.5 and "Phase 3d" in _cal and "StyleMismatch" in _cal)
 
 # --- Report -------------------------------------------------------------------
 print("Phase 3 acceptance checks:")

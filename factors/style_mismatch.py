@@ -28,14 +28,17 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         self.category = "matchup"
         self.description = "Identifies exploitable style mismatches between teams"
         
-        # Output range for this factor
-        self._min_output = -4.0
-        self._max_output = 4.0
-        
+        # Output range (Phase 3d, 3c.10): ±1.5 = 0.6× the ratified ~2.5-pt HFA (D9). The old ±4.0
+        # (1.6× HFA) was the largest single-factor range in the system — a style/efficiency mismatch
+        # is a SECONDARY matchup read and must be capped well below home field; ±1.5 sits alongside
+        # the physical factors (bye 1.0, travel cap 1.5). PROPOSED → ratified in CALIBRATION_LOG 3d.
+        self._min_output = -1.5
+        self._max_output = 1.5
+
         # Hierarchical system configuration
         self.factor_type = FactorType.SECONDARY
         self.activation_threshold = 0.05  # Very low threshold for advanced stats analysis
-        self.max_impact = 4.0
+        self.max_impact = 1.5
         
         # Factor-specific parameters
         self.config = {
@@ -123,13 +126,12 @@ class StyleMismatchCalculator(BaseFactorCalculator):
                 'ppa_off': offense.get('ppa', 0.0),
                 'ppa_def': defense.get('ppa', 0.0),
                 
-                # Pace metrics
-                # KNOWN (Phase 3, PHASE1_NOTES): canonical AdvancedStats has no 'season'
-                # key, so this always /1 → a raw season plays total, not per-game. The
-                # pace *comparison* (home vs away) stays directionally valid; the absolute
-                # value is wrong until calibrated with a games-played count.
-                'plays_per_game': offense.get('plays', 70) / max(1, team_stats.get('season', 1)),
-                
+                # Pace metrics: REMOVED in Phase 3d (3c.10). The canonical AdvancedStats payload
+                # carries only a raw season `plays` total and no games-played count, so the old
+                # `plays / max(1, season)` was a /1 fabrication whose home-vs-away difference fires
+                # on total-play-count noise (games played, blowouts, OT), not tempo. The pace
+                # component is dormant — see `_calculate_pace_mismatch`.
+
                 # Havoc rate (chaos generation)
                 'havoc_rate': defense.get('havoc', {}).get('total', 0.15),
                 
@@ -237,23 +239,16 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         return 0.0
     
     def _calculate_pace_mismatch(self, home_stats: Dict, away_stats: Dict) -> float:
+        """DORMANT (Phase 3d, 3c.10 resolution — ratified in CALIBRATION_LOG).
+
+        Tempo mismatch needs a **per-game** pace, but the advanced-stats payload this factor
+        consumes has only a raw season `plays` total and no games-played count (games-played is not
+        in the factor's data contract). The old formula divided by a non-existent `season` count
+        (→ /1) and compared raw totals, whose difference tracks games-played/blowouts, not tempo —
+        a Bug-#7-adjacent phantom. Neutralized to 0.0 (no signal); the other five style components
+        (real rate stats) carry the factor. Revisit with 2026 attribution in 2027 if tempo earns a
+        real per-game signal.
         """
-        Pace mismatches favor slower teams (more control, less variance).
-        Fast vs slow creates opportunities for time management.
-        """
-        home_pace = home_stats['plays_per_game']
-        away_pace = away_stats['plays_per_game']
-        
-        pace_diff = abs(home_pace - away_pace)
-        
-        # Significant pace mismatch (>10 plays per game difference)
-        if pace_diff > 10:
-            # Slower team gets advantage
-            if home_pace < away_pace:
-                return self.config['pace_advantage_slower']
-            else:
-                return -self.config['pace_advantage_slower']
-        
         return 0.0
     
     def _calculate_run_pass_mismatch(self, home_stats: Dict, away_stats: Dict) -> float:
@@ -327,25 +322,26 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         if not context or not context.get('advanced_stats'):
             return value, FactorConfidence.NONE, ["No snapshot advanced stats available"]
 
-        # Determine confidence based on mismatch severity
-        if abs(value) > 3.0:
+        # Determine confidence based on mismatch severity. Bands rescaled to the Phase-3d ±1.5
+        # range (3c.10) so the factor uses its full range rather than dead >2.0/>3.0 tiers.
+        if abs(value) > 1.2:
             confidence = FactorConfidence.VERY_HIGH
             reasoning.append("Extreme style mismatch identified")
-        elif abs(value) > 2.0:
+        elif abs(value) > 0.9:
             confidence = FactorConfidence.HIGH
             reasoning.append("Significant style conflict detected")
-        elif abs(value) > 1.0:
+        elif abs(value) > 0.6:
             confidence = FactorConfidence.MEDIUM
             reasoning.append("Moderate style mismatch found")
-        elif abs(value) > 0.5:
+        elif abs(value) > 0.3:
             confidence = FactorConfidence.LOW
             reasoning.append("Minor style differential present")
         else:
             confidence = FactorConfidence.NONE
             reasoning.append("No exploitable style mismatch")
-        
+
         # Add specific mismatch type to reasoning
-        if abs(value) > 1.0:
+        if abs(value) > 0.6:
             advanced_by_team = context.get('advanced_stats', {})
             home_stats = self._get_team_advanced_stats(home_team, advanced_by_team)
             away_stats = self._get_team_advanced_stats(away_team, advanced_by_team)
@@ -354,11 +350,7 @@ class StyleMismatchCalculator(BaseFactorCalculator):
                 success_diff = abs(home_stats['success_rate_off'] - away_stats['success_rate_off'])
                 if success_diff > 0.05:
                     reasoning.append("Success rate differential detected")
-                
-                pace_diff = abs(home_stats['plays_per_game'] - away_stats['plays_per_game'])
-                if pace_diff > 10:
-                    reasoning.append("Pace mismatch advantage")
-        
+
         return value, confidence, reasoning
     
     def get_output_range(self) -> Tuple[float, float]:
@@ -373,7 +365,7 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         
         favored_team = home_team if value > 0 else away_team
         
-        impact = "extreme" if abs(value) > 3.0 else "major" if abs(value) > 2.0 else "notable"
+        impact = "major" if abs(value) > 0.9 else "moderate" if abs(value) > 0.6 else "notable"
         
         # Identify primary mismatch type
         mismatch_type = "style"
@@ -384,12 +376,8 @@ class StyleMismatchCalculator(BaseFactorCalculator):
 
             if home_stats and away_stats:
                 success_diff = abs(home_stats['success_rate_off'] - away_stats['success_rate_off'])
-                pace_diff = abs(home_stats['plays_per_game'] - away_stats['plays_per_game'])
-                
                 if success_diff > 0.08:
                     mismatch_type = "success rate"
-                elif pace_diff > 15:
-                    mismatch_type = "pace"
                 else:
                     mismatch_type = "explosiveness"
         
