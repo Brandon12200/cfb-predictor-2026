@@ -24,7 +24,10 @@ Check every CALIBRATION_LOG entry against these rules:
 4. **Cross-entry consistency.** A constant's stated value matches everywhere it appears (CALIBRATION_LOG,
    DECISIONS, code comments, verify script); superseded values are marked superseded, not left as live
    claims. Flag contradictions.
-5. **Reverse check (the important one).** Grep the frozen paths — `factors/`, `engine/` (esp.
+5. **Reverse check (the important one).** First read **`docs/CALIBRATION_EXCLUSIONS.md`** — the persisted
+   allow-list of structural/non-calibration literals — and **exclude** everything on it so your findings are
+   signal-only (do not re-flag excluded items; if you believe an excluded item is actually tunable, say so
+   explicitly as a challenge, don't silently include it). Then grep the frozen paths — `factors/`, `engine/` (esp.
    `physical_coefficients.py`, `power_ratings.py` `EloConfig`, `matchup_pricer.py`, `prediction_engine.py`
    module constants, factor `__init__` thresholds/weights/ranges, `factor_registry` threshold config) —
    for **numeric literals that behave as calibration constants** (weights, thresholds, ranges, coefficients,

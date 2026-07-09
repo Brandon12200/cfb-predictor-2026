@@ -15,6 +15,17 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   errors *edits* these freeze-bound files, impossible after the tag. Scope: add both to the Makefile paths,
   `ruff --fix`, resolve residual mypy errors (or scope them), one focused cleanup PR.
 
+- [ ] **Disposition the reverse-audit ledger (CALIBRATION_LOG "Phase-3 reverse-audit", 2026-07-09).** The
+  `calibration-auditor` shakedown found the log's **reverse** coverage is materially incomplete: **5 bug /
+  dead-path DECISIONS** (A1 `HeadToHeadRecord` threshold==max → never fires, the §16.7 KEEP factor silently
+  neutered; A2 a second unlogged confidence/edge engine wired live via `run_single_prediction`; A3
+  `variance_detector` category map references retired factors; A4 unreachable `prediction_type` ladder; A5
+  `config.py` stale category weights) and **~10 unlogged internal-formula constant groups (B1–B10)** — incl.
+  the formula behind the ratified `confidence_score` itself and the `variance_detector` CV cutoffs that gate
+  NO_BET. Resolve **A** (fix/retire) first, then ratify **B** as a consolidated batch. This is a real
+  freeze-blocker — a duplicate/contradictory scoring surface + unexamined load-bearing formulas cannot freeze.
+  The `calibration-auditor` must return **FREEZE-READY** at the ~Aug-20 pre-flight.
+
 - [ ] **Formal pre-freeze calibration audit (~2026-08-20).** Run the **`calibration-auditor`** agent over
   the complete `docs/CALIBRATION_LOG.md`: every entry evidence-class-labeled with the class matching the
   claim; magnitudes HFA-scale-checked; ratification stamps present; **no orphaned PROPOSED entries**;

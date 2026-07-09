@@ -552,3 +552,89 @@ uses its full range and can report meaningful confidence in-season. No new signa
 
 *All ratified 2026-07-04; freeze at `v2026-frozen`. Not measured against 2025 (inadmissible); measured
 for real by Phase-4 attribution in 2026.*
+
+---
+
+## Phase-3 reverse-audit (calibration-auditor shakedown, 2026-07-09)  — **DISPOSITION-PENDING (owner)**
+
+The `calibration-auditor` agent's first run did the reverse check (grep frozen paths for numeric literals
+lacking a log entry) and found the log's **forward** coverage (Phases 2/3b/3c/3d) is clean but its
+**reverse** coverage is materially incomplete: the *outer* gates (NO_BET floors, tiers, physical
+coefficients, Elo) are logged, but the **internal factor formulas** and a **second scoring engine** are
+not. **This blocks the freeze** (`docs/FREEZE_CHECKLIST.md`): every item below needs owner disposition —
+**ratify** the value as-is, **revise** it, or **retire** the path — before the `v2026-frozen` tag. Nothing
+here is auto-ratified; entries are grouped by the *kind* of disposition needed. Structural literals were
+excluded via `docs/CALIBRATION_EXCLUSIONS.md` (signal-only). Verified spot-checks: findings A1 and A2 below
+confirmed against source.
+
+### A. BUGS / dead-or-duplicate paths — need a **DECISION** (fix or retire), not just a value ratification
+
+- **A1 — `HeadToHeadRecord` can only fire at saturation (never, in practice).** Registry threshold **1.0**
+  (`factors/factor_registry.py:173`) **equals** the factor's own output-range max (`_max_output=1.0`,
+  `factors/coaching_edge.py:270`) — the *identical* bug 3c.3 diagnosed + fixed for `DesperationIndex`
+  (2.0==±2.0), here **unnoticed** and silently neutering a **SPEC §16.7-mandated KEEP** factor. Decision:
+  set a firing threshold below the max (as 3c.3 did) or consciously accept it dormant. **Verified.**
+- **A2 — A second, unlogged, contradictory confidence/edge engine is wired LIVE.** The single-game CLI path
+  (`cli/app.py::run_single_prediction`, `:475,480,510,556`) shows confidence + recommendation from the
+  **standalone** `engine/confidence_calculator.py` (`ConfidenceCalculator`: 6 component weights, `[0.15,0.85]`
+  clamp, edge-tier + type-adjustment + early-season dicts) and `engine/edge_detector.py` (`edge_thresholds`
+  3.0/2.0/1.0/0.5, `confidence_thresholds`, `risk_parameters`) — **not** the 3c/3d-ratified
+  `confidence_score`/`prediction_type`. Both modules live in `engine/` → they **freeze wholesale** as a
+  second calibration surface with zero log coverage, and "confidence" means different things on different CLI
+  paths. Decision: **retire** these (route the single-game path through the ratified engine) or log+ratify
+  them. Retire is the likely honest call. **Verified.**
+- **A3 — `variance_detector` category map references retired factors.** `engine/variance_detector.py:50-55`
+  `factor_categories` names the **deleted** `LookaheadSandwich`/`SchedulingFatigue` (3b.6) and omits every
+  current physical factor + the `matchup`/`market` categories, so category-variance is blind to the 56%
+  physical category. Decision: fix the map (and log the CV cutoffs — see B4) or retire category-variance.
+- **A4 — Contrarian `prediction_type` ladder is structurally unreachable at the top.**
+  `engine/prediction_engine.py:282-291` needs 1.5–3.0-pt edges for MODERATE/STRONG/VERY_STRONG, but 3c.5
+  *measured* real edges cap ~0.2 pts — the same "floor an order of magnitude too high" finding 3c.5 made for
+  NO_BET, recurring unlogged. Decision: rescale to the real edge distribution or accept the ladder collapses
+  to SLIGHT/CONSENSUS/NO_BET (and log that).
+- **A5 — `config.py:54-61` category weights contradict the ratified shares** (60/30/10 + legacy 40/40/20 vs
+  the ratified physical 56 / situational 14 / coaching 12 / matchup 10 / momentum 7) and are surfaced to
+  users via `cli status`. Decision: retire/correct the stale config (confirm it doesn't feed the engine) —
+  cross-entry inconsistency.
+
+### B. Genuinely unlogged calibration constants — **PROPOSED** for ratification (values as-found; ratify / revise)
+
+- **B1 — `_calculate_confidence_score` (`engine/prediction_engine.py:524-573`)** — the formula behind the
+  ratified `confidence_score` that 3c.6/3c.5 key off but never logged: component weights 0.4/0.3/0.2/0.1,
+  edge divisor `/5.0`, variance adjustments `+0.25/+0.1/-0.1/-0.2/-0.3`, clamp `[0.15,0.95]`. **The tier/floor
+  entries assumed this; it must be logged for them to stand.**
+- **B2 — `factor_registry._configure_factor_hierarchy` overrides** (`:172-196`) — `HeadToHeadRecord {1.0,5.0}`
+  (see A1), `ExperienceDifferential {1.0,3.0}`, `PointDifferentialTrends {0.75,3.0}`, `CloseGamePerformance
+  {0.5,2.0}` (only `DesperationIndex 1.0` is logged, 3c.3).
+- **B3 — `DesperationIndex` internal formula** (`factors/situational_context.py:94-155`) — live in-season:
+  blend 0.4/0.3/0.3, bowl/playoff/late-season branch values, `×4.0` differential scale, and the
+  `bowl_eligibility_threshold=6`/`playoff_contender_threshold=1`/`conference_championship_weeks=[13,14]`
+  config. Only the outer activation threshold is logged.
+- **B4 — `variance_detector` CV cutoffs** (`engine/variance_detector.py:41-47`: 0.15/0.30/0.50/0.75/1.0) —
+  set `variance_level`, which is a **hard NO_BET gate** (`NO_BET_VARIANCE_LEVELS`) and drives the B1 variance
+  adjustments. A gate this load-bearing must be logged.
+- **B5 — physical factors' shared cutoffs** (`factors/scheduling_fatigue.py`) — uniform
+  `activation_threshold=0.4` (×6) and the `max_impact*0.6` strong-confidence cutoff (`:59`).
+- **B6 — `ExperienceDifferential` internal** (`factors/coaching_edge.py:36-39,99`) — `max_experience_edge=15`,
+  `tenure_weight=0.3`, `rookie_penalty=0.5`, `×2.0` scale; plus the three coaching factors' individual 0.06
+  weights (only the 12% category total is logged).
+- **B7 — momentum internals** (`factors/momentum_factors.py`) — `PointDifferentialTrends` trend-weights,
+  improvement thresholds, consistency bonus, std-dev bands; `CloseGamePerformance` clutch-weights,
+  `close_game_threshold=7`, split weights, `experience_multiplier=1.2`, `min_close_games=2`.
+- **B8 — `StyleMismatch` internal weighting** (`factors/style_mismatch.py:44-52,85-91`) — the `÷6.0`
+  denominator + component weights (`success_rate 2.0/explosiveness 1.5/havoc 0.8`; note `pace_mismatch_weight`
+  is inert per 3d.2 and `redzone_weight` appears **dead** — verify) + ~20 internal branch thresholds. 3d
+  ratified only the output range + confidence bands, not the pre-clamp weighting.
+- **B9 — `MarketSentiment` internals** (`factors/market_sentiment.py:48-55`) — dormant today but **frozen**:
+  the movement/steam/sharp/public thresholds + signal-strength bands that activate the moment slice-1.5 data
+  lands mid-season. Only the outer `[0.85,1.15]` range is logged (MSF.3).
+- **B10 — SPEC §16.7 exception is undocumented in this log.** §16.7 requires noting the coaching multi-season
+  lookback exception **here**; no entry exists. Add it (and note `HeadToHeadRecord.config`
+  `recent_game_weight/max_lookback_years` appear dead — verify).
+
+### Disposition process
+
+Each A-item is a **freeze-blocker decision**; each B-item is a **PROPOSED** constant awaiting your
+ratify/revise. Recommended order: resolve **A** first (bugs/retirements change what B needs to cover), then
+ratify **B** as one consolidated batch. Track on `docs/FREEZE_CHECKLIST.md`. The auditor re-runs (~Aug 20)
+as the final pre-flight and must come back **FREEZE-READY** before the tag.
