@@ -1,5 +1,16 @@
 # College Football Market Edge Platform - System Architecture
 
+> **⚠ SUPERSEDED (pre-2026-rebuild overview — do not trust the specifics).** This file predates the
+> Phase 0–3 rebuild and is kept only for its high-level shape. It is **wrong** on: the factor roster
+> (`SchedulingFatigue` and `LookaheadSandwich` were **retired** in 3b, replaced by six physical factors
+> Bye/ShortWeek/Travel/Altitude/ConsecutiveRoad/Sandwich; `MarketSentiment` is a **dormant modifier**,
+> not ~39%), the weight distribution (see the real shares in `docs/CALIBRATION_LOG.md` Phase 3b/3c), and
+> the "Error Handling → **Return Neutral Values**" flow (that neutral-fill **fabrication was removed** in
+> Phase 1 — binding principle #4; missing data is recorded `missing`, never neutral-filled). Authoritative
+> current sources: **`docs/CALIBRATION_LOG.md`** (factor roster + weights + evidence), **`docs/CODE_AUDIT.md`**
+> (module map, per-phase changes), **`docs/SCHEMA.md`** (data flow + reproducibility). Not on the
+> keep-current list in `CLAUDE.md`.
+
 ## High-Level Data Flow
 
 ```

@@ -1,5 +1,11 @@
 # College Football Market Edge Platform - Technical Overview
 
+> **⚠ Pre-2026-rebuild narrative — high-level only, specifics superseded.** Written before the Phase 0–3
+> rebuild. Notably wrong now: "there's always a fallback" (§below) — Phase 1 **removed all neutral-fill /
+> fallback fabrication** (SPEC §5.2, binding principle #4); the engine reads frozen snapshots offline and
+> records missing data as `missing`, never a fallback. For current state see `docs/CALIBRATION_LOG.md`,
+> `docs/CODE_AUDIT.md`, `docs/SCHEMA.md`, and `docs/SPEC.md`. Not on the `CLAUDE.md` keep-current list.
+
 ## What This Is
 
 A system I built to find inefficiencies in college football betting markets by analyzing factors that Vegas lines might not fully account for. It started as a curiosity about whether systematic biases exist in sports betting (spoiler: they do) and evolved into a full data pipeline with real-time analysis capabilities.

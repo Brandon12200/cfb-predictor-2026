@@ -135,6 +135,17 @@ Changes:
 
 ## 8. Phase 4 — Measurement & Analytics v2
 
+> **⚠ Freeze-prep + handoff pointers (read before starting Phase 4).** Phase 3 is complete and
+> **frozen-form**; Phase 4 is **measurement built to conventions already frozen**, with **no calibration
+> batches of its own**. Build to the ratified **schema v2** in `docs/SCHEMA.md`: CLV (item 1) uses the
+> ratified sign convention (**positive = our number beat the close**; home ⇒ `vegas−close`, away ⇒
+> `close−vegas`) and fills the `closing_spread`/`clv`/`graded_at` fields per the documented null-vs-push
+> semantics; calibration/attribution (items 2/4) key off the ratified **A/B/C tiers** (tier C is a
+> diagnostic grade, never a live bet). Attribution (item 4) must answer the **open `reasoned` CALIBRATION_LOG
+> questions** (per-sub-signal ATS%/CLV when a factor fired) — that is what converts them to `measured` for
+> 2027. **The freeze precedes all of this:** see `docs/FREEZE_CHECKLIST.md` (tag `v2026-frozen` by
+> ~2026-08-24; calibration audit; freeze-enforcement hook) and the session briefing `docs/HANDOFF_PHASE4.md`.
+
 Replace ad-hoc scripts with a coherent analytics module (`analytics/`), consuming prediction/result JSON only (no live API needed):
 
 1. **CLV** — primary KPI. Per-bet and aggregate: did our number beat the closing line? Report CLV% and average CLV points, overall and by confidence tier.
@@ -175,6 +186,18 @@ Requirements:
 **Acceptance:** the entire manual weekly routine from 2025 (predict slate, inspect factors on interesting games, save JSON) is achievable in ≤2 commands; a regression test proves omitted-week equals explicit-week; `--offline` rerun produces identical output to the original run.
 
 ## 10. Phase 5 — Automation Pipeline (highest-priority feature)
+
+> **⚠ Refined by `docs/PHASE5_NOTES.md` (settled operational decisions) + `docs/FREEZE_CHECKLIST.md`.** The
+> cadence below is the original sketch; the **binding refinements** are in `docs/PHASE5_NOTES.md`: the
+> Tuesday predict job **begins with a catch-up grade** of any previously-ungraded completed games
+> (Sunday/Monday games + postponements; idempotent); **line capture is DAILY Wed–Sat**, not Saturday-only
+> (Thu/Fri games need honest pre-kickoff closes; each game's close = the last observation before *that*
+> game's kickoff — the 1c as-of-T model, no schema work); schedule with **slack before the earliest
+> kickoff** (GitHub cron jitter is real). **Acceptance is expanded** with a preseason validation regimen
+> (two full-cycle rehearsals + a failure-injection drill + a graded Week-0 dress rehearsal). Two design
+> questions to resolve in planning: pipeline **commit identity** (Actions bot vs authored) and
+> **branch-protection interaction** with bot pushes. **The freeze (`docs/FREEZE_CHECKLIST.md`) must land
+> before the first live run, and rehearsals run AFTER the tag.**
 
 GitHub Actions (preferred; cron fallback scripts already partially exist in `scripts/setup_cron.sh` — audit and supersede). Secrets (`ODDS_API_KEY`, `CFBD_API_KEY`) via repo secrets.
 

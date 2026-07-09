@@ -58,10 +58,11 @@ exploration so no session has to re-derive it.
   end-to-end), not the specific-behavior tests their names imply (e.g. an asymmetric venue-boost
   assertion passes for structural reasons). Re-wire real per-test data via `patched_context(**kwargs)`
   (as the 2 D4 tests already do) or trim the misleading setup.
-- **`style_mismatch.py:127` latent calc (Phase 3):** `offense.get('plays', 70) / max(1, team_stats.get('season', 1))`
-  — the canonical `AdvancedStats` carries no `season` key, so this always divides by 1, making
-  "plays per game" a raw season total. The pace *comparison* is still directionally valid (both teams
-  scaled identically), but the absolute value is wrong; fix when the factor is calibrated in Phase 3.
+- **`style_mismatch.py` pace calc — RESOLVED in Phase 3d (Bug #16).** The old
+  `offense.get('plays', 70) / max(1, team_stats.get('season', 1))` divided by a non-existent `season`
+  key (→ /1) and its home-vs-away raw-total comparison tracked games-played/blowouts, not tempo. The
+  pace component is now **dormant** (returns 0.0; the fabricated field removed) and the factor range
+  tightened ±4.0 → ±1.5 — see CALIBRATION_LOG Phase 3d + `tests/test_phase3d.py::test_style_mismatch_is_pace_invariant`.
 - **Committed snapshot is a manual artifact:** `data/snapshots/2026_week_01/` is a hand-run
   `build_snapshot.py` bundle (real 2026 data, honest `missing` coverage) checked in ahead of the
   Phase-5 automation as the reproducibility fixture verified by `verify_phase_1`; it will be

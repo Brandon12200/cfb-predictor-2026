@@ -332,22 +332,28 @@ DONE, merged as PR #12 / Bug #7 / D19.)*
 
 ---
 
-## Consolidated 3c/3d carry-forward (the single canonical list)
+## Carry-forward — Phase 3 → Phases 4 / 4.5 / 5  (rebuilt at the Phase-3 boundary)
 
-Items discovered this session that 3c/3d must fold in. **Both cleanup items landed inside 3c's
-confidence-tier rework** (it redefines confidence anyway):
-1. ✅ **DONE (3c)** — **`ExperienceDifferential` crashed on missing coaching data** (`'<' not supported
-   between int and NoneType`) — the preseason norm — only caught+zeroed by `safe_calculate`. Now reads
-   with no default and returns **0.0 honest-missing** when any of experience/tenure is absent/`None`,
-   removing the old `.get(key, 5)` neutral-fill too (CALIBRATION_LOG 3c.8).
-2. ✅ **DONE (3c)** — **Dormant-modifier activation bookkeeping.** `base_calculator.apply_threshold` now
-   measures activation as distance from the factor's **neutral** value (`abs(value − 1.0)` multiplicative,
-   `abs(value)` additive), so a dormant `MarketSentiment` at 1.0 is **not** counted activated
-   (CALIBRATION_LOG 3c.7).
-3. **(3d) prediction schema v2 + 2025 converter + 2026 dry-run acceptance** — the remaining Phase-3 slice
-   after 3c (see `docs/SPEC.md` §7). 3c surfaces `prediction_type`/`no_bet`/`confidence_tier` in-object +
-   reports and carries them through the storage writer (not silently dropped); 3d owns the on-disk
-   `schema_version` + converter + logging NO_BET games for grading.
+**Phase 3 is complete.** The old 3c/3d carry list is fully consumed: ✅ `ExperienceDifferential`
+None-crash + `.get(key,5)` neutral-fill (Bug #15, CALIBRATION_LOG 3c.8); ✅ dormant-modifier activation
+bookkeeping (3c.7); ✅ prediction schema v2 + 2025 converter + dry-run (3d). Open items now carry to the
+next phases and the freeze:
+
+1. **BEFORE THE FREEZE (`docs/FREEZE_CHECKLIST.md`):** (a) fold `factors/factor_registry.py` +
+   `engine/prediction_engine.py` into CI `LINT_PATHS`/`TYPED_PATHS` — carried from the **3c** review +
+   **3d** (3d only added mypy `follow_imports=skip`, which *skips* them; it does not lint/type them); must
+   land pre-tag because fixing their style debt **edits freeze-bound files**. (b) The `v2026-frozen` tag
+   itself, the pre-freeze **calibration audit** (`calibration-auditor` agent), and extending the
+   freeze-enforcement hook to `factors/`/`engine/`/calibration config at tag time.
+2. **Phase 4 (SPEC §8, no calibration):** fill `closing_spread`/`clv` at grading per the ratified
+   convention (SCHEMA.md — positive = beat the close; null-vs-push semantics); Brier/calibration by tier;
+   per-factor **attribution** answering the open `reasoned` CALIBRATION_LOG questions; NO_BET selectivity
+   grading; report generation. Phase 4 adds an ATS win/loss/**push** outcome field alongside `clv`.
+3. **Phase 5 (SPEC §10 + `docs/PHASE5_NOTES.md`):** the automation pipeline with the refined cadence
+   (Tuesday catch-up grade + predict; daily Wed–Sat line capture; cron slack) and the preseason validation
+   regimen; resolve the two design questions (commit identity, branch protection).
+4. **Retire the Phase-0 dev-script cluster** (`factor_validator`, `performance_analyzer`, `bet_evaluator`)
+   when Phase 4's `analytics/` replaces the ad-hoc reporting scripts (as noted in the Phase-0 audit above).
 
 ## MarketSentiment wiring fix (Bug #7) — 2026-07-04
 
@@ -466,7 +472,7 @@ engine is **untouched** — schema v2 is a freeze-exempt serialization concern.
   the new modules are CI-typed without dragging in legacy type debt (same pattern as the data clients).
   This makes mypy **skip** those files — it does **not** lint/type-check them.
 - `Makefile` — the **new 3d files** added to `LINT_PATHS`/`TYPED_PATHS`.
-- `docs/FREEZE_PREP.md` (NEW) — durable pre-freeze checklist. The carried-from-3c follow-up to fold
+- `docs/FREEZE_CHECKLIST.md` (NEW) — durable pre-freeze checklist. The carried-from-3c follow-up to fold
   `factors/factor_registry.py` + `engine/prediction_engine.py` themselves into CI lint/type is **not**
   done here (still deferred) and is now tracked there rather than in an evaporating PR body — it must
   land before the freeze because fixing their style debt *edits* freeze-bound files.
