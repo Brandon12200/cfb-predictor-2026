@@ -71,13 +71,29 @@ Each `factor_breakdown` entry (`base_calculator.py:238-255`): `factor_name, fact
 Envelope (`prediction_storage.py:54-67`): `{week, season, generated_date, prediction_count, predictions[], system_stats{...}}`. Per record: `game_id` (`{AWAY}_{HOME}_week{N}`), `home_team, away_team, week, timestamp, vegas_spread, contrarian_spread, predicted_edge, edge_direction, prediction_type, confidence (0–100 scale), factor_breakdown ({category: float}), data_quality (0–100 scale), recommendation, variance_analysis`.
 ⚠ Incompatibilities to preserve/convert: stored `factor_breakdown` is flat `{category: float}` vs the engine's rich per-factor dict; `confidence`/`data_quality` stored 0–100 but computed 0–1.
 
+### Stored record (v2 — Phase 3d, current)  — `utils/prediction_schema.py`, writer `analytics/predictions.py`
+
+Written by the freeze-exempt slate writer (`analytics.predictions.build_predictions` → `scripts/build_predictions.py`), which runs the **frozen** engine over a snapshot's bettable slate and serializes **every** game incl. `NO_BET` (the legacy `cli/app.py` P4 path filtered non-edge games; NO_BET is now logged + graded per SPEC §7 item 4 / §16.3). Canonical **golden example**: `docs/examples/prediction_schema_v2_2026_week_01.json` (regenerated + byte-identity-pinned by `verify-phase-3`; the schema reference for Phases 4/4.5/5).
+
+**Envelope** `meta`: `schema_version` (int, **= 2**), `model_version` (git tag — see VOLATILE), `snapshot_id`, `week`, `year`, `generated_at` (frozen from the snapshot's `built_at`), `engine`, `prediction_count`, `coverage`.
+
+**Per record** (`V2_RECORD_KEYS`, exact inventory pinned by the parity test): `game_id` (new `{away}-vs-{home}-week{N}` format), `home_team`, `away_team`, `week`, `vegas_spread`, `contrarian_spread`, `predicted_edge`, `edge_direction`, `prediction_type` (incl. `NO_BET`), `no_bet` (bool), `no_bet_reason`, `confidence_tier` (A/B/C; **C is a diagnostic grade, never a live bet** — 3c.6), `confidence` (**0–1** scale, unlike v1's 0–100), `power_rating_spread`, `factor_breakdown` (**per-sub-signal**: `{factor: {value, weighted_value, activated, category}}`, not the v1 flat `{category: float}`), `data_quality` (**0–1**), `line_as_of` (the prediction-time observation's `fetched_at`), and the **grading-filled** `closing_spread`, `clv`, `graded_at`.
+
+**Grading-filled fields (Phase 4 fills; convention defined here at birth).**
+- `closing_spread` = the home-team consensus spread from `data.normalize.odds.closing_observation` (last observation ≤ kickoff); `null` if no closing line was captured (**honest-missing**).
+- `clv` = closing-line value **in points, from the bet side's perspective — positive = our number beat the close** (`utils.prediction_schema.clv`): a **home** bet ⇒ `vegas_spread − closing_spread`; an **away** bet ⇒ `closing_spread − vegas_spread`.
+- **`null` semantics:** `clv=null` + `graded_at=null` ⇒ **not yet graded**; `graded_at` set + `closing_spread=null` ⇒ **graded, no closing line (honest-missing)**; `graded_at` set + `closing_spread` present ⇒ `clv` computed. Phase 4 implements this convention — it does not invent one.
+
+**2025 v1→v2 converter** (`convert_v1_to_v2`, **pure + read-only** — never rewrites the append-only `data/archive/2025` files). Lossy mappings for fields v1 never recorded: `game_id` kept as-is (v1 `{AWAY}_{HOME}_week{N}` join key); `no_bet=False` (v1 predates NO_BET); `confidence_tier` derived from v1's 0–100 confidence via the ratified boundaries; v1's 0–100 confidence carried as `confidence_pct` (kept distinct from the v2 0–1 `confidence`, which is `null`); `factor_breakdown` kept flat + tagged `_v1_flat: true` (per-sub-signal unrecoverable); `power_rating_spread`/`closing_spread`/`clv`/`graded_at`/`line_as_of`/`model_version` `null`.
+
 ### Reproducibility contract (define once; CLI + test share it)
 `cfb predict rerun` runs in **frozen-clock** mode: it reuses the snapshot's recorded `fetched_at` timestamps and sets prediction wall-clock fields from the snapshot, **not** `datetime.now()`. Two reruns on the same snapshot must be **byte-for-byte identical over the payload minus `VOLATILE_FIELDS`**.
 
 ```
-VOLATILE_FIELDS = { "generated_at", "timestamp", "generated_date" }   # wall-clock only
+VOLATILE_FIELDS = { "generated_at", "timestamp", "generated_date", "model_version" }
+#   wall-clock ------------------------------------^   ^-- git-derived, churns per commit until the tag
 ```
-Everything outside this set (spreads, edges, factor values, provenance) must match exactly. Predictions embed the `snapshot_id` they were computed from.
+Everything outside this set (spreads, edges, factor values, provenance) must match exactly. Predictions embed the `snapshot_id` they were computed from. **`model_version`** (schema v2) is the `git describe` stamp — it changes on every commit before the `v2026-frozen` tag, so it is VOLATILE and **excluded from the schema-v2 golden byte-identity check** in `verify-phase-3` (which pins the whole prediction-writing path minus these fields); once tagged it resolves to `v2026-frozen`.
 
 **Hash-exclusion rule (1c, non-negotiable).** `snapshot_id` is a content hash over the
 snapshot's `data` only. The growing "as-of T" line-observation series (SPEC §5.4.3) is

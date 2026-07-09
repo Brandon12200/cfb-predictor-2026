@@ -49,7 +49,8 @@ warn_unused_ignores = false
 # don't let their type debt block the typed new modules that merely import them for
 # diagnostics (e.g. data/data_manager.py's lazy client construction).
 [[tool.mypy.overrides]]
-module = ["data.cache_manager", "data.cfbd_client", "data.espn_client", "data.odds_client"]
+module = ["data.cache_manager", "data.cfbd_client", "data.espn_client", "data.odds_client",
+          "engine.prediction_engine", "factors.factor_registry", "factors.style_mismatch"]
 follow_imports = "skip"
 
 [tool.pytest.ini_options]

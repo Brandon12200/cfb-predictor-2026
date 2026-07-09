@@ -429,3 +429,43 @@ into CI lint in a dedicated cleanup, consistent with the 3a/3b precedent of not 
 
 **Result:** offline suite **483 passed / 4 skipped**; `make lint` clean; `make verify-phase-3` PASS
 (1 pending — 3d); `-1`/`-2` green. Dry-run: 10/10 NO_BET (honest preseason, no signal).
+
+---
+
+## Phase 3d — prediction schema v2 + 2025 converter + dry-run acceptance (SPEC §7 item 6), 2026-07-04
+
+Branch `phase-3d-schema-v2` (off `main` after 3c merged, PR #13). Completes Phase 3. The frozen
+engine is **untouched** — schema v2 is a freeze-exempt serialization concern.
+
+**New (freeze-exempt):**
+- `utils/prediction_schema.py` — schema-v2 definition (`PREDICTION_SCHEMA_VERSION=2`, `V2_RECORD_KEYS`),
+  `build_v2_record` (per-sub-signal `factor_breakdown`; grading fields null at write), the pure `clv`
+  helper (bet-side convention, positive = beat the close), and `convert_v1_to_v2` (pure, **read-only**
+  on the append-only 2025 archive; documented lossy mappings).
+- `analytics/predictions.py` — `build_predictions(snapshot, week, model_version)`: runs the frozen
+  engine over the bettable slate and serializes **every** game incl. NO_BET (the P4 path never did).
+  Deterministic (`generated_at` from `built_at`), mirrors `analytics/projections.py`.
+- `scripts/build_predictions.py` — writer CLI (`--out` regenerates the golden example).
+- `utils/version.py` — `model_version()` (`git describe`), stamped at write time (engine stays pure);
+  VOLATILE for the golden compare.
+- `docs/examples/prediction_schema_v2_2026_week_01.json` — committed golden example (outside
+  `data/predictions/`, no append-only collision); byte-identity + field-parity pinned by verify.
+- `tests/test_phase3d.py` (14 tests, incl. the pace-invariance regression pin).
+
+**Changed:**
+- `scripts/verify_phase_3.py` — 3d checks: golden byte-identity (minus VOLATILE), schema-v2 shape,
+  **field-inventory parity** (keys+types), converter round-trip, StyleMismatch range < 1.0× HFA. The
+  3d PENDING is gone → **Phase 3 complete**.
+- `factors/style_mismatch.py` (3c.10 resolution, calibration — **RATIFIED** owner 2026-07-04): pace component **dormant**
+  (`_calculate_pace_mismatch → 0.0`; fabricated `plays_per_game` + its confidence/explanation branches
+  removed), output range **±4.0 → ±1.5** (0.6× HFA), confidence bands rescaled.
+- `docs/SCHEMA.md` (v2 record + CLV convention + v1→v2 map + `model_version` added to VOLATILE_FIELDS),
+  `docs/CALIBRATION_LOG.md` (Phase 3d StyleMismatch sub-batch), `docs/DECISIONS.md` (D21).
+- `pyproject.toml` — mypy `follow_imports=skip` extended to the untyped legacy modules the new typed
+  code imports (`engine.prediction_engine`, `factors.factor_registry`, `factors.style_mismatch`), so
+  the new modules are CI-typed without dragging in legacy type debt (same pattern as the data clients).
+- `Makefile` — new files added to `LINT_PATHS`/`TYPED_PATHS`.
+
+**Result:** offline suite **496 passed / 4 skipped**; `make lint` clean (28 typed files);
+`make verify-phase-3` **ALL PHASE 3 CHECKS PASSED — Phase 3 complete**; `-1`/`-2` green. Dry-run:
+10/10 wk1 NO_BET under schema v2.

@@ -478,4 +478,57 @@ L2's situational-threshold reasoning** — folding it in would be scope creep we
 ±4.0 range (1.6 × HFA) cannot freeze unexamined. This deferral carries its own due date.
 
 *Every constant above is **RATIFIED** (owner, 2026-07-04) and freezes at `v2026-frozen`, except the
-**3c.10 `StyleMismatch` deferral**, which carries a hard pre-freeze due date.*
+**3c.10 `StyleMismatch` deferral**, which carries a hard pre-freeze due date — resolved in Phase 3d below.*
+
+---
+
+## Phase 3d — `StyleMismatch` pre-freeze resolution (3c.10)  — **RATIFIED** (owner, 2026-07-04)
+
+The 3c.10 deferral, now due before the freeze. Structured **diagnosis-first** (3d.1), with the three
+ratified dispositions following from it (3d.2–3d.4). Evidence class **`reasoned`** (a `matchup`-factor
+calibration; the archive is inadmissible, SPEC §3). Scale-checked against the ratified ~2.5-pt HFA (D9).
+
+### 3d.1 — Pace-bug diagnosis  (the finding that drives 3d.2–3d.4)
+
+- `StyleMismatch` reads only `context['advanced_stats']`, which is **empty preseason** (CFBD posts no
+  2026 advanced stats until games are played) → the factor is **already fully dormant early season**
+  (returns 0.0 when either team's stats are missing). This is another honest-missing-preseason case: the
+  ±4.0 range and the pace bug have **zero effect** until in-season.
+- The pace formula `plays / max(1, season)` divided by a **non-existent `season` count** (→ /1), and the
+  canonical `AdvancedStats` payload (`offense`/`defense` open dicts) carries **no games-played count** —
+  games-played is **not in the factor's data contract**. Worse than "absolute value wrong": the firing
+  condition `abs(home_pace − away_pace) > 10` compares **raw season play totals**, whose difference
+  tracks games-played / blowouts / OT, **not tempo** — a Bug-#7-adjacent phantom.
+
+### 3d.2 — Pace component → DORMANT (not fixed)  (behavior-change)  — **RATIFIED** (owner, 2026-07-04)
+
+**Decision-tree outcome (honest data path in the factor's inputs? → no):** the per-game denominator is
+not in the payload the factor consumes; bolting cross-source games-played plumbing into a `matchup`
+factor for a single weak tempo sub-signal (1 of 6, overlapping the efficiency components) at freeze time
+is disproportionate risk. **DORMANT:** `_calculate_pace_mismatch` returns 0.0; the fabricated
+`plays_per_game` field + its confidence/explanation branches are removed. The other **five** components
+(real rate stats: success rate, explosiveness, run/pass, havoc) carry the factor. The dormancy is pinned
+by a **pace-invariance regression test** (`tests/test_phase3d.py`): on synthetic team pairs that differ
+only in per-play/pace, the factor's output must be unchanged — the *meaning* is pinned (the factor no
+longer responds to raw play-count differences), not just the arithmetic. *(Fix alternative — plumb a
+completed-games count — remains available in 2027 if attribution shows tempo has independent value.)*
+
+### 3d.3 — Output range ±4.0 → **±1.5**  (`reasoned`)  — **RATIFIED** (owner, 2026-07-04)
+
+**±1.5 = 0.6 × the ~2.5-pt HFA** (was ±4.0 = **1.6× HFA**, the largest single-factor range in the
+system). A style/efficiency mismatch is a **secondary `matchup` read** and must be capped well below home
+field; ±1.5 sits alongside the physical factors (bye 1.0, travel cap 1.5) — **well under 1.0× HFA**, as
+required. **The old ±4.0 was never scale-argued, merely inherited** — unlike every other coefficient in
+the system, it arrived without a stated magnitude justification, which is exactly why 3c.10 refused to
+let it freeze unexamined. **Early-season relevance (from 3d.1):** the factor is dormant until advanced
+stats arrive, so the range binds only in-season — but it freezes now, examined, closing the due date.
+
+### 3d.4 — Confidence bands rescaled to the ±1.5 range  (behavior-change)  — **RATIFIED** (owner, 2026-07-04)
+
+The confidence bands were keyed to the old ±4.0 range (`>3.0` VERY_HIGH, `>2.0` HIGH), leaving the top
+two tiers **dead** under ±1.5. Rescaled proportionally (`>1.2` / `>0.9` / `>0.6` / `>0.3`) so the factor
+uses its full range and can report meaningful confidence in-season. No new signal — a consequence of
+3d.3.
+
+*All ratified 2026-07-04; freeze at `v2026-frozen`. Not measured against 2025 (inadmissible); measured
+for real by Phase-4 attribution in 2026.*
