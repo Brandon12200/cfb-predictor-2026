@@ -1,0 +1,18 @@
+{
+  "_synthetic": true,
+  "_note": "SYNTHETIC — the ONE deliberately fake data file in this repo (D22 golden rider, owner 2026-07-09). 2026 wk1 is unplayed; these finals + closing observations are INVENTED for schema demonstration, crafted to exercise every graded-record semantic (win/loss/null-no-side; clv +/-/0.0/honest-missing close; closing-present-with-clv-null). docs/examples/graded_record_2026_week_01.json is reproduced from the committed v2 golden slate + this fixture (verify-phase-4). Never a source of real outcomes.",
+  "graded_at": "2026-08-31T12:00:00+00:00",
+  "generated_at": "2026-08-31T12:00:00+00:00",
+  "games": {
+    "clemson-vs-lsu-week1":           {"home_score": 31, "away_score": 17, "closing_spread": -12.3, "close_as_of": "2026-08-29T15:00:00+00:00"},
+    "colorado-vs-georgia-tech-week1": {"home_score": 24, "away_score": 17, "closing_spread": -6.3,  "close_as_of": "2026-08-29T15:00:00+00:00"},
+    "miami-vs-stanford-week1":        {"home_score": 20, "away_score": 45, "closing_spread": null,   "close_as_of": null},
+    "smu-vs-florida-state-week1":     {"home_score": 28, "away_score": 21, "closing_spread": 2.8,    "close_as_of": "2026-08-29T15:00:00+00:00"},
+    "baylor-vs-auburn-week1":             {"home_score": 21, "away_score": 24, "closing_spread": -7.0,  "close_as_of": "2026-08-29T15:00:00+00:00"},
+    "boston-college-vs-cincinnati-week1": {"home_score": 27, "away_score": 20, "closing_spread": null,  "close_as_of": null},
+    "louisville-vs-mississippi-week1":    {"home_score": 17, "away_score": 31, "closing_spread": -6.0,  "close_as_of": "2026-08-29T15:00:00+00:00"},
+    "nc-state-vs-virginia-week1":         {"home_score": 24, "away_score": 24, "closing_spread": null,  "close_as_of": null},
+    "north-carolina-vs-tcu-week1":        {"home_score": 14, "away_score": 35, "closing_spread": null,  "close_as_of": null},
+    "wisconsin-vs-notre-dame-week1":      {"home_score": 10, "away_score": 41, "closing_spread": -21.0, "close_as_of": "2026-08-29T15:00:00+00:00"}
+  }
+}

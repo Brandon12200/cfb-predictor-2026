@@ -100,9 +100,12 @@ def clv(vegas_spread: Any, closing_spread: Any, edge_direction: Any) -> float | 
     A **home** bet beats the close when ``vegas_spread > closing_spread`` (a higher / more
     home-favourable number) ⇒ ``clv = vegas_spread − closing_spread``. An **away** bet beats the
     close when ``closing_spread > vegas_spread`` ⇒ ``clv = closing_spread − vegas_spread``. Returns
-    ``None`` when either spread is missing (**not yet graded**, or honest-missing at grading). This
-    is the documented convention (SPEC §7 item 6); Phase 4 fills ``closing_spread`` from the closing
-    observation and calls this at grading time.
+    ``None`` when either spread is missing (**not yet graded**, or honest-missing at grading) **or
+    when no side was taken** (``edge_direction`` neither ``"home"`` nor ``"away"``): CLV is defined
+    from the bet side's perspective, so no side ⇒ no perspective ⇒ undefined ⇒ ``None`` (D22 / SCHEMA
+    §3). ``0.0`` means "our number exactly matched the close" and nothing else. This is the documented
+    convention (SPEC §7 item 6); Phase 4 fills ``closing_spread`` from the closing observation and
+    calls this at grading time.
     """
     if not isinstance(vegas_spread, (int, float)) or not isinstance(closing_spread, (int, float)):
         return None
@@ -110,7 +113,57 @@ def clv(vegas_spread: Any, closing_spread: Any, edge_direction: Any) -> float | 
         return round(vegas_spread - closing_spread, 2)
     if edge_direction == "away":
         return round(closing_spread - vegas_spread, 2)
-    return 0.0  # neutral — no side taken
+    return None  # no side taken (neutral) — CLV undefined, never 0.0 (D22 / f3)
+
+
+# ── Graded-record schema (Phase 4, D22) ─────────────────────────────────────────────────────────
+# Grading NEVER edits the byte-immutable ``data/predictions/`` files (D22, owner 2026-07-09). It
+# writes a SEPARATE append-only artifact ``data/graded/2026_week_NN.json`` keyed by ``game_id``; the
+# "filled" schema-v2 record exists only as an in-memory JOIN (predictions ⋈ graded) rendered in
+# reports, never materialized back to disk. This is a NEW schema, defined here at birth (define-
+# semantics-at-birth). Reproducibility carve-out: predictions are *claims* and are deterministic
+# from a frozen snapshot; gradings are *evented* outcomes stamped at wall-clock ``graded_at`` — the
+# graded artifact is deliberately NOT part of the snapshot reproducibility contract (SCHEMA §3).
+
+GRADED_SCHEMA_VERSION = 1
+
+# Canonical per-record key inventory for the graded artifact (the parity test pins the live writer +
+# the graded golden example to this exact set, mirroring V2_RECORD_KEYS).
+GRADED_RECORD_KEYS: tuple[str, ...] = (
+    "game_id", "home_team", "away_team", "week",
+    "closing_spread", "close_as_of", "clv", "ats_result", "is_hypothetical",
+    "home_score", "away_score", "graded_at",
+)
+
+
+def build_graded_record(pred: dict, result: dict, *, closing_spread: Any, close_as_of: str | None,
+                        clv_points: float | None, ats_result: str | None, graded_at: str) -> dict:
+    """Serialize one grading into a graded-record (keys per ``GRADED_RECORD_KEYS``).
+
+    Pure serializer — the grading computation (``closing_observation`` → ``closing_spread``, ``clv``,
+    ``analytics.calibration_evidence.ats_outcome`` → ``ats_result``) is orchestrated by
+    ``analytics.grading`` and passed in here, so ``utils`` stays free of an ``analytics`` dependency.
+
+    - ``closing_spread`` ``null`` = honest-missing (no closing line captured); a real ``0.0`` is a value.
+    - ``clv`` ``null`` = no closing line **or** no side taken (neutral); ``0.0`` = our number matched
+      the close (D22 / f3). ``clv_points`` is already rounded by ``prediction_schema.clv``.
+    - ``ats_result`` ``"win"``/``"loss"``/``"push"`` from the bet side, or ``null`` (not gradable / no side).
+    - ``is_hypothetical`` — the game was ``NO_BET`` (graded "what would have happened").
+    """
+    return {
+        "game_id": pred.get("game_id"),
+        "home_team": pred.get("home_team"),
+        "away_team": pred.get("away_team"),
+        "week": pred.get("week"),
+        "closing_spread": _round(closing_spread, 2),
+        "close_as_of": close_as_of,
+        "clv": clv_points,
+        "ats_result": ats_result,
+        "is_hypothetical": bool(pred.get("no_bet", False)) or pred.get("prediction_type") == "NO_BET",
+        "home_score": result.get("home_score"),
+        "away_score": result.get("away_score"),
+        "graded_at": graded_at,
+    }
 
 
 def _tier_from_pct_confidence(pct: Any) -> str | None:

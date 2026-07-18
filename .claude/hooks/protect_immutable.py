@@ -12,7 +12,7 @@ import os
 import sys
 
 PROTECTED = ("data/predictions/", "data/results/", "data/archive/", "data/lines/",
-             "data/ratings/", "data/projections/", "reports/")
+             "data/ratings/", "data/projections/", "data/graded/", "reports/")
 
 try:
     payload = json.load(sys.stdin)
