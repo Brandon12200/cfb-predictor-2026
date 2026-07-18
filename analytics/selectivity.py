@@ -37,17 +37,21 @@ def selectivity_report(joined: list[dict]) -> dict[str, Any]:
     no_bet_lean = [r for r in no_bet if r.get("ats_result") in ("win", "loss", "push")]
     no_lean = [r for r in no_bet if r.get("ats_result") is None]
 
+    placed_rate = _rate(placed)
+    lean_rate = _rate(no_bet_lean)
+    # The skip is validated when the placed bets we DID make beat the NO_BET leans we skipped.
+    if not no_bet_lean or not placed or placed_rate["ats_win_pct"] is None or lean_rate["ats_win_pct"] is None:
+        skip_validated = None
+    else:
+        skip_validated = placed_rate["ats_win_pct"] >= lean_rate["ats_win_pct"]
+
     all_no_bet = len(placed) == 0 and len(no_bet) > 0
     return {
-        "placed": _rate(placed),
-        "no_bet_hypothetical": _rate(no_bet_lean),
+        "placed": placed_rate,
+        "no_bet_hypothetical": lean_rate,
         "no_lean": {"n_games": len(no_lean),
                     "note": "neutral no-lean games — no side, no ATS/CLV (f3)"},
-        "skip_validated": (
-            None if not no_bet_lean or not placed
-            else _rate(no_bet_lean)["ats_win_pct"] is not None
-            and (_rate(placed)["ats_win_pct"] or 0) >= (_rate(no_bet_lean)["ats_win_pct"] or 0)
-        ),
+        "skip_validated": skip_validated,
         "all_no_bet_slate": all_no_bet,
         "note": ("Entire slate NO_BET — selectivity working as designed (dormancy-as-design, 3c.9), "
                  "not breakage." if all_no_bet else "Mixed slate."),

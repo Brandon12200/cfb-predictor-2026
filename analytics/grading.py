@@ -51,7 +51,9 @@ def grade_game(pred: dict, result: dict, closing_obs: dict | None, *, graded_at:
 
 
 def lines_key(pred: dict) -> str:
-    """The ``data/lines/`` store key (``{AWAY}@{HOME}``) for a prediction (canonical UPPERCASE)."""
+    """The ``data/lines/`` store key (``{AWAY}@{HOME}``) for a prediction. Team names are already
+    canonical UPPERCASE throughout the pipeline (the snapshot builder writes the same key), so this
+    does not re-normalize; it relies on that upstream invariant holding on both sides of the join."""
     return f"{pred.get('away_team')}@{pred.get('home_team')}"
 
 
