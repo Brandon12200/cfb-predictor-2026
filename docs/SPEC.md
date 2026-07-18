@@ -250,7 +250,7 @@ This project is implemented by Claude Code. The following structures make that r
 
 Rules that must NEVER break are enforced with Claude Code hooks (PreToolUse blocking), because hooks are deterministic where prompt instructions are probabilistic:
 
-1. **Immutable history:** block any edit/delete under `data/predictions/`, `data/results/`, `data/archive/`, and `reports/` for past weeks. Prediction and result files are append-only artifacts produced by the pipeline.
+1. **Immutable history:** block any edit/delete under the append-only artifact dirs — `data/predictions/` (byte-immutable claims, D22), `data/results/`, `data/archive/`, `data/lines/`, `data/ratings/`, `data/projections/`, `data/graded/` (outcomes + derived computations). These are append-only artifacts produced by the pipeline. **`reports/` is NOT guarded** — per **D23** it holds *regenerable renderings* (pure functions over the above; git history is their audit trail), which the Sunday pipeline regenerates each run (§10.3).
 2. **Freeze enforcement:** after the `v2026-frozen` tag exists, block edits to `factors/`, `engine/`, and weight/threshold config. Changes require the human owner to remove the hook deliberately — that friction is the point.
 3. **Secret hygiene:** block committing `.env` or anything matching key patterns.
 4. **Quality gate:** a Stop/PostToolUse hook runs `ruff` + the affected tests so sessions can't end with a broken build.

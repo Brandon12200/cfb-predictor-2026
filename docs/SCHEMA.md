@@ -121,6 +121,11 @@ reproducibility contract**. `graded_at` is a real wall-clock timestamp, not froz
 the graded golden pins its arithmetic (`closing_spread`/`clv`/`ats_result`) via a fixed synthetic
 fixture, not byte-identity over a live-stamped field.
 
+**Artifact taxonomy (D23).** Three tiers, with different mutability contracts:
+- **Claims** — `data/predictions/` — **byte-immutable forever** (D22): a pre-kickoff claim is never edited.
+- **Outcomes + derived computations** — `data/results/`, `data/archive/`, `data/lines/`, `data/ratings/`, `data/projections/`, `data/graded/` — **append-only** (new files/entries added as events/measurements arrive; existing entries never edited). All guarded by the immutability hook.
+- **Renderings** — `reports/` — **pure functions over the above, regenerable at will** (deterministic for frozen inputs like the 2025 retro; fresh for in-season reports as data accrues). A rendering's audit trail is **git history**, not on-disk immutability, so `reports/` is **NOT** hook-guarded and is overwritten on regeneration.
+
 **2025 v1→v2 converter** (`convert_v1_to_v2`, **pure + read-only** — never rewrites the append-only `data/archive/2025` files). Lossy mappings for fields v1 never recorded: `game_id` kept as-is (v1 `{AWAY}_{HOME}_week{N}` join key); `no_bet=False` (v1 predates NO_BET); `confidence_tier` derived from v1's 0–100 confidence via the ratified boundaries; v1's 0–100 confidence carried as `confidence_pct` (kept distinct from the v2 0–1 `confidence`, which is `null`); `factor_breakdown` kept flat + tagged `_v1_flat: true` (per-sub-signal unrecoverable); `power_rating_spread`/`closing_spread`/`clv`/`graded_at`/`line_as_of`/`model_version` `null`.
 
 ### Reproducibility contract (define once; CLI + test share it)

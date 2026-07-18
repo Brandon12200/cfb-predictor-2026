@@ -2,7 +2,11 @@
 """Generate analytics reports (Phase 4, SPEC §8 item 6) — freeze-exempt.
 
 Renders plain-markdown reports from committed JSON (predictions ⋈ graded); no API, no external
-services. Reports are append-only historical artifacts (the pipeline commits them, Phase 5).
+services. Reports are **regenerable renderings** (D23), not append-only history: a pure function over
+the claims/outcomes/derived artifacts, reproduced by re-running this generator (deterministically for
+frozen inputs like the 2025 retro; freshly for in-season reports as data accrues). A rendering's audit
+trail is git history — so `reports/` is NOT guarded by the immutability hook; overwriting is expected.
+The pipeline (Phase 5) regenerates + commits them each run.
 
 Usage:
   python scripts/build_reports.py --week N [--year 2026]   -> reports/2026_week_NN.md

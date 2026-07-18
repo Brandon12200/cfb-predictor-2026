@@ -3,7 +3,11 @@
 Renders plain-markdown weekly + season reports (no external services) from the JOIN (predictions ⋈
 graded). Says plainly when a quiet slate is selectivity, not breakage (L4 / 3c.9). The report layer is
 the cut-first tail of Phase 4 (SPEC §15.1): a pure downstream renderer over stored JSON — cutting it
-loses nothing permanent (reports recompute from the artifacts anytime).
+loses nothing permanent (reports recompute from the artifacts anytime). Reports are **regenerable
+renderings** (D23), not append-only history — git is their audit trail; `reports/` is not hook-guarded.
+
+General rule: any honest-missing / honest-empty cell states its reason inline (September readers see
+cells, not the preamble).
 """
 
 from __future__ import annotations
