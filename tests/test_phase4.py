@@ -184,6 +184,36 @@ def test_attribution_unavailable_on_v1_flat_archive():
     assert a["meta"]["attributable"] is False       # v1 flat breakdown — never faked per-signal
 
 
+def _retro_weeks():
+    from analytics.grading import build_graded
+    from utils.prediction_schema import convert_v1_to_v2
+    weeks = []
+    for pf in sorted((ROOT / "data/archive/2025/predictions").glob("*.json")):
+        wk = int(pf.stem.split("_week_")[1])
+        v1 = json.loads(pf.read_text())
+        env = {"meta": {"week": wk, "year": 2025},
+               "predictions": [convert_v1_to_v2(p) for p in v1["predictions"]]}
+        res = json.loads((ROOT / f"data/archive/2025/results/2025_week_{wk:02d}_results.json").read_text())
+        weeks.append((env, build_graded(env, res["results"], None, graded_at="t")))
+    return weeks
+
+
+def test_report_cells_state_their_reason_inline():
+    """The general rule: any honest-missing / honest-empty cell explains itself inline (September
+    readers see cells, not preambles)."""
+    from analytics.reports import render_season, render_week
+    # 2025 retro: honest-missing CLV, the tier non-separation finding, and the v1 no-NO_BET note.
+    retro = render_season(_retro_weeks(), title="retro")
+    assert "no closing lines captured (honest-missing)" in retro
+    assert "Finding:" in retro and "not distinguishing anything" in retro
+    assert "predates the NO_BET concept" in retro
+    assert "Mixed slate." not in retro                     # the orphaned fragment is gone
+    # all-NO_BET golden week: empty KPI + empty tier table each say why.
+    weekly = render_week(json.loads(V2_GOLDEN.read_text()), json.loads(GRADED_GOLDEN.read_text()))
+    assert "No bets placed" in weekly
+    assert "No graded bets in these tiers yet" in weekly
+
+
 def test_retro_reconciles_the_d17_baseline():
     """The 2025 retro over the full archive must reproduce the honest D17 baseline (~46.6% ATS over
     294 graded bets) — a regression pin on the whole grading + KPI stack."""

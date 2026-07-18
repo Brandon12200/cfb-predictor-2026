@@ -66,22 +66,26 @@ check("graded records match the ratified key inventory + schema_version, and ann
       and all(set(r) == set(GRADED_RECORD_KEYS) for r in _GOLDEN["graded"]))
 
 # Requirement-2: grading the canonical v2 record exercises the FULL ATS ternary (win/loss/push/null).
+# Each outcome is its own check so a regression pinpoints the broken game, not one opaque line.
 _by = {r["game_id"]: r for r in _GOLDEN["graded"]}
-_win = _by["clemson-vs-lsu-week1"]["ats_result"] == "win" and _by["clemson-vs-lsu-week1"]["clv"] == 1.0
-_loss_hm = (_by["miami-vs-stanford-week1"]["ats_result"] == "loss"        # honest-missing close
-            and _by["miami-vs-stanford-week1"]["closing_spread"] is None
-            and _by["miami-vs-stanford-week1"]["clv"] is None)
-_null_side = (_by["baylor-vs-auburn-week1"]["ats_result"] is None          # neutral no-side
-              and _by["baylor-vs-auburn-week1"]["clv"] is None
-              and _by["baylor-vs-auburn-week1"]["closing_spread"] == -7.0)
-_zero = _by["smu-vs-florida-state-week1"]["clv"] == 0.0                     # legit 0.0
+check("golden ATS 'win' + clv +1.0 (clemson-vs-lsu)",
+      _by["clemson-vs-lsu-week1"]["ats_result"] == "win" and _by["clemson-vs-lsu-week1"]["clv"] == 1.0)
+check("golden ATS 'loss' with honest-missing close ⇒ closing/clv null, ats present (miami-vs-stanford)",
+      _by["miami-vs-stanford-week1"]["ats_result"] == "loss"
+      and _by["miami-vs-stanford-week1"]["closing_spread"] is None
+      and _by["miami-vs-stanford-week1"]["clv"] is None)
+check("golden no-side (neutral) ⇒ ats/clv null even with a captured close (baylor-vs-auburn, f3)",
+      _by["baylor-vs-auburn-week1"]["ats_result"] is None
+      and _by["baylor-vs-auburn-week1"]["clv"] is None
+      and _by["baylor-vs-auburn-week1"]["closing_spread"] == -7.0)
+check("golden clv exactly 0.0 is a legit value for a taken side (smu-vs-florida-state)",
+      _by["smu-vs-florida-state-week1"]["clv"] == 0.0)
 # push needs an integer line the golden can't provide → pinned on a crafted v2-shaped record.
 _push_pred = {"game_id": "x-vs-y-week1", "home_team": "Y", "away_team": "X", "week": 1,
               "vegas_spread": -7.0, "edge_direction": "home", "no_bet": False,
               "prediction_type": "SLIGHT_CONTRARIAN"}
-_push = ats_outcome(_push_pred, {"home_score": 28, "away_score": 21}) == "push"
-check("grades the schema-v2 golden with the FULL ATS ternary (win/loss/push/null) + clv +/-/0.0/null",
-      _win and _loss_hm and _null_side and _zero and _push)
+check("ATS 'push' ternary (margin + spread == 0, integer line)",
+      ats_outcome(_push_pred, {"home_score": 28, "away_score": 21}) == "push")
 
 # Idempotent + per-game: grade_game is pure; merge_graded is a no-op when nothing new completed.
 _g1 = grade_game(_push_pred, {"home_score": 28, "away_score": 21}, None, graded_at="t")

@@ -14,7 +14,7 @@ _300/300 games graded across 14 week(s)._
 | Sharpe | -0.1158 |
 | max drawdown | -37.739 units |
 | longest losing streak | 12 |
-| avg CLV | — pts (beat close —, n=0) |
+| avg CLV | — no closing lines captured (honest-missing), n=300 |
 
 ### Calibration by tier
 
@@ -26,6 +26,8 @@ Brier score: **0.2898** (n=294; lower is better, 0.25 = no-skill).
 | B | 19 | 47.4% | 64.4% | [27%–68%] |
 | C | 0 | — | — | — |
 
+_**Finding:** 94% of graded bets landed in tier A; tier ATS win% ranged 46.6%–47.4% (a 1-point spread). The confidence score barely separated winners from losers — the tiers are not distinguishing anything (L3 / D17): confidence clustered, and the top tier hit at the overall rate._
+
 ### Selectivity (was the skip right?)
 
 | bucket | games | ATS win% |
@@ -34,7 +36,7 @@ Brier score: **0.2898** (n=294; lower is better, 0.25 = no-skill).
 | NO_BET (hypothetical lean) | 0 | — |
 | NO_BET (neutral, no lean) | 0 | — (no side) |
 
-_Mixed slate._
+_No NO_BET games — this season/model predates the NO_BET concept (v1): every game was a placed bet, so the NO_BET rows are 0/0 by construction, not missing data._
 
 ### Per-factor attribution
 

@@ -43,6 +43,14 @@ def _kpi_block(ctx: dict) -> list[str]:
     ats, roi, clv = k["ats"], k["roi_at_110"], k["clv"]
     w = ats["wilson_95"]
     wil = f"[{w[0]:.0%}–{w[1]:.0%}]" if w else "—"
+    # Honest-missing/empty CLV states its reason inline (a bare em-dash reads as a bug).
+    if clv["n"]:
+        clv_cell = (f"{_num(clv['avg_clv'])} pts (beat close {_pct(clv['clv_positive_pct'])}, "
+                    f"n={clv['n']})")
+    elif clv["n_no_clv"]:
+        clv_cell = f"— no closing lines captured (honest-missing), n={clv['n_no_clv']}"
+    else:
+        clv_cell = "— (no placed bets)"
     lines = ["### Placeable strategy (real bets)", "",
              "| metric | value |", "|---|---|",
              f"| ATS record | {ats['wins']}-{ats['losses']}-{ats['pushes']} |",
@@ -51,8 +59,7 @@ def _kpi_block(ctx: dict) -> list[str]:
              f"| Sharpe | {k['sharpe']['sharpe'] if k['sharpe']['sharpe'] is not None else '—'} |",
              f"| max drawdown | {k['max_drawdown']} units |",
              f"| longest losing streak | {k['longest_losing_streak']} |",
-             f"| avg CLV | {_num(clv['avg_clv']) if clv['avg_clv'] is not None else '—'} pts "
-             f"(beat close {_pct(clv['clv_positive_pct'])}, n={clv['n']}) |"]
+             f"| avg CLV | {clv_cell} |"]
     if ats["n_graded"] == 0:
         lines += ["", "_No bets placed — the model declined the slate. Selectivity working as "
                   "designed (dormancy-as-design, 3c.9), not breakage._"]
@@ -60,15 +67,37 @@ def _kpi_block(ctx: dict) -> list[str]:
 
 
 def _calibration_block(ctx: dict) -> list[str]:
+    rows = ctx["calibration"]
     lines = ["### Calibration by tier", "",
              f"Brier score: **{ctx['brier']['brier'] if ctx['brier']['brier'] is not None else '—'}** "
              f"(n={ctx['brier']['n']}; lower is better, 0.25 = no-skill).", "",
              "| tier | n | ATS win% | mean conf | Wilson 95% |", "|---|---|---|---|---|"]
-    for row in ctx["calibration"]:
+    for row in rows:
         w = row["wilson_95"]
         lines.append(f"| {row['tier']} | {row['n']} | {_pct(row['ats_win_pct'])} | "
                      f"{_pct(row['mean_confidence'])} | "
                      f"{f'[{w[0]:.0%}–{w[1]:.0%}]' if w else '—'} |")
+    # The finding states itself inline — an empty-looking breakdown IS the L3/D17 result.
+    lines.append("")
+    total = sum(r["n"] for r in rows)
+    graded = [r for r in rows if r["n"] and r["ats_win_pct"] is not None]
+    if total == 0:
+        lines.append("_No graded bets in these tiers yet — tier separation unmeasured. An empty "
+                     "breakdown here is the honest state (e.g. an all-NO_BET slate), not a bug._")
+    else:
+        dom = max(rows, key=lambda r: r["n"])
+        pcts = [r["ats_win_pct"] for r in graded]
+        span = (max(pcts) - min(pcts)) if pcts else 0.0
+        finding = f"**Finding:** {dom['n'] / total:.0%} of graded bets landed in tier {dom['tier']}"
+        if len(graded) > 1:
+            finding += (f"; tier ATS win% ranged {min(pcts):.1%}–{max(pcts):.1%} "
+                        f"(a {span * 100:.0f}-point spread)")
+        finding += "."
+        if dom["n"] / total >= 0.80 and span < 0.05:
+            finding += (" The confidence score barely separated winners from losers — the tiers are "
+                        "not distinguishing anything (L3 / D17): confidence clustered, and the top "
+                        "tier hit at the overall rate.")
+        lines.append(f"_{finding}_")
     return lines
 
 

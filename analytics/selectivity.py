@@ -46,6 +46,15 @@ def selectivity_report(joined: list[dict]) -> dict[str, Any]:
         skip_validated = placed_rate["ats_win_pct"] >= lean_rate["ats_win_pct"]
 
     all_no_bet = len(placed) == 0 and len(no_bet) > 0
+    # The note states the shape of the slate inline — the 0/0 NO_BET rows must not read as missing data.
+    if all_no_bet:
+        note = ("Entire slate NO_BET — selectivity working as designed (dormancy-as-design, 3c.9), "
+                "not breakage.")
+    elif len(no_bet) == 0:
+        note = ("No NO_BET games — this season/model predates the NO_BET concept (v1): every game was a "
+                "placed bet, so the NO_BET rows are 0/0 by construction, not missing data.")
+    else:
+        note = "Mixed slate — placed bets alongside NO_BET skips (the skip is graded hypothetically)."
     return {
         "placed": placed_rate,
         "no_bet_hypothetical": lean_rate,
@@ -53,6 +62,6 @@ def selectivity_report(joined: list[dict]) -> dict[str, Any]:
                     "note": "neutral no-lean games — no side, no ATS/CLV (f3)"},
         "skip_validated": skip_validated,
         "all_no_bet_slate": all_no_bet,
-        "note": ("Entire slate NO_BET — selectivity working as designed (dormancy-as-design, 3c.9), "
-                 "not breakage." if all_no_bet else "Mixed slate."),
+        "no_bet_total": len(no_bet),
+        "note": note,
     }
