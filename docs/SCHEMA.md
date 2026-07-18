@@ -77,12 +77,54 @@ Written by the freeze-exempt slate writer (`analytics.predictions.build_predicti
 
 **Envelope** `meta`: `schema_version` (int, **= 2**), `model_version` (git tag — see VOLATILE), `snapshot_id`, `week`, `year`, `generated_at` (frozen from the snapshot's `built_at`), `engine`, `prediction_count`, `coverage`.
 
-**Per record** (`V2_RECORD_KEYS`, exact inventory pinned by the parity test): `game_id` (new `{away}-vs-{home}-week{N}` format), `home_team`, `away_team`, `week`, `vegas_spread`, `contrarian_spread`, `predicted_edge`, `edge_direction`, `prediction_type` (incl. `NO_BET`), `no_bet` (bool), `no_bet_reason`, `confidence_tier` (A/B/C; **C is a diagnostic grade, never a live bet** — 3c.6), `confidence` (**0–1** scale, unlike v1's 0–100), `power_rating_spread`, `factor_breakdown` (**per-sub-signal**: `{factor: {value, weighted_value, activated, category}}`, not the v1 flat `{category: float}`), `data_quality` (**0–1**), `line_as_of` (the prediction-time observation's `fetched_at`), and the **grading-filled** `closing_spread`, `clv`, `graded_at`.
+**Per record** (`V2_RECORD_KEYS`, exact inventory pinned by the parity test): `game_id` (new `{away}-vs-{home}-week{N}` format), `home_team`, `away_team`, `week`, `vegas_spread`, `contrarian_spread`, `predicted_edge`, `edge_direction`, `prediction_type` (incl. `NO_BET`), `no_bet` (bool), `no_bet_reason`, `confidence_tier` (A/B/C; **C is a diagnostic grade, never a live bet** — 3c.6), `confidence` (**0–1** scale, unlike v1's 0–100), `power_rating_spread`, `factor_breakdown` (**per-sub-signal**: `{factor: {value, weighted_value, activated, category}}`, not the v1 flat `{category: float}`), `data_quality` (**0–1**), `line_as_of` (the prediction-time observation's `fetched_at`), and the grading slots `closing_spread`, `clv`, `graded_at` — which stay **`null` on disk forever** (grading writes a separate artifact, D22 / §3a below).
 
-**Grading-filled fields (Phase 4 fills; convention defined here at birth).**
-- `closing_spread` = the home-team consensus spread from `data.normalize.odds.closing_observation` (last observation ≤ kickoff); `null` if no closing line was captured (**honest-missing**).
-- `clv` = closing-line value **in points, from the bet side's perspective — positive = our number beat the close** (`utils.prediction_schema.clv`): a **home** bet ⇒ `vegas_spread − closing_spread`; an **away** bet ⇒ `closing_spread − vegas_spread`.
-- **`null` vs zero (push) semantics:** `null` is a *missing-ness* signal, never a value. `clv=null` + `graded_at=null` ⇒ **not yet graded**; `graded_at` set + `closing_spread=null` ⇒ **graded, no closing line (honest-missing)**; `graded_at` set + `closing_spread` present ⇒ `clv` computed. A **CLV of exactly `0.0`** (our number == the close) is a **legitimate value, not `null`** — the line didn't move for/against us. This is distinct from an **ATS push** (the bet ties the number, `home_margin + spread == 0`): that is a *bet-outcome* concept, graded separately (Phase 4 adds an ATS win/loss/push outcome field alongside `clv`; the existing push rule is `analytics/calibration_evidence.py::ats_outcome`, `abs < 1e-9` ⇒ `"push"`), and it is **not** encoded as a CLV value. Phase 4 implements this convention — it does not invent one.
+**Grading-filled slots — stay `null` on disk FOREVER (D22).** ⚠ The v2 record's `closing_spread`,
+`clv`, `graded_at` are **never written back into `data/predictions/`**. Per **D22** (owner,
+2026-07-09) prediction files are **byte-immutable forever** — the pre-kickoff commit is the
+pre-registration artifact, verifiable by checksum. Grading writes a **separate append-only graded
+artifact** (`data/graded/2026_week_NN.json`, §3a below); the "filled" record exists only as an
+in-memory **JOIN** (predictions ⋈ graded) rendered in reports, never materialized to disk. These
+three slots remain in the schema (they define the convention *at birth*) but are permanently `null`
+in the on-disk prediction file: **predictions are claims, results are outcomes.** The convention the
+graded artifact implements:
+- `closing_spread` = the home-team consensus spread from `data.normalize.odds.closing_observation` (last observation ≤ that game's own kickoff — per-game as-of-T, never a weekly cutoff); `null` if no closing line was captured (**honest-missing**).
+- `clv` = closing-line value **in points, from the bet side's perspective — positive = our number beat the close** (`utils.prediction_schema.clv`): a **home** bet ⇒ `vegas_spread − closing_spread`; an **away** bet ⇒ `closing_spread − vegas_spread`; **`null` when no side was taken** (`edge_direction` neither home nor away — no side ⇒ no perspective ⇒ undefined, f3), distinct from a real `0.0`.
+- **`null` vs zero (push) semantics:** `null` is a *missing-ness / no-side* signal, never a value. `clv=null` + `graded_at=null` ⇒ **not yet graded**; `graded_at` set + `closing_spread=null` ⇒ **graded, no closing line (honest-missing)**; `graded_at` set + `closing_spread` present + a side taken ⇒ `clv` computed; a **no-side (neutral) game** ⇒ `clv=null` **even when a closing line was captured** (no perspective to value it from). A **CLV of exactly `0.0`** (our number == the close, on a side that WAS taken) is a **legitimate value, not `null`**. This is distinct from an **ATS push** (the bet ties the number, `home_margin + spread == 0`): a *bet-outcome* concept carried by the graded artifact's `ats_result` (`analytics/calibration_evidence.py::ats_outcome`, `abs < 1e-9` ⇒ `"push"`), **not** encoded as a CLV value. Phase 4 implements this convention — it does not invent one.
+
+### 3a. Graded artifact (`data/graded/2026_week_NN.json`, D22 / Phase 4) — grading output, separate from claims
+
+Grading's output store, keyed by `game_id`, **append-only** (a game's entry is immutable once graded;
+new games are appended as they complete — same semantics as `data/lines/`, so the Tuesday catch-up
+grade grows the week's file across commits). Built by `analytics.grading` (freeze-exempt), written by
+`scripts/grade.py`. The immutability hook (`.claude/hooks/protect_immutable.py`) guards `data/graded/`.
+Canonical golden (SYNTHETIC — wk1 unplayed): `docs/examples/graded_record_2026_week_01.json`,
+reproduced from the v2 golden slate + `docs/examples/graded_fixture_2026_week_01.json`.
+
+**Envelope** `meta`: `schema_version` (**= 1**, the graded schema), `week`, `year`, `generated_at`,
+`engine` (`"grading_v1"`), `graded_count`, `coverage` (`predicted`, `graded`, `ungraded[]`,
+`no_closing_line[]`).
+
+**Per record** (`GRADED_RECORD_KEYS`, pinned by the parity test): `game_id`, `home_team`, `away_team`,
+`week`, `closing_spread` (`null`=honest-missing), `close_as_of` (the closing observation's `fetched_at`
+provenance; `null` if missing), `clv` (per the convention above), `ats_result`
+(`"win"`/`"loss"`/`"push"`/`null`, the D22/f2 ratified field — `null` = not gradable or no side),
+`is_hypothetical` (bool — the game was `NO_BET`, graded "what would have happened": most NO_BET games
+have a hypothetical lean and grade normally; a truly neutral no-lean game gets `ats_result`/`clv`
+`null`, its own selectivity bucket), `home_score`, `away_score` (the finals graded against), `graded_at`.
+
+**Reproducibility carve-out (doctrine, not accident — owner rider).** Predictions are **claims** and
+are deterministic from a frozen snapshot (§3 byte-identity contract). Gradings are **evented
+outcomes** — stamped at wall-clock `graded_at`, dependent on when a game completed and how far the
+`data/lines/` series had grown — so the graded artifact is **deliberately NOT part of the snapshot
+reproducibility contract**. `graded_at` is a real wall-clock timestamp, not frozen from `built_at`;
+the graded golden pins its arithmetic (`closing_spread`/`clv`/`ats_result`) via a fixed synthetic
+fixture, not byte-identity over a live-stamped field.
+
+**Artifact taxonomy (D23).** Three tiers, with different mutability contracts:
+- **Claims** — `data/predictions/` — **byte-immutable forever** (D22): a pre-kickoff claim is never edited.
+- **Outcomes + derived computations** — `data/results/`, `data/archive/`, `data/lines/`, `data/ratings/`, `data/projections/`, `data/graded/` — **append-only** (new files/entries added as events/measurements arrive; existing entries never edited). All guarded by the immutability hook.
+- **Renderings** — `reports/` — **pure functions over the above, regenerable at will** (deterministic for frozen inputs like the 2025 retro; fresh for in-season reports as data accrues). A rendering's audit trail is **git history**, not on-disk immutability, so `reports/` is **NOT** hook-guarded and is overwritten on regeneration.
 
 **2025 v1→v2 converter** (`convert_v1_to_v2`, **pure + read-only** — never rewrites the append-only `data/archive/2025` files). Lossy mappings for fields v1 never recorded: `game_id` kept as-is (v1 `{AWAY}_{HOME}_week{N}` join key); `no_bet=False` (v1 predates NO_BET); `confidence_tier` derived from v1's 0–100 confidence via the ratified boundaries; v1's 0–100 confidence carried as `confidence_pct` (kept distinct from the v2 0–1 `confidence`, which is `null`); `factor_breakdown` kept flat + tagged `_v1_flat: true` (per-sub-signal unrecoverable); `power_rating_spread`/`closing_spread`/`clv`/`graded_at`/`line_as_of`/`model_version` `null`.
 

@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """PreToolUse hook (IMPLEMENTATION §2.1): protect append-only historical artifacts.
 
-Blocks Edit/Write/NotebookEdit that would MODIFY an existing file under
-data/predictions/, data/results/, data/archive/, or reports/. Creating a brand
-new file there (what the pipeline does) is allowed; overwriting/editing an
-existing one is not (CLAUDE.md binding principle 5). Exit code 2 blocks the call.
+Artifact taxonomy (D23): **claims** (`data/predictions/`) are byte-immutable forever (D22);
+**outcomes + derived computations** (`data/results/`, `data/archive/`, `data/lines/`,
+`data/ratings/`, `data/projections/`, `data/graded/`) are append-only (new files/entries added,
+existing ones never edited). Both are guarded here. **Renderings** (`reports/`) are pure functions
+over those artifacts, regenerable at will — their audit trail is git history — so they are NOT
+guarded (D23, owner 2026-07-09).
+
+Blocks Edit/Write/NotebookEdit that would MODIFY an existing guarded file; creating a brand new file
+there (what the pipeline does) is allowed. Exit code 2 blocks the call.
 """
 
 import json
@@ -12,7 +17,7 @@ import os
 import sys
 
 PROTECTED = ("data/predictions/", "data/results/", "data/archive/", "data/lines/",
-             "data/ratings/", "data/projections/", "reports/")
+             "data/ratings/", "data/projections/", "data/graded/")
 
 try:
     payload = json.load(sys.stdin)
@@ -35,9 +40,9 @@ for prefix in PROTECTED:
         if os.path.exists(path):
             sys.stderr.write(
                 f"Blocked: {rel} is an append-only historical artifact "
-                f"(CLAUDE.md principle 5). Editing/overwriting existing "
-                f"prediction/result/archive/report files is not allowed; only "
-                f"the pipeline appends new files.\n"
+                f"(CLAUDE.md principle 5 / D22 / D23). Editing/overwriting existing "
+                f"prediction/result/archive/graded files is not allowed; only "
+                f"new files may be added. (Renderings under reports/ are regenerable — not guarded.)\n"
             )
             sys.exit(2)
         break

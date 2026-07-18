@@ -345,15 +345,28 @@ next phases and the freeze:
    land pre-tag because fixing their style debt **edits freeze-bound files**. (b) The `v2026-frozen` tag
    itself, the pre-freeze **calibration audit** (`calibration-auditor` agent), and extending the
    freeze-enforcement hook to `factors/`/`engine/`/calibration config at tag time.
-2. **Phase 4 (SPEC §8, no calibration):** fill `closing_spread`/`clv` at grading per the ratified
-   convention (SCHEMA.md — positive = beat the close; null-vs-push semantics); Brier/calibration by tier;
-   per-factor **attribution** answering the open `reasoned` CALIBRATION_LOG questions; NO_BET selectivity
-   grading; report generation. Phase 4 adds an ATS win/loss/**push** outcome field alongside `clv`.
+2. **Phase 4 (SPEC §8, no calibration) — ✅ DONE (this branch).** Grading writes a **separate**
+   append-only artifact `data/graded/YYYY_week_NN.json` (**D22**: prediction files are byte-immutable;
+   the "filled" v2 record is an in-memory JOIN, never persisted); `clv()` neutral→`None` (f3); the
+   graded-record schema (`GRADED_RECORD_KEYS`, `build_graded_record`, golden + fixture) ratified at the
+   gate; `analytics/grading.py` (pure idempotent `grade_game` + `build_graded` + `merge_graded`) +
+   `scripts/grade.py`; the reporting/attribution cluster (`analytics/{kpis,calibration,attribution,
+   selectivity,join,reports}.py` + `scripts/build_reports.py`) over the JOIN — Brier/calibration by
+   tier, ATS%/ROI/Sharpe/drawdown/streak with Wilson CIs, per-sub-signal attribution (reasoned→
+   measured), NO_BET selectivity. `make verify-phase-4` green; the 2025 retro (`reports/2025_retro.md`)
+   reproduces the honest D17 baseline (46.6% ATS / −11.0% ROI). `data/graded/` added to the immutability
+   hook. **Core/reporting seam:** grading + CLV is never-cut core (Phase-5 grade job depends on it); the
+   reporting cluster is the cut-first tail.
 3. **Phase 5 (SPEC §10 + `docs/PHASE5_NOTES.md`):** the automation pipeline with the refined cadence
    (Tuesday catch-up grade + predict; daily Wed–Sat line capture; cron slack) and the preseason validation
    regimen; resolve the two design questions (commit identity, branch protection).
 4. **Retire the Phase-0 dev-script cluster** (`factor_validator`, `performance_analyzer`, `bet_evaluator`)
-   when Phase 4's `analytics/` replaces the ad-hoc reporting scripts (as noted in the Phase-0 audit above).
+   — deferred, not done in Phase 4 (cut-first tail). `analytics/kpis.py` is now the consolidated KPI home
+   (ATS/ROI/Sharpe/drawdown/streak/Wilson/CLV over graded records), but **`scripts/grading.py` +
+   `scripts/calculate_accuracy.py` are deliberately KEPT** (owner rider, Phase-4): they are the relabeled
+   **D17 artifact** — the always-home vs model's-own-number diagnostic + the "where the 57% came from"
+   explanation are a historical exhibit that must stay findable, so they survive the absorption. Retire
+   the dev-script cluster in a later cleanup, never the D17 exhibit.
 
 ## MarketSentiment wiring fix (Bug #7) — 2026-07-04
 
