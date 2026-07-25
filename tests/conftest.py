@@ -8,8 +8,20 @@ the full suite run deterministically offline.
 """
 
 import time
+from pathlib import Path
 
 import pytest
+
+# The real, committed artifact directories. A test must never write here — `data/predictions/`
+# holds byte-immutable claims (D22) and the rest are append-only history (D23). Tests that
+# exercise a writer point it at `tmp_path` instead (see `test_predict_week_save_refuses_overwrite_d22`,
+# which monkeypatches `build_predictions.PREDICTIONS_DIR`).
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_PROTECTED_ARTIFACT_DIRS = (
+    _REPO_ROOT / "data" / "predictions",
+    _REPO_ROOT / "data" / "results",
+    _REPO_ROOT / "data" / "graded",
+)
 
 # Files that assert on real timing/HTTP behavior and must keep real time.sleep
 # and real (mocked-per-test) request handling — do not apply the global patches.
@@ -51,3 +63,40 @@ def _block_real_network(request, monkeypatch):
         )
 
     monkeypatch.setattr(requests.sessions.Session, "request", _blocked)
+
+
+def _artifact_fingerprint(dirs: tuple[Path, ...] | None = None) -> dict[str, float]:
+    """Path -> mtime for every file under `dirs` (default: the protected artifact dirs)."""
+    seen: dict[str, float] = {}
+    for d in (_PROTECTED_ARTIFACT_DIRS if dirs is None else dirs):
+        if d.is_dir():
+            for f in d.rglob("*"):
+                if f.is_file():
+                    seen[str(f)] = f.stat().st_mtime
+    return seen
+
+
+@pytest.fixture(autouse=True)
+def _no_writes_to_real_artifact_dirs():
+    """Fail any test that creates, deletes, or modifies a real committed artifact.
+
+    A reviewer's manual `--save` run once left a stray file under `data/predictions/`. The
+    existing save test patches `PREDICTIONS_DIR` to `tmp_path`, and that patch only binds because
+    `cli/app`'s save path imports the constant at call time — a refactor to a module-level import
+    would silently re-point the test at the real directory. This guard makes that failure loud
+    instead of leaving an untracked prediction claim in the working tree.
+    """
+    # Bind the directory list at setup: a test that monkeypatches the module tuple (the guard's
+    # own regression pin does) must not redirect this comparison.
+    dirs = tuple(_PROTECTED_ARTIFACT_DIRS)
+    before = _artifact_fingerprint(dirs)
+    yield
+    after = _artifact_fingerprint(dirs)
+    added = sorted(set(after) - set(before))
+    removed = sorted(set(before) - set(after))
+    changed = sorted(p for p in set(before) & set(after) if before[p] != after[p])
+    if added or removed or changed:
+        raise AssertionError(
+            "test wrote to a real committed artifact directory (use tmp_path instead) — "
+            f"added={added} removed={removed} modified={changed}"
+        )
