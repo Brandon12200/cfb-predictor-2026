@@ -7,7 +7,7 @@ Binding owner decisions made outside the resolved SPEC §16 set. Each entry reco
 ## D1 — Phase 0 week-inference source
 **Date:** 2026-07-02
 **Context:** SPEC §4.4 says the silent-week-default fix should "derive the week from the actual date via the season calendar," but no calendar file exists yet and `season.yaml` is formally a Phase 4.5/5 artifact (SPEC §9, §10.6).
-**Decision:** The Phase 0 date→week deriver reads a dedicated **`data/season_calendar_2026.json`** (season + per-week start/end dates), not `season.yaml`. Phase 4.5 later folds this calendar into `season.yaml`.
+**Decision:** The Phase 0 date→week deriver reads a dedicated **`data/season_calendar_2026.json`** (season + per-week start/end dates), not `season.yaml`. Phase 4.5 later folds this calendar into the config home — **`season.json`** (stdlib, not `season.yaml`; see **D24**), while the raw `data/season_calendar_2026.json` stays as the CFBD-corroborated source for the registry.
 **Rationale:** Unblocks the Phase 0 bug fix with an honest, testable date→week source without prematurely claiming the Phase 4.5 config filename. Week boundaries are Saturday-anchored from Week 0 = 2026-08-29 (SPEC §16.2) on standard cadence; exact boundaries are correctable data, not code.
 
 ---
@@ -74,7 +74,7 @@ Binding owner decisions made outside the resolved SPEC §16 set. Each entry reco
 **Date:** 2026-07-03
 **Context:** The Phase-0 interim `data/season_calendar_2026.json` (D1) used hand-built, Saturday-anchored Sunday–Saturday weeks with a **Week 0** (per SPEC §16.2, "Week 0 = 2026-08-29"). 1b's D1 corroboration (`corroborate_calendar()` vs CFBD `/calendar?year=2026`) surfaced 16 warnings: a systematic boundary offset (weeks 2–15) plus **CFBD has no Week 0** — it folds the Aug-29 openers into **week 1** (its week-1 window 08-29→09-08). Two independent week-numbering systems (the hand calendar vs CFBD's `week` field, which the snapshot slate filter uses) is a permanent off-by-one hazard at the season opener.
 **Decision:** Regenerate `data/season_calendar_2026.json` from CFBD `/calendar` as the source of truth, adopting CFBD's regular-season week numbering. **There is no Week 0 for 2026** — the Aug-29 opener games are **week 1**. Weeks are `[start, end]` inclusive and non-overlapping (`start` = CFBD `startDate`; `end` = day before the next week's start). This **supersedes SPEC §16.2's Week-0 convention** for 2026. **Owner-approved amendment** (ratified by approving the 1c plan) — an explicit audit-trail choice, not drift. `corroborate_calendar()` now returns **zero** warnings; `verify-phase-1` asserts it.
-**Implications:** The opener games remain fully in scope, just named week 1 — no games are dropped. **Freeze timing is unchanged in substance:** the `v2026-frozen` tag must still precede the first prediction run — now "before the late-August week-1 build" (~Aug 24 target). The disappearance of the "Week 0" label must not relax that. `resolve_week`/`test_week_inference` updated to the new boundaries; Phase 4.5 folds this calendar into `season.yaml`.
+**Implications:** The opener games remain fully in scope, just named week 1 — no games are dropped. **Freeze timing is unchanged in substance:** the `v2026-frozen` tag must still precede the first prediction run — now "before the late-August week-1 build" (~Aug 24 target). The disappearance of the "Week 0" label must not relax that. `resolve_week`/`test_week_inference` updated to the new boundaries; Phase 4.5 folded this calendar into the config home **`season.json`** (D24 — stdlib, not `season.yaml`).
 
 ---
 

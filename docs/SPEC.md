@@ -176,7 +176,7 @@ cfb status                        # API quota, cache freshness, current week, fr
 
 Requirements:
 
-1. **Week inference done right.** Week is derived from today's date via `season.yaml` and always echoed (`Week 7 — inferred from 2026-10-08`). An explicit `--week` overrides it. Inferred and explicit runs of the same week are bit-identical. If the date falls outside the season or between ambiguous boundaries, the CLI errors with a clear message instead of guessing. (Fixes the 2025 silent-week-1 bug permanently.)
+1. **Week inference done right.** Week is derived from today's date via the config home `season.json` (**D24** — §9's `season.yaml` became **stdlib `season.json`** to avoid a YAML dependency) and always echoed (`Week 7 — inferred from 2026-10-08`, to stderr so `--format json` stdout stays clean). An explicit `--week` overrides it. Inferred and explicit runs of the same week are bit-identical. If the date falls outside the season, the CLI errors (exit 2) instead of guessing. (Fixes the 2025 silent-week-1 bug permanently. **Delivered in Phase 4.5, PR #17.**)
 2. **Slate-first, not game-first.** `cfb predict week` analyzes every game in scope in one command: fetches data once (shared snapshot, respecting API budgets), runs all predictions, saves the weekly JSON, and prints a summary table sorted by edge (columns: matchup, Vegas, model, edge, tier, recommendation). Flags: `--only "TEAM,..."` to restrict, `--min-edge X`, `--tier A|B|C`, `--show-factors` (per-game breakdown), `--format table|json|csv`, `--save/--no-save`.
 3. **Cache-backed reruns.** Any predict command can re-execute from the cached snapshot (`rerun` / `--offline`) for instant iteration with zero API spend — useful when tweaking output flags or re-checking a game.
 4. **Single-game convenience.** `cfb predict game "Michigan @ Ohio State"` parses one string instead of two flags, resolves names through the existing normalizer, and suggests close matches on failure instead of erroring cryptically.
@@ -208,7 +208,7 @@ Weekly cadence (times configurable, ET):
 3. **Sunday night — grade.** Fetch final scores → write `data/results/2026_week_NN.json`, compute ATS outcomes + CLV → run analytics → commit results + regenerated weekly/season reports.
 4. **Failure handling.** Any step failure opens a GitHub Issue automatically with logs; partial data follows the existing degradation rules; the pipeline must be idempotent (safe to rerun).
 5. **Budget guard.** Pipeline enforces the daily Odds API call budget and logs remaining quota.
-6. **Season config.** `season.yaml`: week dates (Week 0 included, per §16.2), freeze tag, kickoff windows, slate filter = FBS-vs-FBS only (§16.1), min data quality thresholds.
+6. **Season config.** The config home is **`season.json`** (**D24** — stdlib JSON, not `season.yaml`), introduced in Phase 4.5 with the `weeks` calendar + `cli_defaults`. Phase 5 **adds** its fields to it: week dates (**no Week 0 for 2026 — D8 abolished it, supersedes §16.2**), freeze tag, kickoff windows, slate filter = FBS-vs-FBS only (§16.1), min data quality thresholds, Odds budget.
 
 **Acceptance:** a full simulated cycle runs against archived data in CI (mock APIs); a live end-to-end test succeeds in one preseason dry-run week; no step requires manual intervention.
 
