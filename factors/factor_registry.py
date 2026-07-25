@@ -185,7 +185,10 @@ class FactorRegistry:
             'ExperienceDifferential': {'threshold': 1.0, 'max_impact': 3.0},
             'PressureSituation': {'threshold': 0.75, 'max_impact': 3.0},
             'RevengeGame': {'threshold': 1.5, 'max_impact': 4.0},
-            'LookaheadSandwich': {'threshold': 1.0, 'max_impact': 4.0},
+            # 'LookaheadSandwich' removed (reverse-audit A3, same class as the variance_detector
+            # map): the factor was retired in 3b.6, so this override matched nothing. The live
+            # `Sandwich` factor is deliberately NOT added here — it keeps the physical layer's
+            # own ratified activation threshold (3b), which this hierarchy must not override.
             'PointDifferentialTrends': {'threshold': 0.75, 'max_impact': 3.0},
             'CloseGamePerformance': {'threshold': 0.5, 'max_impact': 2.0},
             # 'StyleMismatch': {'threshold': 1.0, 'max_impact': 4.0},       # 15% of total (to be added)

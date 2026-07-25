@@ -46,12 +46,22 @@ class VarianceDetector:
             'extreme': 1.0             # Above this = extreme split
         }
         
-        # Category groupings for analysis
+        # Category groupings for analysis. Mirrors the ratified 3b.3 taxonomy (physical /
+        # situational / coaching / matchup / momentum, + market for the dormant modifier) and is
+        # keyed on the LIVE registered factor names. Reverse-audit A3: this map previously named
+        # the retired `LookaheadSandwich`/`SchedulingFatigue` (3b.6) and omitted every physical
+        # factor, so category-variance was blind to the 56% physical category and `StyleMismatch`
+        # was mislabelled 'statistical'. Category variance is DIAGNOSTIC only — `variance_level`
+        # (the NO_BET gate and the confidence-score adjustments) derives from the OVERALL
+        # coefficient of variation, never from this map, so correcting it is output-neutral.
         self.factor_categories = {
             'market': ['MarketSentiment'],
-            'statistical': ['StyleMismatch', 'PointDifferentialTrends', 'CloseGamePerformance'],
-            'situational': ['DesperationIndex', 'RevengeGame', 'LookaheadSandwich', 'SchedulingFatigue'],
-            'coaching': ['ExperienceDifferential', 'PressureSituation', 'HeadToHeadRecord']
+            'matchup': ['StyleMismatch'],
+            'momentum': ['PointDifferentialTrends', 'CloseGamePerformance'],
+            'situational': ['DesperationIndex', 'RevengeGame'],
+            'coaching': ['ExperienceDifferential', 'PressureSituation', 'HeadToHeadRecord'],
+            'physical': ['Altitude', 'ByeAdvantage', 'ConsecutiveRoad',
+                         'Sandwich', 'ShortWeek', 'TravelBurden'],
         }
     
     def analyze_factor_variance(self, factor_results: Dict[str, Any]) -> Dict[str, Any]:
