@@ -1177,8 +1177,8 @@ principle #4). These are the checks that would have caught the original defect.
 ### Venue coverage — investigated, NOT a defect (ruling item 9, second half)
 
 The PR-#19 note that "venue data covers 68 of 138 FBS teams, and the five highest-altitude programs
-are absent" was **a misreading, corrected here.** The registry holds **all 138 FBS teams with
-locations (132 with elevation)**, including Air Force (6,643 ft), Wyoming (7,218 ft), Colorado State,
+are absent" was **a misreading, corrected here.** The committed registry artifact `data/registry/fbs_teams_2026.json` holds **all 138 FBS teams with
+locations (132 with elevation)** — reproducible from the repo, no live pull needed —, including Air Force (6,643 ft), Wyoming (7,218 ft), Colorado State,
 New Mexico and Utah State. The snapshot builds `teams`/`venues` over `get_all_tracked_teams()` — *"the
 tracked **P4 + independents** slate"* = SEC 16 + Big Ten 18 + ACC 17 + Big 12 16 + Notre Dame =
 **exactly 68**, which is **SPEC §5.5's specified scope**, asserted by the season-start

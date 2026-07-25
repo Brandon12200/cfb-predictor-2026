@@ -53,6 +53,8 @@ These bypass the context dict and hit CFBD directly at prediction time; the snap
 Per team-week: `rest_days`, `bye`/`opponent_bye`, `short_week`, `travel_distance` (great-circle from venue lat/long), `time_zones_crossed` (+direction), `altitude`, `consecutive_road_games`, `sandwich_spot`. Must be computable for hypothetical matchups. Venue source fields: `latitude`, `longitude`, `elevation`, `timezone`, `dome`.
 
 > **⚠ Elevation units (A6, 2026-07-16).** `venues[*].elevation` is stored **at rest in METRES** — CFBD's native unit, kept unconverted so the snapshot mirrors its source. `schedule_intel[*].altitude` is emitted in **FEET**. `data.schedule_intel.elevation_feet()` is the single conversion point, and the ratified 3b.1 constant it feeds (`altitude_threshold_ft = 4000.0`) is in feet. **Any new consumer of `elevation` must convert.** Before A6 the two met unconverted, so the altitude comparison was false for every venue in every week and the factor could never fire — the maximum elevation in the dataset is ~1634 m against a 4000 ft threshold. Honest-missing is `None`, never `0.0` (which would read as sea level).
+>
+> **Pre-A6 snapshots:** a snapshot's stored `schedule_intel` blob is frozen at build time, so bundles built before this fix hold the raw **metres**-scale `altitude`. That staleness is harmless to predictions — `data_manager.get_game_context` **recomputes** intel on every call and never reads the stored blob — but `scripts/inspect_snapshot.py` displays the stored value and labels it `alt(as-stored)` unless the bundle records `meta.schedule_intel_altitude_unit == "ft"`.
 
 ---
 
