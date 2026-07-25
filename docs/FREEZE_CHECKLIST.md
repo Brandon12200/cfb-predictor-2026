@@ -15,7 +15,7 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   errors *edits* these freeze-bound files, impossible after the tag. Scope: add both to the Makefile paths,
   `ruff --fix`, resolve residual mypy errors (or scope them), one focused cleanup PR.
 
-- [x] **Disposition the reverse-audit ledger — A-items DONE (owner, 2026-07-25); B-items PENDING.**
+- [x] **Disposition the reverse-audit ledger — A1–A5 DONE (2026-07-25); B1–B10 DONE (2026-07-16).**
   The `calibration-auditor` shakedown found the log's **reverse** coverage materially incomplete.
   **A1–A5 are now all dispositioned and ratified** (CALIBRATION_LOG "A-item dispositions"): A1
   `HeadToHeadRecord` accepted **dormant** (threshold==max *and* an always-zero placeholder input —
@@ -26,10 +26,20 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   not rescaled** (a rescale was measured and rejected — it would misclassify every actual bet as
   VERY_STRONG), plus `predicted_edge` persistence raised 2 dp → 4 dp; A5 stale category weights
   **retired** with A2 and `cli status` repointed at the live registry.
-  **Still open: the B-batch** — B1–B10 unlogged internal-formula constants (`data_quality` 0.4 already
-  RATIFIED; the rest PROPOSED), incl. the `confidence_score` formula and the `variance_detector` CV
-  cutoffs that gate NO_BET. That batch is the remaining freeze-blocker here, and per house rules it
-  goes to `docs/proposals/` as one consolidated reviewable file.
+  **B1–B10 RATIFIED** (owner, 2026-07-16) — audited per-number with liveness measured on both
+  vehicles; six dead constants logged rather than ratified; `MarketSentiment` ruled dormant-and-unwired
+  for all of 2026 (movement data collected, activation deferred to 2027).
+  A1–A5 and B1–B10 are all dispositioned; this item is closed. The late item it surfaced is tracked
+  separately immediately below, so this checkbox reflects only what it covers.
+
+- [ ] **A6 (late A-class, OPEN) — `Altitude` can never fire: metres compared against a feet threshold.**
+  Surfaced by the B-batch reachability audit. Venue `elevation` is in **metres** while
+  `altitude_threshold_ft` is **4000 feet**, and the maximum value in the entire dataset is **1634** —
+  so the comparison is false for every venue in every week. Ratified 3b.1 constants silently neutered:
+  the same never-fires family as A1, **third occurrence**. Correcting it changes output on **17 of 734
+  games** at 1.2 pts each (~48% of HFA), so it is calibration-affecting and **pre-tag**. Proposal,
+  impact and options: `docs/proposals/A6_altitude_unit_mismatch.md`. **Owner ruling required before
+  the tag — this is the last ledger blocker.**
 
 - [ ] **Formal pre-freeze calibration audit (~2026-08-20).** Run the **`calibration-auditor`** agent over
   the complete `docs/CALIBRATION_LOG.md`: every entry evidence-class-labeled with the class matching the
@@ -60,6 +70,14 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   **opening-weekend (Week 1)** cycle as the live dress rehearsal. **D8 abolished Week 0 for 2026**, so
   "Week 0" here means the season's first real slate — Week 1. Rehearsals run **after** the tag (they
   exercise the frozen model end-to-end).
+
+## AFTER the tag — post-tag cleanup list (freeze-exempt; recorded so it doesn't evaporate)
+
+- [ ] **Remove the orphaned legacy analysis functions in `cli/app.py`** — `run_weekly_analysis` and
+  `run_p4_predictions` (~430 lines) became unreachable when the A2 retirement deleted `cli.app.main`,
+  their only caller. `cli/` is **freeze-exempt**, so this deliberately did NOT ride in the pre-tag
+  ledger PR: the pre-tag window stays focused on what gates the tag, and inert dead code in a
+  freeze-exempt path is safe to carry across it (owner ruling, 2026-07-25).
 
 ## Done (for the record)
 
