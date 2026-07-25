@@ -367,6 +367,17 @@ next phases and the freeze:
    **D17 artifact** — the always-home vs model's-own-number diagnostic + the "where the 57% came from"
    explanation are a historical exhibit that must stay findable, so they survive the absorption. Retire
    the dev-script cluster in a later cleanup, never the D17 exhibit.
+5. **Phase 4.5 (SPEC §9, CLI v2) — ✅ DONE (this branch).** `cli/cfb.py` is the unified `cfb` dispatcher
+   (console script `cfb = cli.cfb:main`) — thin wrappers over the existing seams: `predict week/game/rerun`
+   (ratified `build_predictions`; **`predict game` filters the slate, never the A2 `run_single_prediction`**),
+   `hypothetical`/`project` (delegate to `cli.app.run_*`), `slate`, `grade`/`report`/`data snapshot`/`data
+   inspect` (delegate to `scripts/*.py` cores — refactored `main(argv=None)` so `cfb` and the Phase-5 jobs
+   share one orchestration), `status`. `cli/output.py` = shared table/json/csv + exit codes (0/1/2). Week
+   inference re-homed to **`season.json`** (D24; folds the D8 calendar + `cli_defaults`). `main.py` is now a
+   **deprecation shim** delegating to `cfb`; the legacy flat `--home/--away` no longer calls
+   `run_single_prediction`, so the **A2 cluster + `cli.app.main` are consumer-less** (retire at freeze,
+   reverse-audit A2). `make verify-phase-4-5` green. `cli/app.py` stays legacy (its `run_hypothetical`/
+   `run_project` still used; not rewritten — deferred with A2).
 
 ## MarketSentiment wiring fix (Bug #7) — 2026-07-04
 

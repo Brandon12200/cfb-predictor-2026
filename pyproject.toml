@@ -26,6 +26,9 @@ dev = [
     "types-requests>=2.31",
 ]
 
+[project.scripts]
+cfb = "cli.cfb:main"
+
 [tool.setuptools]
 py-modules = ["main", "config"]
 
@@ -44,13 +47,19 @@ ignore = ["E501"]  # long argparse help / descriptive strings
 python_version = "3.11"
 ignore_missing_imports = true
 warn_unused_ignores = false
+# Repo root is the package base so `scripts/grade.py` maps to `scripts.grade` consistently whether
+# it's passed as a path (TYPED_PATHS) or imported as a module (cli.cfb delegates to the scripts).
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = "."
 
 # Legacy clients/cache are pre-Phase-1 code held to a looser bar (rewritten later);
 # don't let their type debt block the typed new modules that merely import them for
 # diagnostics (e.g. data/data_manager.py's lazy client construction).
 [[tool.mypy.overrides]]
 module = ["data.cache_manager", "data.cfbd_client", "data.espn_client", "data.odds_client",
-          "engine.prediction_engine", "factors.factor_registry", "factors.style_mismatch"]
+          "engine.prediction_engine", "factors.factor_registry", "factors.style_mismatch",
+          "cli.app", "cli.args"]
 follow_imports = "skip"
 
 [tool.pytest.ini_options]

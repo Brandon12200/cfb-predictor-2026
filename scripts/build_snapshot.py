@@ -24,11 +24,11 @@ from data.snapshot import SnapshotBuilder  # noqa: E402
 from data.team_registry import registry  # noqa: E402
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build a weekly data snapshot.")
     parser.add_argument("--week", type=int, required=True)
     parser.add_argument("--year", type=int, default=2026)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if registry is None:
         print("Team registry not loaded — run `python scripts/refresh_registry.py` first.")

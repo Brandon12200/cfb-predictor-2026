@@ -583,6 +583,11 @@ confirmed against source.
   second calibration surface with zero log coverage, and "confidence" means different things on different CLI
   paths. Decision: **retire** these (route the single-game path through the ratified engine) or log+ratify
   them. Retire is the likely honest call. **Verified.**
+  **Update (Phase 4.5, D24):** `cfb predict game` routes through the **ratified** slate
+  (`build_predictions`), and `main.py`'s deprecation shim no longer calls `run_single_prediction` — so
+  `run_single_prediction` + the standalone `confidence_calculator`/`edge_detector` + the now-unused
+  `cli.app.main` flat dispatch are **consumer-less** (no live entry point). The code is untouched
+  (parked); this **strengthens retire-over-fix** — the freeze-prep retirement now only deletes dead code.
 - **A3 — `variance_detector` category map references retired factors.** `engine/variance_detector.py:50-55`
   `factor_categories` names the **deleted** `LookaheadSandwich`/`SchedulingFatigue` (3b.6) and omits every
   current physical factor + the `matchup`/`market` categories, so category-variance is blind to the 56%

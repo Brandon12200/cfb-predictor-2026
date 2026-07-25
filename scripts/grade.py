@@ -45,11 +45,11 @@ def _load_json(path: Path) -> dict | None:
     return json.loads(path.read_text()) if path.exists() else None
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Grade a week's predictions into data/graded/.")
     parser.add_argument("--week", type=int, required=True)
     parser.add_argument("--year", type=int, default=2026)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     week, year = args.week, args.year
 
     predictions_env = _load_json(PREDICTIONS_DIR / f"{year}_week_{week:02d}.json")

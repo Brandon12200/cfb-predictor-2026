@@ -2,9 +2,12 @@
 
 Fixes the silent week-1 default in the old ``main._get_current_week``: omitting
 ``--week`` used to analyze games with week-1 context, producing different results
-than passing the correct week. Here the week is derived from the date via
-``data/season_calendar_2026.json``; when the date falls outside the season we
-raise rather than guess. Phase 4.5 folds this calendar into ``season.yaml``.
+than passing the correct week. Here the week is derived from the date via the
+config home ``season.json``; when the date falls outside the season we raise rather
+than guess. Phase 4.5 **folded the calendar into ``season.json``** (D24, the config
+home for the ``cfb`` CLI — stdlib JSON, not the SPEC's ``season.yaml``, to avoid a
+YAML dependency). ``season.json``'s ``weeks`` are kept in sync with the CFBD-
+corroborated ``data/season_calendar_2026.json`` (D8) by a test.
 
 Pure and network-free so it is deterministically testable.
 """
@@ -15,17 +18,26 @@ import json
 from datetime import date, datetime
 from pathlib import Path
 
-_CALENDAR_PATH = Path(__file__).resolve().parent.parent / "data" / "season_calendar_2026.json"
+_CONFIG_PATH = Path(__file__).resolve().parent.parent / "season.json"
 
 
 class WeekInferenceError(Exception):
     """Raised when the CFB week cannot be determined from the date."""
 
 
-def load_calendar(path: Path | str = _CALENDAR_PATH) -> dict:
-    """Load the season calendar JSON (season, weeks -> {start, end})."""
+def load_calendar(path: Path | str = _CONFIG_PATH) -> dict:
+    """Load the season config (season, weeks -> {start, end}, cli_defaults)."""
     with open(path) as f:
         return json.load(f)
+
+
+def cli_defaults(path: Path | str = _CONFIG_PATH) -> dict:
+    """The ``cfb`` CLI defaults from ``season.json`` (config-over-flags, SPEC §9.6).
+    Empty dict if the section is absent so callers fall back to argparse defaults."""
+    try:
+        return load_calendar(path).get("cli_defaults", {}) or {}
+    except (OSError, ValueError):
+        return {}
 
 
 def infer_week_for_date(today: date, calendar: dict | None = None) -> int:

@@ -47,10 +47,10 @@ def render_status(cfbd_key: bool, odds_key: bool, odds_budget: int,
     return "\n".join(lines)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Per-source health + quota.")
     parser.add_argument("--ping", action="store_true", help="live CFBD reachability check")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     from config import config
 

@@ -73,36 +73,36 @@ class TestEndToEndIntegration(unittest.TestCase):
             
             print(f"✅ Full pipeline test completed in {execution_time:.2f}s")
     
-    def test_cli_integration_with_mocks(self):
-        """Test CLI integration with mocked responses."""
-        with patch('data.odds_client.OddsAPIClient.get_consensus_spread') as mock_odds, \
-             patch('data.espn_client.ESPNStatsClient.get_team_info') as mock_espn, \
-             patch('sys.argv', ['main.py', '--home', 'georgia', '--away', 'alabama']):
-            
-            mock_odds.return_value = -2.5
-            mock_espn.return_value = {
-                'info': {'conference': {'name': 'SEC'}},
-                'derived_metrics': {
-                    'current_record': {'wins': 7, 'losses': 3, 'win_percentage': 0.7},
-                    'venue_performance': {
-                        'home_record': {'win_percentage': 0.8},
-                        'away_record': {'win_percentage': 0.7}
-                    }
-                }
-            }
-            
-            try:
-                # This should not raise an exception
-                main()
-                print("✅ CLI integration test passed")
-            except SystemExit as e:
-                # CLI might exit with 0 (success)
-                if e.code == 0:
-                    print("✅ CLI integration test passed (exit 0)")
-                else:
-                    self.fail(f"CLI exited with error code: {e.code}")
-            except Exception as e:
-                self.fail(f"CLI integration failed: {str(e)}")
+    def test_cli_integration_deprecation_shim(self):
+        """Phase 4.5: `main.py`'s legacy flat flags are a deprecation shim over `cfb`. The
+        single-game `--home/--away` path emits the deprecation notice and delegates to
+        `cfb predict game` (the ratified slate) — it must NOT invoke the A2 `run_single_prediction`."""
+        import io
+        from contextlib import redirect_stderr
+
+        import cli.cfb
+        import main as main_module
+
+        called = {}
+        # Spy on the delegation target; stub it so the test doesn't need a built snapshot.
+        orig = cli.cfb.main
+
+        def _spy(argv=None):
+            called["argv"] = argv
+            return 0
+        cli.cfb.main = _spy
+        try:
+            with patch('sys.argv', ['main.py', '--home', 'georgia', '--away', 'alabama', '--week', '8']):
+                err = io.StringIO()
+                with redirect_stderr(err):
+                    rc = main_module.main()
+        finally:
+            cli.cfb.main = orig
+
+        self.assertEqual(rc, 0)
+        self.assertIn("deprecated", err.getvalue().lower())              # the shim warns
+        self.assertEqual(called["argv"][:3], ["predict", "game", "alabama @ georgia"])  # delegates, ratified path
+        print("✅ deprecation-shim delegation verified")
     
     def test_factor_calculation_performance(self):
         """Test factor calculation performance across multiple teams."""

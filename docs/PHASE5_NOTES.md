@@ -57,3 +57,15 @@ These are on `docs/FREEZE_CHECKLIST.md` under "after the tag."
 All freeze obligations live in `docs/FREEZE_CHECKLIST.md` (tag by ~Aug 24; freeze-enforcement hook extended
 to `factors/`/`engine/`/calibration config at tag time; the `calibration-auditor` pre-flight; the lint-scope
 follow-up). Rehearsals (item 3) run **after** the tag.
+
+## 6. Config home is `season.json` (D24) — §10.6 fields ADD to it
+
+Phase 4.5 introduced the config home **`season.json`** (stdlib JSON, not the SPEC's `season.yaml` — D24,
+to avoid a YAML dependency). It already carries the `weeks` calendar (folded from
+`data/season_calendar_2026.json`, D8) and `cli_defaults`. **SPEC §10.6's pipeline config — Week-0/kickoff
+windows, the freeze tag, the FBS-vs-FBS slate filter (§16.1), min-data-quality thresholds, the Odds budget —
+lands as ADDITIONS to `season.json`**, not a new file. Phase 5 extends a home; it does not design one.
+Also settled in 4.5: `cfb grade`/`cfb data snapshot`/`cfb predict week`/`cfb report` are the human wrappers
+over the same `scripts/*.py` cores the workflow files call — the pipeline invokes the scripts (canonical),
+not the `cfb` CLI. And the `run_single_prediction`/A2 cluster is now consumer-less (D24) → retire it at the
+freeze (reverse-audit A2), not fix it.

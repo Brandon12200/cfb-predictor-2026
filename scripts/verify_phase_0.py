@@ -86,10 +86,12 @@ check("no hardcoded conference lists in main.py/cli",
 for doc in ("CODE_AUDIT.md", "DECISIONS.md"):
     check(f"docs/{doc} exists", (ROOT / "docs" / doc).exists())
 
-# 7. main.py is a thin entry point delegating to the cli package.
+# 7. main.py is a thin entry point delegating to the cli package (Phase 4.5: a deprecation shim
+#    over `cfb` — delegates to cli.cfb, carries no business logic).
 main_src = (ROOT / "main.py").read_text()
-check("main.py is thin (delegates to cli)", "from cli.app import main" in main_src
-      and len(main_src.splitlines()) < 30)
+check("main.py is thin (delegates to the cli package)",
+      "cli.cfb" in main_src and "def run_single_prediction" not in main_src
+      and len(main_src.splitlines()) < 100)
 
 # 8. Packaging present.
 check("pyproject.toml exists", (ROOT / "pyproject.toml").exists())

@@ -106,14 +106,14 @@ def _report_retro() -> None:
     print(f"Wrote {out.relative_to(ROOT)}  ({len(weeks)} weeks)")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Generate Phase-4 analytics reports.")
     g = parser.add_mutually_exclusive_group(required=True)
     g.add_argument("--week", type=int)
     g.add_argument("--season", action="store_true")
     g.add_argument("--retro", action="store_true")
     parser.add_argument("--year", type=int, default=2026)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.retro:
         _report_retro()
