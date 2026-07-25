@@ -61,6 +61,14 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   "Week 0" here means the season's first real slate — Week 1. Rehearsals run **after** the tag (they
   exercise the frozen model end-to-end).
 
+## AFTER the tag — post-tag cleanup list (freeze-exempt; recorded so it doesn't evaporate)
+
+- [ ] **Remove the orphaned legacy analysis functions in `cli/app.py`** — `run_weekly_analysis` and
+  `run_p4_predictions` (~430 lines) became unreachable when the A2 retirement deleted `cli.app.main`,
+  their only caller. `cli/` is **freeze-exempt**, so this deliberately did NOT ride in the pre-tag
+  ledger PR: the pre-tag window stays focused on what gates the tag, and inert dead code in a
+  freeze-exempt path is safe to carry across it (owner ruling, 2026-07-25).
+
 ## Done (for the record)
 
 - All calibration entries ratified through 3d (CALIBRATION_LOG Phases 2 / 3b / 3c / 3d).

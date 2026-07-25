@@ -194,8 +194,8 @@ Requirements:
 > (Thu/Fri games need honest pre-kickoff closes; each game's close = the last observation before *that*
 > game's kickoff — the 1c as-of-T model, no schema work); schedule with **slack before the earliest
 > kickoff** (GitHub cron jitter is real). **Acceptance is expanded** with a preseason validation regimen
-> (two full-cycle rehearsals + a failure-injection drill + a graded Week-0 dress rehearsal). Two design
-> questions to resolve in planning: pipeline **commit identity** (Actions bot vs authored) and
+> (two full-cycle rehearsals + a failure-injection drill + a graded opening-weekend/Week-1 dress
+> rehearsal — **D8 abolished Week 0 for 2026**). Two design questions to resolve in planning: pipeline **commit identity** (Actions bot vs authored) and
 > **branch-protection interaction** with bot pushes. **The freeze (`docs/FREEZE_CHECKLIST.md`) must land
 > before the first live run, and rehearsals run AFTER the tag.**
 
