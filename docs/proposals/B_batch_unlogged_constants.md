@@ -5,7 +5,14 @@
 > and this file is deleted at the next phase/session boundary**, together with
 > `A4_prediction_type_rescale.md` and `ledger_pr_summary.md`. Not authoritative over `docs/SPEC.md`.
 >
-> **Status:** PROPOSED — awaiting owner ruling (§7).
+> **Status: RATIFIED (owner, 2026-07-16).** Ratified content now lives in `docs/CALIBRATION_LOG.md`
+> ("B-item ratifications"), which is authoritative.
+>
+> **Deliberately retained past ratification, unlike the other spent proposals** (`A4_…` and
+> `ledger_pr_summary` were deleted at this boundary): the CALIBRATION_LOG B-section cites this file
+> by name for the full per-number derivations and the measurement methodology, so deleting it now
+> would dangle that reference. **Delete when the ledger fully closes** — i.e. once A6 is ruled on and
+> the B-section's derivation pointer is either inlined or dropped.
 > **Ledger:** B1–B10, `docs/CALIBRATION_LOG.md` "Phase-3 reverse-audit" (2026-07-09).
 > **Gates the tag.** Most items touch freeze-bound `factors/`/`engine/`.
 > **`data_quality` weight 0.4 (B1) is already RATIFIED** (owner, 2026-07-04) and is not re-opened.
