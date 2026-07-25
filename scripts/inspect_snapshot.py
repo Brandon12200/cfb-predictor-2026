@@ -73,12 +73,12 @@ def _render_game(manifest: dict, snapshot: dict, game: str) -> list[str]:
     return out
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Inspect a snapshot's provenance manifest.")
     parser.add_argument("--week", type=int, required=True)
     parser.add_argument("--year", type=int, default=2026)
     parser.add_argument("--game", default=None, help='e.g. "CLEMSON@GEORGIA"')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     manifest = load_manifest(args.week, args.year)
     snapshot = load_snapshot(args.week, args.year)
