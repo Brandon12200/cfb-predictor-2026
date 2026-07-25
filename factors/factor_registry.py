@@ -78,20 +78,14 @@ class FactorRegistry:
         """Initialize factor registry."""
         self.factors: Dict[str, BaseFactorCalculator] = {}
         
-        # New contrarian weight structure: PRIMARY/SECONDARY/MODIFIER
-        self.category_weights = {
-            'primary': config.primary_factors_weight,      # 60% - Direct contrarian signals
-            'secondary': config.secondary_factors_weight,  # 30% - Supporting evidence
-            'modifier': config.modifier_factors_weight     # 10% - Situational adjustments
-        }
-        
-        # Legacy category mapping (for existing factors)
-        self.legacy_category_weights = {
-            'coaching_edge': config.coaching_edge_weight,
-            'situational_context': config.situational_context_weight,
-            'momentum_factors': config.momentum_factors_weight
-        }
-        
+        # Reverse-audit A5: `category_weights` (config's 60/30/10) and `legacy_category_weights`
+        # (40/40/20) were removed here. They were keyed on 'primary'/'secondary'/'modifier' while
+        # live factors carry the 3b.3 taxonomy categories ('physical', 'situational_context',
+        # 'coaching_edge', 'matchup', 'momentum_factors', 'market') — ZERO key overlap, so the
+        # validator they fed reported `valid: False` on every run it was ever called. Neither map
+        # reached scoring; their only consumers were the dead diagnostics retired with the A2
+        # cluster. The per-factor `weight` on each registered factor is the single source of truth.
+
         # Weighting strategy configuration
         self.use_dynamic_weights = True  # Enable confidence-based dynamic weighting
         self.apply_thresholds = True     # Enable threshold filtering
@@ -185,7 +179,10 @@ class FactorRegistry:
             'ExperienceDifferential': {'threshold': 1.0, 'max_impact': 3.0},
             'PressureSituation': {'threshold': 0.75, 'max_impact': 3.0},
             'RevengeGame': {'threshold': 1.5, 'max_impact': 4.0},
-            'LookaheadSandwich': {'threshold': 1.0, 'max_impact': 4.0},
+            # 'LookaheadSandwich' removed (reverse-audit A3, same class as the variance_detector
+            # map): the factor was retired in 3b.6, so this override matched nothing. The live
+            # `Sandwich` factor is deliberately NOT added here — it keeps the physical layer's
+            # own ratified activation threshold (3b), which this hierarchy must not override.
             'PointDifferentialTrends': {'threshold': 0.75, 'max_impact': 3.0},
             'CloseGamePerformance': {'threshold': 0.5, 'max_impact': 2.0},
             # 'StyleMismatch': {'threshold': 1.0, 'max_impact': 4.0},       # 15% of total (to be added)
@@ -428,92 +425,6 @@ class FactorRegistry:
         
         return factor_info
     
-    def get_category_summary(self) -> Dict[str, Any]:
-        """Get summary of factors by category."""
-        category_summary = {}
-        
-        for category, target_weight in self.category_weights.items():
-            factors_in_category = [f for f in self.factors.values() if f.category == category]
-            
-            category_summary[category] = {
-                'target_weight': target_weight,
-                'actual_weight': sum(f.weight for f in factors_in_category),
-                'factor_count': len(factors_in_category),
-                'factors': [f.name for f in factors_in_category]
-            }
-        
-        return category_summary
-    
-    def get_execution_stats(self) -> Dict[str, Any]:
-        """Get execution statistics."""
-        total_calcs = max(self.execution_stats['total_calculations'], 1)
-        
-        return {
-            'total_calculations': self.execution_stats['total_calculations'],
-            'success_rate': self.execution_stats['successful_calculations'] / total_calcs,
-            'failure_rate': self.execution_stats['failed_calculations'] / total_calcs,
-            'factors_registered': len(self.factors),
-            'category_distribution': self.get_category_summary()
-        }
-    
-    def validate_factor_configuration(self) -> Dict[str, Any]:
-        """Validate the current factor configuration."""
-        validation_results = {
-            'valid': True,
-            'warnings': [],
-            'errors': [],
-            'summary': {}
-        }
-        
-        # Check total weights
-        total_weight = sum(f.weight for f in self.factors.values())
-        if abs(total_weight - 1.0) > 0.001:
-            validation_results['errors'].append(f"Total weights sum to {total_weight:.3f}, expected 1.0")
-            validation_results['valid'] = False
-        
-        # Check category weights
-        for category, target_weight in self.category_weights.items():
-            factors_in_category = [f for f in self.factors.values() if f.category == category]
-            actual_weight = sum(f.weight for f in factors_in_category)
-            
-            if abs(actual_weight - target_weight) > 0.001:
-                validation_results['warnings'].append(
-                    f"Category '{category}' weights sum to {actual_weight:.3f}, expected {target_weight:.3f}"
-                )
-        
-        # Check for missing factor categories
-        expected_categories = set(self.category_weights.keys())
-        actual_categories = set(f.category for f in self.factors.values())
-        
-        missing_categories = expected_categories - actual_categories
-        if missing_categories:
-            validation_results['errors'].append(f"Missing factor categories: {missing_categories}")
-            validation_results['valid'] = False
-        
-        # Check factor output ranges
-        for factor_name, factor in self.factors.items():
-            try:
-                min_val, max_val = factor.get_output_range()
-                if min_val >= max_val:
-                    validation_results['errors'].append(
-                        f"Factor '{factor_name}' has invalid output range: [{min_val}, {max_val}]"
-                    )
-                    validation_results['valid'] = False
-            except Exception as e:
-                validation_results['errors'].append(
-                    f"Factor '{factor_name}' failed output range check: {e}"
-                )
-                validation_results['valid'] = False
-        
-        validation_results['summary'] = {
-            'total_factors': len(self.factors),
-            'total_weight': total_weight,
-            'categories': len(actual_categories),
-            'valid_configuration': validation_results['valid']
-        }
-        
-        return validation_results
-
 
 # Global factor registry instance
 factor_registry = FactorRegistry()

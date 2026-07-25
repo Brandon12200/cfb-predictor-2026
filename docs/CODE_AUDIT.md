@@ -360,11 +360,14 @@ remain; **the ledger is first (it gates the tag), then Phase 5, then the freeze 
 4. **Freeze sequence (`docs/FREEZE_CHECKLIST.md`)** — `calibration-auditor` pre-flight (~Aug 20, must
    return FREEZE-READY) → **tag `v2026-frozen`** (owner) + extend the freeze-enforcement hook to
    `factors/`/`engine/`/calibration → then **AFTER the tag**: two full-cycle rehearsals (rehearsal-marked
-   commits) + a failure-injection drill (proves the auto-Issue path) + a graded Week-0 dress rehearsal.
-5. **Minor cleanup (any time)** — retire the Phase-0 dev-script cluster (`factor_validator`,
-   `performance_analyzer`, `bet_evaluator`); **keep `scripts/grading.py` + `scripts/calculate_accuracy.py`**
-   (the D17 "where the 57% came from" exhibit — must stay findable). `cli/app.py` stays legacy (its
-   `run_hypothetical`/`run_project` are still used by `cfb`; a full rewrite is deferred with the A2 retire).
+   commits) + a failure-injection drill (proves the auto-Issue path) + a graded opening-weekend (Week 1) dress rehearsal (D8 abolished Week 0).
+5. ~~**Minor cleanup**~~ — **DONE (2026-07-25)**, folded into the A2 deletion event per owner ruling:
+   `factor_validator`, `performance_analyzer`, `bet_evaluator`, `scripts/validate_factors.py`,
+   `scripts/generate_report.py` and `scripts/check_results.py` are deleted. `scripts/grading.py` +
+   `scripts/calculate_accuracy.py` **kept** (the D17 "where the 57% came from" exhibit).
+   **Newly orphaned, deliberately left:** deleting `cli.app.main` orphaned `run_weekly_analysis` and
+   `run_p4_predictions` (~430 lines, reachable only from it). `cli/` is **not** freeze-bound, so this
+   cleanup can land post-tag — flagged rather than silently widening the ratified scope.
 
 ## MarketSentiment wiring fix (Bug #7) — 2026-07-04
 

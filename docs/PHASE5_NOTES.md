@@ -40,7 +40,9 @@ AFTER the `v2026-frozen` tag (they exercise the frozen model end-to-end):
   report), on **rehearsal-marked commits** (clearly labeled, not mistaken for live predictions).
 - **One deliberate failure-injection drill** — revoke a key / kill a source mid-run — that **proves the
   auto-Issue path** actually opens a GitHub Issue with logs and the pipeline degrades/recovers as designed.
-- **A graded Week-0 / opening-weekend cycle** as the live dress rehearsal (real slate, real grading).
+- **A graded opening-weekend cycle** as the live dress rehearsal (real slate, real grading). **D8
+  abolished Week 0 for 2026** — the opening weekend IS Week 1; earlier drafts calling this the
+  "Week-0 dress rehearsal" meant exactly this slate, not a separate Week 0.
 
 These are on `docs/FREEZE_CHECKLIST.md` under "after the tag."
 
@@ -62,7 +64,7 @@ follow-up). Rehearsals (item 3) run **after** the tag.
 
 Phase 4.5 introduced the config home **`season.json`** (stdlib JSON, not the SPEC's `season.yaml` — D24,
 to avoid a YAML dependency). It already carries the `weeks` calendar (folded from
-`data/season_calendar_2026.json`, D8) and `cli_defaults`. **SPEC §10.6's pipeline config — Week-0/kickoff
+`data/season_calendar_2026.json`, D8) and `cli_defaults`. **SPEC §10.6's pipeline config — kickoff
 windows, the freeze tag, the FBS-vs-FBS slate filter (§16.1), min-data-quality thresholds, the Odds budget —
 lands as ADDITIONS to `season.json`**, not a new file. Phase 5 extends a home; it does not design one.
 Also settled in 4.5: `cfb grade`/`cfb data snapshot`/`cfb predict week`/`cfb report` are the human wrappers

@@ -82,35 +82,28 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(config.cache_ttl, 7200)
         self.assertEqual(config.session_cache_size, 2000)
     
-    def test_factor_weights_validation(self):
-        """Test that factor weights sum to 1.0."""
-        config = Config()
-        
-        total_weight = (config.coaching_edge_weight + 
-                       config.situational_context_weight + 
-                       config.momentum_factors_weight)
-        
+    def test_factor_weights_sum_to_one_on_the_registry(self):
+        """Factor weights sum to 1.0 — read from the ratified registry, not config.
+
+        Reverse-audit A5: the category-weight constants this used to assert on (`config`'s legacy
+        40/40/20) were removed — they contradicted the ratified 3b.2 shares and fed no scoring
+        path. The per-factor weights on the registry are the single source of truth, so the
+        invariant is asserted where it actually lives.
+        """
+        from factors.factor_registry import factor_registry
+
+        total_weight = sum(f.weight for f in factor_registry.factors.values())
         self.assertAlmostEqual(total_weight, 1.0, places=3)
-    
-    def test_invalid_factor_weights(self):
-        """Test validation with invalid factor weights."""
-        # Create a config and modify weights after initialization
+
+    def test_config_carries_no_factor_weights(self):
+        """The stale category-weight constants stay gone (A5 regression pin)."""
         config = Config()
-        
-        # Test the validation method directly
-        old_momentum = config.momentum_factors_weight
-        config.momentum_factors_weight = 0.3  # This makes total > 1.0
-        
-        # Test that validation would catch this
-        total_weight = (config.coaching_edge_weight + 
-                       config.situational_context_weight + 
-                       config.momentum_factors_weight)
-        
-        self.assertGreater(abs(total_weight - 1.0), 0.001)
-        
-        # Restore original value
-        config.momentum_factors_weight = old_momentum
-    
+        for attr in ("coaching_edge_weight", "situational_context_weight",
+                     "momentum_factors_weight", "primary_factors_weight",
+                     "secondary_factors_weight", "modifier_factors_weight"):
+            self.assertFalse(hasattr(config, attr),
+                             f"config.{attr} was removed by reverse-audit A5; it must not return")
+
     def test_invalid_rate_limits(self):
         """Test validation with invalid rate limits."""
         os.environ['ODDS_API_RATE_LIMIT'] = '0'

@@ -349,7 +349,7 @@
       "no_bet": true,
       "no_bet_reason": "edge 0.05 below threshold 1.00",
       "power_rating_spread": -3.1,
-      "predicted_edge": 0.05,
+      "predicted_edge": 0.0468,
       "prediction_type": "NO_BET",
       "vegas_spread": -11.3,
       "week": 1
@@ -462,7 +462,7 @@
       "no_bet": true,
       "no_bet_reason": "edge 0.11 below threshold 1.00",
       "power_rating_spread": -3.7,
-      "predicted_edge": 0.11,
+      "predicted_edge": 0.1122,
       "prediction_type": "NO_BET",
       "vegas_spread": -7.3,
       "week": 1
@@ -688,7 +688,7 @@
       "no_bet": true,
       "no_bet_reason": "edge 0.14 below threshold 1.00",
       "power_rating_spread": -4.0,
-      "predicted_edge": 0.14,
+      "predicted_edge": 0.1403,
       "prediction_type": "NO_BET",
       "vegas_spread": 22.6,
       "week": 1
@@ -1027,7 +1027,7 @@
       "no_bet": true,
       "no_bet_reason": "edge 0.05 below threshold 1.00",
       "power_rating_spread": -3.1,
-      "predicted_edge": 0.05,
+      "predicted_edge": 0.0468,
       "prediction_type": "NO_BET",
       "vegas_spread": 2.8,
       "week": 1

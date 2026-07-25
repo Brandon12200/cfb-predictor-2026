@@ -1,7 +1,7 @@
 # Freeze checklist — before tagging `v2026-frozen`
 
 Durable home for everything that **must happen before the freeze tag** (target **~2026-08-24**, before the
-Week-0 prediction run; SPEC §3 / §16.2). Anything that touches `factors/`, `engine/`, or weight/threshold
+opening-weekend (Week 1) prediction run; SPEC §3 / §16.2). Anything that touches `factors/`, `engine/`, or weight/threshold
 config **cannot** be done after the tag (those become immutable), so it belongs here — not in an
 evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → freeze handoff.
 
@@ -15,16 +15,21 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   errors *edits* these freeze-bound files, impossible after the tag. Scope: add both to the Makefile paths,
   `ruff --fix`, resolve residual mypy errors (or scope them), one focused cleanup PR.
 
-- [ ] **Disposition the reverse-audit ledger (CALIBRATION_LOG "Phase-3 reverse-audit", 2026-07-09).** The
-  `calibration-auditor` shakedown found the log's **reverse** coverage is materially incomplete: **5 bug /
-  dead-path DECISIONS** (A1 `HeadToHeadRecord` threshold==max → never fires, the §16.7 KEEP factor silently
-  neutered; A2 a second unlogged confidence/edge engine wired live via `run_single_prediction`; A3
-  `variance_detector` category map references retired factors; A4 unreachable `prediction_type` ladder; A5
-  `config.py` stale category weights) and **~10 unlogged internal-formula constant groups (B1–B10)** — incl.
-  the formula behind the ratified `confidence_score` itself and the `variance_detector` CV cutoffs that gate
-  NO_BET. Resolve **A** (fix/retire) first, then ratify **B** as a consolidated batch. This is a real
-  freeze-blocker — a duplicate/contradictory scoring surface + unexamined load-bearing formulas cannot freeze.
-  The `calibration-auditor` must return **FREEZE-READY** at the ~Aug-20 pre-flight.
+- [x] **Disposition the reverse-audit ledger — A-items DONE (owner, 2026-07-25); B-items PENDING.**
+  The `calibration-auditor` shakedown found the log's **reverse** coverage materially incomplete.
+  **A1–A5 are now all dispositioned and ratified** (CALIBRATION_LOG "A-item dispositions"): A1
+  `HeadToHeadRecord` accepted **dormant** (threshold==max *and* an always-zero placeholder input —
+  both blockers logged so 2027 can't "fix" one and think it restored); A2 the second confidence/edge
+  scoring surface **retired** (full cluster + carry-forward item 5's dev-script cluster deleted;
+  `prediction_engine` is now the only scoring surface in `engine/`); A3 `variance_detector` category
+  map **fixed**, output-neutrality proven over 744 games; A4 ladder collapse **accepted and logged,
+  not rescaled** (a rescale was measured and rejected — it would misclassify every actual bet as
+  VERY_STRONG), plus `predicted_edge` persistence raised 2 dp → 4 dp; A5 stale category weights
+  **retired** with A2 and `cli status` repointed at the live registry.
+  **Still open: the B-batch** — B1–B10 unlogged internal-formula constants (`data_quality` 0.4 already
+  RATIFIED; the rest PROPOSED), incl. the `confidence_score` formula and the `variance_detector` CV
+  cutoffs that gate NO_BET. That batch is the remaining freeze-blocker here, and per house rules it
+  goes to `docs/proposals/` as one consolidated reviewable file.
 
 - [ ] **Formal pre-freeze calibration audit (~2026-08-20).** Run the **`calibration-auditor`** agent over
   the complete `docs/CALIBRATION_LOG.md`: every entry evidence-class-labeled with the class matching the
@@ -51,9 +56,10 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
 
 - [ ] **Preseason validation regimen** (Phase-5 acceptance; see `docs/PHASE5_NOTES.md`): two clean
   full-cycle pipeline rehearsals in mid-August against the real week-1 slate (rehearsal-marked commits);
-  one deliberate **failure-injection drill** proving the auto-Issue path; and a graded **Week-0 /
-  opening-weekend** cycle as the live dress rehearsal. Rehearsals run **after** the tag (they exercise the
-  frozen model end-to-end).
+  one deliberate **failure-injection drill** proving the auto-Issue path; and a graded
+  **opening-weekend (Week 1)** cycle as the live dress rehearsal. **D8 abolished Week 0 for 2026**, so
+  "Week 0" here means the season's first real slate — Week 1. Rehearsals run **after** the tag (they
+  exercise the frozen model end-to-end).
 
 ## Done (for the record)
 
