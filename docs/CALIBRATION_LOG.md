@@ -671,7 +671,7 @@ corrections are recorded in the entries below (A2's blast radius, A5's severity)
 the second was found on inspection and is the decisive one.
 
 1. **Threshold == output max.** Registry `activation_threshold = 1.0`
-   (`factors/factor_registry.py:173`) equals the factor's own `_max_output = 1.0`
+   (`factors/factor_registry.py:167`) equals the factor's own `_max_output = 1.0`
    (`factors/coaching_edge.py:270`). Activation is `abs(value - neutral) < activation_threshold → no-op`
    (`factors/base_calculator.py:215`), so the factor can fire only at exact ±1.0 saturation — the same
    defect 3c.3 fixed for `DesperationIndex` (2.0 == ±2.0), here on a **SPEC §16.7 KEEP** factor.

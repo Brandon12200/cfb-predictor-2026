@@ -16,11 +16,14 @@ import pytest
 # holds byte-immutable claims (D22) and the rest are append-only history (D23). Tests that
 # exercise a writer point it at `tmp_path` instead (see `test_predict_week_save_refuses_overwrite_d22`,
 # which monkeypatches `build_predictions.PREDICTIONS_DIR`).
+# Kept in step with `.claude/hooks/protect_immutable.py`'s PROTECTED tuple — deliberately EXCLUDING
+# `reports/`, which is a regenerable rendering (D23), not history. The hook only intercepts an
+# agent's own Edit/Write calls; this guard covers runtime file I/O executed inside a test, so the
+# two need the same coverage to be a complete net.
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-_PROTECTED_ARTIFACT_DIRS = (
-    _REPO_ROOT / "data" / "predictions",
-    _REPO_ROOT / "data" / "results",
-    _REPO_ROOT / "data" / "graded",
+_PROTECTED_ARTIFACT_DIRS = tuple(
+    _REPO_ROOT / "data" / name
+    for name in ("predictions", "results", "archive", "lines", "ratings", "projections", "graded")
 )
 
 # Files that assert on real timing/HTTP behavior and must keep real time.sleep

@@ -42,7 +42,18 @@ def test_fingerprint_detects_a_deleted_file(tmp_path):
     assert set(before) - set(after), "a deleted artifact must be detected"
 
 
-def test_guard_covers_all_three_append_only_data_dirs():
-    """Claims + outcomes both guarded (D22/D23 taxonomy)."""
-    names = {p.name for p in conftest._PROTECTED_ARTIFACT_DIRS}
-    assert {"predictions", "results", "graded"} <= names
+def test_guard_coverage_matches_the_immutability_hook():
+    """The guard and `.claude/hooks/protect_immutable.py` must protect the same set.
+
+    The hook intercepts an agent's Edit/Write calls; this guard catches runtime file I/O inside a
+    test. A dir covered by one but not the other is a hole. `reports/` is excluded from BOTH: it
+    holds regenerable renderings (D23), not history.
+    """
+    import re
+
+    hook = (conftest._REPO_ROOT / ".claude" / "hooks" / "protect_immutable.py").read_text()
+    block = hook.split("PROTECTED = ", 1)[1].split(")", 1)[0]
+    hook_dirs = {m.rstrip("/").split("/")[-1] for m in re.findall(r'"([^"]+)"', block)}
+    guard_dirs = {p.name for p in conftest._PROTECTED_ARTIFACT_DIRS}
+    assert hook_dirs == guard_dirs, f"hook={hook_dirs} guard={guard_dirs}"
+    assert "reports" not in guard_dirs, "reports/ is a rendering (D23), never guarded"
