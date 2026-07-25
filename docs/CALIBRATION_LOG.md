@@ -555,7 +555,12 @@ for real by Phase-4 attribution in 2026.*
 
 ---
 
-## Phase-3 reverse-audit (calibration-auditor shakedown, 2026-07-09)  — **DISPOSITION-PENDING (owner)**
+## Phase-3 reverse-audit (calibration-auditor shakedown, 2026-07-09)  — **A: DISPOSITIONED (owner, 2026-07-25). B: PENDING.**
+
+> **Status.** The **A-items (A1–A5) are all dispositioned** — see "A-item dispositions" immediately
+> after the ledger below. The **B-items (B1–B10) remain PROPOSED** and are the next ratification
+> batch (`data_quality` 0.4 already RATIFIED). A-before-B was deliberate: the A retirements deleted
+> paths B would otherwise have had to cover.
 
 The `calibration-auditor` agent's first run did the reverse check (grep frozen paths for numeric literals
 lacking a log entry) and found the log's **forward** coverage (Phases 2/3b/3c/3d) is clean but its
@@ -650,3 +655,206 @@ Each A-item is a **freeze-blocker decision**; each B-item is a **PROPOSED** cons
 ratify/revise. Recommended order: resolve **A** first (bugs/retirements change what B needs to cover), then
 ratify **B** as one consolidated batch. Track on `docs/FREEZE_CHECKLIST.md`. The auditor re-runs (~Aug 20)
 as the final pre-flight and must come back **FREEZE-READY** before the tag.
+
+---
+
+## A-item dispositions (reverse-audit ledger)  — **RATIFIED (owner, 2026-07-25)**
+
+All five A-items were dispositioned individually (no batch approval); each touches freeze-bound
+`factors/`/`engine/`/config and therefore had to land **pre-tag**. Evidence was measured read-only
+before each proposal. Two ledger findings were **corrected against source** during that work and the
+corrections are recorded in the entries below (A2's blast radius, A5's severity).
+
+### A1 — `HeadToHeadRecord`: accepted **DORMANT**, not fixed  (`reasoned` / structural)  — **RATIFIED**
+
+**Two independent blockers, and fixing only the first accomplishes nothing.** The ledger recorded one;
+the second was found on inspection and is the decisive one.
+
+1. **Threshold == output max.** Registry `activation_threshold = 1.0`
+   (`factors/factor_registry.py:173`) equals the factor's own `_max_output = 1.0`
+   (`factors/coaching_edge.py:270`). Activation is `abs(value - neutral) < activation_threshold → no-op`
+   (`factors/base_calculator.py:215`), so the factor can fire only at exact ±1.0 saturation — the same
+   defect 3c.3 fixed for `DesperationIndex` (2.0 == ±2.0), here on a **SPEC §16.7 KEEP** factor.
+2. **The input is a hardcoded placeholder that is always zero.** `data/data_manager.py:32-35` injects
+   `_H2H_PLACEHOLDER = {"home_wins": 0, "away_wins": 0, "total_games": 0, "note": "Historical
+   coaching H2H not yet implemented"}` at `:140`, and `calculate()` returns `0.0` whenever
+   `total_games < min_games_for_significance` (=3) — `coaching_edge.py:296-297`. **`total_games` is
+   always 0**, so the factor returns 0.0 on every game of 2026 *at any threshold*.
+
+**Decision: accept dormant, consciously and on the record.** Lowering the threshold (the 3c.3 remedy)
+would be a freeze-bound edit with **provably zero** behavioural effect. Making the factor genuinely fire
+would require building a CFBD coaching-H2H ingest — new data-layer work, days before the freeze,
+injecting a brand-new *unmeasured* signal into a model about to be frozen. That is precisely what the
+freeze exists to prevent. **§16.7's KEEP mandate is satisfied by keeping the factor registered and
+honestly dormant** (dormancy-as-design, 3c.9 / binding principle #4) — never by manufacturing a signal
+from a placeholder.
+
+**⚠ Note for 2027 — do not "fix the threshold" and believe the factor is restored.** Both blockers must
+be cleared, and the *data* one is the real work. A threshold change alone leaves it returning 0.0.
+
+**B10 confirmation (carried to the B-batch):** `HeadToHeadRecord.config`'s `recent_game_weight = 1.5`
+and `max_lookback_years = 10` are confirmed **dead** — `calculate()` reads only
+`min_games_for_significance`. B10 should log them as dead-not-calibrated rather than ratify values that
+nothing reads.
+
+### A2 — Second confidence/edge scoring surface: **RETIRED** (full cluster deleted)  — **RATIFIED**
+
+`engine/confidence_calculator.py` (6 component weights, `[0.15,0.85]` clamp, edge-tier + type-adjustment
++ early-season dicts) and `engine/edge_detector.py` (`edge_thresholds` 3.0/2.0/1.0/0.5,
+`confidence_thresholds`, `risk_parameters`) were a **second, unlogged calibration surface inside
+`engine/`** that would have frozen wholesale, with "confidence" meaning different things on different
+paths. Phase 4.5 (D24) had already orphaned them from production: `cfb predict game` prices from the
+ratified `build_predictions` slate and `main.py` no longer calls `run_single_prediction` — enforced
+structurally by `scripts/verify_phase_4_5.py:76` and `tests/test_cfb_cli.py:80`.
+
+**Correction to the ledger's framing.** The handoff recorded that retirement "only deletes dead code."
+That was **not accurate**: the two engine modules still had **nine consumers** (six test modules, the
+`EdgeType` enum consumed by `output/insights_generator.py`, `scripts/clean_predict.py` via `demo.sh`,
+and `validate_performance_metrics.py`). The retirement is a real deletion with a test-and-script
+cascade, and was scoped and approved as such.
+
+**`EdgeType` relocation was considered and found unnecessary.** The owner's ruling was to relocate the
+enum to its consumer if live presentation code imported it. Verified: its only non-test importer was
+`output/insights_generator.py`, which is itself consumed only by its own tests — dead code importing
+dead code. The enum was deleted with the cluster.
+
+**Deleted:** `engine/confidence_calculator.py`, `engine/edge_detector.py`, `cli/app.py`'s
+`run_single_prediction` + the `cli.app.main` flat dispatch (its only caller;
+`run_hypothetical`/`run_project` are **kept** — `cfb` uses them), `output/insights_generator.py`,
+`output/formatter.py`, `output/__init__.py`, `scripts/clean_predict.py` (+ its `demo.sh` block),
+`validate_performance_metrics.py`, and six test modules. **Folded in per owner ruling (carry-forward
+item 5, the Phase-0 dev-script cluster):** `engine/factor_validator.py`,
+`utils/performance_analyzer.py`, `utils/bet_evaluator.py`, `scripts/validate_factors.py`,
+`scripts/generate_report.py`, and `scripts/check_results.py` (a `bet_evaluator` consumer, unreferenced
+and superseded by `scripts/grade.py` — surfaced during the sweep, not in the original enumeration).
+**Kept per item 5:** `scripts/grading.py` + `scripts/calculate_accuracy.py` — the D17 "where the 57%
+came from" exhibit must stay findable.
+
+**Not expanded (flagged, freeze-exempt):** deleting `cli.app.main` orphans `run_weekly_analysis` and
+`run_p4_predictions` (~430 lines), which were reachable only from it. `cli/` is **not** freeze-bound,
+so this cleanup can land post-tag; it was deliberately left rather than silently widening scope.
+
+**Result:** the ratified `prediction_engine` is now the **only** scoring surface in `engine/`.
+
+### A3 — `variance_detector` category map: **FIXED** (output-neutral)  — **RATIFIED**
+
+`engine/variance_detector.py:50-55` mapped factors by name to categories, but named the **retired**
+`LookaheadSandwich`/`SchedulingFatigue` (3b.6) and **omitted every physical factor** — so
+category-variance was blind to the 56% physical category. Two distinct causes: `SchedulingFatigue` was
+deleted, and `Sandwich` was missed by a **rename**. `StyleMismatch` was additionally mislabelled
+`statistical` against its real category `matchup`.
+
+**Severity corrected downward from the ledger.** The map is **diagnostic only**: `variance_level` — the
+hard NO_BET gate (`prediction_engine.py:335`) and the driver of the B1 confidence adjustments
+(`:504-520`, `:557-566`) — derives from the **overall** coefficient of variation
+(`variance_detector.py:87`), never from this map. `category_variance` feeds only
+`_interpret_variance_implications` → a narrative `implications` list, and neither is persisted (absent
+from `V2_RECORD_KEYS`).
+
+**Fix:** the map now mirrors the ratified 3b.3 taxonomy keyed on live factor names (adds `Altitude`,
+`ByeAdvantage`, `ConsecutiveRoad`, `Sandwich`, `ShortWeek`, `TravelBurden`; drops the two retired names;
+relabels `matchup`). The stale `LookaheadSandwich` override in `factors/factor_registry.py:188` was
+removed as the same defect class.
+
+**Deliberately NOT done:** the live `Sandwich` was **not** added to the registry hierarchy dict. That
+dict sets `activation_threshold`, so adding it would have silently overridden the physical layer's
+ratified 3b threshold — a calibration change disguised as a map fix. Removal only.
+
+**Output-neutrality — proven, not asserted.** Week-1 slate `predictions` payload SHA-256 identical
+across the change (`fdb3da473dadc1455cab9dba8ff577ee4fd875638136338da2cd42f677553c04`), and over the
+**744-game** before/after comparison (10 wk1 + 734 in-season) **zero records differ**:
+`max|Δ edge| = 0.000000000000`, `max|Δ confidence| = 0.000000000000`.
+
+### A4 — Contrarian `prediction_type` ladder: collapse **ACCEPTED and logged, not rescaled**  — **RATIFIED**
+
+**Evidence class: `measured`** — the edge distribution is a deterministic property of the frozen model
+over the real 2026 schedule, not an outcome-fitted quantity, and is **not** drawn from the
+Bug-#7-contaminated 2025 archive tables (which remain inadmissible).
+
+**Measured on two vehicles.** Vehicle A: the 10 wk1 games with real prediction-time lines. Vehicle B
+(the 3c.5 vehicle): **all 734 real 2026 FBS-vs-FBS season games**, each driven at its own week against
+the committed bundle so `compute_schedule_intel` fires at real in-season rates. `edge_size` is
+independent of the line's *value* but requires a line to exist; Vehicle B's placeholder-line injection
+was **proven neutral** (same 40 games at `-3.0` vs `+10.5`: `max|Δ| = 0.000000000000`).
+
+| vehicle | n | p50 | p75 | p90 | p95 | p99 | max | mean |
+|---|---|---|---|---|---|---|---|---|
+| A — wk1 (real lines) | 10 | 0.0000 | 0.0468 | 0.1150 | 0.1276 | 0.1377 | **0.1403** | 0.0346 |
+| B — in-season | 734 | 0.0244 | 0.0935 | 0.1179 | 0.1510 | 0.2057 | **0.2338** | 0.0483 |
+
+*(Denominator note: 3c.5 recorded "330 real games"; this run enumerates **734**, verified unique — the
+committed snapshot's entire schedule is 734 FBS-vs-FBS games across 138 teams, weeks 1–15. Same order,
+same conclusion, fuller denominator.)*
+
+**The ladder is correctly scaled where it persists, and unreachable only where it does not.** This is
+the load-bearing distinction. The ladder and the 3c.5 floors are **in the same units at the same
+scale**: a bet only persists when `edge ≥ min_edge_threshold` (0.75/1.0/1.5), and in that region the
+**current** boundaries read correctly — measured: edge 0.75 → `SLIGHT`, 1.00/1.20/1.50 → `MODERATE`,
+2.00 → `STRONG`, 2.50 → `VERY_STRONG`. The contrarian rungs are unreachable **only in the pre-floor
+region**, where `base_type` is overwritten by the `NO_BET` verdict (`prediction_engine.py:393-394`) and
+never persists — it is a local, absent from `V2_RECORD_KEYS`. **The ladder is not broken-but-inert; it
+is correctly scaled where it persists and unreachable where it doesn't.**
+
+**A rescale was measured and REJECTED as mis-scaled for the bet region.** Candidate boundaries fit to
+the dormant-state distribution (`VERY_STRONG ≥ 0.200`, `STRONG ≥ 0.125`, `MODERATE ≥ 0.075`,
+`SLIGHT ≥ 0.025`) yield a clean in-season spread (1.4% / 8.2% / 20.7% / 18.0% / 51.8%) — but because
+every persisted bet has `edge ≥ 0.75`, **they would classify every actual bet as `VERY_STRONG`**
+(verified across the bet region). Fitting to the dormant region would corrupt the region that matters.
+
+**Scale-check (×HFA, D9 ~2.5 pts):** the entire measured edge range is ≤ **9.4% of HFA**; the rejected
+top rung sat at 8.0%. Recorded so 2027 reads these labels at their true magnitude. The rung *names* are
+semantically inflated relative to pre-floor quantities — renaming is **out of scope** (it would ripple
+into `by_prediction_type` attribution, the v1→v2 converter, and stored 2025 archive values): recorded,
+not acted on.
+
+**⚠ The 100%-NO_BET result is the DORMANT-STATE projection, i.e. a lower bound.** Vehicle B runs with
+situational/momentum/sentiment dormant and no results, so it measures the floor of the model's
+in-season behaviour, not its ceiling. In-season activations are *designed* to lift rare games above the
+floors — 3c.5's ratified posture is "**bets rarely**," not "never." When that happens `prediction_type`
+varies and `SLIGHT`/`MODERATE` attribution rows populate: **that is the system working, not a
+regression.** Do not read the preseason 734/734 `NO_BET` as a permanent property.
+
+**For 2027 — do NOT "deduplicate" these dimensions.** `prediction_type` (edge magnitude) and
+`confidence_tier` (conviction) are **deliberately distinct**. In the dormant state they look redundant
+only because `prediction_type` is constant (`NO_BET`) while `confidence_tier` varies (measured
+in-season: A 2 / B 405 / C 327). That asymmetry is the 3c.5 floors working as designed (L4), not
+evidence that a field is surplus.
+
+### A4 sub-decision — `predicted_edge` persisted at **4 dp** (was 2)  — **RATIFIED**
+
+`utils/prediction_schema.py` rounded `predicted_edge` to 2 dp. Against a measured range of
+**[0, 0.2338]** that leaves ~24 distinct values: the in-season median (0.0244) collapsed to `0.02` and
+~40% of games rounded to `0.00`. Under the A4 disposition **`predicted_edge` is the primary attribution
+dimension** for the 2027 `reasoned`→`measured` conversion (the discrete ladder never persists), so the
+resolution must survive to disk. **Changed to 4 dp.** Freeze-exempt (`utils/`), but it regenerates the
+committed v2 golden example — done, with `model_version` (VOLATILE, excluded from the parity check)
+preserved so the golden carries no working-tree `-dirty` marker. `verify-phase-3`'s byte-identity check
+caught the stale golden; the pytest suite did **not** — worth knowing which gate has that coverage.
+
+### A5 — Stale category weights: **RETIRED** (with A2)  — **RATIFIED**
+
+`config.py:54-61` carried `primary/secondary/modifier` 60/30/10 plus a legacy 40/40/20, contradicting
+the ratified 3b.2 shares and surfaced to users by `cli status`.
+
+**Severity corrected in both directions.** The ledger asked to "confirm it doesn't feed the engine."
+It does **not** feed scoring — a mid-investigation flag that it "reaches `factors/`" was right about
+the import path and wrong about the consequence. But the maps were worse than cosmetic in one respect:
+`category_weights` was keyed `{primary, secondary, modifier}` while live factors carry the 3b.3
+taxonomy (`physical`, `situational_context`, `coaching_edge`, `matchup`, `momentum_factors`, `market`)
+— **zero key overlap**, so `validate_factor_configuration()` returned `valid: False` with three
+spurious warnings on **every run it was ever called**. `legacy_category_weights` was **write-only
+dead** (set, never read).
+
+**Their only consumers were A2-cluster dead code**, so A5 executed inside the A2 deletion event as
+ratified. Removed: both registry maps, `get_category_summary`, `validate_factor_configuration`,
+`get_execution_stats`, `prediction_engine`'s `get_prediction_stats` + `validate_prediction_setup` (zero
+callers anywhere, including tests), and the `config.py` weight blocks with their now-vacuous validator.
+
+**User-visible surface fixed, not dropped** (owner ruling: no surface may state 40/40/20). `cli status`
+now renders weights **live from the ratified registry**, shown both raw and as a share of the
+**additive** budget — the multiplicative MODIFIER (market) is excluded from that subtotal, which is why
+the live physical share reads 51.95% raw but **55.6% of additive = the ratified 56%**. Presenting only
+the raw share would have created a *new* surface appearing to contradict 3b.2.
+
+`tests/test_config.py`'s weight assertions were repointed at the registry (the invariant now lives
+where the weights do) plus a regression pin that the removed constants never return.

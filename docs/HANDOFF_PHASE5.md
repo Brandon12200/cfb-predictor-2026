@@ -33,7 +33,7 @@ then start with the reverse-audit ledger (it gates the tag). **Not authoritative
 3. **Freeze sequence (`docs/FREEZE_CHECKLIST.md`)** — `calibration-auditor` pre-flight (~Aug 20, must return
    **FREEZE-READY**) → **tag `v2026-frozen`** (owner-only) + extend the freeze-enforcement hook to
    `factors/`/`engine/`/calibration → then **AFTER the tag**: two full-cycle rehearsals (rehearsal-marked
-   commits) + a failure-injection drill (proves the auto-Issue path) + a graded **Week-0 dress rehearsal**.
+   commits) + a failure-injection drill (proves the auto-Issue path) + a graded **opening-weekend (Week 1) dress rehearsal** (D8 abolished Week 0).
 
 ## (c) Ordered reading list (one line each)
 
