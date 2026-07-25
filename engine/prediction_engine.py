@@ -595,67 +595,6 @@ class PredictionEngine:
         # Update running average
         new_avg = (current_avg * total_predictions + execution_time) / (total_predictions + 1)
         self.prediction_stats['avg_execution_time'] = new_avg
-    
-    def get_prediction_stats(self) -> Dict[str, Any]:
-        """Get prediction engine statistics."""
-        total = self.prediction_stats['total_predictions']
-        
-        return {
-            'total_predictions': total,
-            'successful_predictions': self.prediction_stats['successful_predictions'],
-            'failed_predictions': self.prediction_stats['failed_predictions'],
-            'success_rate': self.prediction_stats['successful_predictions'] / max(total, 1),
-            'failure_rate': self.prediction_stats['failed_predictions'] / max(total, 1),
-            'avg_execution_time': self.prediction_stats['avg_execution_time'],
-            'factor_registry_stats': self.factor_registry.get_execution_stats()
-        }
-    
-    def validate_prediction_setup(self) -> Dict[str, Any]:
-        """Validate that the prediction engine is properly configured."""
-        validation_results = {
-            'valid': True,
-            'warnings': [],
-            'errors': [],
-            'components': {}
-        }
-        
-        # Check data manager
-        try:
-            connections = self.data_manager.test_all_connections()
-            validation_results['components']['data_manager'] = {
-                'status': 'operational',
-                'connections': connections
-            }
-        except Exception as e:
-            validation_results['errors'].append(f"Data manager error: {e}")
-            validation_results['valid'] = False
-        
-        # Check factor registry
-        try:
-            factor_validation = self.factor_registry.validate_factor_configuration()
-            validation_results['components']['factor_registry'] = factor_validation
-            
-            if not factor_validation['valid']:
-                validation_results['errors'].extend(factor_validation['errors'])
-                validation_results['valid'] = False
-                
-            validation_results['warnings'].extend(factor_validation['warnings'])
-        except Exception as e:
-            validation_results['errors'].append(f"Factor registry error: {e}")
-            validation_results['valid'] = False
-        
-        # Check normalizer
-        try:
-            all_teams = self.normalizer.get_all_teams()
-            validation_results['components']['normalizer'] = {
-                'status': 'operational',
-                'teams_count': len(all_teams)
-            }
-        except Exception as e:
-            validation_results['errors'].append(f"Normalizer error: {e}")
-            validation_results['valid'] = False
-        
-        return validation_results
 
 
 # Global prediction engine instance

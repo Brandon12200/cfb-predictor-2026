@@ -185,7 +185,6 @@ class ErrorHandler:
             'odds_client': self.fallback_values['vegas_spread'],
             'espn_client': self.fallback_values['team_data'],
             'factor_calculator': self.fallback_values['factor_value'],
-            'confidence_calculator': self.fallback_values['confidence_score'],
             'data_manager': self.fallback_values['team_data']
         }
         

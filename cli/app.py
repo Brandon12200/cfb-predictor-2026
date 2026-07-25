@@ -19,29 +19,27 @@ from cli.args import parse_arguments
 # Heavy imports moved to main() to allow logging setup first
 # Global variables for lazy loading
 config = None
-normalizer = None  
+normalizer = None
 data_manager = None
 prediction_engine = None
-confidence_calculator = None
-edge_detector = None
 
 def _ensure_imports():
-    """Ensure all heavy modules are imported."""
-    global config, normalizer, data_manager, prediction_engine, confidence_calculator, edge_detector
+    """Ensure all heavy modules are imported.
+
+    Reverse-audit A2: the standalone `confidence_calculator`/`edge_detector` were dropped here
+    with the rest of that cluster — the ratified `prediction_engine` is the only scoring surface.
+    """
+    global config, normalizer, data_manager, prediction_engine
     if config is None:
         from config import config as _config
         from utils.normalizer import normalizer as _normalizer
         from data.data_manager import data_manager as _data_manager
         from engine.prediction_engine import prediction_engine as _prediction_engine
-        from engine.confidence_calculator import confidence_calculator as _confidence_calculator
-        from engine.edge_detector import edge_detector as _edge_detector
-        
+
         config = _config
         normalizer = _normalizer
         data_manager = _data_manager
         prediction_engine = _prediction_engine
-        confidence_calculator = _confidence_calculator
-        edge_detector = _edge_detector
 
 
 def _get_current_week() -> int:
@@ -336,12 +334,22 @@ def check_configuration() -> bool:
     print(f"  Cache TTL: {config.cache_ttl}s")
     print(f"  Odds API budget: {config.odds_monthly_budget} credits/month (D5); ESPN {config.rate_limit_espn}/min")
     
-    # Check factor weights
-    total_weight = config.coaching_edge_weight + config.situational_context_weight + config.momentum_factors_weight
-    print(f"\nFactor Weights (total: {total_weight:.3f}):")
-    print(f"  Coaching Edge: {config.coaching_edge_weight:.1%}")
-    print(f"  Situational Context: {config.situational_context_weight:.1%}")
-    print(f"  Momentum Factors: {config.momentum_factors_weight:.1%}")
+    # Factor weights, read LIVE from the ratified registry (reverse-audit A5). The old display
+    # printed `config.py`'s stale legacy 40/40/20 category constants, which contradicted the
+    # ratified 3b.2 shares and fed nothing — the registry is the single source of truth.
+    # Shares are shown BOTH raw and as a share of the additive budget: the MODIFIER category
+    # (market sentiment) is multiplicative, so the ratified 3b.2 percentages are quoted against
+    # the additive subtotal, not the raw total.
+    from factors.factor_registry import factor_registry as _registry
+    by_category: dict[str, float] = {}
+    for _f in _registry.factors.values():
+        by_category[_f.category] = by_category.get(_f.category, 0.0) + _f.weight
+    total_weight = sum(by_category.values())
+    additive = total_weight - by_category.get('market', 0.0)
+    print(f"\nFactor Weights (live registry; total: {total_weight:.3f}):")
+    for _cat in sorted(by_category, key=lambda c: -by_category[c]):
+        _share = f"{by_category[_cat] / additive:.1%} of additive" if _cat != 'market' else "multiplicative modifier"
+        print(f"  {_cat}: {by_category[_cat]:.1%}  ({_share})")
     
     # Show cache statistics
     try:
@@ -366,214 +374,6 @@ def check_configuration() -> bool:
             print(f"  - Factor weights don't sum to 1.0 (got {total_weight})")
 
     return is_valid
-
-
-def run_single_prediction(home_team: str, away_team: str, week: Optional[int] = None,
-                         verbose: bool = False, show_factors: bool = False) -> Dict[str, Any]:
-    """
-    Run prediction for a single game.
-    
-    Args:
-        home_team: Normalized home team name
-        away_team: Normalized away team name
-        week: Week number (optional)
-        verbose: Enable verbose output
-        show_factors: Show factor breakdown
-        
-    Returns:
-        dict: Prediction results
-    """
-    _ensure_imports()
-    print(f"\nAnalyzing: {away_team} @ {home_team}")
-    if week:
-        print(f"Week: {week}")
-    print("-" * 50)
-    
-    try:
-        # Get comprehensive game context
-        print("Fetching game data...")
-        context = data_manager.get_game_context(home_team, away_team, week)
-
-        # Display data quality
-        quality = context.get('data_quality', 0)
-        quality_str = f"{quality:.1%}"
-        print(f"Data Quality: {quality_str}")
-
-        # Get betting line
-        vegas_spread = context.get('vegas_spread')
-        if vegas_spread is not None:
-            print(f"Vegas Spread: {home_team} {vegas_spread:+.1f}")
-        else:
-            print("Vegas Spread: Not available")
-        
-        # Show data availability if verbose
-        if verbose:
-            print(f"\nData Sources: {', '.join(context.get('data_sources', []))}")
-
-            availability = data_manager.validate_data_availability(home_team, away_team)
-            print("Data Availability:")
-            for source, available in availability.items():
-                status = "Yes" if available else "No"
-                print(f"   {source}: {status}")
-        
-        # Show team information
-        home_data = context.get('home_team_data', {})
-        away_data = context.get('away_team_data', {})
-
-        print(f"\nTeam Information:")
-
-        # Home team info
-        home_info = home_data.get('info', {})
-        home_display = home_info.get('display_name', home_team)
-        print(f"{home_team}: {home_display}")
-
-        # Away team info
-        away_info = away_data.get('info', {})
-        away_display = away_info.get('display_name', away_team)
-        print(f"{away_team}: {away_display}")
-        
-        # Show coaching comparison
-        coaching_comp = context.get('coaching_comparison', {})
-        if coaching_comp and show_factors:
-            print(f"\nCoaching Comparison:")
-
-            home_coach = coaching_comp.get('home_coaching', {})
-            away_coach = coaching_comp.get('away_coaching', {})
-
-            home_coach_name = home_coach.get('head_coach_name', 'Unknown')
-            away_coach_name = away_coach.get('head_coach_name', 'Unknown')
-
-            home_exp = home_coach.get('head_coach_experience', 0)
-            away_exp = away_coach.get('head_coach_experience', 0)
-
-            print(f"   {home_team}: {home_coach_name} ({home_exp} years)")
-            print(f"   {away_team}: {away_coach_name} ({away_exp} years)")
-
-            exp_diff = coaching_comp.get('experience_differential', 0)
-            if exp_diff > 0:
-                print(f"   Experience Edge: {home_team} +{exp_diff} years")
-            elif exp_diff < 0:
-                print(f"   Experience Edge: {away_team} +{abs(exp_diff)} years")
-            else:
-                print(f"   Experience Edge: Even")
-        
-        # Generate contrarian prediction using the prediction engine
-        print(f"\nGenerating Contrarian Prediction...")
-        prediction_result = prediction_engine.generate_prediction(home_team, away_team, week)
-        
-        # Calculate confidence assessment
-        context_for_confidence = {
-            'data_quality': quality,
-            'vegas_spread': vegas_spread,
-            'data_sources': context.get('data_sources', [])
-        }
-        
-        # Get factor results for confidence calculation
-        from factors.factor_registry import factor_registry
-        factor_results = factor_registry.calculate_all_factors(home_team, away_team, context)
-        
-        confidence_assessment = confidence_calculator.calculate_confidence(
-            prediction_result, factor_results, context_for_confidence
-        )
-        
-        # Detect contrarian edges
-        edge_classification = edge_detector.detect_edge(
-            prediction_result, confidence_assessment, context_for_confidence
-        )
-        
-        # Display prediction results
-        print(f"\nPrediction Results:")
-        print(f"Vegas Spread: {home_team} {vegas_spread:+.1f}" if vegas_spread is not None else "Vegas Spread: Not available")
-        
-        if prediction_result.get('contrarian_spread') is not None:
-            contrarian_spread = prediction_result['contrarian_spread']
-            total_adjustment = prediction_result.get('total_adjustment', 0.0)
-            edge_size = prediction_result.get('edge_size', 0.0)
-
-            # Handle None values
-            if contrarian_spread is None:
-                contrarian_spread = 0.0
-            if total_adjustment is None:
-                total_adjustment = 0.0
-            if edge_size is None:
-                edge_size = 0.0
-
-            print(f"Contrarian Prediction: {home_team} {contrarian_spread:+.1f}")
-            print(f"Factor Adjustment: {total_adjustment:+.2f} points")
-            print(f"Edge Size: {edge_size:.2f} points")
-        else:
-            print("Contrarian Prediction: Cannot calculate without betting line")
-        
-        print(f"\nEdge Analysis:")
-        print(f"Edge Type: {edge_classification.edge_type.value.replace('_', ' ').title()}")
-        print(f"Confidence: {confidence_assessment['confidence_level']} ({confidence_assessment['confidence_percentage']})")
-        print(f"Recommendation: {edge_classification.recommended_action}")
-        
-        if show_factors:
-            print(f"\nFactor Breakdown:")
-            for factor_name, factor_result in factor_results['factors'].items():
-                if factor_result['success']:
-                    value = factor_result.get('value', 0.0)
-                    weighted_value = factor_result.get('weighted_value', 0.0)
-                    # Handle None values
-                    if value is None:
-                        value = 0.0
-                    if weighted_value is None:
-                        weighted_value = 0.0
-                    print(f"   {factor_name}: {value:+.3f} (weighted: {weighted_value:+.3f})")
-                    if factor_result.get('explanation'):
-                        print(f"      -> {factor_result['explanation']}")
-                else:
-                    print(f"   {factor_name}: FAILED - {factor_result.get('error', 'Unknown error')}")
-
-            print(f"\nCategory Summary:")
-            for category, adjustment in factor_results['summary'].get('category_adjustments', {}).items():
-                # Handle None adjustment values
-                if adjustment is None:
-                    adjustment = 0.0
-                print(f"   {category.replace('_', ' ').title()}: {adjustment:+.3f} points")
-        
-        print(f"\nExplanation:")
-        print(f"{edge_classification.explanation}")
-        
-        # Build result structure with prediction engine results
-        result = {
-            'home_team': home_team,
-            'away_team': away_team,
-            'week': week,
-            'vegas_spread': vegas_spread,
-            'contrarian_prediction': prediction_result.get('contrarian_spread'),
-            'edge_size': prediction_result.get('edge_size'),
-            'confidence': confidence_assessment.get('confidence_score'),
-            'edge_classification': edge_classification.edge_type.value,
-            'data_quality': quality,
-            'data_sources': context.get('data_sources', []),
-            'team_data': {
-                'home': home_data,
-                'away': away_data
-            },
-            'coaching_comparison': coaching_comp,
-            'recommendation': edge_classification.recommended_action,
-            'timestamp': context.get('timestamp'),
-            'prediction_result': prediction_result,
-            'confidence_assessment': confidence_assessment,
-            'edge_classification_obj': edge_classification
-        }
-        
-        return result
-        
-    except Exception as e:
-        print(f"Error analyzing game: {e}")
-
-        # Return error result
-        return {
-            'home_team': home_team,
-            'away_team': away_team,
-            'week': week,
-            'error': str(e),
-            'edge_classification': 'ERROR',
-            'recommendation': 'Analysis failed - check configuration'
-        }
 
 
 def run_weekly_analysis(week: int, min_edge: float = 3.0) -> None:
@@ -1306,124 +1106,3 @@ def _project_history(args, weeks: list, latest: dict) -> int:
             cells.append("  —  " if pw is None else f"{pw:>5.2f}")
         print(f"  {t:<20} " + " ".join(cells))
     return 0
-
-
-def main() -> int:
-    """
-    Main entry point for the College Football Market Edge Platform CLI.
-
-    Returns:
-        int: Exit code (0 for success, 1 for error)
-    """
-    # `hypothetical`/`project` are Phase-2 subcommands routed before the (flat) legacy
-    # parser; the full subcommand CLI lands in Phase 4.5.
-    if len(sys.argv) > 1 and sys.argv[1] == "hypothetical":
-        return run_hypothetical(sys.argv[2:])
-    if len(sys.argv) > 1 and sys.argv[1] == "project":
-        return run_project(sys.argv[2:])
-    try:
-        # Parse arguments
-        args = parse_arguments()
-        
-        # Setup logging FIRST
-        setup_logging(args.debug, args.quiet)
-        
-        # Import heavy modules after logging is configured
-        _ensure_imports()
-        from data.schedule_client import CFBScheduleClient
-        
-        if args.debug:
-            logging.debug(f"Arguments: {args}")
-            logging.debug(f"Configuration: {config}")
-        
-        # Handle utility commands
-        if args.list_teams:
-            list_teams()
-            return 0
-        
-        if args.list_games:
-            list_games(args.list_games)
-            return 0
-        
-        if args.validate_team:
-            validate_team_name(args.validate_team)
-            return 0
-        
-        if args.check_config:
-            is_valid = check_configuration()
-            return 0 if is_valid else 1
-        
-        # Validate configuration for prediction commands
-        if not config.odds_api_key and not args.dry_run:
-            logging.error("Odds API key required for predictions")
-            logging.error("Set ODDS_API_KEY in environment or .env file")
-            return 1
-        
-        start_time = time.time()
-        
-        # Handle prediction commands
-        if args.home and args.away:
-            # Validate teams
-            home_normalized, away_normalized = validate_teams(args.home, args.away)
-            if not home_normalized or not away_normalized:
-                return 1
-            
-            # Run single prediction
-            result = run_single_prediction(
-                home_normalized, 
-                away_normalized, 
-                args.week,
-                args.verbose, 
-                args.show_factors
-            )
-            
-            if args.format == 'json':
-                import json
-                # Convert EdgeClassification object to serializable format
-                json_result = result.copy()
-                if 'edge_classification_obj' in json_result:
-                    edge_obj = json_result['edge_classification_obj']
-                    json_result['edge_classification_obj'] = {
-                        'edge_type': edge_obj.edge_type.value if hasattr(edge_obj.edge_type, 'value') else str(edge_obj.edge_type),
-                        'recommended_action': edge_obj.recommended_action,
-                        'explanation': edge_obj.explanation
-                    }
-                print(json.dumps(json_result, indent=2, default=str))
-        
-        elif args.analyze_week is not None:
-            # Run weekly analysis - if week is 0, use current week logic
-            week_to_analyze = args.analyze_week if args.analyze_week != 0 else _get_current_week()
-            run_weekly_analysis(week_to_analyze, args.min_edge)
-        
-        elif args.analyze_week_p4 is not None:
-            # Run P4 predictions - if week is 0, use current week logic
-            week_to_analyze = args.analyze_week_p4 if args.analyze_week_p4 != 0 else _get_current_week()
-            predictions = run_p4_predictions(week_to_analyze, args.min_edge, args.min_confidence, 
-                                           max_spread=14.0, delay_minutes=args.delay)
-            
-            # Save predictions if any were found
-            if predictions:
-                from utils.prediction_storage import prediction_storage
-                filepath = prediction_storage.save_weekly_predictions(predictions, week_to_analyze)
-                print(f"Predictions saved to: {filepath}")
-            else:
-                print("No predictions to save (no edges found)")
-        
-        # Performance timing
-        execution_time = time.time() - start_time
-        if args.debug:
-            logging.debug(f"Execution time: {execution_time:.2f} seconds")
-        
-        return 0
-        
-    except KeyboardInterrupt:
-        print("\nOperation cancelled by user")
-        return 1
-    except Exception as e:
-        if args.debug if 'args' in locals() else False:
-            logging.exception("Unexpected error occurred")
-        else:
-            logging.error(f"Error: {e}")
-        return 1
-
-

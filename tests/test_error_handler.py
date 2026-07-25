@@ -83,7 +83,6 @@ class TestErrorHandler(unittest.TestCase):
             ('odds_client', None),  # Should return None
             ('espn_client', dict),  # Should return team data dict
             ('factor_calculator', 0.0),  # Should return 0.0
-            ('confidence_calculator', 0.15),  # Should return minimum confidence
         ]
         
         for component, expected in test_cases:
