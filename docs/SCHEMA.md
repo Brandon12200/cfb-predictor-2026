@@ -52,6 +52,8 @@ These bypass the context dict and hit CFBD directly at prediction time; the snap
 ### Schedule-intelligence fields (new in 1c, from CFBD `/venues` + `/games`)
 Per team-week: `rest_days`, `bye`/`opponent_bye`, `short_week`, `travel_distance` (great-circle from venue lat/long), `time_zones_crossed` (+direction), `altitude`, `consecutive_road_games`, `sandwich_spot`. Must be computable for hypothetical matchups. Venue source fields: `latitude`, `longitude`, `elevation`, `timezone`, `dome`.
 
+> **⚠ Elevation units (A6, 2026-07-16).** `venues[*].elevation` is stored **at rest in METRES** — CFBD's native unit, kept unconverted so the snapshot mirrors its source. `schedule_intel[*].altitude` is emitted in **FEET**. `data.schedule_intel.elevation_feet()` is the single conversion point, and the ratified 3b.1 constant it feeds (`altitude_threshold_ft = 4000.0`) is in feet. **Any new consumer of `elevation` must convert.** Before A6 the two met unconverted, so the altitude comparison was false for every venue in every week and the factor could never fire — the maximum elevation in the dataset is ~1634 m against a 4000 ft threshold. Honest-missing is `None`, never `0.0` (which would read as sea level).
+
 ---
 
 ## 2. Provenance manifest (SPEC §5.2)

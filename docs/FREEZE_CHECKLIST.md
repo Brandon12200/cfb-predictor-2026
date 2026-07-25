@@ -32,14 +32,15 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   A1–A5 and B1–B10 are all dispositioned; this item is closed. The late item it surfaced is tracked
   separately immediately below, so this checkbox reflects only what it covers.
 
-- [ ] **A6 (late A-class, OPEN) — `Altitude` can never fire: metres compared against a feet threshold.**
-  Surfaced by the B-batch reachability audit. Venue `elevation` is in **metres** while
-  `altitude_threshold_ft` is **4000 feet**, and the maximum value in the entire dataset is **1634** —
-  so the comparison is false for every venue in every week. Ratified 3b.1 constants silently neutered:
-  the same never-fires family as A1, **third occurrence**. Correcting it changes output on **17 of 734
-  games** at 1.2 pts each (~48% of HFA), so it is calibration-affecting and **pre-tag**. Proposal,
-  impact and options: `docs/proposals/A6_altitude_unit_mismatch.md`. **Owner ruling required before
-  the tag — this is the last ledger blocker.**
+- [x] **A6 (late A-class) — `Altitude` unit mismatch: FIXED (owner-ratified, 2026-07-16).** Venue
+  `elevation` was metres compared against a 4000-**foot** threshold, so the factor could never fire.
+  Fixed at the read/access seam in freeze-exempt `data/` (option (a)): elevation stays **metres at
+  rest**, `schedule_intel.altitude` is emitted in **feet**, the ratified 3b.1 constants and the
+  committed snapshot bytes are **untouched**. Measured: **0 → 16 of 330** tracked-slate activations;
+  max edge unchanged; wk1 golden hash identical (no regeneration). `docs/SCHEMA.md` now states the
+  unit contract; regression pins added for high-altitude, sea-level, neutral-site and missing-elevation.
+  **Venue coverage investigated and closed: not a defect** — 68 is SPEC §5.5's specified P4+independents
+  scope, not a gap. See CALIBRATION_LOG "A6".
 
 - [ ] **Formal pre-freeze calibration audit (~2026-08-20).** Run the **`calibration-auditor`** agent over
   the complete `docs/CALIBRATION_LOG.md`: every entry evidence-class-labeled with the class matching the
