@@ -1166,6 +1166,19 @@ before the freeze. A6 is the opposite: **the data is present and correct**, and 
 unit conversion at the boundary between two individually-correct halves. Declining to fix it would
 not be honest dormancy — it would be knowingly shipping a ratified coefficient that cannot fire.
 
+### Derived-artifact propagation — `data/projections/` regenerated
+
+The fix changes the **matchup pricer**, not only the contrarian factor: `model_spread` moves for
+every game played at a high-altitude venue, and that flows into the committed weekly projection
+artifact. `verify-phase-2`'s reproduce-from-snapshot check caught the staleness (**17 of 138 teams**
+differed — exactly those playing at or against Colorado/BYU/Utah), and `data/projections/2026_week_01.json`
+was regenerated through the pipeline writer.
+
+This is the **documented precedent repeating**: a calibration change that alters the pricer must
+regenerate `data/projections/`, and only the full six-target verify sweep surfaces it — `make test`
+and `verify-phase-3` were both green while the artifact was stale. Recorded again here because it has
+now bitten twice (first the 3b `travel_cap` change).
+
 ### Regression pins added
 
 `tests/test_schedule_intel.py` — a high-altitude venue (~7,198 ft) must **clear** the ratified
