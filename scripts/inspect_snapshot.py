@@ -67,9 +67,15 @@ def _render_game(manifest: dict, snapshot: dict, game: str) -> list[str]:
     for team in game.replace("@", " ").split():
         si = snapshot["data"].get("schedule_intel", {}).get(team)
         if si:
+            # `alt` is read from the snapshot's STORED intel blob, which is frozen at build time.
+            # Snapshots built before the A6 unit fix hold the raw metres-scale value, not feet —
+            # the live prediction path recomputes intel and is unaffected, but this diagnostic
+            # shows what was stored. Labelled so a pre-A6 snapshot can't be misread as feet.
+            alt = si["altitude"]
+            alt_label = "alt" if snapshot["meta"].get("schedule_intel_altitude_unit") == "ft" else "alt(as-stored)"
             out.append(f"  intel[{team}]: rest={si['rest_days']} travel={si['travel_distance']} "
                        f"tz={si['time_zones_crossed']}{si['tz_direction'] and ' '+si['tz_direction'] or ''} "
-                       f"alt={si['altitude']} sandwich={si['sandwich_spot']}")
+                       f"{alt_label}={alt} sandwich={si['sandwich_spot']}")
     return out
 
 

@@ -393,11 +393,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.1,
+          "model_spread": 4.3,
           "neutral_site": false,
           "opponent": "BYU",
           "week": 2,
-          "win_prob": 0.4232,
+          "win_prob": 0.3941,
           "won": null
         },
         {
@@ -502,8 +502,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.526,
-      "projected_wins": 5.474,
+      "projected_losses": 5.555,
+      "projected_wins": 5.445,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -585,11 +585,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.1,
+          "model_spread": 4.3,
           "neutral_site": false,
           "opponent": "BYU",
           "week": 9,
-          "win_prob": 0.4232,
+          "win_prob": 0.3941,
           "won": null
         },
         {
@@ -634,8 +634,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.991,
-      "projected_wins": 6.009,
+      "projected_losses": 6.02,
+      "projected_wins": 5.98,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 12,
@@ -657,11 +657,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.1,
+          "model_spread": 5.3,
           "neutral_site": false,
           "opponent": "UTAH",
           "week": 2,
-          "win_prob": 0.3989,
+          "win_prob": 0.3702,
           "won": null
         },
         {
@@ -766,8 +766,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.945,
-      "projected_wins": 6.055,
+      "projected_losses": 5.973,
+      "projected_wins": 6.027,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 12,
@@ -1337,11 +1337,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.1,
+          "model_spread": 4.3,
           "neutral_site": false,
           "opponent": "BYU",
           "week": 11,
-          "win_prob": 0.4232,
+          "win_prob": 0.3941,
           "won": null
         },
         {
@@ -1366,8 +1366,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.544,
-      "projected_wins": 5.456,
+      "projected_losses": 5.573,
+      "projected_wins": 5.427,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -1827,11 +1827,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.1,
+          "model_spread": -4.3,
           "neutral_site": false,
           "opponent": "ARIZONA",
           "week": 2,
-          "win_prob": 0.5768,
+          "win_prob": 0.6059,
           "won": null
         },
         {
@@ -1857,21 +1857,21 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.1,
+          "model_spread": -4.3,
           "neutral_site": false,
           "opponent": "IOWA STATE",
           "week": 6,
-          "win_prob": 0.5768,
+          "win_prob": 0.6059,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.7,
+          "model_spread": -4.9,
           "neutral_site": false,
           "opponent": "NOTRE DAME",
           "week": 7,
-          "win_prob": 0.5914,
+          "win_prob": 0.6203,
           "won": null
         },
         {
@@ -1887,31 +1887,31 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.1,
+          "model_spread": -4.3,
           "neutral_site": false,
           "opponent": "ARIZONA STATE",
           "week": 9,
-          "win_prob": 0.5768,
+          "win_prob": 0.6059,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 2.5,
+          "model_spread": 3.7,
           "neutral_site": false,
           "opponent": "UTAH",
           "week": 10,
-          "win_prob": 0.4379,
+          "win_prob": 0.4086,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.1,
+          "model_spread": -4.3,
           "neutral_site": false,
           "opponent": "BAYLOR",
           "week": 11,
-          "win_prob": 0.5768,
+          "win_prob": 0.6059,
           "won": null
         },
         {
@@ -1927,17 +1927,17 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.7,
+          "model_spread": -4.9,
           "neutral_site": false,
           "opponent": "CINCINNATI",
           "week": 13,
-          "win_prob": 0.5914,
+          "win_prob": 0.6203,
           "won": null
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.379,
-      "projected_wins": 5.621,
+      "projected_losses": 5.234,
+      "projected_wins": 5.766,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -2304,17 +2304,17 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.7,
+          "model_spread": 4.9,
           "neutral_site": false,
           "opponent": "BYU",
           "week": 13,
-          "win_prob": 0.4086,
+          "win_prob": 0.3797,
           "won": null
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.97,
-      "projected_wins": 6.03,
+      "projected_losses": 5.999,
+      "projected_wins": 6.001,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 12,
@@ -2580,21 +2580,21 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.1,
+          "model_spread": -4.3,
           "neutral_site": false,
           "opponent": "TEXAS TECH",
           "week": 5,
-          "win_prob": 0.5768,
+          "win_prob": 0.6059,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.5,
+          "model_spread": -4.7,
           "neutral_site": false,
           "opponent": "UTAH",
           "week": 7,
-          "win_prob": 0.5866,
+          "win_prob": 0.6155,
           "won": null
         },
         {
@@ -2610,11 +2610,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.1,
+          "model_spread": -4.3,
           "neutral_site": false,
           "opponent": "KANSAS STATE",
           "week": 9,
-          "win_prob": 0.5768,
+          "win_prob": 0.6059,
           "won": null
         },
         {
@@ -2630,11 +2630,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.1,
+          "model_spread": -4.3,
           "neutral_site": false,
           "opponent": "HOUSTON",
           "week": 11,
-          "win_prob": 0.5768,
+          "win_prob": 0.6059,
           "won": null
         },
         {
@@ -2650,17 +2650,17 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.7,
+          "model_spread": -4.9,
           "neutral_site": false,
           "opponent": "UCF",
           "week": 13,
-          "win_prob": 0.5914,
+          "win_prob": 0.6203,
           "won": null
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.552,
-      "projected_wins": 5.448,
+      "projected_losses": 5.407,
+      "projected_wins": 5.593,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -4552,11 +4552,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.1,
+          "model_spread": 4.3,
           "neutral_site": false,
           "opponent": "UTAH",
           "week": 8,
-          "win_prob": 0.4232,
+          "win_prob": 0.3941,
           "won": null
         },
         {
@@ -4572,11 +4572,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.1,
+          "model_spread": 4.3,
           "neutral_site": false,
           "opponent": "COLORADO",
           "week": 11,
-          "win_prob": 0.4232,
+          "win_prob": 0.3941,
           "won": null
         },
         {
@@ -4601,8 +4601,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.986,
-      "projected_wins": 6.014,
+      "projected_losses": 6.044,
+      "projected_wins": 5.956,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 12,
@@ -5030,11 +5030,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.1,
+          "model_spread": 4.3,
           "neutral_site": false,
           "opponent": "BYU",
           "week": 6,
-          "win_prob": 0.4232,
+          "win_prob": 0.3941,
           "won": null
         },
         {
@@ -5099,8 +5099,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.428,
-      "projected_wins": 5.572,
+      "projected_losses": 5.457,
+      "projected_wins": 5.543,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -5386,11 +5386,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.1,
+          "model_spread": 5.3,
           "neutral_site": false,
           "opponent": "UTAH",
           "week": 6,
-          "win_prob": 0.3989,
+          "win_prob": 0.3702,
           "won": null
         },
         {
@@ -5465,8 +5465,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.5,
-      "projected_wins": 5.5,
+      "projected_losses": 5.528,
+      "projected_wins": 5.472,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -5538,11 +5538,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.1,
+          "model_spread": 4.3,
           "neutral_site": false,
           "opponent": "COLORADO",
           "week": 9,
-          "win_prob": 0.4232,
+          "win_prob": 0.3941,
           "won": null
         },
         {
@@ -5587,8 +5587,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.409,
-      "projected_wins": 5.591,
+      "projected_losses": 5.438,
+      "projected_wins": 5.562,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -9615,11 +9615,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.7,
+          "model_spread": 4.9,
           "neutral_site": false,
           "opponent": "BYU",
           "week": 7,
-          "win_prob": 0.4086,
+          "win_prob": 0.3797,
           "won": null
         },
         {
@@ -9674,8 +9674,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.928,
-      "projected_wins": 6.072,
+      "projected_losses": 5.956,
+      "projected_wins": 6.044,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 12,
@@ -13235,11 +13235,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.1,
+          "model_spread": 4.3,
           "neutral_site": false,
           "opponent": "COLORADO",
           "week": 5,
-          "win_prob": 0.4232,
+          "win_prob": 0.3941,
           "won": null
         },
         {
@@ -13314,8 +13314,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.37,
-      "projected_wins": 5.63,
+      "projected_losses": 5.399,
+      "projected_wins": 5.601,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -14027,17 +14027,17 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.7,
+          "model_spread": 4.9,
           "neutral_site": false,
           "opponent": "COLORADO",
           "week": 13,
-          "win_prob": 0.4086,
+          "win_prob": 0.3797,
           "won": null
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.36,
-      "projected_wins": 5.64,
+      "projected_losses": 5.389,
+      "projected_wins": 5.611,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -14568,21 +14568,21 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.1,
+          "model_spread": -5.3,
           "neutral_site": false,
           "opponent": "ARKANSAS",
           "week": 2,
-          "win_prob": 0.6011,
+          "win_prob": 0.6298,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -1.5,
+          "model_spread": -2.7,
           "neutral_site": false,
           "opponent": "UTAH STATE",
           "week": 3,
-          "win_prob": 0.5373,
+          "win_prob": 0.567,
           "won": null
         },
         {
@@ -14598,31 +14598,31 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.1,
+          "model_spread": -5.3,
           "neutral_site": false,
           "opponent": "KANSAS",
           "week": 6,
-          "win_prob": 0.6011,
+          "win_prob": 0.6298,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.5,
+          "model_spread": 4.7,
           "neutral_site": false,
           "opponent": "COLORADO",
           "week": 7,
-          "win_prob": 0.4134,
+          "win_prob": 0.3845,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.1,
+          "model_spread": -4.3,
           "neutral_site": false,
           "opponent": "HOUSTON",
           "week": 8,
-          "win_prob": 0.5768,
+          "win_prob": 0.6059,
           "won": null
         },
         {
@@ -14638,11 +14638,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -2.5,
+          "model_spread": -3.7,
           "neutral_site": false,
           "opponent": "BYU",
           "week": 10,
-          "win_prob": 0.5621,
+          "win_prob": 0.5914,
           "won": null
         },
         {
@@ -14668,17 +14668,17 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.7,
+          "model_spread": -4.9,
           "neutral_site": false,
           "opponent": "WEST VIRGINIA",
           "week": 13,
-          "win_prob": 0.5914,
+          "win_prob": 0.6203,
           "won": null
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.424,
-      "projected_wins": 5.576,
+      "projected_losses": 5.278,
+      "projected_wins": 5.722,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -14700,11 +14700,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 1.5,
+          "model_spread": 2.7,
           "neutral_site": false,
           "opponent": "UTAH",
           "week": 3,
-          "win_prob": 0.4627,
+          "win_prob": 0.433,
           "won": null
         },
         {
@@ -14789,8 +14789,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.001,
-      "projected_wins": 4.999,
+      "projected_losses": 5.03,
+      "projected_wins": 4.97,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 10,
@@ -15838,17 +15838,17 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.7,
+          "model_spread": 4.9,
           "neutral_site": false,
           "opponent": "UTAH",
           "week": 13,
-          "win_prob": 0.4086,
+          "win_prob": 0.3797,
           "won": null
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.393,
-      "projected_wins": 5.607,
+      "projected_losses": 5.422,
+      "projected_wins": 5.578,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,

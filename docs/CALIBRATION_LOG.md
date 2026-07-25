@@ -560,9 +560,9 @@ for real by Phase-4 attribution in 2026.*
 > **Status.** **A1–A5 dispositioned** (owner, 2026-07-25) — see "A-item dispositions" below.
 > **B1–B10 ratified** (owner, 2026-07-16) — see "B-item ratifications" below. A-before-B was
 > deliberate: the A retirements deleted paths B would otherwise have had to cover.
-> **One item remains open:** the late A-class **A6** (`Altitude` never fires — a metres/feet unit
-> mismatch), surfaced by the B-batch reachability audit and still PROPOSED. It is the last
-> ledger blocker before the `calibration-auditor` pre-flight.
+> **A6 (late A-class) ratified and fixed** (owner, 2026-07-16) — see the "A6" entry at the end of
+> this log. **The reverse-audit ledger is now fully dispositioned; no items remain open.** Remaining
+> pre-tag work is the lint-scope fold-in and the `calibration-auditor` pre-flight.
 
 The `calibration-auditor` agent's first run did the reverse check (grep frozen paths for numeric literals
 lacking a log entry) and found the log's **forward** coverage (Phases 2/3b/3c/3d) is clean but its
@@ -1083,3 +1083,126 @@ in a ratification batch would have retired live calibration.
 **Open at the close of this batch:** the late A-class item **A6** (`Altitude` never fires — metres
 compared against a feet threshold) is **not** part of this ratification and remains PROPOSED — see
 `docs/proposals/A6_altitude_unit_mismatch.md`.
+
+---
+
+## A6 — `Altitude` unit mismatch: metres compared against a feet threshold  (behavior-change)  — **RATIFIED (owner, 2026-07-16)**
+
+Late A-class item, surfaced by the B-batch reachability audit (ruling item 9). Logged under the
+**D19 behavior-change pattern**: a wiring defect whose correction changes model output, with the
+before/after measured and stated.
+
+### The defect
+
+`altitude_points()` compared a venue elevation against the ratified 3b.1 `altitude_threshold_ft =
+4000.0`. **The elevation was in metres.** Verified against ground truth: Boulder's stored value is
+`1634.04`, and `1634.04 × 3.28084 = 5,361 ft` against a real ~5,328 ft. The **maximum elevation in
+the entire dataset is 1634.04** against a threshold of `4000.0`, so the comparison was **false for
+every venue in every week** — `Altitude` fired **0/330** on the tracked slate and could never have
+fired at any point in the season.
+
+Ratified 3b.1 constants (`altitude_value` 1.2, `altitude_threshold_ft` 4000.0) silently neutered by a
+comparison that cannot be true. **Same family as A1** (`HeadToHeadRecord` threshold == output max) —
+**third occurrence** of a never-fires defect in this ledger.
+
+**The defect was documented in a comment while being asserted through.** `tests/test_schedule_intel.py`
+carried a `LARAMIE` fixture with `"elevation": 2194.0` annotated `# ~7200 ft altitude`, and
+`test_altitude_passthrough_for_high_venue` asserted `intel["altitude"] == 2194.0`. The fixture author
+knew the value was metres and the comment said feet; the test pinned the unconverted passthrough. A
+test can enforce a contract and still enshrine a units bug — the pin has been rewritten to assert the
+conversion.
+
+### Root cause — a contract ambiguity, not a typo
+
+Nothing in the schema stated the unit of `venues[*].elevation`. CFBD serves metres; the constant was
+named `_ft` and reasoned in feet at 3b.1 (4,000 ft is the conventional high-altitude line). **Both
+halves were individually correct; only the join was wrong.**
+
+### Disposition — option (a), converted at the data boundary
+
+Per owner ruling, the conversion lives at the **read/access seam in freeze-exempt `data/`**:
+
+- **`venues[*].elevation` remains metres at rest** — the snapshot mirrors CFBD's native unit,
+  unconverted. **Committed snapshot bytes are unchanged**; `snapshot_id` is untouched.
+- **`data.schedule_intel.elevation_feet()`** is the single conversion point; `schedule_intel.altitude`
+  is emitted in **feet**, with the unit asserted at the boundary.
+- **`factors/physical_coefficients.py` is untouched** — the ratified 3b.1 constants stay
+  byte-identical, which is the point of fixing at the boundary rather than in the frozen factor.
+- **`docs/SCHEMA.md` now states the unit contract explicitly** (metres at rest → feet at the intel
+  seam; any new consumer of `elevation` must convert), closing the ambiguity that caused this.
+
+### Measured before / after (tracked slate, 330 games)
+
+| | before | after |
+|---|---|---|
+| `Altitude` activations | **0 / 330** | **16 / 330** (4.8%) |
+| max edge, tracked slate | 0.2338 | **0.2338** (unchanged) |
+| mean edge, tracked slate | 0.0551 | 0.0592 |
+
+The 16 are every non-neutral tracked game at the three tracked venues clearing 4,000 ft — **Colorado
+(5,361 ft), BYU (4,633 ft), Utah (4,631 ft)**, all Big 12 — each taking the full `altitude_value`
+**1.2 pts** (≈48% of the ratified ~2.5-pt HFA). The maximum edge is **unchanged**: the affected games
+all sat below the prior maximum, so correcting the defect adds signal to 16 games without extending
+the model's edge range.
+
+**Week-1 slate is untouched — golden NOT regenerated.** No wk1 game has a high-altitude home venue
+(Colorado appears, but as the *away* team at Georgia Tech). The committed golden's predictions payload
+hashes **identically** across the fix (`85442a791bc395bfed830d31e929eccf72c52af7ad5f329c303b5f1808b8ee41`),
+so the artifact was correctly left alone per its own lifecycle rule.
+
+**Determinism re-verified while measuring:** a shared `PredictionEngine` and a fresh instance per game
+produce **identical results across all 330 games**, and repeated shared runs are byte-stable — so
+`build_predictions`' single-instance reuse over a slate carries no order dependence.
+
+### Why NOT option (d), accept-dormant — the A1 precedent does not transfer
+
+Recorded verbatim per owner ruling:
+
+> **Dormancy-as-design covers absent inputs, never broken joins.**
+
+A1 was accepted dormant because its **input is a placeholder** — `total_games` is structurally 0, so
+no threshold could make the factor meaningful and "fixing" it would mean inventing a data source days
+before the freeze. A6 is the opposite: **the data is present and correct**, and the only fault is a
+unit conversion at the boundary between two individually-correct halves. Declining to fix it would
+not be honest dormancy — it would be knowingly shipping a ratified coefficient that cannot fire.
+
+### Derived-artifact propagation — `data/projections/` regenerated
+
+The fix changes the **matchup pricer**, not only the contrarian factor: `model_spread` moves for
+every game played at a high-altitude venue, and that flows into the committed weekly projection
+artifact. `verify-phase-2`'s reproduce-from-snapshot check caught the staleness (**17 of 138 teams**
+differed — exactly those playing at or against Colorado/BYU/Utah), and `data/projections/2026_week_01.json`
+was regenerated through the pipeline writer.
+
+This is the **documented precedent repeating**: a calibration change that alters the pricer must
+regenerate `data/projections/`, and only the full six-target verify sweep surfaces it — `make test`
+and `verify-phase-3` were both green while the artifact was stale. Recorded again here because it has
+now bitten twice (first the 3b `travel_cap` change).
+
+### Regression pins added
+
+`tests/test_schedule_intel.py` — a high-altitude venue (~7,198 ft) must **clear** the ratified
+threshold and produce `altitude_value`; a sea-level venue must **not** clear it (guards against a
+blanket-fire regression); a neutral-site game yields no acclimation edge however high the venue; and a
+venue with no elevation yields **`None`, never `0.0`** (a fabricated "sea level" would violate binding
+principle #4). These are the checks that would have caught the original defect.
+
+### Venue coverage — investigated, NOT a defect (ruling item 9, second half)
+
+The PR-#19 note that "venue data covers 68 of 138 FBS teams, and the five highest-altitude programs
+are absent" was **a misreading, corrected here.** The committed registry artifact `data/registry/fbs_teams_2026.json` holds **all 138 FBS teams with
+locations (132 with elevation)** — reproducible from the repo, no live pull needed —, including Air Force (6,643 ft), Wyoming (7,218 ft), Colorado State,
+New Mexico and Utah State. The snapshot builds `teams`/`venues` over `get_all_tracked_teams()` — *"the
+tracked **P4 + independents** slate"* = SEC 16 + Big Ten 18 + ACC 17 + Big 12 16 + Notre Dame =
+**exactly 68**, which is **SPEC §5.5's specified scope**, asserted by the season-start
+`validate_membership_counts()` check. The five programs are Mountain West / non-P4 and are **correctly
+out of scope by design** — neither a fetch gap nor a join defect. **No action; scope working as
+specified.**
+
+**Denominator correction (affects A4 and the B-batch as recorded):** `both teams tracked = 330`, which
+is **exactly 3c.5's "330 real 2026 FBS-vs-FBS games."** The A4/B measurements were reported over a
+**734**-game FBS-vs-FBS basis that included 404 games involving untracked teams carrying
+`_empty_team()` honest-missing data. Re-measured on the correct 330-game tracked basis: p50 rises
+0.0244 → 0.0468 and mean 0.0483 → 0.0551, but **the maximum is identical (0.2338) and zero games clear
+0.5 or 0.75 on either basis.** Every A4 and B-batch conclusion therefore stands unchanged; only the
+stated denominator was wrong. 3c.5's basis was right all along.

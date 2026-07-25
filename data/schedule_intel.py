@@ -4,6 +4,10 @@ Per team-week physical/situational context — rest, bye, short week, travel dis
 time zones crossed, altitude, consecutive road games, sandwich spots. This is the
 substrate for Phase 2's matchup pricer and Phase 3 factors.
 
+**Units:** `altitude` is emitted in **FEET**. Venue elevation is stored at rest in **metres**
+(CFBD native — SCHEMA §venues); this module is the read/access seam that converts. See the A6
+note at `_FEET_PER_METRE`.
+
 `compute_schedule_intel(...)` is a **pure function** (stdlib `math`/`zoneinfo` only, no
 I/O) so it serves the snapshot builder and hypothetical matchups identically. Missing
 inputs (e.g. a venue without coordinates, or SP+ ratings not yet posted) yield `None`
@@ -19,6 +23,31 @@ from zoneinfo import ZoneInfo
 
 _EARTH_RADIUS_MILES = 3958.7613
 _RANKED_THRESHOLD = 25  # SP+ ranking that counts as a "ranked" (sandwich-spot) opponent
+
+# --- Elevation units: the A6 unit boundary (reverse-audit, 2026-07-16) -----------------------
+# CFBD serves venue `elevation` in METRES, and it is stored that way at rest (SCHEMA §venues) —
+# the snapshot keeps the source's native unit, unconverted. The physical factor, however, reads
+# `intel["altitude"]` and compares it against the ratified 3b.1 `altitude_threshold_ft = 4000.0`,
+# which is FEET. Before A6 those two met with no conversion, so the comparison was false for every
+# venue in every week (the dataset's maximum is ~1634 m) and `Altitude` could never fire.
+#
+# This module is that read/access seam: elevation enters in metres and leaves in FEET, converted
+# once, here. The frozen factor is untouched and the committed snapshot bytes are unchanged.
+_FEET_PER_METRE = 3.28084
+
+
+def elevation_feet(elevation_metres: Any) -> float | None:
+    """Venue elevation in **feet** from the metres-at-rest source value.
+
+    Returns `None` for a missing or non-numeric elevation — honest-missing, never 0.0, which
+    would read as "sea level" and is a fabricated value (binding principle #4).
+    """
+    if elevation_metres is None:
+        return None
+    try:
+        return float(elevation_metres) * _FEET_PER_METRE
+    except (TypeError, ValueError):
+        return None
 
 
 class _TeamGame(NamedTuple):
@@ -112,7 +141,9 @@ def compute_schedule_intel(team: str, opponent: str, game_week: int, game_date: 
             time_zones_crossed = round(abs(diff))
             tz_direction = "none" if diff == 0 else ("west" if diff < 0 else "east")
 
-    altitude = game_venue.get("elevation") if game_venue else None
+    # FEET, converted from the metres-at-rest source (A6). The consumer compares this against
+    # the ratified `altitude_threshold_ft`; the unit is asserted here, at the boundary.
+    altitude = elevation_feet(game_venue.get("elevation")) if game_venue else None
 
     return {
         "team": team,
