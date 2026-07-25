@@ -75,7 +75,13 @@ def build_v2_record(result: dict, *, week: Any, line_as_of: str | None) -> dict:
         "week": week,
         "vegas_spread": _round(result.get("vegas_spread"), 2),
         "contrarian_spread": _round(result.get("contrarian_spread"), 2),
-        "predicted_edge": _round(result.get("edge_size"), 2),
+        # 4 dp, not 2 (reverse-audit A4 sub-decision). The measured 2026 edge distribution spans
+        # [0, 0.2338] pts, so 2 dp left ~24 distinct values and collapsed the in-season median
+        # (0.0244) to 0.02 with ~40% of games rounding to 0.00. `predicted_edge` is the primary
+        # attribution dimension for the 2027 reasoned->measured conversion (the discrete
+        # `prediction_type` ladder never persists — it is overwritten by the NO_BET verdict), so
+        # the resolution has to survive to disk.
+        "predicted_edge": _round(result.get("edge_size"), 4),
         "edge_direction": result.get("edge_direction"),
         "prediction_type": result.get("prediction_type"),
         "no_bet": bool(result.get("no_bet", False)),
