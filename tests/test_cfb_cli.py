@@ -111,6 +111,29 @@ def test_slate_returns_ok_when_all_games_have_lines(capsys):
     assert cfb.main(["slate", "1", "--format", "json"]) == 0
 
 
+def test_predict_game_exit_code_ignores_unrelated_slate_drops(capsys, monkeypatch):
+    """A single-game query's exit code reflects THAT game, not the whole week's dropped games."""
+    real = cfb._load_slate
+
+    def _with_a_drop(week, year):
+        env = real(week, year)
+        env["meta"]["coverage"]["skipped"] = ["some-other-game"]   # unrelated drop
+        return env
+    monkeypatch.setattr(cfb, "_load_slate", _with_a_drop)
+    assert cfb.main(["predict", "game", "CLEMSON @ LSU", "--week", "1", "--format", "json"]) == 0
+
+
+def test_predict_week_save_refuses_overwrite_d22(tmp_path, monkeypatch, capsys):
+    """`--save` writes the claim once; re-saving refuses (predictions are byte-immutable, D22)."""
+    import scripts.build_predictions as bp
+    monkeypatch.setattr(bp, "PREDICTIONS_DIR", tmp_path)
+    assert cfb.main(["predict", "week", "1", "--save", "--format", "json"]) == 0
+    assert (tmp_path / "2026_week_01.json").exists()
+    capsys.readouterr()
+    assert cfb.main(["predict", "week", "1", "--save", "--format", "json"]) == 1  # refuses overwrite
+    assert "byte-immutable" in capsys.readouterr().err
+
+
 # ── main.py deprecation shim orphans run_single_prediction ───────────────────────────────────────
 
 def test_shim_delegates_and_does_not_call_a2(capsys, monkeypatch):

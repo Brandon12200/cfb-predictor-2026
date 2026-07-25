@@ -96,6 +96,13 @@ def _emit_slate(records: list[dict], env: dict, args, *, title: str) -> int:
         emit(args.format, rows=rows, columns=_PREDICT_COLUMNS, title=title)
     if getattr(args, "show_factors", False) and args.format == "table":
         _show_factors(records)
+    return EXIT_OK
+
+
+def _slate_degraded(env: dict) -> int:
+    """EXIT_DEGRADED (+ a stderr note) when the WHOLE week's slate dropped games; EXIT_OK otherwise.
+    Only whole-slate commands (predict week / rerun) use this — a single-game query's exit code must
+    reflect that game, not unrelated dropped games in the same week."""
     skipped = env.get("meta", {}).get("coverage", {}).get("skipped") or []
     if skipped:
         print(f"degraded: {len(skipped)} game(s) dropped (no line / unresolved): "
@@ -116,7 +123,8 @@ def cmd_predict_week(args) -> int:
         rc = _save_slate(env, week, args.year)
         if rc:
             return rc
-    return _emit_slate(records, env, args, title=f"Week {week} — {len(records)} game(s)")
+    _emit_slate(records, env, args, title=f"Week {week} — {len(records)} game(s)")
+    return _slate_degraded(env)
 
 
 def cmd_predict_rerun(args) -> int:
@@ -304,8 +312,8 @@ def build_parser() -> argparse.ArgumentParser:
     pr = predict.add_parser("rerun", help="Re-run a week from the cached snapshot (offline).")
     pr.add_argument("--week", type=int, default=None)
     pr.add_argument("--only")
-    pr.add_argument("--min-edge", type=float, default=0.0, metavar="PTS")
-    pr.add_argument("--tier", choices=["A", "B", "C"], default=None)
+    pr.add_argument("--min-edge", type=float, default=_DEFAULTS.get("min_edge", 0.0), metavar="PTS")
+    pr.add_argument("--tier", choices=["A", "B", "C"], default=_DEFAULTS.get("tier"))
     pr.add_argument("--show-factors", action="store_true")
     _add_format(pr)
     pr.set_defaults(func=cmd_predict_rerun, year=_YEAR, save=False)
