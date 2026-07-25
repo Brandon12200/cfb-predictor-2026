@@ -555,12 +555,14 @@ for real by Phase-4 attribution in 2026.*
 
 ---
 
-## Phase-3 reverse-audit (calibration-auditor shakedown, 2026-07-09)  — **A: DISPOSITIONED (owner, 2026-07-25). B: PENDING.**
+## Phase-3 reverse-audit (calibration-auditor shakedown, 2026-07-09)  — **A + B DISPOSITIONED. One late item (A6) open.**
 
-> **Status.** The **A-items (A1–A5) are all dispositioned** — see "A-item dispositions" immediately
-> after the ledger below. The **B-items (B1–B10) remain PROPOSED** and are the next ratification
-> batch (`data_quality` 0.4 already RATIFIED). A-before-B was deliberate: the A retirements deleted
-> paths B would otherwise have had to cover.
+> **Status.** **A1–A5 dispositioned** (owner, 2026-07-25) — see "A-item dispositions" below.
+> **B1–B10 ratified** (owner, 2026-07-16) — see "B-item ratifications" below. A-before-B was
+> deliberate: the A retirements deleted paths B would otherwise have had to cover.
+> **One item remains open:** the late A-class **A6** (`Altitude` never fires — a metres/feet unit
+> mismatch), surfaced by the B-batch reachability audit and still PROPOSED. It is the last
+> ledger blocker before the `calibration-auditor` pre-flight.
 
 The `calibration-auditor` agent's first run did the reverse check (grep frozen paths for numeric literals
 lacking a log entry) and found the log's **forward** coverage (Phases 2/3b/3c/3d) is clean but its
@@ -858,3 +860,226 @@ the raw share would have created a *new* surface appearing to contradict 3b.2.
 
 `tests/test_config.py`'s weight assertions were repointed at the registry (the invariant now lives
 where the weights do) plus a regression pin that the removed constants never return.
+
+---
+
+## B-item ratifications (reverse-audit ledger, consolidated batch)  — **RATIFIED (owner, 2026-07-16)**
+
+The unlogged internal-formula constants, audited **per-number** (a block is never ratified by one
+entry that names it). Measured on the same two vehicles as A4: the 10-game wk1 dry-run slate and all
+**734 real 2026 FBS-vs-FBS season games** driven at their own week. Full evidence and derivations:
+`docs/proposals/B_batch_unlogged_constants.md` (working document, deleted at the next boundary).
+
+> **⚠ Reachability caveat, governing every entry below.** The vehicle is the **preseason** snapshot:
+> no completed games, no in-season advanced stats, no line-movement series. A factor reading
+> "0/734" means **this vehicle cannot exercise it**, NOT that it is dead code — except where an entry
+> says **DEAD**, which is a static-analysis result independent of any vehicle. Same distinction A4
+> turned on; do not collapse it.
+
+**Liveness map (measured).** Only **4 of 15** registered factors fire in the measured state, all
+physical: `ByeAdvantage` 191/734, `ConsecutiveRoad` 185/734, `TravelBurden` 152/734, `ShortWeek`
+79/734. Vehicle-dormant (needs in-season data): `DesperationIndex`, `PointDifferentialTrends`,
+`CloseGamePerformance`, `StyleMismatch`. Input-dormant: `ExperienceDifferential`, `Altitude`,
+`Sandwich`, `PressureSituation`, `RevengeGame`. Design-dormant: `MarketSentiment`. Structurally
+dormant: `HeadToHeadRecord` (A1).
+
+### B1 — `_calculate_confidence_score` (`engine/prediction_engine.py:524-573`)  (`reasoned`)
+
+The formula 3c.5's NO_BET floor and 3c.6's A/B/C tiers both key off.
+
+**Component weights — a partition of one unit** (they sum to exactly 1.0; ratifying the set ratifies
+the ordering *input quality > model coverage > edge > line presence*):
+
+| Component | Weight | Measured mean contribution | Argument |
+|---|---|---|---|
+| `data_quality` | **0.4** | 0.1679 | **Previously RATIFIED** (owner, 2026-07-04); not re-opened |
+| factor success rate | **0.3** | 0.2780 | How much of the model actually ran — the best proxy for trustworthiness after input quality |
+| edge size | **0.2** | **0.0019** | See the divisor entry below |
+| betting data present | **0.1** | 0.1000 | Binary presence gate; smallest share — a line existing says nothing about its quality |
+
+**Edge-scaling divisor `/5.0` — RATIFIED AS-FOUND, with its consequence logged.** The divisor assumes
+edges reaching ~5 pts. Measured: the season maximum edge is **0.2338**, so `edge_size/5.0` peaks at
+0.0468 and the edge term contributes **at most 0.00935 of its nominal 0.20 budget — 4.68% of its own
+range** (2.81% on the wk1 slate; mean 0.0019). **Consequence, ratified explicitly: `confidence_score`
+is in practice a DATA-AVAILABILITY score** — quality + coverage + presence carry ~0.8 of the budget
+and the edge term is negligible. This is consistent with 3c.5's ratified "erring quiet is deliberate"
+posture. Not rescaled: doing so would move `confidence_score` on every game and thereby re-open the
+3c.5 confidence floor and the 3c.6 tier boundaries, both ratified *against this formula*.
+
+**⚠ Three-site root cause (recorded for 2027).** The pre-Bug-#7 point-scale assumption — that model
+edges live at ~1–5 points — now has **three** known sites: the NO_BET floors (found by 3c.5), the
+`prediction_type` ladder (A4), and this divisor (B1). One phantom, three surviving calibration
+artifacts. A 2027 recalibration should sweep for a fourth rather than assume these were all of them.
+
+**Variance adjustments — RATIFIED as proposed:** `consensus` **+0.25**, `mild` **+0.1**, `moderate`
+**−0.1**, `strong` **−0.2**, `extreme` **−0.3**. Monotone in disagreement; `mild`/`moderate` are
+deliberately symmetric; `extreme` is largest but only labels the tier of an already-declined game
+(3c.5 floor 3 forces NO_BET on `extreme` independently). **Logged observation (owner, for 2027):
+`consensus` +0.25 is theoretically dominant and empirically near-inert.** On a [0,1] score with a
+0.50 NO_BET floor and a 0.65 A-tier boundary, +0.25 can move a game from below the floor to A-tier by
+itself — the single most powerful term in the formula. Measured, it fired on **1 of 734** games, with
+711/734 at `insufficient_data` (no adjustment at all). **2027 must re-measure this term against a
+season of real variance states** rather than inherit it on preseason evidence.
+
+**Clamp `[0.15, 0.95]` — RATIFIED.** Never claims certainty or total ignorance. **Measured: it never
+binds** — Vehicle B range `[0.1635, 0.7862]`, Vehicle A `[0.6332, 0.6388]`, zero games at either
+bound. A guard rail, not an active shaper.
+
+### B2 — registry hierarchy overrides (`factors/factor_registry.py`)  (`reasoned`)  — **RATIFIED**
+
+`ExperienceDifferential {1.0, 3.0}` (threshold = 50% of its real ±2.0 max — sound),
+`PointDifferentialTrends {0.75, 3.0}` and `CloseGamePerformance {0.5, 2.0}` (both **inherit the
+secondary-factor set's reasoning**: thresholds scale with signal strength, weakest signal gets the
+lowest bar). `HeadToHeadRecord {1.0, 5.0}` is **logged structurally dormant per A1**, not ratified as
+a live value.
+
+**⚠ Logged defect, deliberately NOT fixed pre-tag: `max_impact` exceeds `_max_output`.**
+`ExperienceDifferential` is configured `max_impact = 3.0` while `validate_output` clamps to ±2.0, so
+the declared cap is **unreachable** — an "unreachable bound", the same family as A1's
+`threshold == _max_output`. It changes no output (the clamp binds first), so harmonising the numbers
+would edit freeze-bound config to no observable effect — the A4 lesson. **Logged so the pattern is
+recognisable in 2027; not corrected.**
+
+### B3 — `DesperationIndex` internals (`factors/situational_context.py:94-155`)  (`reasoned`)  — **RATIFIED**
+
+Vehicle-dormant (0/734); expected to fire in-season once records exist.
+
+Blend **0.4 / 0.3 / 0.3** (bowl / playoff / late-season): bowl eligibility is the most broadly
+applicable motivation — it applies to every team every year — while playoff and late-season pressure
+apply to narrower populations and are weighted equally. Base neutral **0.5** (midpoint of the [0,1]
+pre-scaling band). Bowl branch **−0.3 / 0.6 / 0.4 / 0.2 / 0.0** and playoff branch **0.5 / 0.3 / 0.1 /
+0.0**: both monotone in urgency, with elimination the only negative (motivation *removed*); the
+playoff branch is gated on `week ≥ 10` so it cannot fire early. Late-season ladder **0.4 / 0.3 / 0.2 /
+0.0** by week — monotone step. Differential scale **×4.0** maps a ±0.5 differential onto the ±2.0
+output range — a definitional mapping, not a free parameter. `bowl_eligibility_threshold = 6` is a
+**rule of the sport** (structural, not calibration); `playoff_contender_threshold = 1` is `reasoned`.
+
+**Scale-check:** ±2.0 output at weight 0.13 ⇒ ≤0.26 pts ≈ **10% of the ratified ~2.5-pt HFA**. In band.
+
+**DEAD — logged, not ratified:** `conference_championship_weeks = [13, 14]` (0 references) and
+`desperation_multipliers = {2.0, 1.5, 1.0, 0.3}` (0 references). Both verified statically.
+
+### B5 — physical shared cutoffs (`factors/scheduling_fatigue.py`)  (`reasoned`)  — **RATIFIED**
+
+**The only set governing factors that fire in the measured state.**
+
+`activation_threshold = 0.4` on all six — uniform **by design**: these are structural facts (a bye
+either happened or it didn't), so one threshold expresses "at least half of the smallest meaningful
+coefficient (0.5, consecutive-road) must be present." Measured: fires on **11–26%** of in-season
+games per factor — selective, not chatty. Strong-confidence cutoff **`max_impact × 0.6`** — a signal
+at ≥60% of its own cap is `VERY_HIGH` rather than `HIGH`; expressed relatively so it scales with each
+factor's cap automatically. Per-factor `cap = 1.5` **inherits 3b.1's ratified `travel_cap`** (0.6×
+HFA). The six weights (0.16/0.14/0.16/0.12/0.10/0.12) are **already ratified in 3b.2**; listed for
+completeness only.
+
+**Honest input absence, logged (B-batch item 9):** `Sandwich` fires 0/734 because the snapshot's
+`sp_ratings` is empty — CFBD had not published 2026 preseason SP+ at the 2026-07-03 build.
+`_sandwich_spot()` correctly returns `None` when adjacent-opponent strength is unknown (binding
+principle #4), and `normalize_sp_ratings()` emits exactly the `ranking` key it reads — **no wiring or
+field-name defect.** This is the state **D10 already ratified** ("robust to SP+ staying empty at
+freeze; auto-activates when CFBD posts either source — data, not code"); the Phase-5 weekly rebuild
+resolves it with no code change. **`Altitude`'s 0/734 is a DIFFERENT and NOT-honest cause — see the
+open A6 item.**
+
+### B6 — `ExperienceDifferential` internals (`factors/coaching_edge.py:36-39,99`)  (`reasoned`)  — **RATIFIED**
+
+Input-dormant (0/734) — the snapshot's coaching fields do not populate. `max_experience_edge = 15`
+(years beyond which coaching experience stops differentiating — a diminishing-returns knee);
+`tenure_weight = 0.3` (tenure at the *current* school is worth less than total experience, 0.7
+implied); `rookie_penalty = 0.5` (extra penalty for a first-year head coach); scale **×2.0** maps a
+±1.0 raw differential onto ±2.0 — definitional. The three coaching factors' **0.06** weights are an
+equal three-way split of the 12% coaching category total already ratified in 3b.2.
+
+**Scale-check:** ±2.0 at weight 0.06 ⇒ ≤0.12 pts ≈ **5% of HFA**. In band.
+
+### B7 — momentum internals (`factors/momentum_factors.py`)  (`reasoned` + `structural`)  — **RATIFIED**
+
+Vehicle-dormant (0/734) — needs completed-game results. All constants verified **live and
+referenced**.
+
+`trend_weights` **0.4 / 0.3 / 0.2 / 0.1** — linear decay over the 4-game window; the last game counts
+4× the fourth-last. `recent_games_window = 4` matches. `improvement_thresholds` **+10 / +5 / −5** —
+point-differential swings of one-and-a-half to two possessions. `consistency_bonus = 0.3`.
+`clutch_weights` — winning a close game is the full clutch signal, a blowout carries **0.3** of it
+(less informative about late-game execution); consumed by name. `recent_games_window = 6` for close
+games — a larger window than trends because close games are rarer and need more history to sample.
+`experience_multiplier = 1.2` (20% amplification).
+
+**Ratified as `structural` (sport convention / sample gate, not magnitudes):**
+`close_game_threshold = 7` (one possession) and `min_close_games = 2` (the smallest non-degenerate
+sample).
+
+**⚠ Fragility logged: `trend_weights` are consumed POSITIONALLY.** `momentum_factors.py:144` does
+`list(self.config['trend_weights'].values())[:n]` — the key names (`last_game`, `second_last`, …) are
+**decorative**, and **reordering the dict would silently re-weight the factor** with no error and no
+test failure. Recorded as a maintenance hazard, not a value change.
+
+**Scale-check:** ±2.0 at weight 0.036 ⇒ ≤0.07 pts ≈ **3% of HFA**. In band.
+
+### B8 — `StyleMismatch` internal weighting (`factors/style_mismatch.py:44-52,85-91`)  (`reasoned`)  — **RATIFIED as-found**
+
+Vehicle-dormant (0/734). Component weights `success_rate 2.0` (highest — most predictive metric),
+`explosiveness 1.5`, `havoc 0.8` (lowest — noisiest), `min_success_diff 0.05` (a 5% gate).
+`pace_mismatch_weight 1.2` is referenced but **inert** — the pace component is dormant per 3d.2.
+
+**⚠ The `/6.0` divisor — RATIFIED AS-FOUND with the discrepancy quantified.** Its comment says
+"normalize by total weights", but the weights actually referenced in the sum are
+`2.0 + 1.5 + 1.2 + 1.0 (a literal, not a config key) + 0.8 = **6.5**`; with pace dormant the *live*
+sum is **5.3**. The divisor matches neither its stated intent nor the live total, under-normalising by
+~8% against intent. **Not corrected**: the output is clamped to the ratified ±1.5 range (3d.3), the
+factor is dormant in the measured state, and changing the divisor is a magnitude change to a frozen
+factor. Logged so 2027 inherits a known, quantified discrepancy rather than rediscovering it.
+
+**DEAD — logged, not ratified:** `redzone_weight = 1.0` (0 references — the ledger's suspicion,
+confirmed) and `pace_advantage_slower = 0.3` (0 references — new finding).
+
+### B9 — `MarketSentiment` internals: **DORMANT FOR ALL OF 2026, UNWIRED**  (`reasoned`, unexercised)  — **RATIFIED**
+
+Measured: value **1.0 on 744/744** games, never activates — exactly MSF.3's specification.
+
+**Owner ruling (2026-07-16): `MarketSentiment` stays dormant for the ENTIRE 2026 season.** Line
+movement **is collected** (the Phase-5 daily `data/lines/` store) but is **not wired into the
+factor**. Activation is deferred to **2027**, to be calibrated against a full season of real movement
+data.
+
+**This is NOT a re-opening of MSF.3.** The dormant-until-data design stands unchanged; the ruling
+fixes what "data landing" means for 2026: **collected, not wired.** Rationale (owner): *activation is
+earned with evidence, like automation; the model characterized at the tag is the model that runs the
+season.* Without this, thresholds with zero measured backing would begin altering live predictions
+mid-season, after the freeze, with the first affected game being the first time they ever ran.
+
+Internal thresholds logged **as-found**, evidence-class `reasoned`, explicitly
+**unexercised-and-unwired**: `reverse_movement_threshold 0.7`, `line_move_threshold 0.5`,
+`steam_move_threshold 1.0`, `steam_time_window 6` (hours), `sharp_indicator_weight 0.4`,
+`public_fade_weight 0.3`, `line_freeze_signal 0.2`. The outer `[0.85, 1.15]` range remains ratified
+(MSF.3). **2027 inherits a season of collected movement data and zero in-season activation risk.**
+
+### B10 — SPEC §16.7 exception note + dead H2H config  — **RATIFIED**
+
+**§16.7 multi-season coaching-lookback exception, recorded here as §16.7 requires.** The coaching
+factors legitimately read **prior-season coaching history** (identity, tenure, career record). This is
+an explicit, owner-resolved carve-out from the **Data Recency Principle**: a coach's experience and
+tenure are **not team-quality data** — they are properties of a person, and a coach's record before
+2026 is the only way the signal can exist at all. The carve-out is narrow: it licenses prior-season
+*coaching* attributes only, never prior-season team performance as a proxy for current team quality.
+
+**DEAD — logged, not ratified** (carried from A1, verified statically): `HeadToHeadRecord.config`'s
+`recent_game_weight = 1.5` and `max_lookback_years = 10` — **0 references** each; only
+`min_games_for_significance` is read.
+
+### Batch-level notes
+
+**Six dead constants logged rather than ratified** — `redzone_weight`, `pace_advantage_slower` (B8),
+`recent_game_weight`, `max_lookback_years` (B10), `conference_championship_weeks`,
+`desperation_multipliers` (B3). Ratifying a value nothing reads asserts a claim the code does not
+make. **Method note for the next audit:** an initial flat scan also flagged B7's
+`trend_weights`/`clutch_weights` members as dead — a **false positive**, since they are nested dicts
+consumed via their parent key. Nested config needs the parent-key check, not a flat one; a false DEAD
+in a ratification batch would have retired live calibration.
+
+**Two "unreachable bound" defects logged, neither fixed** — A1's `threshold == _max_output` and B2's
+`max_impact > _max_output`. Neither changes output; both are logged so the family is recognisable.
+
+**Open at the close of this batch:** the late A-class item **A6** (`Altitude` never fires — metres
+compared against a feet threshold) is **not** part of this ratification and remains PROPOSED — see
+`docs/proposals/A6_altitude_unit_mismatch.md`.

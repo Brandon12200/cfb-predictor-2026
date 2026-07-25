@@ -26,10 +26,15 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   not rescaled** (a rescale was measured and rejected — it would misclassify every actual bet as
   VERY_STRONG), plus `predicted_edge` persistence raised 2 dp → 4 dp; A5 stale category weights
   **retired** with A2 and `cli status` repointed at the live registry.
-  **Still open: the B-batch** — B1–B10 unlogged internal-formula constants (`data_quality` 0.4 already
-  RATIFIED; the rest PROPOSED), incl. the `confidence_score` formula and the `variance_detector` CV
-  cutoffs that gate NO_BET. That batch is the remaining freeze-blocker here, and per house rules it
-  goes to `docs/proposals/` as one consolidated reviewable file.
+  **B1–B10 RATIFIED** (owner, 2026-07-16) — audited per-number with liveness measured on both
+  vehicles; six dead constants logged rather than ratified; `MarketSentiment` ruled dormant-and-unwired
+  for all of 2026 (movement data collected, activation deferred to 2027).
+  **Still open — the last ledger blocker: A6.** The B-batch reachability audit surfaced a late
+  A-class bug: `Altitude` can never fire because venue `elevation` is in **metres** while
+  `altitude_threshold_ft` is **4000 feet** (max value in the data is 1634). Ratified 3b.1 constants
+  silently neutered — the same never-fires family as A1, third occurrence. Proposed fix and impact
+  (17/734 games) in `docs/proposals/A6_altitude_unit_mismatch.md`; **owner ruling required before the
+  tag.**
 
 - [ ] **Formal pre-freeze calibration audit (~2026-08-20).** Run the **`calibration-auditor`** agent over
   the complete `docs/CALIBRATION_LOG.md`: every entry evidence-class-labeled with the class matching the
