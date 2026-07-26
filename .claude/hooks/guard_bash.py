@@ -105,6 +105,16 @@ _PROTECTED_ROOTS = sorted({p.split("/")[0] for p in PROTECTED})
 # Verbs that overwrite, move or destroy a file.
 _MUTATION_VERBS = r"rm|rmdir|mv|cp|dd|truncate|install|shred"
 
+# The leaf name of each protected directory (`data/predictions/` -> `predictions`).
+_PROTECTED_LEAVES = sorted({p.strip("/").split("/")[-1] for p in PROTECTED})
+
+# Any write context: a mutation verb, an in-place sed, a tee, or a redirection operator. The glob
+# check below applies to ALL of these — scoping it to mutation verbs alone left `sed -i`, `tee`
+# and `>` able to reach a globbed protected path.
+_WRITE_CONTEXT = re.compile(rf"\b({_MUTATION_VERBS})\b|\bsed\s+-i|\btee\b|>")
+
+_GLOB_CHARS = "*?[{"
+
 # A command segment: stop at a pipe/semicolon/&& so one clause's arguments cannot leak into the
 # next clause's match.
 _SEG = r"[^|;&]*"
@@ -192,6 +202,53 @@ def _resolve_git_subcommand(tokens: list[str]) -> tuple[str | None, list[str], l
             continue
         i += 1  # unknown bare option: step over it alone
     return None, c_values, []
+
+
+def _glob_may_reach_protected(token: str) -> bool:
+    """Could this globbed token expand to something under a protected directory?
+
+    The shell expands before this hook runs, so the guard never sees the resulting path — the only
+    safe reading of a glob is the pessimistic one. Round 5 denied globs whose text already spelled
+    the root (`data/pred*`); round 6 showed that was still a literal-text rule, and `rm -rf dat*`
+    and `rm -rf */predictions` both walked past it while resolving to `data/predictions/`.
+
+    Pessimistic, in order:
+      * a token that BEGINS with a glob can match anything, including the root;
+      * a protected leaf name anywhere in the token (`*/predictions`);
+      * any complete path component equal to a protected root (`../repo/data/pred*`);
+      * the component adjacent to the glob being a prefix of a root, or extending one — `dat*`
+        expands to `data`, and `data*` to `data`.
+    A component that merely CONTAINS a root as a substring (`metadata/`, `validated_data/`) does
+    not qualify: those are unrelated names, and blocking them was a real false positive.
+    """
+    first_glob = next((i for i, ch in enumerate(token) if ch in _GLOB_CHARS), -1)
+    if first_glob < 0:
+        return False
+    if first_glob == 0:
+        return True
+    if any(leaf in token for leaf in _PROTECTED_LEAVES):
+        return True
+
+    components = token[:first_glob].lstrip("./").split("/")
+    for comp in components[:-1]:
+        if comp in _PROTECTED_ROOTS:
+            return True
+    last = components[-1]
+    return any(root.startswith(last) or last.startswith(root) for root in _PROTECTED_ROOTS if last)
+
+
+def _check_protected_globs(command: str) -> None:
+    """Deny a glob that could expand onto a protected path, in ANY write context."""
+    for clause in _clauses(command):
+        if not _WRITE_CONTEXT.search(clause):
+            continue
+        for token in _tokenize(clause):
+            if _glob_may_reach_protected(token.lstrip(">|<")):
+                _block(
+                    "Blocked: a glob or brace expansion could resolve onto an append-only path "
+                    "without naming it, and the shell expands before this guard runs. Name the "
+                    "exact file instead. (CLAUDE.md principle 5 / D22 / D23)"
+                )
 
 
 def _check_git(tokens: list[str]) -> None:
@@ -348,21 +405,7 @@ def main() -> None:
         "append-only historical artifacts (CLAUDE.md principle 5 / D22 / D23). "
         "New files may be added; existing ones are never modified, moved or deleted."
     )
-    # A glob or brace can produce a protected path without ever spelling it: `rm -rf data/pred*`
-    # and `rm -rf data/{predictions,results}` both reach `data/predictions/` while matching none of
-    # the literal-name rules below. The shell expands before the guard could ever see the result,
-    # so any glob/brace under a protected ROOT is denied wholesale — the same posture as `$IFS` and
-    # `$(…)`. This deliberately also catches globs under non-protected siblings of the same root
-    # (`rm -rf data/snapshots/*`): resolving which expansion is safe means expanding it, and the
-    # over-block fails closed. Pinned by tests.
-    if re.search(
-        rf"\b({_MUTATION_VERBS})\b{_SEG}(?:\./)?({'|'.join(_PROTECTED_ROOTS)})[^\s;|&]*[*?\[{{]",
-        command,
-    ):
-        _block(
-            "Blocked: a glob or brace expansion under a protected root can produce an "
-            f"append-only path without naming it. Name the exact file instead. {protected_note}"
-        )
+    _check_protected_globs(command)
     if re.search(rf"\b({_MUTATION_VERBS})\b{_SEG}\b({_PROTECTED_ALT}){_PDIR_END}", command):
         _block(f"Blocked: refusing to delete/move/overwrite {protected_note}")
     if re.search(rf"\bsed\s+-i{_SEG}\b({_PROTECTED_ALT}){_PDIR_END}", command):

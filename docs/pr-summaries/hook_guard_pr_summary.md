@@ -14,11 +14,11 @@ The `guard_bash.py` extension ruled in D25, plus the shared `PROTECTED` tuple, t
 `code-reviewer.md` briefing fixes, and D25 itself.
 
 **No `factors/` or `engine/` path is touched, so the output-hash instrument does not apply** — this
-change cannot move a prediction. `make test` **644 passed, 2 skipped** (was 449; **+195-case hook
+change cannot move a prediction. `make test` **644 passed, 2 skipped** (was 449; **+213-case hook
 matrix**). `make lint` clean on a scope that now includes both the new test file **and the three
 hook source files themselves**, which had never been linted. *(Counts re-measured at the close of
-round 5 and reconciled against `make test` and `pytest --collect-only`; earlier drafts of this file
-and of D25 quoted 619/170 and 633/184 and went stale each round — a reviewer nit both times.)*
+round 6 and reconciled against `make test` and `pytest --collect-only`; earlier drafts of this file
+and of D25 quoted 619/170, 633/184 and 644/195 and went stale every round — a reviewer nit three times over.)*
 
 ## The gap this closes
 
@@ -31,7 +31,7 @@ Now: destructive git is denied **globally**; in-place mutation of the protected 
 denied **scoped**; and both hooks read **one** `PROTECTED` tuple, so the freeze-day addition of
 `factors/`/`engine/` propagates from a single edit.
 
-## Five NO-GO rounds — what the reviewer caught that I did not
+## Six NO-GO rounds — what the reviewer caught that I did not
 
 This is the part worth reading. Each round I believed the guard was correct; each round it was not.
 
@@ -42,6 +42,21 @@ This is the part worth reading. Each round I believed the guard was correct; eac
 | 3 | Replaced regex with clause-splitting + tokenizing + a positionless token scan | **The trailing slash was load-bearing**: `rm -rf data/predictions` (no slash) matched nothing — no cleverness required, and it would have silently defeated the freeze-day extension to `factors/`. Plus `dd`/`truncate`/`install`/`>|`, persistent aliases, `$IFS`, `$(…)`, backslash-newline continuation, and spurious blocks on `git log --grep revert` |
 | 4 | Terminator widened to `/`, whitespace, quote, end-of-string | **The same closed-set mistake, one layer down.** `rm -rf data/predictions; echo done` walked straight past it — a semicolon, on the artifact this PR exists to defend. Also: D25 and this summary had stale counts, and the read-out over-block was undocumented |
 | 5 | Terminator replaced with a boundary lookahead | **Globs and braces reach the path without spelling it**: `rm -rf data/pred*` and `rm -rf data/{predictions,results}` were ALLOWED — the shell expands before the hook ever sees a path. Also `data/predictions.bak` was newly over-blocked, because `.` was missing from the sibling exclusion the round-4 fix had just introduced |
+| 6 | A glob rule scoped to mutation verbs and anchored on the literal root | **Still a literal-text rule.** `rm -rf dat*` and `rm -rf */predictions` resolve to the protected path without containing it; `sed -i`, `tee` and redirection were never covered; and `metadata/`, `validated_data/` were falsely blocked as substring matches. D25 itself had gone stale on the over-block count and NO-GO tally |
+
+### Round 6 in full
+
+The glob rule I shipped in round 5 was **still literal-text matching wearing a different hat** — it
+required the token to spell the root. Replaced with a token-level check that is pessimistic by
+construction and shared by **every** write context (mutation verbs, `sed -i`, `tee`, redirection),
+since the shell expands before this hook ever sees a path. A token is denied if it begins with a
+glob, contains a protected leaf name, has a complete path component equal to a protected root, or
+has a component adjacent to the glob that is a prefix of a root or extends one (`dat*` → `data`).
+A component that merely *contains* a root as a substring does not qualify — that was the
+`metadata/` false positive, now pinned as ALLOWED.
+
+Read-only commands (`ls data/*`, `grep -rn x data/pred*`, `cat data/snapshots/*/snapshot.json`) sit
+outside every write context and are pinned as unaffected.
 
 ### Round 4 in full
 
@@ -67,7 +82,7 @@ tests-can-enforce-a-broken-contract failure this project already has a doctrine 
 was rewritten to pin reality, not preserved.
 
 **45 git escapes plus the round-4 protected-path escapes are pinned as named regression cases**,
-each a demonstrated miss rather than a hypothetical, in a **195-case** matrix that runs the real
+each a demonstrated miss rather than a hypothetical, in a **213-case** matrix that runs the real
 hook as a subprocess against real payloads.
 
 ### Round 5 in full
@@ -101,7 +116,7 @@ with the `-F` / `--body-file` workaround noted.
 
 ## Reviewer
 
-**Five rounds, five NO-GOs, every one binding and every one correct.** That record is the strongest
+**Six rounds, six NO-GOs, every one binding and every one correct.** That record is the strongest
 evidence in this PR, and it cuts against me: on each round I believed the guard was finished, and
 on each round it was not. Three times the finding was that I had closed the reported *instances*
 while leaving the *class* open — round 4 caught me making that exact mistake inside the commit that

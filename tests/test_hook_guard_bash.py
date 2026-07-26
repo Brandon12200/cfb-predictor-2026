@@ -226,6 +226,21 @@ DENIED_PROTECTED = [
     "cp /tmp/x.json data/predi?tions/",
     "rm -rf ./data/pred*",
     "rm -rf data/[pr]*",
+    # --- Sixth review round: the glob rule was verb-scoped and root-anchored. Three write verbs
+    # and two path shapes walked past it.
+    "sed -i s/x/y/ data/pred*",
+    "tee data/pred*",
+    "echo x > data/pred*",
+    "echo x >data/pred*",
+    "cat /tmp/x | tee data/predi*/out.json",
+    # The root need not be spelled in full: `dat*` uniquely expands to `data`, and `*/predictions`
+    # to `data/predictions` — neither contains the literal protected path.
+    "rm -rf dat*",
+    "rm -rf */predictions",
+    "rm -rf */pred*",
+    "rm -rf ../repo/data/pred*",
+    "rm -rf /Users/x/proj/data/pred*",
+    "rm -rf $HOME/proj/data/pred*",
     # Evasion shapes that defeat tokenizing. Denied wholesale — never needed for ordinary work.
     "git config alias.co checkout",
     "git config alias.wipe '!git reset --hard'",
@@ -259,6 +274,16 @@ ALLOWED_UNPROTECTED = [
     "rm -rf data/predictions.bak",
     "rm data/results.old",
     "mv data/graded.tmp /tmp/",
+    # Names that merely CONTAIN a protected root as a substring are unrelated directories —
+    # blocking them was a real round-6 false positive, not an accepted over-block.
+    "rm -rf metadata/file*",
+    "rm -rf validated_data/*",
+    "rm -rf /tmp/scratch/*",
+    # Read-only commands are outside every write context, so globs there are never touched.
+    "ls data/*",
+    "grep -rn game_id data/pred*",
+    "cat data/snapshots/*/snapshot.json",
+    "python scripts/build_reports.py data/*.json",
 ]
 
 # ── Secret hygiene — the pre-existing rules must still hold ───────────────────────────────────
