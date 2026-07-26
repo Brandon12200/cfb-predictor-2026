@@ -43,16 +43,21 @@ def test_fingerprint_detects_a_deleted_file(tmp_path):
 
 
 def test_guard_coverage_matches_the_immutability_hook():
-    """The guard and `.claude/hooks/protect_immutable.py` must protect the same set.
+    """The guard and the hooks' shared `PROTECTED` tuple must protect the same set.
 
-    The hook intercepts an agent's Edit/Write calls; this guard catches runtime file I/O inside a
-    test. A dir covered by one but not the other is a hole. `reports/` is excluded from BOTH: it
-    holds regenerable renderings (D23), not history.
+    The hooks intercept an agent's Edit/Write calls (`protect_immutable.py`) and its shell commands
+    (`guard_bash.py`); this guard catches runtime file I/O inside a test. A dir covered by one but
+    not the others is a hole. `reports/` is excluded from ALL of them: it holds regenerable
+    renderings (D23), not history.
+
+    Reads `.claude/hooks/protected_paths.py` — the single source both hooks import (D25). The tuple
+    formerly lived in `protect_immutable.py`; it was extracted so the Bash guard could share it
+    rather than keep a second copy that drifts.
     """
     import re
 
-    hook = (conftest._REPO_ROOT / ".claude" / "hooks" / "protect_immutable.py").read_text()
-    block = hook.split("PROTECTED = ", 1)[1].split(")", 1)[0]
+    shared = (conftest._REPO_ROOT / ".claude" / "hooks" / "protected_paths.py").read_text()
+    block = shared.split("PROTECTED = ", 1)[1].split(")", 1)[0]
     hook_dirs = {m.rstrip("/").split("/")[-1] for m in re.findall(r'"([^"]+)"', block)}
     guard_dirs = {p.name for p in conftest._PROTECTED_ARTIFACT_DIRS}
     assert hook_dirs == guard_dirs, f"hook={hook_dirs} guard={guard_dirs}"

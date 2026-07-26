@@ -1,0 +1,242 @@
+"""Allow/deny matrix for the `guard_bash.py` PreToolUse hook.
+
+The hook is regex-driven and sits between an agent and the working tree, so it is exactly the kind
+of code that must not ship untested: a silently over-broad pattern blocks ordinary work, and a
+silently under-broad one reads as protection while providing none (the state this hook was in when
+a read-only reviewer agent ran `git checkout <sha> -- .`).
+
+Each case runs the real hook as a subprocess with a real PreToolUse payload on stdin and asserts the
+exit code — 2 blocks the call, 0 allows it. That tests the actual contract the harness uses, not a
+reimplementation of the patterns.
+"""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+HOOK = Path(__file__).resolve().parents[1] / ".claude" / "hooks" / "guard_bash.py"
+
+BLOCKED, ALLOWED = 2, 0
+
+
+def run_hook(command: str) -> int:
+    payload = {"tool_name": "Bash", "tool_input": {"command": command}}
+    proc = subprocess.run(
+        [sys.executable, str(HOOK)],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    return proc.returncode
+
+
+# ── Destructive git — denied globally (ruling 1) ──────────────────────────────────────────────
+DENIED_GIT = [
+    # The incident that prompted the hook extension.
+    "git checkout af7b0ea -- .",
+    # The append-only bypass (ruling 2): neither hook caught this before.
+    "git checkout af7b0ea -- data/predictions/",
+    "git checkout HEAD -- data/predictions/2026_week_01.json",
+    "git checkout main -- data/results/",
+    "git checkout -- .",
+    "git checkout -- factors/factor_registry.py",
+    "git checkout af7b0ea",
+    "git checkout a5d8d689903f6abedce6a1fa52d11f264cc0be3680",  # over-long: no length loophole
+    "git checkout 9903f6a0be3680bedce6a1fa52d1d29fe605e7fdf1",
+    "git restore .",
+    "git restore --staged data/predictions/2026_week_01.json",
+    "git restore --source=HEAD~3 engine/prediction_engine.py",
+    "git reset --hard",
+    "git reset --hard origin/main",
+    "git clean -f",
+    "git clean -fd",
+    "git clean -xfd",
+    "git stash pop",
+    "git stash apply",
+    "git apply /tmp/some.patch",
+    "git apply --3way fix.patch",
+    # Compound commands: the destructive clause must still be caught.
+    "make test && git reset --hard",
+    "echo hi; git checkout -- .",
+]
+
+# ── Benign git — must remain allowed (ruling 1) ───────────────────────────────────────────────
+ALLOWED_GIT = [
+    "git checkout -b hook-guard-extension",
+    "git checkout -b af7b0ea-experiment",  # -b is branch CREATION even with a hex-ish name
+    "git checkout main",
+    "git checkout lint-scope-fold-in",
+    "git diff main...HEAD",
+    "git diff -w -- factors/factor_registry.py",
+    "git diff --stat",
+    "git status --porcelain",
+    "git log --oneline -5",
+    "git show af7b0ea",
+    "git show af7b0ea --stat",
+    "git blame factors/factor_registry.py",
+    "git stash list",
+    "git add -A",
+    "git commit -m 'lint: mechanical style fixes'",
+    "git push -u origin hook-guard-extension",
+    "git reset --soft HEAD~1",
+    "git clean -n",  # dry run
+]
+
+# ── Protected-directory mutation — denied, scoped (ruling 1: no global mutation block) ────────
+DENIED_PROTECTED = [
+    "rm data/predictions/2026_week_01.json",
+    "rm -rf data/results/",
+    "rmdir data/archive/",
+    "mv data/predictions/2026_week_01.json /tmp/",
+    "cp /tmp/fake.json data/predictions/2026_week_01.json",
+    "sed -i 's/0.5/0.9/' data/predictions/2026_week_01.json",
+    "cat /tmp/x.json | tee data/graded/2026_week_01.json",
+    "echo '{}' > data/predictions/2026_week_01.json",
+    "echo '{}' >> data/lines/2026_week_01.json",
+    "python scripts/x.py > data/ratings/2026_week_01.json",
+    "rm data/projections/2026_week_01.json",
+]
+
+# ── The same verbs OUTSIDE protected directories — must remain allowed ────────────────────────
+ALLOWED_UNPROTECTED = [
+    "rm /tmp/scratch.json",
+    "rm -rf /tmp/claude-scratch/",
+    "mv /tmp/a.json /tmp/b.json",
+    "cp docs/SPEC.md /tmp/spec-backup.md",
+    "sed -i 's/foo/bar/' /tmp/notes.txt",
+    "echo 'hello' > /tmp/out.txt",
+    "python scripts/build_predictions.py > /tmp/run.log",
+    "cat docs/SPEC.md | tee /tmp/spec.txt",
+    "rm reports/weekly_2026_week_01.md",  # D23: renderings are regenerable, NOT guarded
+    "echo x > reports/season_2026.md",
+]
+
+# ── Secret hygiene — the pre-existing rules must still hold ───────────────────────────────────
+DENIED_SECRETS = [
+    "git add .env",
+    "git add .env.local",
+    "git add secrets.txt",
+    "git add api_keys.txt",
+    "git add server.pem",
+    "git commit -m 'add .env'",
+]
+
+# ── Ordinary work — the hook must stay out of the way ─────────────────────────────────────────
+ALLOWED_ORDINARY = [
+    "make test",
+    "make lint",
+    "make verify-phase-3",
+    "ruff check factors/factor_registry.py",
+    "mypy engine/power_ratings.py",
+    "python scripts/build_predictions.py --week 1",
+    "grep -rn 'PROPOSED' factors/ engine/",
+    "ls data/predictions/",
+    "cat data/predictions/2026_week_01.json",
+    "python -c 'import json; print(1)'",
+]
+
+
+@pytest.mark.parametrize("command", DENIED_GIT)
+def test_destructive_git_is_blocked(command):
+    assert run_hook(command) == BLOCKED, f"should be BLOCKED: {command}"
+
+
+@pytest.mark.parametrize("command", ALLOWED_GIT)
+def test_benign_git_is_allowed(command):
+    assert run_hook(command) == ALLOWED, f"should be ALLOWED: {command}"
+
+
+@pytest.mark.parametrize("command", DENIED_PROTECTED)
+def test_protected_dir_mutation_is_blocked(command):
+    assert run_hook(command) == BLOCKED, f"should be BLOCKED: {command}"
+
+
+@pytest.mark.parametrize("command", ALLOWED_UNPROTECTED)
+def test_same_verbs_outside_protected_dirs_are_allowed(command):
+    assert run_hook(command) == ALLOWED, f"should be ALLOWED: {command}"
+
+
+@pytest.mark.parametrize("command", DENIED_SECRETS)
+def test_secret_staging_is_blocked(command):
+    assert run_hook(command) == BLOCKED, f"should be BLOCKED: {command}"
+
+
+@pytest.mark.parametrize("command", ALLOWED_ORDINARY)
+def test_ordinary_work_is_allowed(command):
+    assert run_hook(command) == ALLOWED, f"should be ALLOWED: {command}"
+
+
+def test_heredoc_mentioning_a_denied_shape_is_blocked_known_false_positive():
+    """Matching is over the raw command string, so PROSE that mentions a denied shape blocks.
+
+    This fired for real: the commit that introduced this hook had a message describing
+    `git checkout <sha> -- data/predictions/`, and the hook blocked its own commit. Separating a
+    heredoc body from a real argument means parsing shell, which is where guards acquire holes — so
+    the guard fails closed and this is pinned as INTENDED rather than left to be rediscovered as a
+    bug. Workaround: `git commit -F <file>`.
+    """
+    commit_with_heredoc = (
+        "git commit -F - <<'EOF'\n"
+        "hooks: deny destructive shell commands\n\n"
+        "Prevents `git checkout <old-sha> -- data/predictions/` from reverting an artifact.\n"
+        "EOF"
+    )
+    assert run_hook(commit_with_heredoc) == BLOCKED
+
+    # The same commit message, with no denied shape in its text, passes normally.
+    clean_commit = (
+        "git commit -F - <<'EOF'\n"
+        "hooks: deny destructive shell commands\n\n"
+        "Prevents reverting an append-only artifact from the shell.\n"
+        "EOF"
+    )
+    assert run_hook(clean_commit) == ALLOWED
+
+
+def test_protected_list_is_shared_not_duplicated():
+    """Both hooks must read the same tuple — a second copy is how guards drift apart.
+
+    At the v2026-frozen tag, `factors/`, `engine/` and the calibration config join PROTECTED;
+    this pin is what makes that one edit propagate to both guards.
+    """
+    hooks = Path(__file__).resolve().parents[1] / ".claude" / "hooks"
+    shared = (hooks / "protected_paths.py").read_text()
+    assert "PROTECTED = (" in shared, "protected_paths.py must define the tuple"
+
+    for name in ("guard_bash.py", "protect_immutable.py"):
+        src = (hooks / name).read_text()
+        assert "from protected_paths import PROTECTED" in src, f"{name} must import the shared tuple"
+        assert "PROTECTED = (" not in src, f"{name} must NOT define its own copy of PROTECTED"
+
+
+def test_guard_inherits_new_protected_entries(tmp_path, monkeypatch):
+    """A directory added to PROTECTED is guarded by guard_bash without editing guard_bash.
+
+    This is the freeze-day contract: at the tag, `factors/` and `engine/` are appended to
+    PROTECTED and the git-bypass/mutation denials must cover them automatically.
+    """
+    hooks = Path(__file__).resolve().parents[1] / ".claude" / "hooks"
+    sandbox = tmp_path / "hooks"
+    sandbox.mkdir()
+    for name in ("guard_bash.py", "protect_immutable.py"):
+        (sandbox / name).write_text((hooks / name).read_text())
+    # A PROTECTED tuple with one extra entry, standing in for the freeze-day addition.
+    (sandbox / "protected_paths.py").write_text(
+        'PROTECTED = ("data/predictions/", "factors/")\n'
+    )
+
+    payload = {"tool_name": "Bash", "tool_input": {"command": "rm factors/factor_registry.py"}}
+    proc = subprocess.run(
+        [sys.executable, str(sandbox / "guard_bash.py")],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert proc.returncode == BLOCKED, "a newly PROTECTED directory must be guarded automatically"

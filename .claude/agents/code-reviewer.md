@@ -11,9 +11,12 @@ change set; read `docs/SPEC.md` (the relevant phase) and `CLAUDE.md`.
 
 Check specifically:
 - **Binding principles (CLAUDE.md):** current-season-only team data (Data Recency);
-  no hardcoded team/conference names outside the single registry/`data/conferences.py`
-  interim module; freeze discipline; no fabricated/neutral-filled data; append-only
-  `data/predictions|results|archive` and `reports`.
+  no hardcoded team/conference names outside the season team registry (SPEC §5.5 — the
+  single source; there is no `data/conferences.py`); freeze discipline; no
+  fabricated/neutral-filled data. **Artifact taxonomy (D23):** `data/predictions/` is
+  byte-immutable forever (D22); `data/results|archive|lines|ratings|projections|graded/`
+  are append-only; **`reports/` are regenerable renderings — NOT append-only**, git
+  history is their audit trail, so regenerating them is correct, not a violation.
 - **Phase acceptance:** does the diff satisfy the acceptance criteria of the phase
   being reviewed (e.g. SPEC §4 for Phase 0)? Is `make verify-phase-N` evidence present?
 - **Correctness & scope:** behavior-preserving where the phase claims no behavior

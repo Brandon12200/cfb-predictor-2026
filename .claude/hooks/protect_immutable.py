@@ -16,8 +16,8 @@ import json
 import os
 import sys
 
-PROTECTED = ("data/predictions/", "data/results/", "data/archive/", "data/lines/",
-             "data/ratings/", "data/projections/", "data/graded/")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from protected_paths import PROTECTED  # noqa: E402  (single source of truth — never duplicate)
 
 try:
     payload = json.load(sys.stdin)
