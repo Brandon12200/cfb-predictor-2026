@@ -14,7 +14,7 @@ The `guard_bash.py` extension ruled in D25, plus the shared `PROTECTED` tuple, t
 `code-reviewer.md` briefing fixes, and D25 itself.
 
 **No `factors/` or `engine/` path is touched, so the output-hash instrument does not apply** — this
-change cannot move a prediction. `make test` **644 passed, 2 skipped** (was 449; **+213-case hook
+change cannot move a prediction. `make test` **662 passed, 2 skipped** (was 449; **+213-case hook
 matrix**). `make lint` clean on a scope that now includes both the new test file **and the three
 hook source files themselves**, which had never been linted. *(Counts re-measured at the close of
 round 6 and reconciled against `make test` and `pytest --collect-only`; earlier drafts of this file
