@@ -162,7 +162,8 @@ class FactorRegistry:
         # These are the factors that most contradict public perception
         primary_factors = {
             'HeadToHeadRecord': {'threshold': 1.0, 'max_impact': 5.0},      # 20% of total
-            # DesperationIndex threshold 2.0 -> 1.0 (Phase 3c, PROPOSED — CALIBRATION_LOG 3c).
+            # DesperationIndex threshold 2.0 -> 1.0 — RATIFIED (owner, 2026-07-04;
+            # CALIBRATION_LOG 3c.3).
             # The old 2.0 equalled the factor's max output (±2.0), so it could only fire at exact
             # saturation (never, in practice). 1.0 lets a genuine half-max desperation differential
             # fire, and the L2 confirmation gate (confirm_situational) supplies the real selectivity.
