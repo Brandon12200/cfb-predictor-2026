@@ -4,7 +4,7 @@
 > is outside the proposal lifecycle. The authoritative record is **`docs/DECISIONS.md` D25**; this
 > carries the review context around it.
 >
-> **Status:** open, awaiting owner merge. **Branch:** `hook-guard-extension`, 4 commits, base `a5d8d68`.
+> **Status:** open, awaiting owner merge. **Branch:** `hook-guard-extension`, base `a5d8d68`.
 
 ---
 
@@ -14,10 +14,11 @@ The `guard_bash.py` extension ruled in D25, plus the shared `PROTECTED` tuple, t
 `code-reviewer.md` briefing fixes, and D25 itself.
 
 **No `factors/` or `engine/` path is touched, so the output-hash instrument does not apply** — this
-change cannot move a prediction. `make test` **633 passed, 2 skipped** (was 449; **+184-case hook
-matrix**). `make lint` clean on a scope that now includes the new test file. *(These are the
-authoritative counts, re-measured at the close of round 4; earlier drafts of this file and of D25
-quoted 619/170 and were stale by one round — reconciled here and in D25.)*
+change cannot move a prediction. `make test` **644 passed, 2 skipped** (was 449; **+195-case hook
+matrix**). `make lint` clean on a scope that now includes both the new test file **and the three
+hook source files themselves**, which had never been linted. *(Counts re-measured at the close of
+round 5 and reconciled against `make test` and `pytest --collect-only`; earlier drafts of this file
+and of D25 quoted 619/170 and 633/184 and went stale each round — a reviewer nit both times.)*
 
 ## The gap this closes
 
@@ -30,7 +31,7 @@ Now: destructive git is denied **globally**; in-place mutation of the protected 
 denied **scoped**; and both hooks read **one** `PROTECTED` tuple, so the freeze-day addition of
 `factors/`/`engine/` propagates from a single edit.
 
-## Three NO-GO rounds — what the reviewer caught that I did not
+## Five NO-GO rounds — what the reviewer caught that I did not
 
 This is the part worth reading. Each round I believed the guard was correct; each round it was not.
 
@@ -40,6 +41,7 @@ This is the part worth reading. Each round I believed the guard was correct; eac
 | 2 | Enumerated the known global options | **The fix closed the instances, not the class.** Any option outside the enumeration (`--no-optional-locks`, `-p`) defeated the rule again, and `git -c alias.co=checkout co …` defeated it *through an option the fix had just whitelisted*. A closed set was the wrong shape |
 | 3 | Replaced regex with clause-splitting + tokenizing + a positionless token scan | **The trailing slash was load-bearing**: `rm -rf data/predictions` (no slash) matched nothing — no cleverness required, and it would have silently defeated the freeze-day extension to `factors/`. Plus `dd`/`truncate`/`install`/`>|`, persistent aliases, `$IFS`, `$(…)`, backslash-newline continuation, and spurious blocks on `git log --grep revert` |
 | 4 | Terminator widened to `/`, whitespace, quote, end-of-string | **The same closed-set mistake, one layer down.** `rm -rf data/predictions; echo done` walked straight past it — a semicolon, on the artifact this PR exists to defend. Also: D25 and this summary had stale counts, and the read-out over-block was undocumented |
+| 5 | Terminator replaced with a boundary lookahead | **Globs and braces reach the path without spelling it**: `rm -rf data/pred*` and `rm -rf data/{predictions,results}` were ALLOWED — the shell expands before the hook ever sees a path. Also `data/predictions.bak` was newly over-blocked, because `.` was missing from the sibling exclusion the round-4 fix had just introduced |
 
 ### Round 4 in full
 
@@ -65,30 +67,27 @@ tests-can-enforce-a-broken-contract failure this project already has a doctrine 
 was rewritten to pin reality, not preserved.
 
 **45 git escapes plus the round-4 protected-path escapes are pinned as named regression cases**,
-each a demonstrated miss rather than a hypothetical, in a **184-case** matrix that runs the real
+each a demonstrated miss rather than a hypothetical, in a **195-case** matrix that runs the real
 hook as a subprocess against real payloads.
 
-## The open question for you — the threat model
+### Round 5 in full
 
-Round 3 also surfaced evasions that are **not fixable by this mechanism at all**: `eval`, base64,
-`python -c`, backtick substitution, and any alias defined in an *earlier* call. A `PreToolUse`
-string hook cannot interpret shell — it sees text, and text that is about to be expanded, aliased
-or decoded is indistinguishable from text that is not.
+Two findings. The blocker: **globs and braces reach a protected path without ever spelling it** —
+`rm -rf data/pred*`, `rm -rf data/{predictions,results}` — because the shell expands before the
+hook sees anything. Any glob or brace under a protected *root* is now denied wholesale, the same
+posture already used for `$IFS` and `$(…)`. This deliberately also catches globs under
+non-protected siblings of that root (`rm -rf data/snapshots/*`): deciding which expansion is safe
+would mean performing it. Fourth accepted over-block, documented and pinned.
 
-I have therefore written a **stated threat model into D25**: this guard stops **accident and
-carelessness** — which is precisely what the incident was, an agent casually running a destructive
-command — and is **not a security boundary against a caller deliberately working around it**.
-Known residuals are pinned by tests *as known*, so they can never be mistaken for coverage.
+The second: my own round-4 fix **introduced** a false positive. Excluding `_` and `-` from the
+boundary but not `.` meant `rm -rf data/predictions.bak` — the likeliest real backup spelling — was
+newly blocked, breaking the very "siblings are not swept in" property that fix claimed to
+establish. `.` joined the exclusion, with `.bak`/`.old`/`.tmp` siblings pinned as allowed.
 
-One judgement call inside that, worth your explicit eye: **backtick substitution is deliberately
-left unguarded.** Prose quoting a command in backticks is textually identical to real substitution,
-this project's commit messages use backticks constantly, and guarding it made the hook refuse
-ordinary commits — it blocked one of mine. `$(…)` is denied, since it is rare in prose.
-
-**If you want the stronger claim** — "destructive git is *categorically* impossible from an agent
-session" — that is not a hook, it is a sandbox or a `permissions.deny` layer, and it is a different
-piece of work. My recommendation is to accept the narrowed model: it closes the realistic failure
-(a careless command) at proportionate cost, and it is honest about what it does not do.
+Also closed: the three hook source files were never in `LINT_PATHS`, so "`make lint` clean" did not
+actually cover the hook. They are in now. And shell-variable indirection
+(`X=data/predictions; rm -rf $X`) is named in the docstring's open-by-construction list rather than
+left as an unnamed gap.
 
 ## The threat model — ratified
 
@@ -102,11 +101,16 @@ with the `-F` / `--body-file` workaround noted.
 
 ## Reviewer
 
-**Four rounds, four NO-GOs, every one binding and every one correct.** That record is the strongest
+**Five rounds, five NO-GOs, every one binding and every one correct.** That record is the strongest
 evidence in this PR, and it cuts against me: on each round I believed the guard was finished, and
-on each round it was not. Twice the finding was that I had closed the reported *instances* while
-leaving the *class* open — and round 4 caught me making that exact mistake a second time, inside
-the commit that claimed to fix the first one.
+on each round it was not. Three times the finding was that I had closed the reported *instances*
+while leaving the *class* open — round 4 caught me making that exact mistake inside the commit that
+claimed to fix the round-3 version of it, and round 5 caught the same shape once more in the glob
+case. Twice a fix of mine introduced a *new* defect that the same review round caught.
 
-Every finding is now fixed or pinned as a known residual. Counts in this file and in D25 are
-re-measured and reconciled against `make test` and `pytest --collect-only`.
+The honest read: **the reviewer, not the author, is why this guard works.** Everything shipped in
+this PR would have gone in broken five separate times on my judgement alone — and it guards the
+byte-immutable artifact the whole project's audit trail rests on.
+
+Every finding is now fixed or pinned as a known residual. Counts here and in D25 are re-measured
+against `make test` and `pytest --collect-only`.

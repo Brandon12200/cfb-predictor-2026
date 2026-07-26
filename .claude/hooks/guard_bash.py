@@ -60,7 +60,18 @@ without distinguishing source from destination, so `cp data/predictions/x.json /
 each verb's argument grammar (`cp SRC DST`, `dd if=/of=`, `install -m MODE SRC DST`), i.e. another
 enumerated set, which is the shape that has now failed twice here. Use `Read`, or copy via Python.
 
-All three over-blocks are pinned by tests so they read as intended rather than as bugs.
+A fourth, from the same trade: a glob or brace under a protected root is denied wholesale, which
+also catches globs under non-protected siblings of that root (`rm -rf data/snapshots/*`). The shell
+expands before this hook runs, so deciding which expansion is safe would mean expanding it.
+
+All four over-blocks are pinned by tests so they read as intended rather than as bugs.
+
+**Open by construction — named, not hidden.** A caller who *wants* to get past this will:
+`eval`, base64, `python -c`, backtick substitution, an alias defined in an earlier call, or a path
+held in a shell variable (`X=data/predictions; rm -rf $X`). None of these is defended against, and
+none can be: this hook receives a string, and a string about to be expanded, decoded or dereferenced
+is indistinguishable from one that is not. See D25's stated threat model — accident and
+carelessness, not adversaries.
 
 Exit code 2 blocks the call.
 """
@@ -83,9 +94,16 @@ _PROTECTED_ALT = "|".join(re.escape(p.rstrip("/")) for p in PROTECTED)
 #   round 4: enumerating `/`, whitespace, quote, end-of-string missed `rm -rf data/predictions;`
 #            and `(rm -rf data/predictions)` — ordinary shell punctuation, no evasion needed.
 # A negative lookahead closes the class instead of adding instances: match unless the next
-# character continues the NAME. `_` and `-` are excluded so a sibling directory
-# (`data/predictions_backup`, `data/predictions-old`) is not swept in.
-_PDIR_END = r"(?![-\w])"
+# character continues the NAME. `_`, `-` and `.` are excluded so a sibling
+# (`data/predictions_backup`, `data/predictions-old`, `data/predictions.bak`) is not swept in.
+# `/` is NOT excluded — `data/predictions/x.json` must still match.
+_PDIR_END = r"(?![-.\w])"
+
+# Roots of the protected tree (`data/predictions/` -> `data`). Used only by the glob rule below.
+_PROTECTED_ROOTS = sorted({p.split("/")[0] for p in PROTECTED})
+
+# Verbs that overwrite, move or destroy a file.
+_MUTATION_VERBS = r"rm|rmdir|mv|cp|dd|truncate|install|shred"
 
 # A command segment: stop at a pipe/semicolon/&& so one clause's arguments cannot leak into the
 # next clause's match.
@@ -330,8 +348,22 @@ def main() -> None:
         "append-only historical artifacts (CLAUDE.md principle 5 / D22 / D23). "
         "New files may be added; existing ones are never modified, moved or deleted."
     )
-    if re.search(rf"\b(rm|rmdir|mv|cp|dd|truncate|install|shred)\b{_SEG}\b({_PROTECTED_ALT}){_PDIR_END}",
-                 command):
+    # A glob or brace can produce a protected path without ever spelling it: `rm -rf data/pred*`
+    # and `rm -rf data/{predictions,results}` both reach `data/predictions/` while matching none of
+    # the literal-name rules below. The shell expands before the guard could ever see the result,
+    # so any glob/brace under a protected ROOT is denied wholesale — the same posture as `$IFS` and
+    # `$(…)`. This deliberately also catches globs under non-protected siblings of the same root
+    # (`rm -rf data/snapshots/*`): resolving which expansion is safe means expanding it, and the
+    # over-block fails closed. Pinned by tests.
+    if re.search(
+        rf"\b({_MUTATION_VERBS})\b{_SEG}(?:\./)?({'|'.join(_PROTECTED_ROOTS)})[^\s;|&]*[*?\[{{]",
+        command,
+    ):
+        _block(
+            "Blocked: a glob or brace expansion under a protected root can produce an "
+            f"append-only path without naming it. Name the exact file instead. {protected_note}"
+        )
+    if re.search(rf"\b({_MUTATION_VERBS})\b{_SEG}\b({_PROTECTED_ALT}){_PDIR_END}", command):
         _block(f"Blocked: refusing to delete/move/overwrite {protected_note}")
     if re.search(rf"\bsed\s+-i{_SEG}\b({_PROTECTED_ALT}){_PDIR_END}", command):
         _block(f"Blocked: refusing in-place `sed -i` edit of {protected_note}")

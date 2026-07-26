@@ -216,6 +216,16 @@ DENIED_PROTECTED = [
     "rm -rf data/predictions && echo done",
     "rm -rf data/graded|cat",
     "rm -rf data/lines,",
+    # --- Fifth review round: the shell expands globs and braces BEFORE the guard sees a path,
+    # so a protected directory can be reached without ever being spelled.
+    "rm -rf data/pred*",
+    "rm -rf data/{predictions,results}",
+    "rm -rf data/*",
+    "rm -rf data*",
+    "mv data/pred* /tmp/",
+    "cp /tmp/x.json data/predi?tions/",
+    "rm -rf ./data/pred*",
+    "rm -rf data/[pr]*",
     # Evasion shapes that defeat tokenizing. Denied wholesale — never needed for ordinary work.
     "git config alias.co checkout",
     "git config alias.wipe '!git reset --hard'",
@@ -244,6 +254,11 @@ ALLOWED_UNPROTECTED = [
     "rm -rf data/predictions-old",
     "mv data/results_scratch /tmp/",
     "echo x > data/graded_tmp/notes.txt",
+    # A `.`-suffixed sibling is a sibling too — the round-4 lookahead swept these in until `.`
+    # joined the exclusion set. A backup named `.bak` is the likeliest real-world spelling.
+    "rm -rf data/predictions.bak",
+    "rm data/results.old",
+    "mv data/graded.tmp /tmp/",
 ]
 
 # ── Secret hygiene — the pre-existing rules must still hold ───────────────────────────────────
