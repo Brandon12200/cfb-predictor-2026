@@ -447,6 +447,51 @@ def test_working_directory_is_resolved_not_ignored():
     assert run_hook("cat predictions/2026_week_01.json", cwd="data") == ALLOWED
 
 
+def test_known_open_filesystem_state_bypasses():
+    """KNOWN-OPEN residuals, not coverage — owner-ruled open-by-construction (D25).
+
+    A `PreToolUse` hook receives a string and has **no filesystem state**. It cannot know that
+    `pushd` moved the shell, that a subshell has its own working directory, or that a name is a
+    symlink into a protected tree. Round 8 closed the `cd` form because a literal `cd` token is
+    visible in the command text; these are the same class with the state hidden somewhere the hook
+    cannot see.
+
+    Chasing them one at a time is the enumerated-set mistake this guard's own review record
+    documents three times over, so the CLASS is recorded in D25's open-by-construction list rather
+    than closed instance by instance. These assertions therefore pin what the guard does NOT do —
+    if a future change starts blocking them, that is a welcome improvement and this test should be
+    updated, not the guard reverted.
+
+    The real immutability guarantee was never this hook: it is git history plus owner-controlled
+    merges. This is a seatbelt against carelessness.
+    """
+    assert run_hook("pushd data && rm -rf predictions") == ALLOWED
+    assert run_hook("(cd data && rm -rf predictions)") == ALLOWED
+    assert run_hook("rm -rf link_to_predictions") == ALLOWED
+
+    # For contrast, the `cd` form IS closed — the state is visible in the command text.
+    assert run_hook("cd data && rm -rf predictions") == BLOCKED
+
+
+def test_hook_never_tracebacks_on_malformed_payloads():
+    """A crashing PreToolUse hook is its own failure mode — it must degrade, never raise."""
+    for cwd in [None, "", "/tmp", "data/predictions"]:
+        for command in ["rm -rf predictions", "cd", "cd -", "cd ~"]:
+            payload = {"tool_name": "Bash", "tool_input": {"command": command}}
+            if cwd is not None:
+                payload["cwd"] = str(REPO / cwd) if cwd and not cwd.startswith("/") else cwd
+            proc = subprocess.run(
+                [sys.executable, str(HOOK)],
+                input=json.dumps(payload),
+                capture_output=True,
+                text=True,
+                timeout=30,
+                env={**os.environ, "CLAUDE_PROJECT_DIR": str(REPO)},
+            )
+            assert "Traceback" not in proc.stderr, f"{command!r} @ {cwd!r}: {proc.stderr}"
+            assert proc.returncode in (0, 2), f"{command!r} @ {cwd!r}: rc={proc.returncode}"
+
+
 def test_reading_out_of_a_protected_dir_is_blocked_accepted_over_block():
     """Third accepted over-block: guard (c) does not distinguish source from destination.
 

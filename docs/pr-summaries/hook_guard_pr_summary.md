@@ -14,7 +14,7 @@ The `guard_bash.py` extension ruled in D25, plus the shared `PROTECTED` tuple, t
 `code-reviewer.md` briefing fixes, and D25 itself.
 
 **No `factors/` or `engine/` path is touched, so the output-hash instrument does not apply** — this
-change cannot move a prediction. `make test` **672 passed, 2 skipped** (was 449; **+223-case hook
+change cannot move a prediction. `make test` **674 passed, 2 skipped** (was 449; **+225-case hook
 matrix**). `make lint` clean on a scope that now includes both the new test file **and the three
 hook source files themselves**, which had never been linted. *(Counts re-measured at the close of
 round 8 and reconciled against `make test` and `pytest --collect-only`; earlier drafts of this file
@@ -112,7 +112,7 @@ tests-can-enforce-a-broken-contract failure this project already has a doctrine 
 was rewritten to pin reality, not preserved.
 
 **45 git escapes plus the round-4 protected-path escapes are pinned as named regression cases**,
-each a demonstrated miss rather than a hypothetical, in a **223-case** matrix that runs the real
+each a demonstrated miss rather than a hypothetical, in a **225-case** matrix that runs the real
 hook as a subprocess against real payloads.
 
 ### Round 5 in full
