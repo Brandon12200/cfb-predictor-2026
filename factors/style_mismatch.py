@@ -31,7 +31,8 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         # Output range (Phase 3d, 3c.10): ±1.5 = 0.6× the ratified ~2.5-pt HFA (D9). The old ±4.0
         # (1.6× HFA) was the largest single-factor range in the system — a style/efficiency mismatch
         # is a SECONDARY matchup read and must be capped well below home field; ±1.5 sits alongside
-        # the physical factors (bye 1.0, travel cap 1.5). PROPOSED → ratified in CALIBRATION_LOG 3d.
+        # the physical factors (bye 1.0, travel cap 1.5).
+        # RATIFIED (owner, 2026-07-04; CALIBRATION_LOG 3d.3).
         self._min_output = -1.5
         self._max_output = 1.5
 

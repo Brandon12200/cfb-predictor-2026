@@ -211,7 +211,7 @@ class PressureSituationCalculator(BaseFactorCalculator):
         }
     
     def calculate(self, home_team: str, away_team: str, context: Optional[Dict[str, Any]] = None) -> float:
-        """Coaching-pressure factor — DORMANT (Phase 3c proposed disposition).
+        """Coaching-pressure factor — DORMANT. RATIFIED (owner, 2026-07-04; CALIBRATION_LOG 3c.2).
 
         This factor was almost entirely fabricated: an MD5-hash-of-team-name base pressure,
         a hardcoded ``popular_teams`` list, and a home-field term that double-counted the
@@ -220,9 +220,8 @@ class PressureSituationCalculator(BaseFactorCalculator):
         and spread-based heuristics) overlaps DesperationIndex (record-based motivation) and
         the market factors without earning an independent reasoned coefficient. Rather than
         keep a thin, double-counting heuristic, the factor is dormant — it returns 0.0 (no
-        signal, never fabricated) until a genuine coaching-pressure signal exists. Proposed
-        disposition, ratified in the Phase 3c CALIBRATION_LOG batch; revisit with 2026
-        attribution in 2027.
+        signal, never fabricated) until a genuine coaching-pressure signal exists. Ratified as
+        dormant in CALIBRATION_LOG 3c.2 (owner, 2026-07-04); revisit with 2026 attribution in 2027.
         """
         return 0.0
     

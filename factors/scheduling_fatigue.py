@@ -8,7 +8,8 @@ D15 — the same values the matchup pricer's model-spread schedule adjustment co
 appears separately in `factor_breakdown` and is individually attributable in Phase 4.
 
 Per D17, physical factors are the reliable signals (L1) but the coefficients rest on documented
-reasoning, not 2025 performance; weights are ratified in `docs/CALIBRATION_LOG.md` before the freeze.
+reasoning, not 2025 performance. **RATIFIED** (owner, 2026-07-03): coefficients `CALIBRATION_LOG`
+**3b.1**, weights **3b.2**; the shared activation cutoffs are **B5** (owner, 2026-07-16).
 Point values here are POINTS from the home perspective (+ favors home). Missing intel → 0 (honest
 absence, never fabricated).
 """
