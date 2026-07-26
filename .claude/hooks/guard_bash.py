@@ -12,9 +12,10 @@ Three jobs, in order:
     explicitly still allowed: `checkout -b`, plain branch switching, `diff`, `log`, `show`,
     `status`, `stash list`.
 
-(c) **In-place mutation of the protected artifact directories** — `rm`/`rmdir`/`mv`/`cp`,
-    `sed -i`, `tee`, and `>`/`>>` redirection targeting anything under `PROTECTED`. Scoped to
-    those directories only; there is deliberately **no global file-mutation block**.
+(c) **In-place mutation of the protected artifact directories** — `rm`/`rmdir`/`mv`/`cp`/`dd`/
+    `truncate`/`install`/`shred`, `sed -i`, `tee`, and `>`/`>>`/`>|` redirection targeting anything
+    under `PROTECTED`. Scoped to those directories only; there is deliberately **no global
+    file-mutation block**.
 
 **Why (b) is global while (c) is scoped.** `git checkout <sha> -- data/predictions/` would revert a
 byte-immutable prediction artifact (D22) and was blocked by neither hook before this: the
@@ -45,7 +46,7 @@ invocation **every token is scanned** for a destructive subcommand. No verb posi
 so an unknown global option cannot shift the verb out of view. `-c alias.X=<verb>` is denied
 outright, since git resolves the alias itself and no token check could see the real verb.
 
-**Residual over-blocks, accepted — two of them, both hit for real.** A heredoc LINE that itself
+**Residual over-blocks, accepted — five in total, the first two hit for real.** A heredoc LINE that itself
 begins with a denied command reads as a real clause; and prose containing the `$(` substitution
 form near a destructive verb trips the substitution rule (this blocked the PR description that
 *explained* the substitution rule). Distinguishing either would mean tracking heredoc and quoting
@@ -64,7 +65,13 @@ A fourth, from the same trade: a glob or brace under a protected root is denied 
 also catches globs under non-protected siblings of that root (`rm -rf data/snapshots/*`). The shell
 expands before this hook runs, so deciding which expansion is safe would mean expanding it.
 
-All four over-blocks are pinned by tests so they read as intended rather than as bugs.
+A fifth, found by the final conformance review and recorded rather than chased: a command whose
+QUOTED text contains a mutation verb near a glob-like substring (a `grep` for one of these
+patterns, a `python3 -c` payload embedding one) trips the write-context check, because that
+check reads the clause text rather than tracking which tokens were fully quoted. Same family as
+the heredoc and `$(` cases, same fail-closed direction.
+
+All five over-blocks are pinned or recorded so they read as intended rather than as bugs.
 
 **Open by construction — named, not hidden.** A caller who *wants* to get past this will:
 `eval`, base64, `python -c`, backtick substitution, an alias defined in an earlier call, or a path

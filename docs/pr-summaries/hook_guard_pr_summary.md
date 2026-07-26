@@ -134,6 +134,21 @@ actually cover the hook. They are in now. And shell-variable indirection
 (`X=data/predictions; rm -rf $X`) is named in the docstring's open-by-construction list rather than
 left as an unnamed gap.
 
+## The cap — owner ruling, 2026-07-26
+
+**The branch is capped at the current commit; round 8's `cwd` fix was the last guard-logic
+change.** The class that case belongs to — **filesystem-state-dependent bypasses** (`pushd`,
+subshells, symlinks and kin) — is ruled **open-by-construction** under D25's threat model: a
+`PreToolUse` hook receives a string and has no filesystem state, and closing such instances one at
+a time is exactly the enumerated-set mistake this review record already documents three times over.
+
+Before pinning them I probed which cases the round-8 fix actually covers, so the residual list
+states fact rather than assumption. **Covered (blocked):** `cd data && …`, `cd ./data`,
+`cd data/../data`, nested `cd`, the `$(…)` form, a persisted working directory, and standing inside
+a protected directory. **Genuinely open:** `pushd`, subshells, symlinks — the three now pinned as
+KNOWN-OPEN, asserting what the guard does *not* do. The hook was also confirmed never to traceback
+on a missing, empty, or out-of-project `cwd`, which is its own failure mode.
+
 ## The threat model — ratified
 
 Accepted as narrowed (owner, 2026-07-25) and stated in D25: the guard closes **accident and
@@ -157,5 +172,30 @@ The honest read: **the reviewer, not the author, is why this guard works.** Ever
 this PR would have gone in broken five separate times on my judgement alone — and it guards the
 byte-immutable artifact the whole project's audit trail rests on.
 
-Every finding is now fixed or pinned as a known residual. Counts here and in D25 are re-measured
-against `make test` and `pytest --collect-only`.
+### Round 9 — conformance only: **GO**
+
+Scoped by the owner to conformance rather than penetration: does the code match D25's stated
+model, are all residuals honestly pinned as known, do all stated counts match reality. **GO, no
+blockers, no should-fixes.** The reviewer verified live rather than by reading: the three
+KNOWN-OPEN cases really are allowed and the `cd` contrast really is blocked; the 225-case matrix,
+45 pinned escapes, and 674/2 suite counts all check out against actual execution; `make lint` is
+clean including the three hook files that had never been linted.
+
+Its two nits were documentation-only and are fixed here, since a description that overstates or
+understates what the code does is itself a conformance defect: the docstring and D25 both listed
+guard (c)'s verbs as `rm`/`rmdir`/`mv`/`cp` when the code also covers `dd`/`truncate`/`install`/
+`shred` and `>|`; and a **fifth** over-block (quoted text containing a mutation verb near a
+glob-like substring — a `grep` for one of these patterns) is now recorded rather than left
+unnamed. No guard logic was touched.
+
+Every finding across nine rounds is now fixed, pinned as a known residual, or ruled
+open-by-construction. Counts here and in D25 are re-measured against `make test` and
+`pytest --collect-only` at the capped commit.
+
+### What this record is worth
+
+Rounds 1–4 turned an unguarded Bash surface into a real accident-guard, and those findings were
+substantive. Rounds 5–8 show the oscillation signature — each fix introducing an over-block the
+next round removed — which is the honest signal that the remaining class was not closable from a
+string hook. **The immutability guarantee was always git history plus owner-controlled merges;
+this hook is a seatbelt, and the seatbelt is done.**
