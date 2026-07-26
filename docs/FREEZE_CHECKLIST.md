@@ -1,5 +1,10 @@
 # Freeze checklist — before tagging `v2026-frozen`
 
+> **The reverse-audit ledger is CLOSED** (A1–A6, B1–B10 — 2026-07-25, merged through PR #20).
+> Remaining pre-tag work, in order: **lint-scope fold-in → `calibration-auditor` pre-flight →
+> FREEZE-READY → owner cuts the tag.** Full carry-forward for a fresh session:
+> **`docs/HANDOFF_FREEZE.md`**.
+
 Durable home for everything that **must happen before the freeze tag** (target **~2026-08-24**, before the
 opening-weekend (Week 1) prediction run; SPEC §3 / §16.2). Anything that touches `factors/`, `engine/`, or weight/threshold
 config **cannot** be done after the tag (those become immutable), so it belongs here — not in an
