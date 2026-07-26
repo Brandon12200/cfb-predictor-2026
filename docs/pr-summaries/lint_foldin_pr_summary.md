@@ -72,20 +72,39 @@ looked relevant. Nothing regenerated `data/projections/`, correctly: no pricer i
 | **6** | The stale `PROPOSED` label at `prediction_engine.py:15` now reads `RATIFIED (owner, 2026-07-04; CALIBRATION_LOG 3c.5 / 3c.6)`. Comment-only. |
 | **7** | Carried to the B4 proposal (post-merge), not into this PR. |
 
-## One thing surfaced, deliberately NOT fixed here
+## Ruling 6 extended to the defect class (`1f264cc`)
 
-**`factors/factor_registry.py:165` carries the identical stale-label defect that ruling 6 fixed.**
-The `DesperationIndex` threshold comment reads *"threshold 2.0 -> 1.0 (Phase 3c, **PROPOSED** —
-CALIBRATION_LOG 3c)"*. That constant is **RATIFIED** (3c.3, owner, 2026-07-04).
+The owner ruled that ruling 6's intent covers the **defect class, not the single site**, so
+`factors/factor_registry.py:165` was corrected the same way: the `DesperationIndex` threshold comment
+now reads **RATIFIED (owner, 2026-07-04; CALIBRATION_LOG 3c.3)** instead of *"(Phase 3c, PROPOSED —
+CALIBRATION_LOG 3c)"*. The bare `3c` reference was also made precise — `3c` spans 3c.1–3c.10 and
+several unrelated dispositions; `3c.3` is the section that actually ratifies this threshold.
 
-It was left untouched because part-2 step 1 said *"nothing else in `factors/` or `engine/` moves"*,
-and ruling 6 named only `prediction_engine.py:16`. It is flagged rather than fixed or banked:
+Comment-only. Re-proven against the **original** pre-change baseline: week-1 payload and envelope
+hashes identical, tracked slate identical, **0 of 330** records differ, max |Δ| any numeric
+`0.000000000000`, `make test` 449 passed / 2 skipped, `make lint` clean, all six verify targets PASS.
 
-- It is the **same defect class** the owner just approved fixing — a stale label presented as a live
-  claim, which is what the auditor's **rule 4 (cross-entry consistency)** exists to catch.
-- It is **comment-only** and **pre-tag-or-never**, so the window closes with this PR's merge.
+## The sweep was too narrow — corrected, with five sites remaining
 
-**One word before merge folds it in.** Otherwise it becomes a 2027 known-state line.
+**The stated answer to "are these the only two `PROPOSED` strings" is: yes for that literal
+case-sensitive string, but that framing understated the problem, and the reviewer caught it.** The
+same defect class also appears as `PROVISIONAL`, as lowercase *"proposed disposition"*, and as
+future-tense *"ratified … before the freeze"* — none of which a grep for `PROPOSED` matches. Sites
+verified against the log's ratification stamps, and **all five are left untouched pending a ruling**:
+
+| Site | Text | Actual status | Severity |
+|---|---|---|---|
+| `engine/power_ratings.py:33-34` | "Calibration constants (D9/D11/D12) — **PROVISIONAL** until the dispersion test passes and the owner ratifies… **Do not treat as final.**" | D9 / D11 / D12 all **RATIFIED** (owner, 2026-07-03) | **Clearest of all** — it actively instructs a reader *not* to treat frozen constants as final. Self-contradicts the `EloConfig` docstring three lines below ("ratified in CALIBRATION_LOG.md, frozen at the tag") |
+| `factors/physical_coefficients.py:18,20` | "**Calibration status (D17): PROPOSED**… Ratified… **before the freeze**" | 3b.1 **RATIFIED** (owner, 2026-07-03) | Clear-cut; self-contradicts the `PhysicalCoefficients` docstring below ("Owner-ratified calibration; frozen at the tag") |
+| `factors/scheduling_fatigue.py:11` | "weights are ratified… **before the freeze**" (future tense) | 3b.2 **RATIFIED** (owner, 2026-07-03) | Clear-cut, same future-tense staleness |
+| `factors/coaching_edge.py:214,223-225` | "DORMANT (Phase 3c **proposed disposition**)… Proposed disposition, ratified in the Phase 3c batch" | 3c.2 **RATIFIED** (owner, 2026-07-04) | Weaker — already says "ratified"; lacks owner/date stamp |
+| `factors/style_mismatch.py:34` | "**PROPOSED** → ratified in CALIBRATION_LOG 3d" | 3d.3 **RATIFIED** (owner, 2026-07-04) | Weakest — describes the transition; bare `3d` should be `3d.3` |
+
+Three are clear-cut instances of exactly what ruling 6 corrected; two are weaker, since they already
+mention ratification and merely lack a stamp. All are **comment-only** and **pre-tag-or-never** —
+`factors/` and `engine/` both freeze at the tag, so this PR's merge closes the window on all five.
+
+**They are not fixed**, per the instruction not to touch a further site without a ruling.
 
 ## Scope discipline
 
@@ -121,6 +140,24 @@ Findings it confirmed by direct inspection rather than assertion:
   `CALIBRATION_LOG.md`, `DECISIONS.md` and every other `factors/`/`engine/` file confirmed
   zero-diff.
 
-**Nit (the one open item):** `factors/factor_registry.py:165`'s identical stale `PROPOSED` label —
-accurately described in this summary and correctly outside the ratified scope. The reviewer's note:
-fold it in on the owner's word, or carry it as a 2027 known-state line.
+**Nit (at first review):** `factors/factor_registry.py:165`'s identical stale `PROPOSED` label —
+since **fixed** under the extended ruling (`1f264cc`).
+
+### Second review — the incremental commit
+
+`code-reviewer` re-ran on `1f264cc` alone: **GO**, no blockers. It confirmed the commit is
+comment-only (the `DesperationIndex` config dict on the line below is byte-identical), that `3c.3` is
+the correct and more precise log reference, and that no explanatory wording was lost in the rewrap.
+
+**It also caught a real gap in my sweep**, which is the reason the review exists: I had grepped the
+literal string `PROPOSED`, so I missed `PROVISIONAL`, lowercase *"proposed disposition"*, and the
+future-tense *"ratified … before the freeze"* variants — three further sites, including
+`engine/power_ratings.py:33-34`, which is arguably the worst-worded of any of them. The table above
+is the corrected result, independently re-verified against the log's ratification stamps before
+being written down. The `1f264cc` commit message was amended to state the corrected scope; its
+**tree hash is unchanged**, so the content the reviewer approved is byte-identical.
+
+**Process note:** the reviewer's sandbox ran `git checkout af7b0ea -- .` during its investigation,
+which the harness flagged as a potentially destructive action. Checked immediately afterwards: the
+working tree was already at that exact commit, so it was a no-op — `HEAD` correct, tree clean, no
+stash, empty diff. No damage, recorded because a read-only agent should not be writing to the tree.
