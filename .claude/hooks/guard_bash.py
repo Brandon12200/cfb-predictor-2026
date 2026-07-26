@@ -67,6 +67,11 @@ from protected_paths import PROTECTED  # noqa: E402  (single source of truth —
 # `data/predictions/` -> `data/predictions`, joined into one alternation.
 _PROTECTED_ALT = "|".join(re.escape(p.rstrip("/")) for p in PROTECTED)
 
+# What may follow a protected directory name. Requiring a literal `/` was a real hole: `rm -rf
+# data/predictions` (no trailing slash) — the more natural way to write it — matched nothing. So
+# the directory may be followed by `/`, whitespace, a quote, or end-of-string.
+_PDIR_END = r"(?:/|\s|[\"']|$)"
+
 # A command segment: stop at a pipe/semicolon/&& so one clause's arguments cannot leak into the
 # next clause's match.
 _SEG = r"[^|;&]*"
@@ -75,6 +80,14 @@ _SEG = r"[^|;&]*"
 # many tokens to step over; an option missing from this set costs nothing, because an unknown
 # option is skipped and a mis-parse resolves to an unrecognised subcommand, which DENIES.
 _GIT_GLOBAL_WITH_VALUE = {
+    "-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path", "--super-prefix",
+}
+
+# Options whose VALUE is free text that may legitimately contain a destructive verb —
+# `git log --grep revert` must not be blocked. The value token is skipped, not scanned.
+_OPTIONS_TAKING_A_VALUE = {
+    "--grep", "-S", "-G", "--author", "--committer", "-m", "--message", "--pretty", "--format",
+    "-F", "--file", "-L", "--since", "--until", "--before", "--after",
     "-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path", "--super-prefix",
 }
 
@@ -92,7 +105,13 @@ def _block(message: str) -> None:
 
 
 def _clauses(command: str) -> list[str]:
-    """Split a command line into clauses on `|`, `;`, `&&`, `||`, newline."""
+    """Split a command line into clauses on `|`, `;`, `&&`, `||`, newline.
+
+    Backslash-newline continuations are joined FIRST: bash treats them as one logical command, and
+    splitting on the raw newline sliced `git checkout \\<newline>-- <path>` into two clauses, which
+    separated the pathspec from the verb and let it through.
+    """
+    command = re.sub(r"\\\n", " ", command)
     return [c for c in re.split(r"\|\||&&|[|;&\n]", command) if c.strip()]
 
 
@@ -158,7 +177,20 @@ def _check_git(tokens: list[str]) -> None:
                 "subcommand and defeat this guard. Invoke the subcommand directly."
             )
 
+    # Two positions where a destructive WORD is data, not a verb, and blocking it breaks ordinary
+    # work: the value of a search/message option (`git log --grep revert`), and anything after the
+    # `--` pathspec separator (`git log --oneline -- rm`, a file named `rm`). Everything else is
+    # still scanned positionlessly.
+    skip_next = False
     for idx, tok in enumerate(tokens[1:], start=1):
+        if tok == "--":
+            break
+        if skip_next:
+            skip_next = False
+            continue
+        if tok in _OPTIONS_TAKING_A_VALUE:
+            skip_next = True
+            continue
         if tok in _DESTRUCTIVE_SUBCOMMANDS:
             _check_git_subcommand(tok, tokens[idx + 1:])
 
@@ -240,6 +272,28 @@ def main() -> None:
         _block("Blocked: refusing to commit anything referencing .env.")
 
     # ── (b) Destructive git, denied globally ──────────────────────────────────────────────────
+    # Evasion shapes that defeat tokenizing outright. None is ever needed for ordinary work here,
+    # so they are denied wholesale rather than parsed.
+    if re.search(r"\bgit\b[^|;&\n]*\bconfig\b[^|;&\n]*\balias\.", command):
+        _block(
+            "Blocked: defining a git alias (`git config alias.…`) creates a name this guard "
+            "cannot recognise as a destructive verb. Invoke subcommands directly."
+        )
+    if "$IFS" in command:
+        _block("Blocked: `$IFS` splits a command into tokens this guard cannot see.")
+    # `$(…)` only, NOT backticks. Backticks are how this project's own commit messages and
+    # docstrings quote commands, and prose quoting is textually identical to real substitution —
+    # telling them apart needs heredoc-quoting state. Blocking backticks made the guard refuse
+    # ordinary commits; `$(` in prose is rare enough to deny outright. Backtick substitution is
+    # therefore a KNOWN RESIDUAL, recorded in D25's threat model rather than half-guarded.
+    if "$(" in command and re.search(
+        rf"\b({'|'.join(sorted(_DESTRUCTIVE_SUBCOMMANDS))})\b", command
+    ):
+        _block(
+            "Blocked: command substitution `$(…)` around a destructive git subcommand hides the "
+            "real command from this guard. Run the steps separately."
+        )
+
     for clause in _clauses(command):
         tokens = _tokenize(clause)
         # Step over leading `env` and VAR=value assignments so `env git …` is still seen as git.
@@ -254,13 +308,15 @@ def main() -> None:
         "append-only historical artifacts (CLAUDE.md principle 5 / D22 / D23). "
         "New files may be added; existing ones are never modified, moved or deleted."
     )
-    if re.search(rf"\b(rm|rmdir|mv|cp)\b{_SEG}\b({_PROTECTED_ALT})/", command):
+    if re.search(rf"\b(rm|rmdir|mv|cp|dd|truncate|install|shred)\b{_SEG}\b({_PROTECTED_ALT}){_PDIR_END}",
+                 command):
         _block(f"Blocked: refusing to delete/move/overwrite {protected_note}")
-    if re.search(rf"\bsed\s+-i{_SEG}\b({_PROTECTED_ALT})/", command):
+    if re.search(rf"\bsed\s+-i{_SEG}\b({_PROTECTED_ALT}){_PDIR_END}", command):
         _block(f"Blocked: refusing in-place `sed -i` edit of {protected_note}")
-    if re.search(rf"\btee\b{_SEG}\b({_PROTECTED_ALT})/", command):
+    if re.search(rf"\btee\b{_SEG}\b({_PROTECTED_ALT}){_PDIR_END}", command):
         _block(f"Blocked: refusing to `tee` over {protected_note}")
-    if re.search(rf">>?\s*[\"']?({_PROTECTED_ALT})/", command):
+    # `>`, `>>`, and `>|` (clobber). The `|` in `>|` is why this cannot reuse `_SEG`.
+    if re.search(rf">[>|]?\s*[\"']?({_PROTECTED_ALT}){_PDIR_END}", command):
         _block(f"Blocked: refusing shell redirection into {protected_note}")
 
     sys.exit(0)

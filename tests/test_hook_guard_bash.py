@@ -168,6 +168,15 @@ ALLOWED_GIT = [
     "git fetch origin",
     "git branch -a",
     "git tag -l",
+    # A destructive WORD as data, not a verb — these are ordinary commands and must not block.
+    "git log --grep revert",
+    "git log --grep rebase",
+    "git log --grep='reset --hard'",
+    "git log --oneline -- rm",
+    "git show HEAD -- mv",
+    "git log --author revert",
+    "git commit -m 'revert the earlier change'",
+    "git diff -- data/predictions/2026_week_01.json",
 ]
 
 # ── Protected-directory mutation — denied, scoped (ruling 1: no global mutation block) ────────
@@ -183,6 +192,28 @@ DENIED_PROTECTED = [
     "echo '{}' >> data/lines/2026_week_01.json",
     "python scripts/x.py > data/ratings/2026_week_01.json",
     "rm data/projections/2026_week_01.json",
+    # --- Third review round: the trailing slash was load-bearing and should not have been. ---
+    # `rm -rf data/predictions` (no trailing slash) is the MORE natural spelling and matched
+    # nothing. This would also have silently defeated the freeze-day extension to factors/.
+    "rm -rf data/predictions",
+    "rmdir data/predictions",
+    "mv /tmp/x.json data/predictions",
+    "cp /tmp/2026_week_01.json data/predictions",
+    "rm -rf data/graded",
+    # Overwrite verbs missing from the list, and the clobber redirection form.
+    "dd if=/dev/zero of=data/predictions/2026_week_01.json",
+    "truncate -s 0 data/predictions/2026_week_01.json",
+    "install -m 644 /tmp/fake.json data/predictions/2026_week_01.json",
+    "shred data/predictions/2026_week_01.json",
+    "echo hi >| data/predictions/2026_week_01.json",
+    # Evasion shapes that defeat tokenizing. Denied wholesale — never needed for ordinary work.
+    "git config alias.co checkout",
+    "git config alias.wipe '!git reset --hard'",
+    "git config alias.co checkout && git co -- data/predictions/2026_week_01.json",
+    "git $(echo checkout) -- data/predictions/2026_week_01.json",
+    'git commit -m "$(git checkout -- data/predictions/2026_week_01.json)"',
+    "git checkout$IFS-- data/predictions/2026_week_01.json",
+    "git checkout \\\n-- data/predictions/2026_week_01.json",
 ]
 
 # ── The same verbs OUTSIDE protected directories — must remain allowed ────────────────────────
@@ -302,6 +333,21 @@ def test_prose_mentioning_a_denied_shape_is_allowed():
     assert run_hook('git commit -m "fix the git checkout -- . bug"') == ALLOWED
     assert run_hook('echo "git checkout -- data/predictions/"') == ALLOWED
     assert run_hook("grep -rn 'git reset --hard' docs/") == ALLOWED
+
+
+def test_known_residual_backtick_substitution_is_not_guarded():
+    """Documented gap, pinned so it is not mistaken for coverage.
+
+    `$(…)` around a destructive verb is denied, but BACKTICK substitution is not: prose quoting a
+    command with backticks is textually identical to real substitution, and this project's commit
+    messages use backticks constantly — guarding it made the hook refuse ordinary commits.
+    Telling them apart requires heredoc-quoting state, i.e. parsing shell.
+
+    This is in D25's stated threat model: the guard stops accident and carelessness, not a caller
+    deliberately evading it (`eval`, base64, `python -c`, a previously-defined alias all remain
+    open by construction). Pinned as KNOWN, not as acceptable-because-unnoticed.
+    """
+    assert run_hook("git `echo checkout` -- data/predictions/2026_week_01.json") == ALLOWED
 
 
 def test_residual_false_positive_a_heredoc_line_that_is_itself_a_git_command():
