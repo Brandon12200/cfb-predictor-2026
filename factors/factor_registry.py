@@ -3,27 +3,25 @@ Factor registry for College Football Market Edge Platform.
 Manages dynamic loading, weight distribution, and execution of all factors.
 """
 
-import logging
-from typing import Dict, List, Any, Optional, Type
-from importlib import import_module
 import inspect
+import logging
+from typing import Any
 
-from config import config
-from factors.base_calculator import BaseFactorCalculator, FactorType, FactorConfidence
+from factors.base_calculator import BaseFactorCalculator, FactorConfidence, FactorType
 
 SITUATIONAL_CATEGORY = "situational_context"
 PHYSICAL_CATEGORY = "physical"
 
 
-def _sign(x: Optional[float]) -> int:
+def _sign(x: float | None) -> int:
     """-1 / 0 / +1 sign of a spread-space value (None -> 0)."""
     if x is None or x == 0:
         return 0
     return 1 if x > 0 else -1
 
 
-def confirm_situational(factor_results: List[Dict[str, Any]],
-                        base_gap: Optional[float]) -> set:
+def confirm_situational(factor_results: list[dict[str, Any]],
+                        base_gap: float | None) -> set:
     """L2 confirming-signal gate (SPEC §7.3, D15).
 
     Situational signals are motivational hypotheses, not team-quality facts — the L2 lesson is
@@ -66,18 +64,18 @@ def confirm_situational(factor_results: List[Dict[str, Any]],
 class FactorRegistry:
     """
     Registry for managing and executing all prediction factors.
-    
+
     Features:
     - Dynamic loading of factor calculators
     - Weight normalization and validation
     - Factor execution with error handling
     - Performance tracking and monitoring
     """
-    
+
     def __init__(self):
         """Initialize factor registry."""
-        self.factors: Dict[str, BaseFactorCalculator] = {}
-        
+        self.factors: dict[str, BaseFactorCalculator] = {}
+
         # Reverse-audit A5: `category_weights` (config's 60/30/10) and `legacy_category_weights`
         # (40/40/20) were removed here. They were keyed on 'primary'/'secondary'/'modifier' while
         # live factors carry the 3b.3 taxonomy categories ('physical', 'situational_context',
@@ -90,56 +88,55 @@ class FactorRegistry:
         self.use_dynamic_weights = True  # Enable confidence-based dynamic weighting
         self.apply_thresholds = True     # Enable threshold filtering
         self.hierarchical_mode = True    # Enable primary/secondary hierarchy
-        
+
         # Performance tracking
-        self.execution_stats = {
+        self.execution_stats: dict[str, Any] = {
             'total_calculations': 0,
             'successful_calculations': 0,
             'failed_calculations': 0,
             'factor_performance': {}
         }
-        
+
         # Logging
         self.logger = logging.getLogger(__name__)
-        
+
         # Load all factors
         self._load_all_factors()
-        
+
         # Configure factor types and thresholds
         self._configure_factor_hierarchy()
-        
+
         # Validate weights
         self._validate_and_normalize_weights()
-        
+
         self.logger.info(f"Factor registry initialized with {len(self.factors)} factors")
-    
+
     def _load_all_factors(self) -> None:
         """
         Dynamically load all factor calculator classes from the factors directory.
-        
+
         This modular approach automatically discovers and loads any factor that:
         1. Is in a .py file in the factors directory
         2. Contains a class that inherits from BaseFactorCalculator
         3. Has a proper __init__ method
-        
+
         This allows new factors to be added simply by creating a new file,
         without modifying the registry.
         """
-        import os
         import importlib
-        import inspect
-        
+        import os
+
         factors_dir = os.path.dirname(os.path.abspath(__file__))
-        
+
         # Iterate through all Python files in the factors directory
         for filename in os.listdir(factors_dir):
             if filename.endswith('.py') and not filename.startswith('__') and filename != 'base_calculator.py' and filename != 'factor_registry.py':
                 module_name = filename[:-3]  # Remove .py extension
-                
+
                 try:
                     # Dynamically import the module
                     module = importlib.import_module(f'factors.{module_name}')
-                    
+
                     # Find all classes in the module that inherit from BaseFactorCalculator
                     for name, obj in inspect.getmembers(module):
                         if inspect.isclass(obj) and issubclass(obj, BaseFactorCalculator) and obj != BaseFactorCalculator:
@@ -150,29 +147,30 @@ class FactorRegistry:
                                 self.logger.debug(f"Loaded factor: {factor_instance.name} from {module_name}.py")
                             except Exception as e:
                                 self.logger.warning(f"Could not instantiate {name} from {module_name}: {e}")
-                                
+
                 except ImportError as e:
                     self.logger.warning(f"Could not import module {module_name}: {e}")
                 except Exception as e:
                     self.logger.error(f"Error loading factors from {module_name}: {e}")
-        
+
         self.logger.info(f"Dynamically loaded {len(self.factors)} factors")
-    
-    
+
+
     def _configure_factor_hierarchy(self) -> None:
         """Configure factor types and thresholds for contrarian system."""
         # PRIMARY factors (60% weight) - Direct contrarian signals
         # These are the factors that most contradict public perception
         primary_factors = {
             'HeadToHeadRecord': {'threshold': 1.0, 'max_impact': 5.0},      # 20% of total
-            # DesperationIndex threshold 2.0 -> 1.0 (Phase 3c, PROPOSED — CALIBRATION_LOG 3c).
+            # DesperationIndex threshold 2.0 -> 1.0 — RATIFIED (owner, 2026-07-04;
+            # CALIBRATION_LOG 3c.3).
             # The old 2.0 equalled the factor's max output (±2.0), so it could only fire at exact
             # saturation (never, in practice). 1.0 lets a genuine half-max desperation differential
             # fire, and the L2 confirmation gate (confirm_situational) supplies the real selectivity.
             'DesperationIndex': {'threshold': 1.0, 'max_impact': 7.0},      # 20% of total
             # 'SchedulingFatigue': {'threshold': 1.5, 'max_impact': 3.5},   # 20% of total (to be added)
         }
-        
+
         # SECONDARY factors (30% weight) - Supporting evidence
         # These provide additional context but aren't primary contrarian signals
         secondary_factors = {
@@ -187,11 +185,11 @@ class FactorRegistry:
             'CloseGamePerformance': {'threshold': 0.5, 'max_impact': 2.0},
             # 'StyleMismatch': {'threshold': 1.0, 'max_impact': 4.0},       # 15% of total (to be added)
         }
-        
+
         # MODIFIER factors (10% weight) - Situational adjustments
         # These amplify or dampen predictions based on market conditions
         # 'MarketSentiment': {'threshold': 0.5, 'max_impact': 2.5},        # 10% of total (to be added)
-        
+
         # Configure each factor
         for factor_name, factor in self.factors.items():
             if factor_name in primary_factors:
@@ -204,12 +202,12 @@ class FactorRegistry:
                 factor.activation_threshold = secondary_factors[factor_name]['threshold']
                 factor.max_impact = secondary_factors[factor_name]['max_impact']
                 self.logger.debug(f"Configured {factor_name} as SECONDARY factor")
-    
+
     def _validate_and_normalize_weights(self) -> None:
         """Validate and normalize factor weights to sum to 1.0."""
         # Calculate current total weight across all factors
         total_weight = sum(f.weight for f in self.factors.values())
-        
+
         if total_weight == 0:
             # If no weights set, distribute evenly
             equal_weight = 1.0 / len(self.factors)
@@ -219,40 +217,40 @@ class FactorRegistry:
         else:
             # Normalize all weights to sum to 1.0
             normalization_factor = 1.0 / total_weight
-            for factor_name, factor in self.factors.items():
+            for _factor_name, factor in self.factors.items():
                 # Store both original and normalized weights
                 factor.original_weight = factor.weight
                 factor.normalized_weight = factor.weight * normalization_factor
                 # Use normalized weight for calculations
                 factor.weight = factor.normalized_weight
-            
+
             self.logger.info(f"Normalized {len(self.factors)} factor weights (was {total_weight:.2f}, now 1.00)")
-            
+
             # Log the normalized weights for transparency
             for factor_name, factor in self.factors.items():
                 self.logger.debug(f"  {factor_name}: {factor.original_weight:.3f} -> {factor.normalized_weight:.3f}")
-        
+
         # Final validation
         final_total = sum(f.weight for f in self.factors.values())
         if abs(final_total - 1.0) > 0.001:
             self.logger.error(f"Normalization failed! Total weight is {final_total:.3f}")
         else:
             self.logger.info("Factor weights successfully normalized to 1.0")
-    
-    def calculate_all_factors(self, home_team: str, away_team: str, 
-                            context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+    def calculate_all_factors(self, home_team: str, away_team: str,
+                            context: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Calculate all factors for a given matchup with enhanced weighting.
-        
+
         Args:
             home_team: Normalized home team name
             away_team: Normalized away team name
             context: Game context data
-            
+
         Returns:
             Dictionary with factor results and summary
         """
-        results = {
+        results: dict[str, Any] = {
             'home_team': home_team,
             'away_team': away_team,
             'factors': {},
@@ -271,12 +269,12 @@ class FactorRegistry:
                 'data_quality_impact': 0.0
             }
         }
-        
+
         self.execution_stats['total_calculations'] += 1
-        
+
         confidence_sum = 0.0
         confidence_count = 0
-        
+
         # ── Phase 1: compute every factor's result (no activation-dependent aggregation yet),
         # so the L2 confirmation gate below can see ALL factor signs before any situational
         # contribution is counted or summed. ────────────────────────────────────────────────
@@ -353,7 +351,7 @@ class FactorRegistry:
             ]
 
         # ── Phase 2: activation-dependent aggregation over the (now gated) results. ──────────
-        for factor_name, factor_result in results['factors'].items():
+        for _factor_name, factor_result in results['factors'].items():
             if not factor_result.get('success') or not factor_result.get('activated', False):
                 continue
 
@@ -390,25 +388,25 @@ class FactorRegistry:
         # Calculate average confidence
         if confidence_count > 0:
             results['summary']['avg_confidence'] = confidence_sum / confidence_count
-        
+
         # Calculate data quality impact
-        success_rate = (results['summary']['factors_successful'] / 
+        success_rate = (results['summary']['factors_successful'] /
                        max(results['summary']['factors_calculated'], 1))
         results['summary']['data_quality_impact'] = success_rate
-        
+
         self.logger.debug(f"Calculated {results['summary']['factors_calculated']} factors for {away_team} @ {home_team}")
         self.logger.debug(f"Activated: {results['summary']['factors_activated']}, Primary: {results['summary']['primary_signals']}")
         self.logger.debug(f"Total adjustment: {results['summary']['total_adjustment']:.3f}, Multiplier: {results['summary']['multiplicative_adjustment']:.3f}")
-        
+
         return results
-    
-    def get_factor_info(self, factor_name: Optional[str] = None) -> Dict[str, Any]:
+
+    def get_factor_info(self, factor_name: str | None = None) -> dict[str, Any]:
         """
         Get information about factors.
-        
+
         Args:
             factor_name: Specific factor name, or None for all factors
-            
+
         Returns:
             Dictionary with factor information
         """
@@ -417,14 +415,14 @@ class FactorRegistry:
                 return self.factors[factor_name].get_factor_info()
             else:
                 raise ValueError(f"Factor '{factor_name}' not found")
-        
+
         # Return info for all factors
         factor_info = {}
         for name, factor in self.factors.items():
             factor_info[name] = factor.get_factor_info()
-        
+
         return factor_info
-    
+
 
 # Global factor registry instance
 factor_registry = FactorRegistry()

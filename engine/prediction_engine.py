@@ -4,19 +4,18 @@ Orchestrates factor calculations and generates contrarian predictions.
 """
 
 import logging
-from typing import Dict, Any, Optional, List
 from datetime import datetime
+from typing import Any
 
-from config import config
 from data.data_manager import data_manager
+from engine.variance_detector import variance_detector
 from factors.factor_registry import factor_registry
 from utils.normalizer import normalizer
-from engine.variance_detector import variance_detector
 
-# ── Phase 3c calibration constants (PROPOSED — ratified in docs/CALIBRATION_LOG.md; frozen at the
-# tag). Evidence class `reasoned`: NOT fit to the 2025 archive (its confidence/edge distributions
-# are Bug-#7-contaminated, SPEC §3), set by stated argument on the model's own scale and
-# structurally sanity-checked on the NEW model's dry-run output — never tuned to hit an ATS%. ───
+# ── Phase 3c calibration constants — RATIFIED (owner, 2026-07-04; CALIBRATION_LOG 3c.5 / 3c.6);
+# frozen at the tag. Evidence class `reasoned`: NOT fit to the 2025 archive (its confidence/edge
+# distributions are Bug-#7-contaminated, SPEC §3), set by stated argument on the model's own scale
+# and structurally sanity-checked on the NEW model's dry-run output — never tuned to hit an ATS%. ─
 #
 # L4 — NO_BET floors. NO_BET fires when ANY of: the edge is below the (dynamic, confidence-aware)
 # `min_edge_threshold` already computed for the pick; confidence is below the floor below; or the
@@ -36,7 +35,7 @@ CONFIDENCE_TIER_B_MIN = 0.50            # B: standard; below B_MIN → tier C (t
 class PredictionEngine:
     """
     Core prediction engine that orchestrates the contrarian prediction process.
-    
+
     The engine follows this flow:
     1. Fetch Vegas consensus spread
     2. Calculate all factor adjustments
@@ -44,13 +43,13 @@ class PredictionEngine:
     4. Assess edge size and confidence
     5. Generate insights and recommendations
     """
-    
+
     def __init__(self):
         """Initialize prediction engine."""
         self.data_manager = data_manager
         self.factor_registry = factor_registry
         self.normalizer = normalizer
-        
+
         # Performance tracking
         self.prediction_stats = {
             'total_predictions': 0,
@@ -58,52 +57,52 @@ class PredictionEngine:
             'failed_predictions': 0,
             'avg_execution_time': 0.0
         }
-        
+
         # Logging
         self.logger = logging.getLogger(__name__)
-        
+
         self.logger.info("Prediction engine initialized")
-    
-    def generate_prediction(self, home_team: str, away_team: str, 
-                          week: Optional[int] = None) -> Dict[str, Any]:
+
+    def generate_prediction(self, home_team: str, away_team: str,
+                          week: int | None = None) -> dict[str, Any]:
         """
         Generate a contrarian prediction for a given matchup.
-        
+
         Args:
             home_team: Home team name (will be normalized)
             away_team: Away team name (will be normalized)
             week: Week number (optional)
-            
+
         Returns:
             Dictionary with complete prediction results
         """
         start_time = datetime.now()
-        
+
         try:
             # Normalize team names
             home_normalized = self.normalizer.normalize(home_team)
             away_normalized = self.normalizer.normalize(away_team)
-            
+
             if not home_normalized or not away_normalized:
                 return self._create_error_result(
                     home_team, away_team, week,
                     "Invalid team names - could not normalize"
                 )
-            
+
             if home_normalized == away_normalized:
                 return self._create_error_result(
                     home_team, away_team, week,
                     "Home and away teams cannot be the same"
                 )
-            
+
             self.logger.info(f"Generating prediction: {away_normalized} @ {home_normalized} (Week {week})")
-            
+
             # Step 1: Fetch comprehensive game context
             context = self.data_manager.get_game_context(home_normalized, away_normalized, week)
-            
+
             # Step 2: Get Vegas consensus spread
             vegas_spread = context.get('vegas_spread')
-            
+
             # CRITICAL: Cannot generate contrarian prediction without betting line
             if vegas_spread is None:
                 self.logger.warning(f"No betting line available for {away_normalized} @ {home_normalized}")
@@ -111,7 +110,7 @@ class PredictionEngine:
                     home_normalized, away_normalized, week,
                     "No betting line available - cannot calculate contrarian prediction"
                 )
-            
+
             # Step 2.5: Price the matchup with the in-house power rating (SPEC §6.3/§6.6) BEFORE
             # the factors run, so the L2 confirming-signal gate can read the model-vs-market BASE
             # gap. The gap remains a diagnostic for the model spread itself (§6.6); its NEW job in
@@ -149,31 +148,31 @@ class PredictionEngine:
                 vegas_spread, factor_results, prediction_result, context, variance_analysis,
                 power_rating
             )
-            
+
             # Track successful prediction
             self.prediction_stats['successful_predictions'] += 1
             execution_time = (datetime.now() - start_time).total_seconds()
             self._update_execution_stats(execution_time)
-            
+
             self.logger.info(f"Prediction completed successfully in {execution_time:.2f}s")
-            
+
             return result
-            
+
         except Exception as e:
             self.logger.error(f"Error generating prediction: {e}")
             self.prediction_stats['failed_predictions'] += 1
-            
+
             return self._create_error_result(
                 home_team, away_team, week,
                 f"Prediction failed: {str(e)}"
             )
-        
+
         finally:
             self.prediction_stats['total_predictions'] += 1
-    
-    def _compute_power_rating(self, home: str, away: str, week: Optional[int],
-                              vegas_spread: Optional[float],
-                              context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+
+    def _compute_power_rating(self, home: str, away: str, week: int | None,
+                              vegas_spread: float | None,
+                              context: dict[str, Any]) -> dict[str, Any] | None:
         """Price the matchup with the in-house power rating and return the diagnostic
         fields (SPEC §6.3/§6.6). Reads ONLY the snapshot data already on `context`;
         ratings are recomputed (memoized by `snapshot_id`) so reruns are bit-identical.
@@ -228,14 +227,14 @@ class PredictionEngine:
             'power_rating_caveats': priced.caveats,
         }
 
-    def _calculate_contrarian_prediction(self, vegas_spread: Optional[float],
-                                       factor_results: Dict[str, Any],
-                                       context: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_contrarian_prediction(self, vegas_spread: float | None,
+                                       factor_results: dict[str, Any],
+                                       context: dict[str, Any]) -> dict[str, Any]:
         """Calculate the contrarian prediction using factor adjustments."""
         # Get both additive and multiplicative adjustments
         total_adjustment = factor_results['summary']['total_adjustment']
         multiplicative_adjustment = factor_results['summary'].get('multiplicative_adjustment', 1.0)
-        
+
         # If no Vegas spread available, can't make a contrarian prediction
         if vegas_spread is None:
             return {
@@ -246,15 +245,15 @@ class PredictionEngine:
                 'prediction_type': 'NO_BETTING_DATA',
                 'explanation': 'No betting line available for contrarian analysis'
             }
-        
+
         # Apply factor adjustments to the Vegas line. The multiplicative modifier scales the
         # model's EDGE (its disagreement with the market), NOT the Vegas baseline (D19): sentiment
         # can amplify/dampen our edge, but it must never rescale the market's own number.
         contrarian_spread = vegas_spread + total_adjustment * multiplicative_adjustment
-        
+
         # Calculate edge size (difference between Vegas and our prediction)
         edge_size = abs(contrarian_spread - vegas_spread)
-        
+
         # Determine edge direction
         adjustment_diff = contrarian_spread - vegas_spread
         if adjustment_diff > 0:
@@ -263,11 +262,11 @@ class PredictionEngine:
             edge_direction = 'away'  # Our prediction favors away team more than Vegas
         else:
             edge_direction = 'neutral'
-        
+
         # Adjust thresholds based on confidence and primary signals
         avg_confidence = factor_results['summary'].get('avg_confidence', 0.5)
         primary_signals = factor_results['summary'].get('primary_signals', 0)
-        
+
         # Dynamic edge threshold based on confidence
         if primary_signals >= 2 and avg_confidence >= 0.7:
             min_edge_threshold = 0.75  # Lower threshold for high-confidence primary signals
@@ -275,9 +274,9 @@ class PredictionEngine:
             min_edge_threshold = 1.0  # Standard threshold
         else:
             min_edge_threshold = 1.5  # Higher threshold for low-confidence signals
-        
+
         has_edge = edge_size >= min_edge_threshold
-        
+
         # Classify prediction type with confidence-based adjustments
         if primary_signals >= 2 and edge_size >= 2.5:
             prediction_type = 'VERY_STRONG_CONTRARIAN'
@@ -289,7 +288,7 @@ class PredictionEngine:
             prediction_type = 'SLIGHT_CONTRARIAN'
         else:
             prediction_type = 'CONSENSUS_ALIGNMENT'
-        
+
         return {
             'contrarian_spread': contrarian_spread,
             'edge_size': edge_size,
@@ -301,9 +300,9 @@ class PredictionEngine:
             'total_adjustment': total_adjustment,
             'min_edge_threshold': min_edge_threshold
         }
-    
-    def _evaluate_no_bet(self, prediction_result: Dict[str, Any], confidence_score: float,
-                         variance_analysis: Optional[Dict[str, Any]]) -> tuple:
+
+    def _evaluate_no_bet(self, prediction_result: dict[str, Any], confidence_score: float,
+                         variance_analysis: dict[str, Any] | None) -> tuple:
         """L4 NO_BET evaluation (SPEC §7.4). Return (no_bet: bool, reasons: List[str]).
 
         NO_BET fires when ANY floor is breached — it is purely threshold-driven, with NO weekly
@@ -314,7 +313,7 @@ class PredictionEngine:
           3. The variance detector flags hard factor disagreement (extreme variance, a
              primary-factor directional split, or an AVOID recommendation).
         """
-        reasons: List[str] = []
+        reasons: list[str] = []
 
         # 1. Edge floor (reuses the existing dynamic threshold; skip the no-line sentinel case).
         if prediction_result.get('edge_size') is not None and not prediction_result.get('has_edge', False):
@@ -341,7 +340,7 @@ class PredictionEngine:
 
         return (len(reasons) > 0, reasons)
 
-    def _confidence_tier(self, confidence_score: float, prediction_type: str) -> Optional[str]:
+    def _confidence_tier(self, confidence_score: float, prediction_type: str) -> str | None:
         """L3 A/B/C confidence tier from the confidence score (SPEC §7.5).
 
         Because the NO_BET confidence floor equals the B/C boundary (`CONFIDENCE_TIER_B_MIN`), a
@@ -361,11 +360,11 @@ class PredictionEngine:
             return 'B'
         return 'C'
 
-    def _build_prediction_result(self, home_team: str, away_team: str, week: Optional[int],
-                               vegas_spread: Optional[float], factor_results: Dict[str, Any],
-                               prediction_result: Dict[str, Any], context: Dict[str, Any],
-                               variance_analysis: Optional[Dict[str, Any]] = None,
-                               power_rating: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def _build_prediction_result(self, home_team: str, away_team: str, week: int | None,
+                               vegas_spread: float | None, factor_results: dict[str, Any],
+                               prediction_result: dict[str, Any], context: dict[str, Any],
+                               variance_analysis: dict[str, Any] | None = None,
+                               power_rating: dict[str, Any] | None = None) -> dict[str, Any]:
         """Build comprehensive prediction result."""
         # Frozen from the snapshot's build time so `predict rerun` is bit-identical
         # (reproducibility contract, SCHEMA §3). A missing timestamp means the context
@@ -437,20 +436,20 @@ class PredictionEngine:
             'total_adjustment': prediction_result.get('total_adjustment', 0.0),
             'factor_breakdown': factor_results.get('factors', {}),
             'category_adjustments': factor_results.get('summary', {}).get('category_adjustments', {}),
-            
+
             # Data quality
             'data_quality': context.get('data_quality', 0.0),
             'data_sources': context.get('data_sources', []),
             'factors_calculated': factor_results.get('summary', {}).get('factors_calculated', 0),
             'factors_successful': factor_results.get('summary', {}).get('factors_successful', 0),
-            
+
             # Variance Analysis
             'variance_analysis': variance_analysis,
-            
+
             # Recommendation (incorporates variance + NO_BET)
             'recommendation': recommendation,
             'confidence_score': confidence_score,
-            
+
             # Context data
             'context': {
                 'home_team_data': context.get('home_team_data', {}),
@@ -458,12 +457,12 @@ class PredictionEngine:
                 'coaching_comparison': context.get('coaching_comparison', {})
             }
         }
-    
-    def _generate_recommendation(self, prediction_result: Dict[str, Any],
-                               factor_results: Dict[str, Any],
-                               variance_analysis: Optional[Dict[str, Any]] = None,
+
+    def _generate_recommendation(self, prediction_result: dict[str, Any],
+                               factor_results: dict[str, Any],
+                               variance_analysis: dict[str, Any] | None = None,
                                no_bet: bool = False,
-                               no_bet_reasons: Optional[List[str]] = None) -> str:
+                               no_bet_reasons: list[str] | None = None) -> str:
         """Generate betting recommendation based on prediction results."""
         prediction_type = prediction_result.get('prediction_type', 'UNKNOWN')
         edge_direction = prediction_result.get('edge_direction', 'neutral')
@@ -477,10 +476,10 @@ class PredictionEngine:
 
         if prediction_type == 'NO_BETTING_DATA':
             return "Cannot provide recommendation - no betting line available"
-        
+
         if prediction_type == 'CONSENSUS_ALIGNMENT':
             return "No contrarian opportunity identified - align with market consensus"
-        
+
         # Generate contrarian recommendation
         if edge_direction == 'home':
             favored_team = factor_results.get('home_team', 'Home team')
@@ -490,7 +489,7 @@ class PredictionEngine:
             recommendation = f"CONTRARIAN OPPORTUNITY: Consider {favored_team}"
         else:
             recommendation = "Neutral prediction - no clear contrarian edge"
-        
+
         # Add edge size context
         if edge_size >= 3.0:
             recommendation += f" (Strong {edge_size:.1f} point edge)"
@@ -498,13 +497,13 @@ class PredictionEngine:
             recommendation += f" (Moderate {edge_size:.1f} point edge)"
         else:
             recommendation += f" (Slight {edge_size:.1f} point edge)"
-        
+
         # Add variance analysis warnings/confirmations
         if variance_analysis:
             variance_level = variance_analysis.get('variance_level', '')
             var_recommendation = variance_analysis.get('recommendation', {})
             var_action = var_recommendation.get('action', '')
-            
+
             if variance_level == 'extreme':
                 recommendation += " ⚠️ EXTREME FACTOR DISAGREEMENT - AVOID"
             elif variance_level == 'strong':
@@ -513,32 +512,32 @@ class PredictionEngine:
                 recommendation += " ⚠️ Some factor disagreement - proceed cautiously"
             elif variance_level == 'consensus':
                 recommendation += " ✓ Factors align - high confidence"
-            
+
             # Override recommendation if variance suggests avoiding
             if var_action in ['AVOID_OR_MINIMUM', 'REDUCE_EXPOSURE']:
                 recommendation = f"VARIANCE WARNING: {recommendation.split('(')[0].strip()}"
                 recommendation += f" - Factors disagree ({variance_level} variance)"
-        
+
         return recommendation
-    
-    def _calculate_confidence_score(self, prediction_result: Dict[str, Any], 
-                                  factor_results: Dict[str, Any], 
-                                  context: Dict[str, Any],
-                                  variance_analysis: Optional[Dict[str, Any]] = None) -> float:
+
+    def _calculate_confidence_score(self, prediction_result: dict[str, Any],
+                                  factor_results: dict[str, Any],
+                                  context: dict[str, Any],
+                                  variance_analysis: dict[str, Any] | None = None) -> float:
         """Calculate confidence score for the prediction (0.0 to 1.0)."""
         confidence_factors = []
-        
+
         # Data quality factor (0-40% of confidence)
         data_quality = context.get('data_quality', 0.0)
         confidence_factors.append(data_quality * 0.4)
-        
+
         # Factor success rate (0-30% of confidence)
         factor_summary = factor_results.get('summary', {})
         factors_calculated = factor_summary.get('factors_calculated', 1)
         factors_successful = factor_summary.get('factors_successful', 0)
         success_rate = factors_successful / max(factors_calculated, 1)  # Prevent division by zero
         confidence_factors.append(success_rate * 0.3)
-        
+
         # Edge size factor (0-20% of confidence)
         edge_size = prediction_result.get('edge_size', 0.0)
         if edge_size is not None:
@@ -546,11 +545,11 @@ class PredictionEngine:
             confidence_factors.append(edge_confidence * 0.2)
         else:
             confidence_factors.append(0.0)  # No edge data available
-        
+
         # Betting data availability (0-10% of confidence)
         has_betting_data = prediction_result.get('contrarian_spread') is not None
         confidence_factors.append(0.1 if has_betting_data else 0.0)
-        
+
         # Factor variance adjustment (affects confidence by ±0.3)
         variance_adjustment = 0.0
         if variance_analysis:
@@ -565,15 +564,15 @@ class PredictionEngine:
                 variance_adjustment = -0.2  # Strong confidence penalty
             elif variance_level == 'extreme':
                 variance_adjustment = -0.3  # Maximum confidence penalty
-        
+
         # Total confidence score
         total_confidence = sum(confidence_factors) + variance_adjustment
-        
+
         # Ensure confidence is between 0.15 and 0.95 (never completely certain/uncertain)
         return max(0.15, min(0.95, total_confidence))
-    
-    def _create_error_result(self, home_team: str, away_team: str, 
-                           week: Optional[int], error_message: str) -> Dict[str, Any]:
+
+    def _create_error_result(self, home_team: str, away_team: str,
+                           week: int | None, error_message: str) -> dict[str, Any]:
         """Create error result structure."""
         return {
             'home_team': home_team,
@@ -586,12 +585,12 @@ class PredictionEngine:
             'recommendation': f"Prediction failed: {error_message}",
             'confidence_score': 0.0
         }
-    
+
     def _update_execution_stats(self, execution_time: float) -> None:
         """Update execution time statistics."""
         total_predictions = self.prediction_stats['total_predictions']
         current_avg = self.prediction_stats['avg_execution_time']
-        
+
         # Update running average
         new_avg = (current_avg * total_predictions + execution_time) / (total_predictions + 1)
         self.prediction_stats['avg_execution_time'] = new_avg

@@ -12,13 +12,15 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
 
 ## Must land BEFORE the tag
 
-- [ ] **Fold `factors/factor_registry.py` + `engine/prediction_engine.py` into CI `LINT_PATHS` / `TYPED_PATHS`.**
-  Carried from the **3c** code-review (should-fix #2) and **3d** — deferred both times because these legacy
-  files carry ~200 pre-existing ruff style errors (mostly blank-line whitespace) that would bury a phase
-  diff. 3d only added `follow_imports = "skip"` for them in `pyproject.toml` (so mypy **skips** them as
-  imports) — it did **not** lint or type-check them. **Must land before the freeze:** fixing the style
-  errors *edits* these freeze-bound files, impossible after the tag. Scope: add both to the Makefile paths,
-  `ruff --fix`, resolve residual mypy errors (or scope them), one focused cleanup PR.
+- [x] **Fold `factors/factor_registry.py` + `engine/prediction_engine.py` into CI `LINT_PATHS` — DONE
+  (2026-07-25).** Carried from the **3c** code-review (should-fix #2) and **3d** — deferred both times
+  because these legacy files carried ~200 pre-existing ruff style errors that would bury a phase diff.
+  Landed pre-tag because fixing them *edits* freeze-bound files, impossible after the tag. **All 170 ruff
+  violations resolved; both files are in `LINT_PATHS`. `TYPED_PATHS` is deliberately unchanged** — see the
+  2027 known-state list below. **Zero behaviour change proven, not asserted:** week-1 predictions payload
+  and envelope SHA-256 identical, 330-game tracked slate identical (0 of 330 records differ across 154,937
+  compared scalar fields, max |Δ| edge / confidence / model_spread = 0.000000000000), `make test` 449
+  passed / 2 skipped, `make lint` green on the widened scope, all six verify targets PASS.
 
 - [x] **Disposition the reverse-audit ledger — A1–A5 DONE (2026-07-25); B1–B10 DONE (2026-07-16).**
   The `calibration-auditor` shakedown found the log's **reverse** coverage materially incomplete.
@@ -47,7 +49,12 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   **Venue coverage investigated and closed: not a defect** — 68 is SPEC §5.5's specified P4+independents
   scope, not a gap. See CALIBRATION_LOG "A6".
 
-- [ ] **Formal pre-freeze calibration audit (~2026-08-20).** Run the **`calibration-auditor`** agent over
+- [ ] **Formal pre-freeze calibration audit (run early by choice, 2026-07-25 rather than ~2026-08-20).**
+  **Owner intent, on the record: the tag follows FREEZE-READY promptly — days, not weeks.** The audit
+  grades the log as it stands when it runs, so: **if anything touches the frozen paths (`factors/`,
+  `engine/`, weight/threshold config) or `docs/CALIBRATION_LOG.md` between the pre-flight and the tag, the
+  pre-flight RE-RUNS.** A stale FREEZE-READY verdict does not carry across a change to what it graded.
+  Run the **`calibration-auditor`** agent over
   the complete `docs/CALIBRATION_LOG.md`: every entry evidence-class-labeled with the class matching the
   claim; magnitudes HFA-scale-checked; ratification stamps present; **no orphaned PROPOSED entries**;
   cross-entry consistency; and the reverse check — grep the frozen paths (`factors/`, `engine/`) for numeric
@@ -84,6 +91,31 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   their only caller. `cli/` is **freeze-exempt**, so this deliberately did NOT ride in the pre-tag
   ledger PR: the pre-tag window stays focused on what gates the tag, and inert dead code in a
   freeze-exempt path is safe to carry across it (owner ruling, 2026-07-25).
+
+## 2027 known-state list (inherited, NOT defects — do not re-derive these)
+
+Recorded at the freeze so a 2027 reader inherits them as **decided** rather than rediscovering them as
+findings. Each is a conscious acceptance under the freeze-session triage standard: **only an unlogged live
+constant or a behaviour-affecting defect blocks the tag; everything else is logged as a known state in one
+line and inherited.** The project was closing, not opening.
+
+- **`TYPED_PATHS` excludes `factors/factor_registry.py` + `engine/prediction_engine.py`** (they are in
+  `LINT_PATHS` only). Honest typing needs `normalized_weight` / `original_weight` **declared on
+  `factors/base_calculator.py`** (the registry assigns them dynamically at
+  `factor_registry.py:219-225`; 6 mypy `attr-defined` errors) plus a heterogeneous-dict annotation at
+  **`engine/variance_detector.py:232`** (1 `assignment` error) — *two further frozen files*, outside the
+  ratified two-file scope. The alternative, a blanket per-module suppression, would make the target green
+  while checking nothing. **At a 2027 unfreeze, type all four files together or not at all.**
+- **`engine/variance_detector.py:232` is typing noise, not a defect** — verified: the only consumer
+  (`variance_detector.py:307`) reads `inter_category_variance` as a number via `.get(..., 0)`, so the
+  heterogeneous dict is intentional and nothing iterates its values expecting uniformity.
+- **The rest of `factors/` and `engine/` is frozen un-linted** — `variance_detector.py`,
+  `situational_context.py`, `momentum_factors.py`, `coaching_edge.py`, `style_mismatch.py`,
+  `market_sentiment.py`, `base_calculator.py` are outside `LINT_PATHS`. **Style-only; style is not
+  behaviour, and the tag freezes code, not cosmetics.** Lint them at the 2027 unfreeze if desired.
+- **`data/`, `cli/` and the `pyproject.toml` `follow_imports = "skip"` override list are unchanged** by
+  the fold-in; the override still lists modules that are now linted, which is harmless (it governs how
+  mypy follows them **as imports**, not whether ruff checks them).
 
 ## Done (for the record)
 

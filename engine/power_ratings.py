@@ -30,8 +30,8 @@ from typing import Any
 
 
 # --------------------------------------------------------------------------- #
-# Calibration constants (D9 / D11 / D12) — PROVISIONAL until the dispersion test
-# passes and the owner ratifies the CALIBRATION_LOG entry. Do not treat as final.
+# Calibration constants — RATIFIED (owner, 2026-07-03; CALIBRATION_LOG D9 / D11 / D12).
+# Final and frozen at the tag; changing any of them requires the SPEC §3 exception process.
 # --------------------------------------------------------------------------- #
 @dataclass(frozen=True)
 class EloConfig:

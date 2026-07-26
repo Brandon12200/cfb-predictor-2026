@@ -15,9 +15,9 @@ this game" physical effects worth pricing, and behavior-preserving vs the 2a `Sc
 motivational letdown — not team-quality pricing), so they do NOT feed the model spread; recorded
 in `docs/DECISIONS.md` for ratification.
 
-**Calibration status (D17):** PROPOSED, evidence-class **`reasoned`** — magnitudes argued from
-rest/travel effects and the priced ~2.5-pt home-field scale (each bounded well under it), NOT from
-2025 performance. Ratified in `docs/CALIBRATION_LOG.md` before the freeze.
+**Calibration status:** **RATIFIED** (owner, 2026-07-03; `docs/CALIBRATION_LOG.md` **3b.1**),
+evidence-class **`reasoned`** (D17) — magnitudes argued from rest/travel effects and the priced
+~2.5-pt home-field scale (each bounded well under it), NOT from 2025 performance. Frozen at the tag.
 """
 
 from __future__ import annotations
