@@ -229,12 +229,19 @@ def _glob_may_reach_protected(token: str) -> bool:
     if any(leaf in token for leaf in _PROTECTED_LEAVES):
         return True
 
-    components = token[:first_glob].lstrip("./").split("/")
+    prefix = token[:first_glob]
+    is_absolute = prefix.startswith("/") or prefix.startswith("~")
+    components = prefix.lstrip("./~").split("/")
     for comp in components[:-1]:
         if comp in _PROTECTED_ROOTS:
             return True
+    # The "could this abbreviation expand to the root" rule applies only to a RELATIVE,
+    # single-component path — `dat*` at the repo root expands to `data`. Applying it anywhere on
+    # the filesystem made `rm -rf /tmp/d*` a false positive: unrelated tree, unrelated `d`.
     last = components[-1]
-    return any(root.startswith(last) or last.startswith(root) for root in _PROTECTED_ROOTS if last)
+    if is_absolute or len(components) != 1 or not last:
+        return False
+    return any(root.startswith(last) or last.startswith(root) for root in _PROTECTED_ROOTS)
 
 
 def _check_protected_globs(command: str) -> None:
@@ -243,12 +250,16 @@ def _check_protected_globs(command: str) -> None:
         if not _WRITE_CONTEXT.search(clause):
             continue
         for token in _tokenize(clause):
-            if _glob_may_reach_protected(token.lstrip(">|<")):
-                _block(
-                    "Blocked: a glob or brace expansion could resolve onto an append-only path "
-                    "without naming it, and the shell expands before this guard runs. Name the "
-                    "exact file instead. (CLAUDE.md principle 5 / D22 / D23)"
-                )
+            # A spaceless redirect (`echo x>data/pred*`) is ONE shlex token, so stripping leading
+            # operators is not enough — the path hides after the operator, mid-token. Split on the
+            # redirection characters and check every piece.
+            for piece in re.split(r"[<>|]+", token):
+                if _glob_may_reach_protected(piece):
+                    _block(
+                        "Blocked: a glob or brace expansion could resolve onto an append-only "
+                        "path without naming it, and the shell expands before this guard runs. "
+                        "Name the exact file instead. (CLAUDE.md principle 5 / D22 / D23)"
+                    )
 
 
 def _check_git(tokens: list[str]) -> None:

@@ -241,6 +241,11 @@ DENIED_PROTECTED = [
     "rm -rf ../repo/data/pred*",
     "rm -rf /Users/x/proj/data/pred*",
     "rm -rf $HOME/proj/data/pred*",
+    # --- Seventh review round: a SPACELESS redirect is one shlex token, so the path hides
+    # mid-token after the operator. `echo foo>bar` is an ordinary shell habit, not evasion.
+    "echo x>data/pred*",
+    "printf y>>data/pred*.json",
+    "cat /tmp/a>data/predi*/out.json",
     # Evasion shapes that defeat tokenizing. Denied wholesale — never needed for ordinary work.
     "git config alias.co checkout",
     "git config alias.wipe '!git reset --hard'",
@@ -279,6 +284,14 @@ ALLOWED_UNPROTECTED = [
     "rm -rf metadata/file*",
     "rm -rf validated_data/*",
     "rm -rf /tmp/scratch/*",
+    # The "abbreviation could expand to the root" rule is scoped to a RELATIVE, single-component
+    # path. Applying it filesystem-wide made these false positives — unrelated trees, unrelated `d`.
+    "rm -rf /tmp/d*",
+    "rm -rf /tmp/da*",
+    "rm -rf ~/scratch/d*",
+    "rm -rf docs/*",
+    "rm -rf dist/*",
+    "mv build/* /tmp/",
     # Read-only commands are outside every write context, so globs there are never touched.
     "ls data/*",
     "grep -rn game_id data/pred*",
