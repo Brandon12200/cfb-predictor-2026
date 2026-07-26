@@ -45,9 +45,12 @@ invocation **every token is scanned** for a destructive subcommand. No verb posi
 so an unknown global option cannot shift the verb out of view. `-c alias.X=<verb>` is denied
 outright, since git resolves the alias itself and no token check could see the real verb.
 
-**Residual over-block, accepted.** A heredoc LINE that itself begins with a denied command reads
-as a real clause; distinguishing it would mean tracking heredoc delimiters, which is where guards
-acquire holes. It fails closed. (Tokenizing did remove the broader false positive the regex
+**Residual over-blocks, accepted — two of them, both hit for real.** A heredoc LINE that itself
+begins with a denied command reads as a real clause; and prose containing the `$(` substitution
+form near a destructive verb trips the substitution rule (this blocked the PR description that
+*explained* the substitution rule). Distinguishing either would mean tracking heredoc and quoting
+state, which is where guards acquire holes. Both fail closed; the workaround in both cases is to
+put the text in a file (`git commit -F <file>`, `gh pr create --body-file <file>`). (Tokenizing did remove the broader false positive the regex
 version had, where any prose *mentioning* a denied command was blocked — a quoted argument is now
 a single token and never equals a subcommand name.) **Workaround:** put the text in a file and use
 `git commit -F <file>`. Both behaviours are pinned by tests so they read as intended.

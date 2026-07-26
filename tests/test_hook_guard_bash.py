@@ -350,6 +350,19 @@ def test_known_residual_backtick_substitution_is_not_guarded():
     assert run_hook("git `echo checkout` -- data/predictions/2026_week_01.json") == ALLOWED
 
 
+def test_residual_false_positive_prose_containing_the_substitution_form():
+    """Second known over-block: prose that merely CONTAINS `$(` near a destructive verb.
+
+    Hit for real while opening this PR — the description explained the substitution rule, so the
+    description tripped it. Same shape as the heredoc case: the guard reads text, and text about a
+    command is indistinguishable from the command. Fails closed; workaround is `--body-file` /
+    `-F <file>`, which is how that PR was opened.
+    """
+    assert run_hook('gh pr create --body "denies $( ) around git checkout"') == BLOCKED
+    # From a file, the same content carries no denied shape on the command line.
+    assert run_hook("gh pr create --body-file /tmp/body.md") == ALLOWED
+
+
 def test_residual_false_positive_a_heredoc_line_that_is_itself_a_git_command():
     """The one remaining over-block: a heredoc LINE that literally begins with a denied command.
 
