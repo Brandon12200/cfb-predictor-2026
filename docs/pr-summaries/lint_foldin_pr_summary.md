@@ -104,11 +104,71 @@ Three are clear-cut instances of exactly what ruling 6 corrected; two are weaker
 mention ratification and merely lack a stamp. All are **comment-only** and **pre-tag-or-never** —
 `factors/` and `engine/` both freeze at the tag, so this PR's merge closes the window on all five.
 
-**They are not fixed**, per the instruction not to touch a further site without a ruling.
+### All five fixed under the final ruling (`bedce6a`)
+
+The owner ruled all five ride in this PR, as its **final** extension: any site found after this
+sweep goes to the 2027 known-state list, not into a pre-tag PR (pre-flight findings excepted).
+
+Each was restated with a precise owner/date stamp and a **sub-entry** log reference, following the
+precedent set at 3c.3 — bare phase numbers were the imprecision being corrected, so `3c` → `3c.2`,
+`3d` → `3d.3`, and so on. Every stamp was verified against the log's ratification header **before**
+being written, then re-verified independently by the reviewer:
+
+| File | Was | Now |
+|---|---|---|
+| `engine/power_ratings.py:33` | "PROVISIONAL… Do not treat as final" | RATIFIED (owner, 2026-07-03; **D9 / D11 / D12**) |
+| `factors/physical_coefficients.py:18` | "PROPOSED… ratified before the freeze" | RATIFIED (owner, 2026-07-03; **3b.1**), evidence-class `reasoned` (D17) |
+| `factors/scheduling_fatigue.py:11` | "ratified… before the freeze" | RATIFIED (owner, 2026-07-03; coefficients **3b.1**, weights **3b.2**; shared cutoffs **B5**, 2026-07-16) |
+| `factors/coaching_edge.py:214,223` | "proposed disposition" | RATIFIED (owner, 2026-07-04; **3c.2**) |
+| `factors/style_mismatch.py:34` | "PROPOSED → ratified in 3d" | RATIFIED (owner, 2026-07-04; **3d.3**) |
+
+`power_ratings.py:33` was the most consequential of the five: it actively instructed the reader
+**not to treat the Elo constants as final**, while the `EloConfig` docstring six lines below already
+said "ratified… frozen at the tag". A 2027 reader hitting that first line would have had grounds to
+believe the frozen constants were still open.
+
+## Sweep methodology, and whether it is comprehensive
+
+Stated explicitly, because the first attempt was too narrow and that is the failure worth recording:
+**the original sweep grepped only the literal case-sensitive string `PROPOSED`.** That answered the
+question asked but not the question that mattered — the same defect wore other clothes.
+
+**Patterns searched** (case-insensitive, all of `factors/` and `engine/`, including docstrings):
+`PROPOSED`, `provisional`, `proposed disposition`, `before the freeze`, `do not treat as final`,
+`to be ratified`, `will be ratified`, `not yet ratified`, `awaiting`, `pending`, `tentative`,
+`subject to change`, `TBD`, `preliminary`, `unratified`, `pre-ratification`.
+
+**The reviewer ran a second, independent sweep** with patterns of its own choosing — `draft`,
+`interim`, `placeholder`, `not final`, `un-ratified`, `still proposed`, `WIP`, `in progress`,
+`temporary`, `not ratified`, `open question`, `needs owner`, `open item`. It surfaced no sixth
+stale-status site. Its only additional hits were `# placeholder` comments at `coaching_edge.py:289`
+and `situational_context.py:236,270`, which describe **unimplemented H2H/coaching data** — already
+covered by the A1 / B10 dormancy dispositions, not calibration-status claims.
+
+**Declared: the sweep is comprehensive.** One match survives by design —
+`engine/power_ratings.py:39`, the `EloConfig` docstring's *"proposed via the dispersion test,
+ratified in CALIBRATION_LOG.md, frozen at the tag"*. That is accurate past-tense process history
+sandwiched between "ratified" and "frozen", not a live status claim. The reviewer read the full
+surrounding docstring and independently agreed with leaving it.
+
+**No sixth site turned up during this pass.**
+
+### Third review — the five-site commit
+
+`code-reviewer` on `bedce6a`: **GO, no blockers, no should-fixes, no nits.** It verified the stamps
+against the log line-by-line (including the three-part `scheduling_fatigue.py` claim, confirming B5
+covers `activation_threshold = 0.4` and the `max_impact × 0.6` cutoff, and that 3b.2's six weights
+match the live `_configure` calls exactly), confirmed no prose was lost in any rewrap, and — most
+usefully — **checked the actual constant values byte-for-byte**: `EloConfig`'s fields,
+`PhysicalCoefficients`' eight coefficients, the six `scheduling_fatigue` weights,
+`coaching_edge`'s `return 0.0`, and `style_mismatch`'s ±1.5 bounds are all unchanged.
 
 ## Scope discipline
 
-`factors/` and `engine/` changes are confined to the two ratified files. **No numeric constant, no
+The **code** fold-in is confined to the two ratified files. The stale-label corrections reach three
+further frozen files (`power_ratings.py`, `physical_coefficients.py`, `scheduling_fatigue.py`,
+`coaching_edge.py`, `style_mismatch.py`) under the owner's explicit final ruling, and are
+**comment-only in every case** — verified by the reviewer against the actual constant values. **No numeric constant, no
 expression, and no control flow was touched anywhere** — the substantive diff is imports,
 annotations, two loop-variable renames, and comment/whitespace text. `TYPED_PATHS`, `pyproject.toml`,
 `data/`, `cli/`, and every calibration value are untouched.
