@@ -94,7 +94,33 @@ expression, and no control flow was touched anywhere** — the substantive diff 
 annotations, two loop-variable renames, and comment/whitespace text. `TYPED_PATHS`, `pyproject.toml`,
 `data/`, `cli/`, and every calibration value are untouched.
 
-## Reviewer
+## Reviewer — **GO**
 
-`code-reviewer` on the complete diff (`d29fe60` through part 2) — verdict recorded below at review
-time. A **NO-GO is binding**.
+`code-reviewer` on the complete diff (`ca29ec4..HEAD`, all three commits). **No blockers, one nit.**
+
+What makes the verdict worth something here: the reviewer did not take the author's evidence on
+trust. It **re-ran the gates itself** — `ruff` on the widened `LINT_PATHS`, `mypy` on `TYPED_PATHS`,
+`make test`, and all six verify targets — and confirmed each matches the claims in this summary,
+the commit messages and the checklist verbatim. It also independently reproduced the 2027
+known-state error counts (exactly 6 `attr-defined` + 1 `assignment` at `variance_detector.py:232`).
+
+Findings it confirmed by direct inspection rather than assertion:
+
+- **R1 is safe for a reason I had not fully stated:** `config.py` also calls `load_dotenv()` at
+  import. The reviewer verified those side effects still fire on every reachable path, since
+  `prediction_engine.py:10` imports `data.data_manager` (which imports `config`) *before*
+  `factors.factor_registry` at `:12`. It further grepped both files for any surviving bare `config`
+  runtime reference — the only hit is historical prose in a comment.
+- **R2:** checked `variance_detector.py` and `base_calculator.py` for a circular-import hazard the
+  sort could expose; none, and a clean import of both modules succeeds.
+- **R3:** read both loop bodies in full and confirmed `factor_name` is genuinely unreferenced.
+- **Ruling 6:** verified the new `RATIFIED (owner, 2026-07-04)` text against `CALIBRATION_LOG`
+  `3c.5` (`:369`) and `3c.6` (`:434`) — status and date match exactly — and checked the reflowed
+  comment line-by-line against the original for dropped wording. None.
+- **Scope:** exactly five files touched; `TYPED_PATHS`, `pyproject.toml`, `data/`, `cli/`,
+  `CALIBRATION_LOG.md`, `DECISIONS.md` and every other `factors/`/`engine/` file confirmed
+  zero-diff.
+
+**Nit (the one open item):** `factors/factor_registry.py:165`'s identical stale `PROPOSED` label —
+accurately described in this summary and correctly outside the ratified scope. The reviewer's note:
+fold it in on the owner's word, or carry it as a 2027 known-state line.
