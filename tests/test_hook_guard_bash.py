@@ -66,6 +66,37 @@ DENIED_GIT = [
     "echo hi; git checkout -- .",
 ]
 
+# ── Escapes found by review — every one of these was ALLOWED by the first version of the hook ──
+# Kept as a named block because they are regression pins on real misses, not hypotheticals: a
+# global git option or an `=`-form flag defeated every "denied globally" rule.
+DENIED_GIT_ESCAPES = [
+    # -C <dir>: the whole (b) ruleset was bypassed by one flag.
+    "git -C . checkout -- data/predictions/2026_week_01.json",
+    "git -C /Users/x/repo checkout af7b0ea -- data/predictions/",
+    "git -C . checkout af7b0ea",
+    "git -C . restore .",
+    "git -C . reset --hard",
+    "git -C . clean -fd",
+    "git -C . stash pop",
+    "git -C . apply patch.diff",
+    # Other global options in the same position.
+    "git --git-dir=.git checkout -- .",
+    "git --git-dir .git reset --hard",
+    "git --work-tree=. restore data/predictions/",
+    "git -c core.pager=cat checkout af7b0ea",
+    "git --no-pager checkout -- data/results/",
+    "git -P reset --hard",
+    "git --literal-pathspecs checkout -- .",
+    # `=`-form subcommand flags before a commit-ish broke the flag-skip.
+    "git checkout --track=origin/main abc1234567",
+    "git checkout --orphan=foo abc1234567",
+    "git -C . checkout --track=origin/main abc1234567",
+    # -B force-resets an existing branch (unlike -b, which errors if it exists).
+    "git checkout -B main origin/main",
+    "git checkout -B main",
+    "git -C . checkout -B main origin/main",
+]
+
 # ── Benign git — must remain allowed (ruling 1) ───────────────────────────────────────────────
 ALLOWED_GIT = [
     "git checkout -b hook-guard-extension",
@@ -86,6 +117,13 @@ ALLOWED_GIT = [
     "git push -u origin hook-guard-extension",
     "git reset --soft HEAD~1",
     "git clean -n",  # dry run
+    # Global options must not turn a READ-ONLY git command into a blocked one.
+    "git -C . diff main...HEAD",
+    "git -C /Users/x/repo status --porcelain",
+    "git --no-pager log --oneline -5",
+    "git -c core.pager=cat show af7b0ea",
+    "git -C . stash list",
+    "git -C . checkout -b new-branch",
 ]
 
 # ── Protected-directory mutation — denied, scoped (ruling 1: no global mutation block) ────────
@@ -147,6 +185,12 @@ def test_destructive_git_is_blocked(command):
     assert run_hook(command) == BLOCKED, f"should be BLOCKED: {command}"
 
 
+@pytest.mark.parametrize("command", DENIED_GIT_ESCAPES)
+def test_review_found_escapes_stay_closed(command):
+    """Regression pins on real escapes: each of these was ALLOWED before review caught it."""
+    assert run_hook(command) == BLOCKED, f"escape must stay closed: {command}"
+
+
 @pytest.mark.parametrize("command", ALLOWED_GIT)
 def test_benign_git_is_allowed(command):
     assert run_hook(command) == ALLOWED, f"should be ALLOWED: {command}"
@@ -170,6 +214,27 @@ def test_secret_staging_is_blocked(command):
 @pytest.mark.parametrize("command", ALLOWED_ORDINARY)
 def test_ordinary_work_is_allowed(command):
     assert run_hook(command) == ALLOWED, f"should be ALLOWED: {command}"
+
+
+def test_shell_writes_to_protected_dirs_are_blocked_even_for_a_new_file():
+    """DELIBERATELY stricter than `protect_immutable.py`, which permits creating a NEW file.
+
+    That hook allows the pipeline to add `data/predictions/2026_week_NN.json`; this one blocks the
+    same creation via shell. That is not drift — every legitimate writer here is Python `open()`
+    inside `scripts/`/`analytics/`, never shell redirection, so there is no benign shell case to
+    preserve, and deciding existence would mean parsing a path out of an arbitrary command line.
+    The asymmetry fails closed. Pinned so a future reader sees it as intended.
+    """
+    # A file that does not exist — creation, not modification — is still blocked from the shell.
+    assert run_hook("echo '{}' > data/predictions/2099_week_99.json") == BLOCKED
+    assert run_hook("cp /tmp/new.json data/predictions/2099_week_99.json") == BLOCKED
+
+    # The Python writers the pipeline actually uses are untouched.
+    assert run_hook("python scripts/build_predictions.py --week 1") == ALLOWED
+    assert run_hook("python scripts/grade.py --week 1") == ALLOWED
+    # Committing an artifact is how the pipeline publishes it — never blocked.
+    assert run_hook("git add data/predictions/2026_week_01.json") == ALLOWED
+    assert run_hook("git add -A && git commit -m 'predictions: 2026 week 01 (pre-kickoff)'") == ALLOWED
 
 
 def test_heredoc_mentioning_a_denied_shape_is_blocked_known_false_positive():

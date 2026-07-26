@@ -66,9 +66,11 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   data dirs; at the freeze they must also refuse edits to the frozen code paths unless a documented
   SPEC §3 exception + new tag is in play).
   **Edit `.claude/hooks/protected_paths.py` — the single shared `PROTECTED` tuple (D25) — not the hooks
-  themselves.** Then **verify the git-bypass denials in `guard_bash.py` inherit the new entries**: after
-  adding `factors/`/`engine/`, confirm that `rm factors/<file>`, `sed -i` on one, and redirection into one
-  are all blocked, alongside the `Edit`/`Write` guard. `tests/test_hook_guard_bash.py` pins this
+  themselves.** Then **verify `guard_bash.py`'s protected-path mutation rules inherit the new entries**:
+  after adding `factors/`/`engine/`, confirm that `rm factors/<file>`, `sed -i` on one, and redirection
+  into one are all blocked, alongside the `Edit`/`Write` guard. *(Only that scoped-mutation class reads
+  `PROTECTED`; the destructive-git denials are global and path-independent, so they need no update — they
+  are already what stops `git checkout <sha> -- factors/`.)* `tests/test_hook_guard_bash.py` pins the
   inheritance with a sandboxed `PROTECTED` containing `factors/`; extend its live matrix at the tag.
 
 - [ ] **Confirm all calibration is locked** — every constant ratified (Phases 2 / 3b / 3c / 3d all
