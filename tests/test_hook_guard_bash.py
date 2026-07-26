@@ -95,6 +95,38 @@ DENIED_GIT_ESCAPES = [
     "git checkout -B main origin/main",
     "git checkout -B main",
     "git -C . checkout -B main origin/main",
+    # --- Second review round: the enumerate-the-global-options approach was itself the bug. ---
+    # Inline alias substitution through the whitelisted -c: git resolves `co` into `checkout`,
+    # so no literal-token check could ever see the real verb.
+    "git -c alias.co=checkout co -- data/predictions/2026_week_01.json",
+    "git -c alias.co=checkout co af7b0ea",
+    "git -c alias.rs=reset rs --hard",
+    "git -c alias.cl=clean cl -fd",
+    "git -c alias.st2=stash st2 pop",
+    # Global options absent from any enumeration — the closed-set failure mode.
+    "git --no-optional-locks reset --hard",
+    "git -p checkout af7b0ea",
+    "git --no-optional-locks checkout -- data/predictions/",
+    "git -C . --no-optional-locks checkout -- data/predictions/2026_week_01.json",
+    # An unknown option that takes a SEPARATE value shifts the verb out of the parsed position.
+    # Found while re-reading my own fix: positional parsing cannot be trusted at all.
+    "git --unknown-opt somevalue reset --hard",
+    "git --unknown-opt somevalue checkout -- data/predictions/",
+    # git reached by absolute path or through env.
+    "/usr/bin/git reset --hard",
+    "env git checkout -- data/predictions/",
+    "GIT_DIR=.git git reset --hard",
+    # Other history/working-tree rewrites in the same class.
+    "git rebase -i HEAD~3",
+    "git cherry-pick af7b0ea",
+    "git revert af7b0ea",
+    "git rm data/predictions/2026_week_01.json",
+    "git mv data/predictions/a.json data/predictions/b.json",
+    "git worktree add /tmp/wt af7b0ea",
+    "git worktree remove /tmp/wt",
+    "git stash drop",
+    "git stash clear",
+    "git clean --force",
 ]
 
 # ── Benign git — must remain allowed (ruling 1) ───────────────────────────────────────────────
@@ -124,6 +156,18 @@ ALLOWED_GIT = [
     "git -c core.pager=cat show af7b0ea",
     "git -C . stash list",
     "git -C . checkout -b new-branch",
+    # Read-only git must survive the conservative token scan, including unknown global options
+    # and a -c that is NOT an alias definition.
+    "git --no-optional-locks status",
+    "git -c core.pager=cat show af7b0ea",
+    "git -c user.name=x log --oneline",
+    "git worktree list",
+    "git stash show",
+    "git rev-parse HEAD",
+    "git describe --tags",
+    "git fetch origin",
+    "git branch -a",
+    "git tag -l",
 ]
 
 # ── Protected-directory mutation — denied, scoped (ruling 1: no global mutation block) ────────
@@ -237,14 +281,14 @@ def test_shell_writes_to_protected_dirs_are_blocked_even_for_a_new_file():
     assert run_hook("git add -A && git commit -m 'predictions: 2026 week 01 (pre-kickoff)'") == ALLOWED
 
 
-def test_heredoc_mentioning_a_denied_shape_is_blocked_known_false_positive():
-    """Matching is over the raw command string, so PROSE that mentions a denied shape blocks.
+def test_prose_mentioning_a_denied_shape_is_allowed():
+    """Tokenizing per clause removed the old false positive — pinned so it stays removed.
 
-    This fired for real: the commit that introduced this hook had a message describing
-    `git checkout <sha> -- data/predictions/`, and the hook blocked its own commit. Separating a
-    heredoc body from a real argument means parsing shell, which is where guards acquire holes — so
-    the guard fails closed and this is pinned as INTENDED rather than left to be rediscovered as a
-    bug. Workaround: `git commit -F <file>`.
+    The first (regex) implementation matched the RAW command string, so a commit message merely
+    *describing* a denied command was blocked; it fired on this hook's own commit. Splitting into
+    clauses and tokenizing fixed that as a side effect: a heredoc line that starts with prose is a
+    clause whose first token is not `git`, and a quoted argument is a single token that never
+    equals a subcommand name.
     """
     commit_with_heredoc = (
         "git commit -F - <<'EOF'\n"
@@ -252,16 +296,28 @@ def test_heredoc_mentioning_a_denied_shape_is_blocked_known_false_positive():
         "Prevents `git checkout <old-sha> -- data/predictions/` from reverting an artifact.\n"
         "EOF"
     )
-    assert run_hook(commit_with_heredoc) == BLOCKED
+    assert run_hook(commit_with_heredoc) == ALLOWED
 
-    # The same commit message, with no denied shape in its text, passes normally.
-    clean_commit = (
+    # A quoted argument that contains a denied shape is one token, not a subcommand.
+    assert run_hook('git commit -m "fix the git checkout -- . bug"') == ALLOWED
+    assert run_hook('echo "git checkout -- data/predictions/"') == ALLOWED
+    assert run_hook("grep -rn 'git reset --hard' docs/") == ALLOWED
+
+
+def test_residual_false_positive_a_heredoc_line_that_is_itself_a_git_command():
+    """The one remaining over-block: a heredoc LINE that literally begins with a denied command.
+
+    Such a line is indistinguishable from a real clause without tracking heredoc delimiters, which
+    is where guards acquire holes. It fails closed, which is the right direction. Pinned as
+    intended, not rediscovered. Workaround: put the text in a file and use `git commit -F <file>`.
+    """
+    body_line_is_a_command = (
         "git commit -F - <<'EOF'\n"
         "hooks: deny destructive shell commands\n\n"
-        "Prevents reverting an append-only artifact from the shell.\n"
+        "git checkout -- data/predictions/\n"
         "EOF"
     )
-    assert run_hook(clean_commit) == ALLOWED
+    assert run_hook(body_line_is_a_command) == BLOCKED
 
 
 def test_protected_list_is_shared_not_duplicated():

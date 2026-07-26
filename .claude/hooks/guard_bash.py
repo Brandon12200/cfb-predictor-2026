@@ -36,14 +36,21 @@ shell redirection — so there is no benign shell case to preserve, and deciding
 parsing a path out of an arbitrary command line. The asymmetry is extra friction, not a hole: it
 fails closed. Recorded here so it reads as intended rather than as drift between the two guards.
 
-**Known, accepted false positive.** Matching is over the raw command string, so ANY command whose
-*text* contains a denied shape is blocked, even when nothing destructive would execute and even
-when git is never invoked — a `git commit` heredoc describing this hook, a `python3 - <<EOF` block
-embedding one of these strings as test data, a `grep` for the pattern. Distinguishing a quoted
-body from a real argument means parsing shell, which is where guards acquire holes. A guard whose
-job is friction should fail closed, so this is left as-is. **Workaround:** put the text in a file
-(`git commit -F <file>`, a heredoc-free script) instead of inline. Pinned by a test so the
-behaviour is intended, not rediscovered.
+**How git is matched, and why it is not a regex.** Two earlier versions matched
+``git\\s+<verb>`` against the raw string and both leaked: `git -C <dir> checkout -- data/predictions/`
+slipped past every rule, and after global options were enumerated, any option *outside* that
+enumeration (`--no-optional-locks`, `-p`) slipped past just as silently — a closed set is the wrong
+shape for this. So the command is split into clauses, each clause is tokenized, and for a git
+invocation **every token is scanned** for a destructive subcommand. No verb position is assumed,
+so an unknown global option cannot shift the verb out of view. `-c alias.X=<verb>` is denied
+outright, since git resolves the alias itself and no token check could see the real verb.
+
+**Residual over-block, accepted.** A heredoc LINE that itself begins with a denied command reads
+as a real clause; distinguishing it would mean tracking heredoc delimiters, which is where guards
+acquire holes. It fails closed. (Tokenizing did remove the broader false positive the regex
+version had, where any prose *mentioning* a denied command was blocked — a quoted argument is now
+a single token and never equals a subcommand name.) **Workaround:** put the text in a file and use
+`git commit -F <file>`. Both behaviours are pinned by tests so they read as intended.
 
 Exit code 2 blocks the call.
 """
@@ -51,6 +58,7 @@ Exit code 2 blocks the call.
 import json
 import os
 import re
+import shlex
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -63,32 +71,155 @@ _PROTECTED_ALT = "|".join(re.escape(p.rstrip("/")) for p in PROTECTED)
 # next clause's match.
 _SEG = r"[^|;&]*"
 
-# Global options that may sit BETWEEN `git` and its subcommand. Without these, every destructive
-# rule below is bypassed by one extra flag — `git -C <dir> checkout -- data/predictions/` was
-# ALLOWED by the first version of this hook, which is the exact escape it exists to prevent.
-# Enumerated explicitly (rather than a permissive `-\S+` wildcard) so the pattern cannot
-# over-consume the subcommand token itself.
-_GIT_GLOBAL = (
-    r"(?:\s+(?:"
-    r"-C\s+\S+|-c\s+\S+"
-    r"|--git-dir(?:=|\s+)\S+|--work-tree(?:=|\s+)\S+|--namespace(?:=|\s+)\S+"
-    r"|--exec-path(?:=\S+)?"
-    r"|-P|--no-pager|--bare|--no-replace-objects"
-    r"|--literal-pathspecs|--glob-pathspecs|--noglob-pathspecs|--icase-pathspecs"
-    r"))*"
-)
-# `git` plus any run of global options, up to (not including) the subcommand.
-_GIT = rf"git{_GIT_GLOBAL}\s+"
+# Git global options that take a SEPARATE value token. Needed only so the token walk knows how
+# many tokens to step over; an option missing from this set costs nothing, because an unknown
+# option is skipped and a mis-parse resolves to an unrecognised subcommand, which DENIES.
+_GIT_GLOBAL_WITH_VALUE = {
+    "-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path", "--super-prefix",
+}
 
-# Subcommand flags that may precede a commit-ish. `(?:=\S+)?` is load-bearing: without it
-# `git checkout --track=origin/main <sha>` slipped through, because an `=`-form flag broke the
-# skip and the whole alternation failed rather than stepping over the flag.
-_SUBFLAG = r"(?:-[a-zA-Z-]+(?:=\S+)?\s+)*"
+# Subcommands that mutate the working tree, the index, or history. Each gets a nuanced rule in
+# `_check_git`; everything not listed here is allowed through.
+_DESTRUCTIVE_SUBCOMMANDS = {
+    "checkout", "restore", "reset", "clean", "stash", "apply", "worktree",
+    "rebase", "cherry-pick", "revert", "rm", "mv", "filter-branch",
+}
 
 
 def _block(message: str) -> None:
     sys.stderr.write(message if message.endswith("\n") else message + "\n")
     sys.exit(2)
+
+
+def _clauses(command: str) -> list[str]:
+    """Split a command line into clauses on `|`, `;`, `&&`, `||`, newline."""
+    return [c for c in re.split(r"\|\||&&|[|;&\n]", command) if c.strip()]
+
+
+def _tokenize(clause: str) -> list[str]:
+    """Best-effort token split. On failure, fall back to whitespace — never raise.
+
+    A tokenizer failure must not silently allow: callers treat an unresolvable git invocation as
+    denied, so degrading to a coarser split is safe.
+    """
+    try:
+        return shlex.split(clause)
+    except ValueError:
+        return clause.split()
+
+
+def _resolve_git_subcommand(tokens: list[str]) -> tuple[str | None, list[str], list[str]]:
+    """Return (subcommand, global-option values seen, remaining args) for a git invocation.
+
+    Walks past global options to find the first bare token. This is a BEST-EFFORT resolution used
+    for the `-c alias.…` check only — it cannot be trusted to find the verb, because an unknown
+    option that takes a separate value causes the walk to read that value as the subcommand
+    (`git --unknown-opt value reset --hard` resolves to `value`, not `reset`). `_check_git`
+    therefore does not rely on it for the destructive rules; it scans EVERY token instead.
+    """
+    i = 1
+    c_values: list[str] = []
+    while i < len(tokens):
+        tok = tokens[i]
+        if not tok.startswith("-"):
+            return tok, c_values, tokens[i + 1:]
+        if "=" in tok:  # self-contained, e.g. --git-dir=.git
+            i += 1
+            continue
+        if tok in _GIT_GLOBAL_WITH_VALUE:
+            if tok == "-c" and i + 1 < len(tokens):
+                c_values.append(tokens[i + 1])
+            i += 2  # step over the option AND its value
+            continue
+        i += 1  # unknown bare option: step over it alone
+    return None, c_values, []
+
+
+def _check_git(tokens: list[str]) -> None:
+    """Deny the destructive git subcommands. Called once per git clause.
+
+    **Scans every token rather than trusting a parsed subcommand position.** Positional parsing is
+    what made the two earlier versions of this guard leaky: any global option the enumeration did
+    not know about shifted the verb out of the position being inspected, and the rule silently
+    failed open. Here, if a destructive verb appears ANYWHERE in a git invocation, its rule runs —
+    an unlisted global option cannot hide it, because no position is assumed.
+
+    The cost is a little over-blocking (a branch literally named `reset` passed where a flag is
+    expected). That is the correct direction for a guard protecting a byte-immutable artifact.
+    """
+    _, c_values, _ = _resolve_git_subcommand(tokens)
+
+    # `-c alias.X=<verb>` makes git resolve an arbitrary token into any subcommand, so no
+    # token-level check can see the real verb. Alias definition is never legitimate here.
+    for val in c_values:
+        if val.startswith("alias."):
+            _block(
+                "Blocked: `git -c alias.…` defines an inline alias, which can resolve to any "
+                "subcommand and defeat this guard. Invoke the subcommand directly."
+            )
+
+    for idx, tok in enumerate(tokens[1:], start=1):
+        if tok in _DESTRUCTIVE_SUBCOMMANDS:
+            _check_git_subcommand(tok, tokens[idx + 1:])
+
+
+def _check_git_subcommand(sub: str, rest: list[str]) -> None:
+    """Apply the rule for one destructive subcommand, given the tokens that follow it."""
+    flags = [t for t in rest if t.startswith("-")]
+    bare = [t for t in rest if not t.startswith("-")]
+
+    if sub == "checkout":
+        if "--" in rest:
+            _block(
+                "Blocked: `git checkout -- <pathspec>` overwrites working-tree files. If this "
+                "targets a protected artifact directory it would also revert append-only history "
+                "(D22/D23). Use `git diff` to inspect; restore deliberately outside the session."
+            )
+        if "-B" in flags:
+            _block(
+                "Blocked: `git checkout -B <branch>` force-resets an existing branch. "
+                "Use `git checkout -b` for a new branch."
+            )
+        if "-b" in flags:
+            return  # branch CREATION — always fine
+        # `{7,}` not `{7,40}`: an over-long hex token is not a valid sha, but it must not slip
+        # through on a length technicality either. A branch named in 7+ hex chars is collateral.
+        if any(re.fullmatch(r"[0-9a-f]{7,}", t) for t in bare):
+            _block(
+                "Blocked: `git checkout <sha>` detaches HEAD over the working tree. "
+                "Use `git show <sha>` / `git diff <sha>` to inspect a commit read-only."
+            )
+        return
+
+    if sub == "restore":
+        _block("Blocked: `git restore` discards working-tree changes. Inspect with `git diff`.")
+    if sub == "reset":
+        if "--hard" in flags:
+            _block("Blocked: `git reset --hard` discards committed and working-tree state.")
+        return
+    if sub == "clean":
+        if any(re.fullmatch(r"-[a-zA-Z]*f[a-zA-Z]*", f) or f == "--force" for f in flags):
+            _block("Blocked: `git clean -f` deletes untracked files irrecoverably.")
+        return
+    if sub == "stash":
+        # `git stash list|show` is read-only; a bare `git stash` saves but does not destroy.
+        if bare and bare[0] in {"pop", "apply", "drop", "clear"}:
+            _block(
+                "Blocked: `git stash pop|apply|drop|clear` mutates the working tree or discards "
+                "stashed work. (`git stash list` is fine.)"
+            )
+        return
+    if sub == "apply":
+        _block("Blocked: `git apply` patches the working tree. Inspect the patch instead.")
+    if sub == "worktree":
+        if bare and bare[0] != "list":
+            _block("Blocked: `git worktree add|remove|prune` mutates checkouts on disk.")
+        return
+    # rebase / cherry-pick / revert / rm / mv / filter-branch: history or working-tree rewrites.
+    _block(
+        f"Blocked: `git {sub}` rewrites history or the working tree. "
+        "Perform it deliberately outside the agent session."
+    )
 
 
 def main() -> None:
@@ -109,39 +240,14 @@ def main() -> None:
         _block("Blocked: refusing to commit anything referencing .env.")
 
     # ── (b) Destructive git, denied globally ──────────────────────────────────────────────────
-    # `git checkout ... -- <pathspec>` restores files over the working tree.
-    if re.search(rf"{_GIT}checkout\b{_SEG}\s--\s", command):
-        _block(
-            "Blocked: `git checkout -- <pathspec>` overwrites working-tree files. If this targets "
-            "a protected artifact directory it would also revert append-only history (D22/D23). "
-            "Use `git diff` to inspect; restore deliberately outside the agent session."
-        )
-    # `-B` force-creates-or-RESETS an existing branch over the working tree — destructive, unlike
-    # `-b`, which errors if the branch exists. Checked before the `-b` exemption below.
-    if re.search(rf"{_GIT}checkout\s+{_SUBFLAG}?-B\b", command):
-        _block(
-            "Blocked: `git checkout -B <branch>` force-resets an existing branch. "
-            "Use `git checkout -b` for a new branch."
-        )
-    # `git checkout <sha>` (a commit-ish, not a branch) — but `-b` is branch CREATION, always fine.
-    if not re.search(rf"{_GIT}checkout\s+-b\b", command):
-        # `{7,}` not `{7,40}`: an over-long hex token is not a valid sha, but it must not slip
-        # through on a length technicality either. A branch named in 7+ hex chars is collateral.
-        if re.search(rf"{_GIT}checkout\s+{_SUBFLAG}[0-9a-f]{{7,}}\b", command):
-            _block(
-                "Blocked: `git checkout <sha>` detaches HEAD over the working tree. "
-                "Use `git show <sha>` / `git diff <sha>` to inspect a commit read-only."
-            )
-    if re.search(rf"{_GIT}restore\b", command):
-        _block("Blocked: `git restore` discards working-tree changes. Inspect with `git diff`.")
-    if re.search(rf"{_GIT}reset\b{_SEG}--hard\b", command):
-        _block("Blocked: `git reset --hard` discards committed and working-tree state.")
-    if re.search(rf"{_GIT}clean\b{_SEG}-[a-zA-Z]*f", command):
-        _block("Blocked: `git clean -f` deletes untracked files irrecoverably.")
-    if re.search(rf"{_GIT}stash\s+(pop|apply)\b", command):
-        _block("Blocked: `git stash pop|apply` mutates the working tree. (`git stash list` is fine.)")
-    if re.search(rf"{_GIT}apply\b", command):
-        _block("Blocked: `git apply` patches the working tree. Inspect the patch instead.")
+    for clause in _clauses(command):
+        tokens = _tokenize(clause)
+        # Step over leading `env` and VAR=value assignments so `env git …` is still seen as git.
+        while tokens and (tokens[0] == "env" or re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", tokens[0])):
+            tokens = tokens[1:]
+        if not tokens or os.path.basename(tokens[0]) != "git":
+            continue
+        _check_git(tokens)
 
     # ── (c) In-place mutation of the protected artifact directories ───────────────────────────
     protected_note = (
