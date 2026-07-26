@@ -244,21 +244,77 @@ def _glob_may_reach_protected(token: str) -> bool:
     return any(root.startswith(last) or last.startswith(root) for root in _PROTECTED_ROOTS)
 
 
-def _check_protected_globs(command: str) -> None:
-    """Deny a glob that could expand onto a protected path, in ANY write context."""
+def _rel_cwd(payload: dict) -> str:
+    """The Bash tool's working directory, relative to the project root ('' when at the root).
+
+    `protect_immutable.py` has always read `cwd`; this guard did not, and that asymmetry was a
+    hole rather than a detail — every rule here matches text like `data/predictions`, so a shell
+    already sitting inside `data/` made `rm -rf predictions` invisible. The Bash tool's working
+    directory persists between calls, so reaching that state takes one ordinary `cd`.
+    """
+    cwd = payload.get("cwd") or os.getcwd()
+    root = os.environ.get("CLAUDE_PROJECT_DIR") or cwd
+    try:
+        rel = os.path.relpath(os.path.abspath(cwd), os.path.abspath(root)).replace(os.sep, "/")
+    except ValueError:
+        return ""
+    return "" if rel in (".", "..") or rel.startswith("../") else rel
+
+
+def _resolve(rel_cwd: str, piece: str) -> str:
+    """A token as a project-root-relative path, so `predictions` under cwd=`data` is seen."""
+    if piece.startswith("/") or piece.startswith("~"):
+        return piece
+    joined = f"{rel_cwd}/{piece}" if rel_cwd else piece
+    return os.path.normpath(joined).replace(os.sep, "/")
+
+
+def _under_protected(path: str) -> bool:
+    return any(path == p.rstrip("/") or path.startswith(p) for p in PROTECTED)
+
+
+def _check_protected_globs(command: str, rel_cwd: str = "") -> None:
+    """Deny a glob that could expand onto a protected path, in ANY write context.
+
+    Also resolves relative tokens against the working directory, and follows a `cd` between
+    clauses of the same command — `cd data && rm -rf predictions` names no protected path.
+    """
+    cwd = rel_cwd
     for clause in _clauses(command):
+        tokens = _tokenize(clause)
+        if tokens and tokens[0] == "cd" and len(tokens) > 1:
+            cwd = _resolve(cwd, tokens[1])
+            continue
         if not _WRITE_CONTEXT.search(clause):
             continue
-        for token in _tokenize(clause):
+        # A shell already inside a protected directory makes every relative write dangerous, and
+        # no amount of path matching on the command text can see it.
+        if cwd and _under_protected(cwd + "/"):
+            _block(
+                f"Blocked: the working directory ({cwd}) is inside an append-only artifact "
+                "directory, so a relative write here cannot be distinguished from an edit to "
+                "history. Run the command from the project root, naming the path explicitly."
+            )
+        for token in tokens:
             # A spaceless redirect (`echo x>data/pred*`) is ONE shlex token, so stripping leading
             # operators is not enough — the path hides after the operator, mid-token. Split on the
             # redirection characters and check every piece.
             for piece in re.split(r"[<>|]+", token):
-                if _glob_may_reach_protected(piece):
+                if not piece:
+                    continue
+                resolved = _resolve(cwd, piece)
+                if _glob_may_reach_protected(piece) or _glob_may_reach_protected(resolved):
                     _block(
                         "Blocked: a glob or brace expansion could resolve onto an append-only "
                         "path without naming it, and the shell expands before this guard runs. "
                         "Name the exact file instead. (CLAUDE.md principle 5 / D22 / D23)"
+                    )
+                # The same token resolved against the working directory: `rm -rf predictions`
+                # from `data/` is the identical act as `rm -rf data/predictions` from the root.
+                if resolved != piece and _under_protected(resolved):
+                    _block(
+                        f"Blocked: `{piece}` resolves to `{resolved}`, an append-only historical "
+                        "artifact (CLAUDE.md principle 5 / D22 / D23)."
                     )
 
 
@@ -416,7 +472,7 @@ def main() -> None:
         "append-only historical artifacts (CLAUDE.md principle 5 / D22 / D23). "
         "New files may be added; existing ones are never modified, moved or deleted."
     )
-    _check_protected_globs(command)
+    _check_protected_globs(command, _rel_cwd(payload))
     if re.search(rf"\b({_MUTATION_VERBS})\b{_SEG}\b({_PROTECTED_ALT}){_PDIR_END}", command):
         _block(f"Blocked: refusing to delete/move/overwrite {protected_note}")
     if re.search(rf"\bsed\s+-i{_SEG}\b({_PROTECTED_ALT}){_PDIR_END}", command):

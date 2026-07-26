@@ -14,10 +14,10 @@ The `guard_bash.py` extension ruled in D25, plus the shared `PROTECTED` tuple, t
 `code-reviewer.md` briefing fixes, and D25 itself.
 
 **No `factors/` or `engine/` path is touched, so the output-hash instrument does not apply** — this
-change cannot move a prediction. `make test` **671 passed, 2 skipped** (was 449; **+222-case hook
+change cannot move a prediction. `make test` **672 passed, 2 skipped** (was 449; **+223-case hook
 matrix**). `make lint` clean on a scope that now includes both the new test file **and the three
 hook source files themselves**, which had never been linted. *(Counts re-measured at the close of
-round 7 and reconciled against `make test` and `pytest --collect-only`; earlier drafts of this file
+round 8 and reconciled against `make test` and `pytest --collect-only`; earlier drafts of this file
 and of D25 quoted 619/170, 633/184 and 644/195 and went stale every round — a reviewer nit three times over.)*
 
 ## The gap this closes
@@ -31,7 +31,7 @@ Now: destructive git is denied **globally**; in-place mutation of the protected 
 denied **scoped**; and both hooks read **one** `PROTECTED` tuple, so the freeze-day addition of
 `factors/`/`engine/` propagates from a single edit.
 
-## Seven NO-GO rounds — what the reviewer caught that I did not
+## Eight NO-GO rounds — what the reviewer caught that I did not
 
 This is the part worth reading. Each round I believed the guard was correct; each round it was not.
 
@@ -45,6 +45,22 @@ This is the part worth reading. Each round I believed the guard was correct; eac
 | 6 | A glob rule scoped to mutation verbs and anchored on the literal root | **Still a literal-text rule.** `rm -rf dat*` and `rm -rf */predictions` resolve to the protected path without containing it; `sed -i`, `tee` and redirection were never covered; and `metadata/`, `validated_data/` were falsely blocked as substring matches. D25 itself had gone stale on the over-block count and NO-GO tally |
 
 | 7 | A token-level glob check | **A spaceless redirect hides the path mid-token.** `echo x>data/pred*` is one shlex token, so stripping *leading* operators missed it — an ordinary shell habit, not evasion. Also `rm -rf /tmp/d*` was over-blocked, because the "abbreviation could expand to the root" rule was applied filesystem-wide |
+
+| 8 | Everything above — all of it text-matching | **The guard never read `cwd`.** A relative delete of a protected directory, after an ordinary `cd` or from a persisted working directory, bypassed guard (c) entirely — no glob, no evasion. The sibling hook had always read `cwd`; this one never did |
+
+### Round 8 in full
+
+The most valuable finding of the eight, and the only one that was not a textual edge: every
+rule here matched strings like the literal protected path, and **none of them knew where the
+shell was standing**. `protect_immutable.py` had read `payload["cwd"]` since it was written;
+this guard never did. Because the Bash tool's working directory persists between calls, one
+legitimate `cd` into the data tree — to inspect pipeline output, say — silently removed guard
+(c) for every command after it.
+
+Relative tokens are now resolved against the working directory, a `cd` between clauses of the
+same command is followed, and standing *inside* a protected directory refuses the write
+context outright: a relative write there cannot be distinguished from an edit to history.
+Ordinary work outside those trees is pinned as unaffected.
 
 ### Round 7 in full
 
@@ -96,7 +112,7 @@ tests-can-enforce-a-broken-contract failure this project already has a doctrine 
 was rewritten to pin reality, not preserved.
 
 **45 git escapes plus the round-4 protected-path escapes are pinned as named regression cases**,
-each a demonstrated miss rather than a hypothetical, in a **222-case** matrix that runs the real
+each a demonstrated miss rather than a hypothetical, in a **223-case** matrix that runs the real
 hook as a subprocess against real payloads.
 
 ### Round 5 in full
@@ -130,7 +146,7 @@ with the `-F` / `--body-file` workaround noted.
 
 ## Reviewer
 
-**Seven rounds, seven NO-GOs, every one binding and every one correct.** That record is the strongest
+**Eight rounds, eight NO-GOs, every one binding and every one correct.** That record is the strongest
 evidence in this PR, and it cuts against me: on each round I believed the guard was finished, and
 on each round it was not. Three times the finding was that I had closed the reported *instances*
 while leaving the *class* open — round 4 caught me making that exact mistake inside the commit that

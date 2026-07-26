@@ -13,6 +13,7 @@ reimplementation of the patterns.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -24,14 +25,23 @@ HOOK = Path(__file__).resolve().parents[1] / ".claude" / "hooks" / "guard_bash.p
 BLOCKED, ALLOWED = 2, 0
 
 
-def run_hook(command: str) -> int:
-    payload = {"tool_name": "Bash", "tool_input": {"command": command}}
+REPO = Path(__file__).resolve().parents[1]
+
+
+def run_hook(command: str, cwd: str | None = None) -> int:
+    """Invoke the real hook with a real payload. `cwd` is project-root-relative."""
+    payload = {
+        "tool_name": "Bash",
+        "tool_input": {"command": command},
+        "cwd": str(REPO / cwd) if cwd else str(REPO),
+    }
     proc = subprocess.run(
         [sys.executable, str(HOOK)],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
         timeout=30,
+        env={**os.environ, "CLAUDE_PROJECT_DIR": str(REPO)},
     )
     return proc.returncode
 
@@ -402,6 +412,39 @@ def test_prose_mentioning_a_denied_shape_is_allowed():
     assert run_hook('git commit -m "fix the git checkout -- . bug"') == ALLOWED
     assert run_hook('echo "git checkout -- data/predictions/"') == ALLOWED
     assert run_hook("grep -rn 'git reset --hard' docs/") == ALLOWED
+
+
+def test_working_directory_is_resolved_not_ignored():
+    """`cd data && rm -rf predictions` names no protected path — and used to be allowed.
+
+    The guard matched text like `data/predictions` while having no concept of where the shell was
+    standing, so one ordinary `cd` removed guard (c) entirely. Its sibling `protect_immutable.py`
+    had always read `cwd`; this one did not, and the asymmetry was the hole. Relative tokens are
+    now resolved against the working directory, and a `cd` between clauses is followed.
+    """
+    # A `cd` earlier in the same command line.
+    assert run_hook("cd data && rm -rf predictions") == BLOCKED
+    assert run_hook("cd data && rm -rf pred*") == BLOCKED
+    assert run_hook("cd data && sed -i s/a/b/ predictions/2026_week_01.json") == BLOCKED
+    assert run_hook("cd data; mv predictions /tmp/") == BLOCKED
+
+    # The Bash tool's working directory persisting from an earlier call.
+    assert run_hook("rm -rf predictions", cwd="data") == BLOCKED
+    assert run_hook("mv results /tmp/", cwd="data") == BLOCKED
+    assert run_hook("echo x > graded/2026_week_01.json", cwd="data") == BLOCKED
+
+    # Standing INSIDE a protected directory: every relative write is indistinguishable from an
+    # edit to history, so the write context itself is refused.
+    assert run_hook("rm -rf old.json", cwd="data/predictions") == BLOCKED
+    assert run_hook("sed -i s/a/b/ f.json", cwd="data/predictions") == BLOCKED
+    assert run_hook("echo x > f.json", cwd="data/predictions") == BLOCKED
+
+    # Ordinary work from a non-protected directory is untouched.
+    assert run_hook("rm -rf __pycache__", cwd="factors") == ALLOWED
+    assert run_hook("rm -rf snapshots/tmp", cwd="data") == ALLOWED
+    assert run_hook("cd docs && rm -rf build") == ALLOWED
+    assert run_hook("ls predictions", cwd="data") == ALLOWED
+    assert run_hook("cat predictions/2026_week_01.json", cwd="data") == ALLOWED
 
 
 def test_reading_out_of_a_protected_dir_is_blocked_accepted_over_block():
