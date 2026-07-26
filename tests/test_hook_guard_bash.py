@@ -206,6 +206,16 @@ DENIED_PROTECTED = [
     "install -m 644 /tmp/fake.json data/predictions/2026_week_01.json",
     "shred data/predictions/2026_week_01.json",
     "echo hi >| data/predictions/2026_week_01.json",
+    # --- Fourth review round: the terminator was enumerated, so ordinary shell punctuation
+    # walked straight past it. No evasion technique required — just a `;`.
+    "rm -rf data/predictions; echo done",
+    "rm -rf data/predictions;echo done",
+    "mv /tmp/x.json data/predictions; echo done",
+    "(rm -rf data/predictions)",
+    "if true; then rm -rf data/predictions; fi",
+    "rm -rf data/predictions && echo done",
+    "rm -rf data/graded|cat",
+    "rm -rf data/lines,",
     # Evasion shapes that defeat tokenizing. Denied wholesale — never needed for ordinary work.
     "git config alias.co checkout",
     "git config alias.wipe '!git reset --hard'",
@@ -228,6 +238,12 @@ ALLOWED_UNPROTECTED = [
     "cat docs/SPEC.md | tee /tmp/spec.txt",
     "rm reports/weekly_2026_week_01.md",  # D23: renderings are regenerable, NOT guarded
     "echo x > reports/season_2026.md",
+    # Sibling directories whose names merely START with a protected name must NOT be swept in —
+    # the risk the round-4 boundary fix introduces if the lookahead is too loose.
+    "rm -rf data/predictions_backup",
+    "rm -rf data/predictions-old",
+    "mv data/results_scratch /tmp/",
+    "echo x > data/graded_tmp/notes.txt",
 ]
 
 # ── Secret hygiene — the pre-existing rules must still hold ───────────────────────────────────
@@ -333,6 +349,22 @@ def test_prose_mentioning_a_denied_shape_is_allowed():
     assert run_hook('git commit -m "fix the git checkout -- . bug"') == ALLOWED
     assert run_hook('echo "git checkout -- data/predictions/"') == ALLOWED
     assert run_hook("grep -rn 'git reset --hard' docs/") == ALLOWED
+
+
+def test_reading_out_of_a_protected_dir_is_blocked_accepted_over_block():
+    """Third accepted over-block: guard (c) does not distinguish source from destination.
+
+    `cp data/predictions/x.json /tmp/` leaves the original untouched but is blocked, because
+    telling source from destination means encoding each verb's argument grammar — another
+    enumerated set, the shape that has already failed twice in this guard. Use `Read`, or copy via
+    Python. Pinned so it reads as intended rather than as a bug.
+    """
+    assert run_hook("cp data/predictions/2026_week_01.json /tmp/backup.json") == BLOCKED
+    # Reading with non-mutating tools is unaffected — the common case stays open.
+    assert run_hook("cat data/predictions/2026_week_01.json") == ALLOWED
+    assert run_hook("ls data/predictions") == ALLOWED
+    assert run_hook("grep -rn game_id data/predictions") == ALLOWED
+    assert run_hook("python -c \"import json; json.load(open('data/predictions/x.json'))\"") == ALLOWED
 
 
 def test_known_residual_backtick_substitution_is_not_guarded():

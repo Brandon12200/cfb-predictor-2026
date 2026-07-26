@@ -50,10 +50,17 @@ begins with a denied command reads as a real clause; and prose containing the `$
 form near a destructive verb trips the substitution rule (this blocked the PR description that
 *explained* the substitution rule). Distinguishing either would mean tracking heredoc and quoting
 state, which is where guards acquire holes. Both fail closed; the workaround in both cases is to
-put the text in a file (`git commit -F <file>`, `gh pr create --body-file <file>`). (Tokenizing did remove the broader false positive the regex
-version had, where any prose *mentioning* a denied command was blocked — a quoted argument is now
-a single token and never equals a subcommand name.) **Workaround:** put the text in a file and use
-`git commit -F <file>`. Both behaviours are pinned by tests so they read as intended.
+put the text in a file (`git commit -F <file>`, `gh pr create --body-file <file>`). Tokenizing did
+remove the broader false positive the regex version had, where any prose *mentioning* a denied
+command was blocked — a quoted argument is now a single token and never equals a subcommand name.
+
+**A third accepted over-block: reading OUT of a protected directory.** Guard (c) matches its verbs
+without distinguishing source from destination, so `cp data/predictions/x.json /tmp/backup.json`
+— which leaves the original untouched — is blocked. Telling source from destination means knowing
+each verb's argument grammar (`cp SRC DST`, `dd if=/of=`, `install -m MODE SRC DST`), i.e. another
+enumerated set, which is the shape that has now failed twice here. Use `Read`, or copy via Python.
+
+All three over-blocks are pinned by tests so they read as intended rather than as bugs.
 
 Exit code 2 blocks the call.
 """
@@ -70,10 +77,15 @@ from protected_paths import PROTECTED  # noqa: E402  (single source of truth —
 # `data/predictions/` -> `data/predictions`, joined into one alternation.
 _PROTECTED_ALT = "|".join(re.escape(p.rstrip("/")) for p in PROTECTED)
 
-# What may follow a protected directory name. Requiring a literal `/` was a real hole: `rm -rf
-# data/predictions` (no trailing slash) — the more natural way to write it — matched nothing. So
-# the directory may be followed by `/`, whitespace, a quote, or end-of-string.
-_PDIR_END = r"(?:/|\s|[\"']|$)"
+# What may follow a protected directory name. TWO rounds of review died here, both to the same
+# mistake — enumerating the allowed terminators instead of using a boundary:
+#   round 3: requiring a literal `/` missed `rm -rf data/predictions` (no trailing slash);
+#   round 4: enumerating `/`, whitespace, quote, end-of-string missed `rm -rf data/predictions;`
+#            and `(rm -rf data/predictions)` — ordinary shell punctuation, no evasion needed.
+# A negative lookahead closes the class instead of adding instances: match unless the next
+# character continues the NAME. `_` and `-` are excluded so a sibling directory
+# (`data/predictions_backup`, `data/predictions-old`) is not swept in.
+_PDIR_END = r"(?![-\w])"
 
 # A command segment: stop at a pipe/semicolon/&& so one clause's arguments cannot leak into the
 # next clause's match.
@@ -88,6 +100,13 @@ _GIT_GLOBAL_WITH_VALUE = {
 
 # Options whose VALUE is free text that may legitimately contain a destructive verb —
 # `git log --grep revert` must not be blocked. The value token is skipped, not scanned.
+#
+# ⚠ Stated invariant, since skipping a value could in principle skip a real verb: the
+# subcommand-only entries here (`-m`, `--grep`, `--author`, `-F`, …) are NOT valid in git's global
+# position, so a crafted `git -m reset --hard` is rejected by git itself (`unknown option: -m`,
+# exit 129) before any subcommand runs — the skip cannot hide a verb that would actually execute.
+# Verified against the real git binary. Recorded rather than assumed, because the enumerate-and-
+# hope pattern has already failed twice in this file.
 _OPTIONS_TAKING_A_VALUE = {
     "--grep", "-S", "-G", "--author", "--committer", "-m", "--message", "--pretty", "--format",
     "-F", "--file", "-L", "--since", "--until", "--before", "--after",
