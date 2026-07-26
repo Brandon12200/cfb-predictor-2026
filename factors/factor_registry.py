@@ -3,12 +3,11 @@ Factor registry for College Football Market Edge Platform.
 Manages dynamic loading, weight distribution, and execution of all factors.
 """
 
+import inspect
 import logging
 from typing import Any
-import inspect
 
-from config import config
-from factors.base_calculator import BaseFactorCalculator, FactorType, FactorConfidence
+from factors.base_calculator import BaseFactorCalculator, FactorConfidence, FactorType
 
 SITUATIONAL_CATEGORY = "situational_context"
 PHYSICAL_CATEGORY = "physical"
@@ -65,7 +64,7 @@ def confirm_situational(factor_results: list[dict[str, Any]],
 class FactorRegistry:
     """
     Registry for managing and executing all prediction factors.
-    
+
     Features:
     - Dynamic loading of factor calculators
     - Weight normalization and validation
@@ -115,17 +114,17 @@ class FactorRegistry:
     def _load_all_factors(self) -> None:
         """
         Dynamically load all factor calculator classes from the factors directory.
-        
+
         This modular approach automatically discovers and loads any factor that:
         1. Is in a .py file in the factors directory
         2. Contains a class that inherits from BaseFactorCalculator
         3. Has a proper __init__ method
-        
+
         This allows new factors to be added simply by creating a new file,
         without modifying the registry.
         """
-        import os
         import importlib
+        import os
 
         factors_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -217,7 +216,7 @@ class FactorRegistry:
         else:
             # Normalize all weights to sum to 1.0
             normalization_factor = 1.0 / total_weight
-            for factor_name, factor in self.factors.items():
+            for _factor_name, factor in self.factors.items():
                 # Store both original and normalized weights
                 factor.original_weight = factor.weight
                 factor.normalized_weight = factor.weight * normalization_factor
@@ -241,12 +240,12 @@ class FactorRegistry:
                             context: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Calculate all factors for a given matchup with enhanced weighting.
-        
+
         Args:
             home_team: Normalized home team name
             away_team: Normalized away team name
             context: Game context data
-            
+
         Returns:
             Dictionary with factor results and summary
         """
@@ -351,7 +350,7 @@ class FactorRegistry:
             ]
 
         # ── Phase 2: activation-dependent aggregation over the (now gated) results. ──────────
-        for factor_name, factor_result in results['factors'].items():
+        for _factor_name, factor_result in results['factors'].items():
             if not factor_result.get('success') or not factor_result.get('activated', False):
                 continue
 
@@ -403,10 +402,10 @@ class FactorRegistry:
     def get_factor_info(self, factor_name: str | None = None) -> dict[str, Any]:
         """
         Get information about factors.
-        
+
         Args:
             factor_name: Specific factor name, or None for all factors
-            
+
         Returns:
             Dictionary with factor information
         """

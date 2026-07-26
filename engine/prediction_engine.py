@@ -4,19 +4,18 @@ Orchestrates factor calculations and generates contrarian predictions.
 """
 
 import logging
-from typing import Any
 from datetime import datetime
+from typing import Any
 
-from config import config
 from data.data_manager import data_manager
+from engine.variance_detector import variance_detector
 from factors.factor_registry import factor_registry
 from utils.normalizer import normalizer
-from engine.variance_detector import variance_detector
 
-# ── Phase 3c calibration constants (PROPOSED — ratified in docs/CALIBRATION_LOG.md; frozen at the
-# tag). Evidence class `reasoned`: NOT fit to the 2025 archive (its confidence/edge distributions
-# are Bug-#7-contaminated, SPEC §3), set by stated argument on the model's own scale and
-# structurally sanity-checked on the NEW model's dry-run output — never tuned to hit an ATS%. ───
+# ── Phase 3c calibration constants — RATIFIED (owner, 2026-07-04; CALIBRATION_LOG 3c.5 / 3c.6);
+# frozen at the tag. Evidence class `reasoned`: NOT fit to the 2025 archive (its confidence/edge
+# distributions are Bug-#7-contaminated, SPEC §3), set by stated argument on the model's own scale
+# and structurally sanity-checked on the NEW model's dry-run output — never tuned to hit an ATS%. ─
 #
 # L4 — NO_BET floors. NO_BET fires when ANY of: the edge is below the (dynamic, confidence-aware)
 # `min_edge_threshold` already computed for the pick; confidence is below the floor below; or the
@@ -36,7 +35,7 @@ CONFIDENCE_TIER_B_MIN = 0.50            # B: standard; below B_MIN → tier C (t
 class PredictionEngine:
     """
     Core prediction engine that orchestrates the contrarian prediction process.
-    
+
     The engine follows this flow:
     1. Fetch Vegas consensus spread
     2. Calculate all factor adjustments
@@ -68,12 +67,12 @@ class PredictionEngine:
                           week: int | None = None) -> dict[str, Any]:
         """
         Generate a contrarian prediction for a given matchup.
-        
+
         Args:
             home_team: Home team name (will be normalized)
             away_team: Away team name (will be normalized)
             week: Week number (optional)
-            
+
         Returns:
             Dictionary with complete prediction results
         """
