@@ -52,7 +52,14 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   **Venue coverage investigated and closed: not a defect** — 68 is SPEC §5.5's specified P4+independents
   scope, not a gap. See CALIBRATION_LOG "A6".
 
-- [ ] **Formal pre-freeze calibration audit (runs 2026-08-03, immediately after the B4 log entry merges).**
+- [ ] **Formal pre-freeze calibration audit — RAN 2026-08-03 @ `560d268`: NOT-FREEZE-READY**
+  (2 blockers, 5 should-fix, 2 nits). Full verdict and per-finding dispositions:
+  **`docs/preflight_verdict.md`**. **Early by choice:** ran on *ledger-close* rather than the
+  original ~2026-08-20 calendar date, per **D26** — the trigger is the FREEZE-READY verdict, not a
+  date; running early is what created room to disposition what it found.
+  **Re-run condition:** any change to `factors/`, `engine/`, calibration config, or
+  `docs/CALIBRATION_LOG.md` after the pre-flight and before the tag **invalidates the verdict and
+  the pre-flight re-runs.**
   **Owner intent, on the record: the tag follows FREEZE-READY promptly — days, not weeks.** The audit
   grades the log as it stands when it runs, so: **if anything touches the frozen paths (`factors/`,
   `engine/`, weight/threshold config) or `docs/CALIBRATION_LOG.md` between the pre-flight and the tag, the
