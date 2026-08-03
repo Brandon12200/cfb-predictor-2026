@@ -5,8 +5,11 @@
 > FREEZE-READY → owner cuts the tag.** Full carry-forward for a fresh session:
 > **`docs/HANDOFF_FREEZE.md`**.
 
-Durable home for everything that **must happen before the freeze tag** (target **~2026-08-24**, before the
-opening-weekend (Week 1) prediction run; SPEC §3 / §16.2). Anything that touches `factors/`, `engine/`, or weight/threshold
+Durable home for everything that **must happen before the freeze tag**. **The tag is cut on
+FREEZE-READY, target ~2026-08-08** — per owner ruling 2026-08-03 (originally g1, July), superseding
+the earlier ~2026-08-24 planning date. **The `calibration-auditor` verdict is the gate; the date is
+a target.** The tag must precede the opening-weekend (Week 1) prediction run (SPEC §3 / §16.2);
+2026-08-29 remains the absolute outer bound. Anything that touches `factors/`, `engine/`, or weight/threshold
 config **cannot** be done after the tag (those become immutable), so it belongs here — not in an
 evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → freeze handoff.
 
@@ -49,7 +52,7 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   **Venue coverage investigated and closed: not a defect** — 68 is SPEC §5.5's specified P4+independents
   scope, not a gap. See CALIBRATION_LOG "A6".
 
-- [ ] **Formal pre-freeze calibration audit (run early by choice, 2026-07-25 rather than ~2026-08-20).**
+- [ ] **Formal pre-freeze calibration audit (runs 2026-08-03, immediately after the B4 log entry merges).**
   **Owner intent, on the record: the tag follows FREEZE-READY promptly — days, not weeks.** The audit
   grades the log as it stands when it runs, so: **if anything touches the frozen paths (`factors/`,
   `engine/`, weight/threshold config) or `docs/CALIBRATION_LOG.md` between the pre-flight and the tag, the
@@ -84,8 +87,9 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
 
 ## AFTER the tag (dress rehearsal, not freeze-prep)
 
-- [ ] **Preseason validation regimen** (Phase-5 acceptance; see `docs/PHASE5_NOTES.md`): two clean
-  full-cycle pipeline rehearsals in mid-August against the real week-1 slate (rehearsal-marked commits);
+- [ ] **Preseason validation regimen** (Phase-5 acceptance; see `docs/PHASE5_NOTES.md`).
+  **Binding schedule (owner, 2026-08-03): pipeline PR by Aug 14, first rehearsal cycle by Aug 17.**
+  Two clean full-cycle pipeline rehearsals against the real week-1 slate (rehearsal-marked commits);
   one deliberate **failure-injection drill** proving the auto-Issue path; and a graded
   **opening-weekend (Week 1)** cycle as the live dress rehearsal. **D8 abolished Week 0 for 2026**, so
   "Week 0" here means the season's first real slate — Week 1. Rehearsals run **after** the tag (they

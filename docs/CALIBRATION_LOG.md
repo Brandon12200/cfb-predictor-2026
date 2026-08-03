@@ -78,13 +78,13 @@ can't dominate a model spread.
 ## Phase 3 — status: FROZEN-FORM (constants final in all but the tag)
 
 Phase 3 (3a → 3d) is **complete and merged**. Every constant below is **RATIFIED** and in its final
-form; the model is **frozen-form**. **Before the `v2026-frozen` tag** (~2026-08-24, SPEC §3/§16.2): any
+form; the model is **frozen-form**. **Before the `v2026-frozen` tag** (on FREEZE-READY, target ~2026-08-08, per owner ruling 2026-08-03 (originally g1, July); SPEC §3/§16.2): any
 change to a calibration constant, factor logic, or threshold requires **owner ratification** and a new
 CALIBRATION_LOG entry — the same propose→pause→ratify rule that produced these. **After the tag:** the
 freeze is binding — `factors/`, `engine/`, and weight/threshold config are immutable for the season, and
 any output-altering change requires the **documented exception process** (SPEC §3: a dated exception
 entry + a new tag). The formal pre-freeze **calibration audit** (SPEC §14 / `calibration-auditor` agent)
-runs ~2026-08-20 and is on `docs/FREEZE_CHECKLIST.md`.
+runs immediately before the tag (per owner ruling 2026-08-03 (originally g1, July)) and is on `docs/FREEZE_CHECKLIST.md`.
 
 Evidence-class recap (SPEC §3 Bug-#7 constraint): every Phase-3 entry is **`reasoned`** unless it rests
 on model-independent market data (`hfa_elo`, `margin_sigma`) — the 2025 archive's confidence→ATS /
@@ -863,12 +863,20 @@ where the weights do) plus a regression pin that the removed constants never ret
 
 ---
 
-## B-item ratifications (reverse-audit ledger, consolidated batch)  — **RATIFIED (owner, 2026-07-16)**
+## B-item ratifications (reverse-audit ledger, consolidated batch)  — **RATIFIED (owner, 2026-07-16; B4 added 2026-08-03)**
 
 The unlogged internal-formula constants, audited **per-number** (a block is never ratified by one
-entry that names it). Measured on the same two vehicles as A4: the 10-game wk1 dry-run slate and all
-**734 real 2026 FBS-vs-FBS season games** driven at their own week. Full evidence and derivations:
-`docs/proposals/B_batch_unlogged_constants.md` (working document, deleted at the next boundary).
+entry that names it). Measured on the same two vehicles as A4: the 10-game wk1 dry-run slate and the
+real 2026 season games driven at their own week — reported here over a **734**-game FBS-vs-FBS basis
+and later corrected to the **330** both-teams-tracked basis (see "A6 → Denominator correction"; every
+conclusion stood, only the stated denominator changed). **B4 was added on 2026-08-03 and is measured
+on the corrected 330 basis.**
+
+**This log is the complete and self-contained record.** The consolidated working proposal that
+carried the original derivations was retired at the freeze boundary per its own lifecycle header;
+every figure, argument, per-number disposition, dead-constant finding, method note and cross-cutting
+observation it contained is reproduced in the entries below. **No external document is needed to
+audit this batch.**
 
 > **⚠ Reachability caveat, governing every entry below.** The vehicle is the **preseason** snapshot:
 > no completed games, no in-season advanced stats, no line-movement series. A factor reading
@@ -906,10 +914,13 @@ and the edge term is negligible. This is consistent with 3c.5's ratified "erring
 posture. Not rescaled: doing so would move `confidence_score` on every game and thereby re-open the
 3c.5 confidence floor and the 3c.6 tier boundaries, both ratified *against this formula*.
 
-**⚠ Three-site root cause (recorded for 2027).** The pre-Bug-#7 point-scale assumption — that model
-edges live at ~1–5 points — now has **three** known sites: the NO_BET floors (found by 3c.5), the
-`prediction_type` ladder (A4), and this divisor (B1). One phantom, three surviving calibration
-artifacts. A 2027 recalibration should sweep for a fourth rather than assume these were all of them.
+**⚠ FOUR-site root cause (updated 2026-08-03; recorded for 2027).** The pre-Bug-#7 point-scale
+assumption — that model edges live at ~1–5 points — has **four** known sites: the NO_BET floors
+(found by 3c.5), the `prediction_type` ladder (A4), this divisor (B1), and the **variance CV
+cutoffs (B4)**, whose stated 0–1-ish dispersion scale does not match the unbounded values the
+formula actually produces. **The sweep that this note asked for in July found the fourth.** One
+phantom, four surviving calibration artifacts — **2027 should sweep for a fifth rather than assume
+these were all of them.**
 
 **Variance adjustments — RATIFIED as proposed:** `consensus` **+0.25**, `mild` **+0.1**, `moderate`
 **−0.1**, `strong` **−0.2**, `extreme` **−0.3**. Monotone in disagreement; `mild`/`moderate` are
@@ -958,6 +969,99 @@ output range — a definitional mapping, not a free parameter. `bowl_eligibility
 
 **DEAD — logged, not ratified:** `conference_championship_weeks = [13, 14]` (0 references) and
 `desperation_multipliers = {2.0, 1.5, 1.0, 0.3}` (0 references). Both verified statically.
+
+### B4 — `variance_detector` CV cutoffs (`engine/variance_detector.py:41-47`)  (`reasoned`)  — **RATIFIED (owner, 2026-08-03)**
+
+> **⚠ This entry was written 18 days after the rest of the batch, because B4 was SKIPPED.** The
+> ledger enumerated B1–B10; the ratification batch ran B1, B2, B3, **→ B5**, B6–B10. The
+> consolidated proposal skipped it identically (its §4 was headed "B2–B7" and went B3 → B5), so the
+> proposal, the ratification and the log all inherited one enumeration slip, invisible from the log
+> alone because every neighbouring item is present. Found by a three-source grep during freeze prep
+> and dispositioned before the tag. **Method note for 2027: verify a batch's enumeration against its
+> source list by count, not by reading — a missing middle item reads as continuous prose.**
+
+The five coefficient-of-variation cutoffs: `consensus 0.15 / mild 0.30 / moderate 0.50 /
+strong 0.75 / extreme 1.0`.
+
+**Liveness chain — a live gate, NOT the diagnostic path A3 downgraded.** The distinction matters
+because A3 concerned a *neighbouring* item in this same file. A3 was the `factor_categories`
+**map**; B4 is the **cutoffs**, and they reach further:
+`_determine_variance_level(cv)` (`:266-277`) → `variance_level` (`:97`) → consumed by **two
+ratified gates** — (1) **3c.5 floor 3**, the hard NO_BET gate (`prediction_engine.py:411-413`,
+`NO_BET_VARIANCE_LEVELS = {'extreme'}` plus `NO_BET_VARIANCE_ACTIONS = {'AVOID_OR_MINIMUM'}`, which
+`_generate_recommendation` derives from the same ladder), and (2) **B1's ratified variance
+adjustments** (`+0.25/+0.1/−0.1/−0.2/−0.3`), keyed on the label these cutoffs produce.
+**3c.5 and B1 were both ratified against labels these five numbers produce.** `variance_level`
+derives from the **overall** CV, never from the A3 map, so A3's "diagnostic only" does not transfer.
+
+**Measured (330 both-teams-tracked games, each at its own week).** The 3-active-factor gate
+(`:80-81`) dominates: **312/330 (94.5%) return `insufficient_data` with ZERO active factors**,
+before any cutoff is consulted. Only **18** games reach the cutoffs — `extreme` 10, `moderate` 7,
+`mild` 1, `consensus` 0, `strong` 0.
+
+**Consequence, ratified explicitly: the hard gate is INERT in the measured preseason state.**
+`extreme` fired **10/330** and changed **0** outcomes — all 10 were already NO_BET on *both* other
+floors (edge < 0.75 **and** confidence < 0.50). Example (wk3 NC STATE@VANDERBILT): *"edge 0.02 below
+threshold 0.75; confidence 0.33 < 0.50; extreme factor variance; variance recommends
+AVOID_OR_MINIMUM."* **Reachability caveat (as for the whole B-batch): this is the preseason vehicle;
+in-season activations may make the gate decisive, and that is the design working, not a regression.**
+
+**⚠ Structural characterisation — the CV is not the scale it appears to be.** It is
+`abs(std_dev / mean)` (`:156-159`) over **signed** factor values (positive favours home). When
+factors point in opposite directions — precisely the "disagreement" being measured — the mean
+collapses toward zero and the ratio explodes:
+
+| game | active values | mean | CV | level |
+|---|---|---:|---:|---|
+| wk3 MIAMI@WAKE FOREST | Bye −1.0, ConsecRoad 0.5, ShortWeek −1.0 | −0.500 | 1.73 | extreme |
+| wk9 OHIO STATE@USC | Bye −1.0, ConsecRoad 0.5, Travel 1.5 | 0.333 | 3.77 | extreme |
+| wk3 NC STATE@VANDERBILT | Bye −1.0, ConsecRoad 0.5, Travel 0.6 | **0.033** | **26.89** | extreme |
+
+So it behaves as a **sign-agreement detector with an unstable magnitude**, not a smooth dispersion
+scale: mixed-sign games jump past all five cutoffs at once, same-sign games sit low. The measured
+shape confirms it — the **`strong` band (0.50–0.75) is EMPTY and structurally near-unreachable**,
+not merely unexercised. **This is a FOURTH member of the point-scale-artifact family** alongside the
+3c.5 floors, the A4 ladder and B1's `/5.0` divisor — a number whose stated semantics do not match
+its measured behaviour. **2027 should sweep for a fifth.**
+
+**Per-number dispositions** (composite doctrine: each member argued, plus the set's progression):
+
+- **`consensus` 0.15** — below 15% relative dispersion the factors tell one story; the most
+  confident band, feeding B1's largest single adjustment (+0.25). Fires **0/330**.
+- **`mild` 0.30** — 2× `consensus`; a uniform doubling, stated rather than fitted. Fires **1/330**.
+- **`moderate` 0.50** — dispersion equals half the mean, the natural "disagree materially" line and
+  where B1's adjustment turns negative. Fires **7/330**, the busiest live band.
+- **`strong` 0.75** — dispersion at ¾ of the mean. **Ratified as a boundary, not as a live band**
+  (0/330, structurally near-unreachable per the characterisation above).
+- **`extreme` 1.0** — dispersion ≥ the mean; the only cutoff wired to a hard gate. Fires **10/330**,
+  changed **0** outcomes.
+
+The set is a **monotone ladder with one stated progression** — each boundary a fixed fraction of the
+mean, ending at parity (0.15 → 0.30 → 0.50 → 0.75 → 1.0); every member both carries its own argument
+and inherits that progression.
+
+**`×HFA` scale-check — considered exemption, recorded so the pre-flight does not read it as an
+omission.** These five are **dimensionless ratios, not point magnitudes**: "0.30 × 2.5 pts" is
+meaningless. The substantive scale-check is the measured behaviour above — what the boundaries do to
+real games.
+
+**NOT recalibrated pre-tag (owner ruling).** Changing them moves `confidence_score` on every game
+with ≥3 active factors and thereby re-opens **3c.5's floors and 3c.6's tiers**, both ratified
+against this formula — the identical argument that carried B1's `/5.0` divisor. The measured state
+shows zero outcome impact, so a change would be a freeze-bound edit with provably no behavioural
+effect (the A1/A4 precedent). And the honest repair is not a threshold change at all: it is
+computing dispersion without dividing by a near-zero signed mean — a **formula** change to a frozen
+file, unmeasurable until a season of real in-season activations exists. **Carried to 2027.**
+
+**DEAD/UNREACHABLE — logged as a KNOWN STATE, not ratified:** `variance_detector.py:225`'s bare
+`0.3` (`'consensus': cat_metrics['coefficient_of_variation'] < 0.3`) — a sixth literal that is
+**not** a member of the `thresholds` dict. **Doubly unreachable, both verified against source:**
+(1) its only consumer (`:312-313`) requires `'statistical' in category`, but the **A3 fix relabelled
+that key to `matchup`** — the live keys are `market/matchup/momentum/situational/coaching/physical`
+(`:57-65`) — so the branch is always False; (2) the outer condition requires `market`, which needs
+`MarketSentiment` **active**, ruled dormant-and-unwired for all of 2026 (**B9**). Even if both
+fired, the output is a string appended to the unpersisted `implications` list (absent from
+`V2_RECORD_KEYS`). Ratifying a value nothing can read would assert a claim the code does not make.
 
 ### B5 — physical shared cutoffs (`factors/scheduling_fatigue.py`)  (`reasoned`)  — **RATIFIED**
 
@@ -1080,9 +1184,18 @@ in a ratification batch would have retired live calibration.
 **Two "unreachable bound" defects logged, neither fixed** — A1's `threshold == _max_output` and B2's
 `max_impact > _max_output`. Neither changes output; both are logged so the family is recognisable.
 
-**Open at the close of this batch:** the late A-class item **A6** (`Altitude` never fires — metres
-compared against a feet threshold) is **not** part of this ratification and remains PROPOSED — see
-`docs/proposals/A6_altitude_unit_mismatch.md`.
+**A seventh constant logged as a KNOWN STATE rather than ratified (added with B4, 2026-08-03):**
+`variance_detector.py:225`'s bare `0.3`, **doubly unreachable** — its only consumer tests a category
+key that the A3 fix renamed, and the outer branch needs the dormant `MarketSentiment`. Same
+principle as the six dead constants: a value nothing can read is not ratified.
+
+**Open at the close of this batch (since CLOSED):** the late A-class item **A6** (`Altitude` never
+fires — metres compared against a feet threshold) was **not** part of this ratification and was
+PROPOSED at the time of writing. It was **ratified and fixed the same day** — see the **A6** entry
+immediately below, which is the complete record; its working proposal was retired per lifecycle.
+
+**Also added after this batch closed: B4** (`variance_detector` CV cutoffs) — ratified 2026-08-03,
+the item the B1→B5 numbering skipped. See the B4 entry above.
 
 ---
 
