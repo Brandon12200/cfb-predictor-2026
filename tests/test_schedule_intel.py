@@ -12,6 +12,7 @@ from data.schedule_intel import (
     _utc_offset_hours,
     compute_schedule_intel,
     haversine_miles,
+    resolve_venue_timezone,
 )
 
 # Venue fixtures (real coordinates/timezones).
@@ -166,3 +167,135 @@ def test_sandwich_spot_none_when_strength_unknown():
     intel = compute_schedule_intel("GEORGIA", "VANDERBILT", 7, "2026-10-10", True, ATHENS,
                                    games, {"GEORGIA": ATHENS}, ratings={})
     assert intel["sandwich_spot"] is None  # adjacent opponents' SP+ unknown → missing
+
+# ── Venue timezone fallback (owner-ratified 2026-08-03) ───────────────────────────────────────
+# CFBD serves `timezone: null` for 8 of 138 FBS venues, two of them tracked. Because
+# `travel_points` keys ONLY on `time_zones_crossed`, a null made a real multi-zone trip score as
+# zero zones — a ratified coefficient neutered by an input that never arrives (the A6 family).
+# These pins assert the MEANING of the fix, not stored values (the LARAMIE doctrine).
+
+# The two tracked venues CFBD serves without a timezone.
+EVANSTON = {"name": "Lanny and Sharon Martin Stadium", "latitude": None, "longitude": None,
+            "elevation": None, "timezone": None}          # Northwestern — Central
+PISCATAWAY = {"name": "SHI Stadium", "latitude": 40.5462553, "longitude": -74.4660408,
+              "elevation": None, "timezone": None}        # Rutgers — Eastern
+
+
+def test_every_tracked_venue_resolves_a_timezone():
+    """Load-bearing pin: no tracked venue may be left without a resolvable timezone.
+
+    Fails if CFBD drops the timezone for another venue and the static table is not updated — the
+    exact regression that produced this fix, caught before it can silently zero a travel term.
+    """
+    pytest.importorskip("data.snapshot")
+    from data.snapshot import load_snapshot
+    from data.team_registry import get_all_tracked_teams
+
+    venues = load_snapshot(1, 2026)["data"]["venues"]
+    tracked = get_all_tracked_teams()
+    unresolved = sorted(t for t, v in venues.items()
+                        if t in tracked and not resolve_venue_timezone(v))
+    assert unresolved == [], f"tracked venues with no resolvable timezone: {unresolved}"
+
+
+def test_three_zone_eastward_trip_prices_at_the_ratified_cap():
+    """A 3-zone crossing must clamp to `travel_cap`, not scale linearly.
+
+    Asserts the physical meaning: LA -> Piscataway is three zones east, which at the ratified
+    `tz_per_zone` would be 1.8 pts — the ratified `travel_cap` holds it at 1.5.
+    """
+    from factors.physical_coefficients import DEFAULT_PHYSICAL_COEFFICIENTS as C
+    from factors.physical_coefficients import travel_points
+
+    games = [{"week": 3, "home_team": "RUTGERS", "away_team": "USC", "start_date": "2026-09-12"}]
+    venues = {"RUTGERS": PISCATAWAY, "USC": LA}
+    home = compute_schedule_intel("RUTGERS", "USC", 3, "2026-09-12", True, PISCATAWAY,
+                                  games, venues)
+    away = compute_schedule_intel("USC", "RUTGERS", 3, "2026-09-12", False, PISCATAWAY,
+                                  games, venues)
+
+    assert away["time_zones_crossed"] == 3
+    assert away["tz_direction"] == "east"
+    assert home["time_zones_crossed"] == 0        # the host crosses nothing
+
+    pts = travel_points(home, away)
+    assert pts == pytest.approx(C.travel_cap), "3 zones must clamp to travel_cap, not 3 x tz_per_zone"
+    assert pts < 3 * C.tz_per_zone
+
+
+def test_neutral_site_stays_honestly_none():
+    """A neutral site has no host venue, so there is no acclimation edge however far the travel."""
+    games = [{"week": 3, "home_team": "RUTGERS", "away_team": "USC", "start_date": "2026-09-12"}]
+    intel = compute_schedule_intel("USC", "RUTGERS", 3, "2026-09-12", False, None,
+                                   games, {"RUTGERS": PISCATAWAY, "USC": LA})
+    assert intel["time_zones_crossed"] is None
+    assert intel["tz_direction"] is None
+
+
+def test_venue_in_neither_source_records_missing():
+    """Unknown to CFBD and to the static table -> None, never a fabricated offset (binding #4)."""
+    unknown = {"name": "Nowhere Field", "latitude": 40.0, "longitude": -75.0,
+               "elevation": None, "timezone": None}
+    assert resolve_venue_timezone(unknown) is None
+
+    games = [{"week": 3, "home_team": "NOWHERE", "away_team": "USC", "start_date": "2026-09-12"}]
+    intel = compute_schedule_intel("USC", "NOWHERE", 3, "2026-09-12", False, unknown,
+                                   games, {"NOWHERE": unknown, "USC": LA})
+    assert intel["time_zones_crossed"] is None
+
+
+def test_dateless_input_still_yields_none():
+    """A dateless hypothetical has no answer: UTC offset is DST-dependent, so `None` is correct.
+
+    Pinned so a later change cannot silently fabricate an offset for a matchup with no date. The
+    distance, which needs only coordinates, still computes — that asymmetry is by design.
+    """
+    games = [{"week": 3, "home_team": "RUTGERS", "away_team": "USC", "start_date": "2026-09-12"}]
+    intel = compute_schedule_intel("USC", "RUTGERS", 3, None, False, PISCATAWAY,
+                                   games, {"RUTGERS": PISCATAWAY, "USC": LA})
+    assert intel["time_zones_crossed"] is None
+    assert intel["tz_direction"] is None
+    assert intel["travel_distance"] is not None    # date-free geometry still resolves
+
+
+def test_no_static_table_key_is_ambiguous():
+    """Guards the `Memorial Stadium` class: a venue NAME shared by two differently-zoned venues.
+
+    The table is keyed by name, so a key shared by venues in different zones would be wrong for one
+    of them. Any snapshot venue matching a table key must either have no timezone of its own, or
+    agree with the table.
+    """
+    pytest.importorskip("data.snapshot")
+    from data.snapshot import load_snapshot
+    from data.venue_timezones import STATIC_VENUE_TIMEZONES
+
+    conflicts = []
+    for team, v in load_snapshot(1, 2026)["data"]["venues"].items():
+        table_tz = STATIC_VENUE_TIMEZONES.get(v.get("name"))
+        own_tz = v.get("timezone")
+        if table_tz and own_tz and own_tz != table_tz:
+            conflicts.append((team, v.get("name"), own_tz, table_tz))
+    assert conflicts == [], f"static-table keys conflict with a venue's own timezone: {conflicts}"
+
+
+def test_both_layers_resolve_the_same_value_from_the_same_table():
+    """Two-layer consistency: the builder path and the read seam must never disagree.
+
+    `normalize_venue` bakes the fallback into FUTURE snapshots; `resolve_venue_timezone` backfills
+    already-built ones. If those two ever drew on different tables, a snapshot rebuild would
+    silently change model output. This pin fails the moment they diverge.
+    """
+    from data.normalize.cfbd import normalize_venue
+    from data.venue_timezones import STATIC_VENUE_TIMEZONES
+
+    for name, expected in STATIC_VENUE_TIMEZONES.items():
+        loc = {"name": name, "latitude": None, "longitude": None,
+               "elevation": None, "timezone": None}
+        assert normalize_venue(loc).timezone == expected, f"normalize layer: {name}"
+        assert resolve_venue_timezone(loc) == expected, f"read seam: {name}"
+
+    # A source value always wins over the table, in both layers.
+    override = {"name": "SHI Stadium", "latitude": None, "longitude": None,
+                "elevation": None, "timezone": "America/Denver"}
+    assert normalize_venue(override).timezone == "America/Denver"
+    assert resolve_venue_timezone(override) == "America/Denver"

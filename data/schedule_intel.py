@@ -21,6 +21,8 @@ from math import asin, cos, radians, sin, sqrt
 from typing import Any, NamedTuple
 from zoneinfo import ZoneInfo
 
+from data.venue_timezones import static_timezone_for
+
 _EARTH_RADIUS_MILES = 3958.7613
 _RANKED_THRESHOLD = 25  # SP+ ranking that counts as a "ranked" (sandwich-spot) opponent
 
@@ -48,6 +50,30 @@ def elevation_feet(elevation_metres: Any) -> float | None:
         return float(elevation_metres) * _FEET_PER_METRE
     except (TypeError, ValueError):
         return None
+
+
+# --- Venue timezone: the second read-seam fallback (owner-ratified, 2026-08-03) ---------------
+# CFBD serves `"timezone": null` for 8 of 138 FBS venues (the key is present; only the value is
+# absent), two of them in the tracked slate — Northwestern and Rutgers. `travel_points` keys ONLY
+# on `time_zones_crossed`, so a null made a real multi-zone trip score as zero zones, silently
+# neutering the ratified `tz_per_zone` coefficient. Same family as A6 above: an input that never
+# arrives, not a wrong number.
+#
+# The static table SPEC Appendix A already specified fills the gap. It is applied HERE, at the same
+# read seam as `elevation_feet`, so the committed snapshot's bytes and `snapshot_id` stay untouched
+# (A6's precedent, and the reason the wk1 golden does not move). `normalize_venue` consults the same
+# table so every FUTURE snapshot bakes the value in, satisfying SPEC §5.2.
+
+
+def resolve_venue_timezone(venue: Any) -> str | None:
+    """A venue's IANA timezone: the source value, else the static table, else `None`.
+
+    `None` when neither source has one — honest-missing, never a fabricated offset (binding
+    principle #4). An unknown zone name is left to `_utc_offset_hours`, which also returns `None`.
+    """
+    if not isinstance(venue, dict):
+        return None
+    return venue.get("timezone") or static_timezone_for(venue)
 
 
 class _TeamGame(NamedTuple):
@@ -134,8 +160,8 @@ def compute_schedule_intel(team: str, opponent: str, game_week: int, game_date: 
     if hc and gc:
         travel_distance = haversine_miles(hc[0], hc[1], gc[0], gc[1])
     if gdate is not None and home_venue and game_venue:
-        home_off = _utc_offset_hours(home_venue.get("timezone"), gdate)
-        game_off = _utc_offset_hours(game_venue.get("timezone"), gdate)
+        home_off = _utc_offset_hours(resolve_venue_timezone(home_venue), gdate)
+        game_off = _utc_offset_hours(resolve_venue_timezone(game_venue), gdate)
         if home_off is not None and game_off is not None:
             diff = game_off - home_off
             time_zones_crossed = round(abs(diff))
