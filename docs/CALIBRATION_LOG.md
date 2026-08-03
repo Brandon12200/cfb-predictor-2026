@@ -1193,7 +1193,8 @@ in a ratification batch would have retired live calibration.
 **A seventh constant logged as a KNOWN STATE rather than ratified (added with B4, 2026-08-03):**
 `variance_detector.py:225`'s bare `0.3`, **doubly unreachable** — its only consumer tests a category
 key that the A3 fix renamed, and the outer branch needs the dormant `MarketSentiment`. Same
-principle as the six dead constants: a value nothing can read is not ratified.
+principle as the dead constants (six at this batch, **seven** after the pre-flight's S-1): a value
+nothing can read is not ratified.
 
 **Open at the close of this batch (since CLOSED):** the late A-class item **A6** (`Altitude` never
 fires — metres compared against a feet threshold) was **not** part of this ratification and was
