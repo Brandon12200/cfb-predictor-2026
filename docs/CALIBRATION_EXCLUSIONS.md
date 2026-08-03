@@ -58,9 +58,23 @@ entry**, not because of what the numbers are "about."
 
 ## NOT excluded — these ARE calibration and must be logged (see the reverse-audit ledger in CALIBRATION_LOG)
 
-The shakedown found large **unlogged** calibration surface that does NOT belong here: the internal factor
-formulas (DesperationIndex blend/scale, momentum/coaching/style-mismatch component weights + thresholds),
-the `factor_registry._configure_factor_hierarchy` threshold/max_impact overrides, `variance_detector`
-CV cutoffs (a hard NO_BET gate), `prediction_engine._calculate_confidence_score` + the `prediction_type`
-ladder, and the standalone `confidence_calculator`/`edge_detector` engine. These are PROPOSED /
-decision-pending in `docs/CALIBRATION_LOG.md` (Phase-3 reverse-audit) and on `docs/FREEZE_CHECKLIST.md`.
+**The purpose of this section is unchanged and still binding: the surfaces named below are
+calibration, and none of them may ever be moved into the exclusion list.** What has changed is their
+status — all are now dispositioned (refreshed 2026-08-03, pre-flight N-2):
+
+- **Internal factor formulas** — `DesperationIndex` blend/scale **B3**; coaching **B6**; momentum
+  **B7** *and* its branch arithmetic **B-2** (pre-flight); `StyleMismatch` outer weighting **B8**,
+  with its ~20 branch constants **still unratified** and the factor therefore **dormant for 2026**
+  (**B-1**, pre-flight) — that dormancy is *why* they are unlogged, and it is itself the disposition.
+- **`factor_registry._configure_factor_hierarchy` overrides** — **B2**, completed by **S-5**.
+- **`variance_detector` CV cutoffs** (a hard NO_BET gate) — **B4**, ratified 2026-08-03; the file's
+  residual diagnostic literals are logged DEAD in **S-3**, and `:225`'s bare `0.3` is a logged
+  known state.
+- **`prediction_engine._calculate_confidence_score`** — **B1**; the **`prediction_type` ladder** —
+  **A4**.
+- **The standalone `confidence_calculator`/`edge_detector` engine** — **RETIRED**, not logged: the
+  whole cluster was deleted under **A2**, so there is no longer a second scoring surface in
+  `engine/`.
+
+**Nothing in this section is PROPOSED or decision-pending any longer** — the A1–A6 / B1–B10 ledger
+closed 2026-07-25, B4 landed 2026-08-03, and the pre-flight dispositions closed the remainder.

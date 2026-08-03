@@ -7,7 +7,9 @@ it is not ratified until the owner approves the entry. Ratified constants are fr
 magic numbers.
 
 Status legend: **PROPOSED** (awaiting owner approval) · **RATIFIED** (owner-approved) ·
-**FROZEN** (locked at the tag).
+**APPROVED** (a resolved owner stamp carrying an owner + date, used on the behavior-change entries
+3c.7 and 3c.8; **equivalent in force to RATIFIED** — historical stamps are deliberately not
+rewritten, see "Pre-flight dispositions → N-1") · **FROZEN** (locked at the tag).
 
 ---
 
@@ -967,7 +969,8 @@ playoff branch is gated on `week ≥ 10` so it cannot fire early. Late-season la
 output range — a definitional mapping, not a free parameter. `bowl_eligibility_threshold = 6` is a
 **rule of the sport** (structural, not calibration); `playoff_contender_threshold = 1` is `reasoned`.
 
-**Scale-check:** ±2.0 output at weight 0.13 ⇒ ≤0.26 pts ≈ **10% of the ratified ~2.5-pt HFA**. In band.
+**Scale-check — CORRECTED 2026-08-03 (pre-flight S-2).** ±2.0 output at the factor's **true normalized weight 0.0649** ⇒ **≤0.13 pts ≈ 5.2% of the ratified ~2.5-pt HFA**. In band.
+*(The entry originally read "weight 0.13 ⇒ ≤0.26 pts ≈ 10%". The 0.13 was the **situational category's** share, not `DesperationIndex`'s own weight: its raw 0.10 (`situational_context.py:23`) divided by the 1.5400 raw-weight sum across all 15 registered factors gives 0.0649. **Conclusion unaffected and conservative** — the true contribution is half the figure originally stated, so "in band" holds with more room. Method lesson, now applied throughout the momentum entry below: **scale-check against the factor's own normalized weight, never its category share.**)*
 
 **DEAD — logged, not ratified:** `conference_championship_weeks = [13, 14]` (0 references) and
 `desperation_multipliers = {2.0, 1.5, 1.0, 0.3}` (0 references). Both verified statically.
@@ -1110,7 +1113,7 @@ point-differential swings of one-and-a-half to two possessions. `consistency_bon
 `clutch_weights` — winning a close game is the full clutch signal, a blowout carries **0.3** of it
 (less informative about late-game execution); consumed by name. `recent_games_window = 6` for close
 games — a larger window than trends because close games are rarer and need more history to sample.
-`experience_multiplier = 1.2` (20% amplification).
+~~`experience_multiplier = 1.2` (20% amplification)~~ — **RE-DISPOSITIONED DEAD, 2026-08-03 (pre-flight S-1).** Verified: the name appears **exactly once** across `factors/` and `engine/` — its own assignment at `momentum_factors.py:237`. Nothing reads it; `_calculate_team_clutch_performance` hardcodes `0.2`/`4` instead. **This entry originally ratified it as a live constant, which was wrong** — the *inverse* of the false-DEAD risk this same batch's method note warns about, and the first time this project ratified a dead constant as live. It joins the dead list, making **seven**.
 
 **Ratified as `structural` (sport convention / sample gate, not magnitudes):**
 `close_game_threshold = 7` (one possession) and `min_close_games = 2` (the smallest non-degenerate
@@ -1176,7 +1179,7 @@ tenure are **not team-quality data** — they are properties of a person, and a 
 
 ### Batch-level notes
 
-**Six dead constants logged rather than ratified** — `redzone_weight`, `pace_advantage_slower` (B8),
+**SEVEN dead constants logged rather than ratified** (six at the 2026-07-16 batch, plus `experience_multiplier` re-dispositioned 2026-08-03 — see B7) — `redzone_weight`, `pace_advantage_slower` (B8),
 `recent_game_weight`, `max_lookback_years` (B10), `conference_championship_weeks`,
 `desperation_multipliers` (B3). Ratifying a value nothing reads asserts a claim the code does not
 make. **Method note for the next audit:** an initial flat scan also flagged B7's
@@ -1322,3 +1325,180 @@ is **exactly 3c.5's "330 real 2026 FBS-vs-FBS games."** The A4/B measurements we
 0.0244 → 0.0468 and mean 0.0483 → 0.0551, but **the maximum is identical (0.2338) and zero games clear
 0.5 or 0.75 on either basis.** Every A4 and B-batch conclusion therefore stands unchanged; only the
 stated denominator was wrong. 3c.5's basis was right all along.
+
+---
+
+## Pre-flight dispositions (calibration-auditor, 2026-08-03)  — **RATIFIED (owner, 2026-08-03)**
+
+The formal pre-freeze pre-flight ran on ledger-close (D26) and returned **NOT-FREEZE-READY**: two
+blockers, five should-fix, two nits. Full verdict: `docs/preflight_verdict.md`. All nine are
+dispositioned here.
+
+**Both blockers were the same defect, one layer deeper than the July shakedown found it.** B7 and
+B8 ratified each factor's outer `config` block but not the **inner branch arithmetic** that actually
+produces the value — the per-number composite rule (`calibration-auditor` rule 6) that B3 and B6
+applied correctly. **Method lesson for 2027: when a factor's `config` dict is ratified, audit its
+private helpers in the same pass — a ratified outer block is not coverage of the numbers inside the
+methods it feeds.**
+
+### B-1 — `StyleMismatch`: **DORMANT FOR ALL OF 2026** (`reasoned` / structural)  — **RATIFIED**
+
+`factors/style_mismatch.py:164-315` carries ~20 unlogged branch weights and thresholds inside
+`_calculate_success_rate_mismatch` (`×8`, `×4`, `×6`, two hardcoded `0.05` thresholds **distinct
+from** `config['min_success_diff']`), `_calculate_explosiveness_mismatch` (`0.5`, `0.1`, `×1.5`,
+`×3`, `>3.0` → `±0.3`), `_calculate_run_pass_mismatch` (`0.08` ×2, `×4` ×2, a `stuff_rate_def × 2`
+conversion, `0.15` → `×2`) and `_calculate_havoc_mismatch` (`>0.20` → `−0.3`, `×1.3` → `±0.5`).
+**B8's own PROPOSED text flagged exactly these** — *"~20 internal branch thresholds… 3d ratified
+only the output range + confidence bands, not the pre-clamp weighting"* — and the ratification never
+returned to the flag.
+
+**Why dormancy rather than ratifying the internals.** The measured vehicle holds `advanced_stats`
+for **zero** teams, so no magnitude argument could honestly be written for any of the ~20 constants.
+Ratifying them would be argument-from-vibes at ~20× scale, days before an irreversible tag.
+**Precedent: `MarketSentiment` (B9)** — data collected, factor unwired, activation deferred to 2027
+so it can be calibrated against real evidence. The parallel is exact on the data side:
+**`advanced_stats` still lands in every weekly snapshot**, so 2027 inherits a full season of real
+inputs and can **back-compute this factor offline** against actual outcomes before ratifying its
+internals per-number. Owner rationale, carried from B9: *activation is earned with evidence; the
+model characterized at the tag is the model that runs the season.*
+
+**⚠ TWO INDEPENDENT BLOCKERS — for 2027, do NOT remove the gate and believe the factor restored.**
+This is the **A1 treatment applied deliberately**, for the same reason A1 needed it:
+
+1. **The dormancy gate** — `calculate()` returns `0.0` unconditionally for 2026.
+2. **The internals remain UNRATIFIED and UNMEASURED** — no magnitude argument exists in this log for
+   any of the ~20 branch constants. **Clearing (1) without ratifying (2) restores an unlogged
+   calibration surface**, which is the exact reverse-coverage failure the 2026-07-09 shakedown
+   existed to close.
+
+A **third**, separate blocker predates both: the **pace component is dormant per 3d.2**.
+
+**Implementation — dormant, NOT deleted.** Deletion would change the registered factor count and
+therefore the weight-normalisation denominator, moving every other factor's normalized weight and
+**every prediction**. The 2026 implementation is preserved verbatim and uncalled as
+`_calculate_2027_reference()` — the basis for the back-computation. The ratified ±1.5 range (3d.3),
+the registry entry, the weight and the category are all untouched.
+
+**Output-neutrality — proven, not asserted.** The factor already returned `0.0` on every
+tracked-slate game (empty `advanced_stats`), so the dormancy makes permanent a state the vehicle was
+already in. Week-1 payload SHA-256 `0cf87d68…2371` and envelope hash **identical**; 330-game tracked
+slate `ca52d761…23d3` **identical**; **0 of 330 records differ** across **154,937** compared scalar
+fields; max |Δ| edge / confidence / model_spread = **0.000000000000**.
+
+**Regression pins assert MEANING, not stored values** (the LARAMIE doctrine). The load-bearing pin
+feeds **populated** `advanced_stats` carrying a strong, genuine mismatch — the input that *would*
+produce a large value if the internals ran — and asserts the factor still returns `0.0`. A pin that
+only checked the empty-stats case would pass for the entire life of an accidental reactivation.
+The pre-existing 3d.2 pace-invariance pin was **repointed at `_calculate_2027_reference`** rather
+than deleted: under dormancy it would have passed vacuously and silently retired that protection.
+
+### B-2 — momentum internals: per-number ratification (`reasoned`)  — **RATIFIED**
+
+`factors/momentum_factors.py`. B7 ratified the `config` dict; these are the arithmetic constants in
+the methods that consume it.
+
+**Scale-check method — the S-2 lesson.** Every magnitude below is checked against the factor's
+**true normalized weight**, computed live from the registry (raw-weight sum across all 15 registered
+factors = **1.5400**), never against a category share:
+
+| Factor | raw | normalized | range | max contribution | ×HFA |
+|---|---:|---:|---|---:|---:|
+| `PointDifferentialTrends` | 0.06 | **0.0390** | ±2.0 | **0.078 pts** | **3.1%** |
+| `CloseGamePerformance` | 0.05 | **0.0325** | ±1.5 | **0.049 pts** | **1.9%** |
+
+Both factors are bounded at **≤3.1% of HFA**; every constant below is a fraction of that ceiling.
+
+**`_scale_trend_improvement` (`:154-164`)** — strong-trend **1.5** (75% of range for a ≥10-pt,
+two-possession swing; ≤0.058 pts, **2.3% of HFA**); moderate-trend **1.0** (50% of range at the
+≥5-pt one-possession step; ≤0.039 pts, **1.6%**); decline **−1.0** (mirrors the moderate step);
+interior divisor **/10.0**. All **RATIFIED as-found**.
+
+**`_calculate_consistency_bonus` (`:166-180`)** — high-consistency cutoff **7** pts std-dev (one
+possession of game-to-game spread; matches `close_game_threshold = 7`, already ratified in B7 —
+sport convention, not a fitted value); moderate cutoff **14** (exactly 2×, a stated doubling);
+half-bonus **×0.5** of the ratified `consistency_bonus` 0.3 ⇒ ≤0.15 raw ⇒ **≤0.006 pts, 0.2% of
+HFA**. All **RATIFIED as-found**.
+
+**`_calculate_team_clutch_performance` (`:296-311`)** — close-game **×0.8** / blowout **×0.2**
+(**inherits the set's reasoning** from B7's already-ratified `clutch_weights`, where a blowout
+carries 0.3 of a close game's signal — same ordering, same argument); experience-bonus divisor **4**
+(four close games saturates the sample bonus, same order as the ratified `min_close_games = 2` and
+the 6-game window); experience-bonus cap **×0.2** ⇒ **≤0.0098 pts, 0.4% of HFA**. All **RATIFIED
+as-found**.
+
+#### ⚠ The `/10.0` divisor — three defects, logged as-found, none corrected
+
+**It is NOT a fifth member of the point-scale-artifact family.** That family is the pre-Bug-#7
+assumption that *model edges* live at ~1–5 points (3c.5 floors, A4 ladder, B1 `/5.0`, B4 CV
+cutoffs). This divisor operates on a **point differential**, which genuinely is measured in points —
+the input scale is real, not phantom. **The family therefore stays at FOUR, and 2027 should still
+sweep for a fifth elsewhere.** Recorded explicitly so the tally is not silently inflated.
+
+Its own defects, measured:
+
+| input `improvement` | output |
+|---:|---:|
+| 4.99 | 0.499 |
+| **5.00** | **1.000** |
+| −4.99 | −0.499 |
+| **−5.00** | **−1.000** |
+
+1. **A 2× discontinuity at the ±5 boundary** — a 0.01-pt change in input doubles the output. The
+   linear interior (`/10.0`, spanning only ±0.5) never meets the step values it sits between; the
+   divisor and the `improvement_thresholds` were evidently chosen independently.
+2. **Asymmetry** — positive trends reach **+1.5**, negative cap at **−1.0**. A declining team is
+   scored two-thirds as strongly as an improving one, with no stated rationale.
+3. **The ±2.0 output range is unreachable** — the function's maximum emission is 1.5 (+0.3
+   consistency bonus = 1.8).
+
+**Defect-family taxonomy — two distinct tallies, stated so 2027's sweep is one coherent
+instruction:**
+
+- **"Unreachable bound" subfamily — now THREE:** A1 (`threshold == _max_output`), B2
+  (`max_impact > _max_output`), and **this** (`_max_output` unreachable by the producing function).
+- **Broader "never-true-comparison / silently-neutered constant" family — now FOUR:** those three
+  plus **A6** (metres compared against a feet threshold). This is the count `docs/HANDOFF_FREEZE.md`
+  §(b) framed at three; it is four with this entry.
+
+**2027 sweeps for a fourth unreachable bound and a fifth never-true comparison.**
+
+**Not corrected:** any change moves output the moment a game is played — a calibration change days
+before the tag with no measured basis for choosing a replacement. All magnitudes are ≤2.3% of HFA,
+so the defects are real but small. 2027 inherits a quantified, named discontinuity rather than
+rediscovering it.
+
+### S-3 — `variance_detector` residual literals: **DEAD / diagnostic-only** (logged, not ratified)
+
+Beyond B4's five CV cutoffs and the `:225` known state: `_analyze_directional_agreement`
+(`:180-189`) `0.7`/`0.5`; `_identify_outlier_factors` (`:252`) z-cutoff `1.5`;
+`_interpret_variance_implications` (`:308`) `inter_cat_var > 0.5` (a **different metric** from the CV
+cutoffs — category-mean variance); `_generate_recommendation` (`:322-349`) `bet_size_adjustment`
+`1.0/0.9/0.7/0.5/0.25`, the `×0.7` primary-disagreement dampener, and the `>0.8` / `×1.1` boost.
+All populated, **none consumed** outside the file except via the unpersisted `implications` list
+(absent from `V2_RECORD_KEYS`). **Structurally** dead — no vehicle dependency, unlike B-1/B-2 — so
+they stay unread regardless of season progress. Same disposition as the A3 map and B4's `:225`.
+
+### S-4 — `RevengeGame` config: **DEAD** (logged, not ratified)
+
+`factors/situational_context.py:203-212` — `revenge_timeframes` (`last_year 1.0`,
+`two_years_ago 0.6`, `three_years_ago 0.3`), `coaching_connection_weight 0.7`,
+`margin_of_defeat_weight 0.3`, `rivalry_amplifier 1.2`. Zero references each, and
+`RevengeGameCalculator.calculate()` is provably always `0.0` (all three sub-estimators
+`return 0.0`, `:250-278`). **Same pattern B3 caught for `DesperationIndex` in the same file**,
+missed for its sibling class — a reminder that a per-file audit must cover every class in it.
+
+### S-5 — B2 completeness: two registry overrides, logged INERT
+
+`factors/factor_registry.py:178-179` — `PressureSituation {threshold 0.75, max_impact 3.0}` and
+`RevengeGame`'s `max_impact 4.0`. Both **logged inert rather than ratified as live values**:
+`PressureSituation.calculate()` returns `0.0` unconditionally (ratified 3c.2) and `RevengeGame`
+likewise (S-4). Recorded for rule-6 completeness.
+
+### N-1 — legend: `APPROVED` defined; history NOT restamped
+
+Entries **3c.7** and **3c.8** carry **APPROVED** (owner, 2026-07-04) where the legend defined only
+PROPOSED / RATIFIED / FROZEN. Both carry an owner and a date and are clearly resolved — **not**
+orphaned PROPOSED entries. The legend now defines **APPROVED** as a resolved owner stamp used on
+behavior-change entries, equivalent in force to RATIFIED. **Existing stamps are deliberately not
+rewritten:** restamping resolved history to match a legend would be the tail wagging the dog, and
+the audit trail is more trustworthy showing the words the owner actually used.
