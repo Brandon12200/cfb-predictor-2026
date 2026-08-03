@@ -1541,7 +1541,10 @@ They are in the table for completeness and cannot affect a 2026 tracked predicti
   are covered and **committed snapshot bytes and `snapshot_id` are untouched**. This is the A6
   precedent, and the reason the wk1 golden does not move.
 - **`data.normalize.cfbd.normalize_venue()`** — the **build** path, so every future snapshot bakes
-  the value in, satisfying SPEC §5.2's rule that fallback policy belongs in the builder path.
+  the value in. **Recorded deviation:** SPEC §5.2 places fallback policy in the *snapshot builder*, and
+  A6 touched only the read seam. Applying it at the normalizer too is a deliberate exception, taken so a
+  future rebuild cannot silently disagree with the backfilled bundle; Appendix A sanctions the table
+  itself, and a test pins the two layers identical. Not a claim of strict §5.2 conformance.
 - Resolution order: source value → static table → **`None`, never a fabricated offset** (binding #4).
 
 **The snapshot was deliberately NOT rebuilt.** `scripts/build_snapshot.py` is a networked entry
@@ -1596,10 +1599,13 @@ with the read seam.
 
 This entry **founds a new family** rather than joining an existing one:
 
-1. **"Input never arrives" — NEW, now TWO members:** **A6** (venue elevation in metres, so the feet
-   comparison was never true) and **this** (venue timezone null, so the zone difference was always
-   zero). Characteristic: *the constant is correct and ratified; the input it consumes never shows
-   up, so the coefficient cannot fire.* **A6 belongs to both this family and the next.**
+1. **"Input never arrives" — NEW, now TWO members:** **A6** and **this**. Characteristic:
+   *the constant is correct and ratified, but the value it consumes is unusable as delivered, so the
+   coefficient can never fire.* **The two members differ in shape and 2027 should look for both:**
+   A6's input *arrived but was mis-scaled* (metres against a feet threshold); this one's input
+   *never arrived at all* (a null the source simply does not populate). **A6 belongs to both this
+   family and the next; this entry belongs only to this one** — there is no never-true comparison
+   here, just an absent operand.
 2. **"Never-true comparison" — unchanged at FOUR:** A1, B2, the momentum `±2.0` unreachable bound,
    and A6.
 3. **"Unreachable bound" (a subfamily of 2) — unchanged at THREE:** A1 (`threshold == _max_output`),
