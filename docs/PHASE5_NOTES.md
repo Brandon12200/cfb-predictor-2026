@@ -56,7 +56,7 @@ These are on `docs/FREEZE_CHECKLIST.md` under "after the tag."
 
 ## 5. Freeze-prep
 
-All freeze obligations live in `docs/FREEZE_CHECKLIST.md` (tag by ~Aug 24; freeze-enforcement hook extended
+All freeze obligations live in `docs/FREEZE_CHECKLIST.md` (tag on FREEZE-READY, target ~Aug 8, per owner ruling 2026-08-03 (originally g1, July); freeze-enforcement hook extended
 to `factors/`/`engine/`/calibration config at tag time; the `calibration-auditor` pre-flight; the lint-scope
 follow-up). Rehearsals (item 3) run **after** the tag.
 

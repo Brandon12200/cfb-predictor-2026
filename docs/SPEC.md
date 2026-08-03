@@ -44,7 +44,7 @@ Roster turnover (transfer portal, NIL) makes prior-season **team performance dat
 1. **Recalibration window (now → freeze date).** Use the 300-game 2025 prediction/result archive — a dataset about market mispricing patterns, not team quality, and therefore exempt from the Data Recency Principle — to adjust factor weights, activation thresholds, and confidence mappings. Every change must be recorded in `docs/CALIBRATION_LOG.md` with: the 2025 evidence motivating it, the old value, the new value, and the expected effect. Changes are justified by evidence and reasoning, not by optimizing backtest ATS% (no grid searches over 2025 outcomes — that is the overfitting this project exists to avoid).
    - **⚠ Bug #7 constraint (D17 addendum / D19), binding on 3c and after:** the archive's **confidence→ATS and edge→ATS tables are phantom-contaminated** — the 2025 model's entire output was a near-constant +1.0 shove (a MarketSentiment wiring bug), so its confidence and edge distributions measured the bug, not the market. They may **NOT** be cited as measured evidence. In the 3c batch, every entry is evidence-class **`reasoned`** unless it rests on **model-independent market data** (e.g. the price-derived HFA/σ), and the monotonic-tier gate is a **structural sanity check on the NEW model's dry-run output, not a 2025-evidence gate.** (Market-behaviour constants like `hfa_elo`/`margin_sigma`, derived from lines/outcomes rather than the model's own predictions, remain admissible.)
    - **⚠ Derived-artifact invariant (binding):** any calibration change that alters the pricer (`engine/matchup_pricer.py` or the coefficients/weights it consumes) must **regenerate the committed `data/projections/` artifacts** in the same change, because `make verify-phase-2` byte-checks them against a fresh recompute. Omitting this broke `verify-phase-2` on `main` when the 3b `travel_cap` change wasn't propagated. (`data/ratings/` is likewise a committed derived export with the same regenerate-on-pricer-change obligation.)
-2. **Freeze date: tag `v2026-frozen` by 2026-08-24** — Week 0 (2026-08-29) is in scope per §16.2, so the freeze must precede the first prediction run (~Tue 2026-08-25); the owner's stated 2026-08-29 date is the absolute outer bound. After this date, no changes to weights, thresholds, factor logic, or confidence math for the entire season. Bug fixes that alter outputs require a documented exception entry and a new tag.
+2. **Freeze date: tag `v2026-frozen` on FREEZE-READY, target ~2026-08-08** (per owner ruling 2026-08-03 (originally g1, July); supersedes the earlier ~2026-08-24 planning date, which the g1 "tag when the ledger closes" ruling had already overtaken). The freeze must precede the first prediction run; 2026-08-29 remains the absolute outer bound. **The trigger is the `calibration-auditor` FREEZE-READY verdict, not a calendar date** — the date is a target, the verdict is the gate. After this date, no changes to weights, thresholds, factor logic, or confidence math for the entire season. Bug fixes that alter outputs require a documented exception entry and a new tag.
 3. **Shadow model (stretch, Phase 6).** A learned model may run alongside for comparison but never drives a recommendation. Its predictions are logged and graded identically. `tests/test_shadow_mode.py` already exists — audit and build on it if useful.
 
 ## 4. Phase 0 — Repo Hygiene & Audit (do first)
@@ -144,7 +144,7 @@ Changes:
 > diagnostic grade, never a live bet). Attribution (item 4) must answer the **open `reasoned` CALIBRATION_LOG
 > questions** (per-sub-signal ATS%/CLV when a factor fired) — that is what converts them to `measured` for
 > 2027. **The freeze precedes all of this:** see `docs/FREEZE_CHECKLIST.md` (tag `v2026-frozen` by
-> ~2026-08-24; calibration audit; freeze-enforcement hook) and the session briefing `docs/HANDOFF_PHASE4.md`.
+> tag on FREEZE-READY, target ~2026-08-08; calibration audit; freeze-enforcement hook) and the session briefing `docs/HANDOFF_PHASE4.md`.
 
 Replace ad-hoc scripts with a coherent analytics module (`analytics/`), consuming prediction/result JSON only (no live API needed):
 
@@ -283,7 +283,7 @@ Named explicitly because they are the common agentic failure modes: trusting pla
 | +2 → +6 wks | Phase 2 (ratings + hypothetical), Phase 3 (factors v2) |
 | +6 → +8 wks | Phase 4 (analytics, incl. 2025 retro report), Phase 4.5 (CLI v2) |
 | +8 → +10 wks | Phase 5 (automation), preseason dry runs |
-| Aug 2026 | Calibration review complete → **freeze & tag by 2026-08-24** |
+| Aug 2026 | Calibration review complete → **freeze & tag on FREEZE-READY, target ~2026-08-08** |
 | Season | Zero-touch operation; Phase 6 stretch work only |
 
 ### 15.1 De-scoping order (if the freeze date approaches with work unfinished)
@@ -301,7 +301,7 @@ The season starts whether the software is ready or not. If time runs short, cut 
 ## 16. Owner Decisions (RESOLVED — binding; record any future changes in docs/DECISIONS.md)
 
 1. **Slate scope:** FBS-vs-FBS games only.
-2. **Season scope & freeze:** Week 0 games ARE in scope. Owner freeze date: **August 29, 2026**. ⚠ Scheduling constraint: Week 0 kicks off Saturday 2026-08-29, and predictions must be generated and committed before kickoff, so the `v2026-frozen` tag must exist **before the Week 0 prediction run** (the Tuesday prior, ~2026-08-25). Practically: complete calibration and tag no later than 2026-08-24; treat Aug 29 as the absolute outer bound, not the target.
+2. **Season scope & freeze:** Week 0 games ARE in scope. Owner freeze date: **August 29, 2026**. ⚠ Scheduling constraint: Week 0 kicks off Saturday 2026-08-29, and predictions must be generated and committed before kickoff, so the `v2026-frozen` tag must exist **before the Week 0 prediction run** (the Tuesday prior, ~2026-08-25). Practically: **tag on the `calibration-auditor` FREEZE-READY verdict, target ~2026-08-08** (per owner ruling 2026-08-03 (originally g1, July); supersedes the earlier ~2026-08-24 planning date). Treat Aug 29 as the absolute outer bound, not the target. **D8 later abolished the Week 0 label for 2026** — the opening weekend IS Week 1; the freeze constraint is unchanged in substance.
 3. **`NO_BET` filtering:** purely threshold-driven. No weekly volume target — the model bets what clears the bar, whether that's 5 games or 30.
 4. **Power ratings:** build our own Elo (in-house, transparent, per SPEC §6.1) rather than blending public ratings. Public preseason ratings remain permitted as roster-continuity priors only.
 5. **2025 audit trail:** the original 2025 repo is private and will NOT be linked. Therefore SPEC §4.3 option (b) is the decision: import the 2025 prediction/result JSONs into `data/archive/2025/` with a provenance note in the README.

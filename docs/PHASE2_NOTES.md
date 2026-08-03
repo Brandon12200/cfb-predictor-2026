@@ -113,7 +113,7 @@ sp_ratings, venues, schedule_intel, betting_lines`.
   (2026-08-29). SPEC §16.2 still says "Week 0 games ARE in scope"; those games are in scope, just
   named week 1. Don't be confused by the §16.2 "Week 0" label.
 - **Freeze discipline (§16.2):** `v2026-frozen` tag must exist **before the week-1 prediction run**
-  (~Aug 24 target; Aug 29 absolute outer bound). After the tag, `factors/`, `engine/`, weight/threshold
+  (tag on FREEZE-READY, target ~Aug 8, per owner ruling 2026-08-03 (originally g1, July); Aug 29 absolute outer bound). After the tag, `factors/`, `engine/`, weight/threshold
   config are immutable. **The pricer LOGIC and rating-update LOGIC are freeze-disciplined; the rating
   VALUES update weekly (data, not code).** Projections/hypothetical polish are cut-first, freeze-exempt.
 - No hardcoded team/conference names (registry only); no fabricated/neutral-filled data (missing stays
