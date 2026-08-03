@@ -17,6 +17,7 @@ from data.normalize.models import (
     TeamScheduleResult,
     Venue,
 )
+from data.venue_timezones import static_timezone_for
 from utils.normalizer import normalizer
 
 
@@ -142,7 +143,15 @@ def normalize_returning_production(raw_rows: list[dict]) -> dict[str, dict[str, 
 
 
 def normalize_venue(location: dict | None) -> Venue:
-    """A CFBD team `location` object (from the registry artifact) → canonical Venue."""
+    """A CFBD team `location` object (from the registry artifact) → canonical Venue.
+
+    `timezone` falls back to the static IANA table when CFBD serves null (8 of 138 FBS venues) —
+    SPEC Appendix A's "static timezone table", owner-ratified 2026-08-03. Applying it here means
+    every FUTURE snapshot bakes the value in, satisfying SPEC §5.2's rule that fallback policy
+    belongs in the builder path; `data.schedule_intel.resolve_venue_timezone` applies the SAME
+    table at the read seam so already-built bundles are covered without a rebuild. A venue in
+    neither source keeps `None` — honest-missing, never a fabricated offset (binding principle #4).
+    """
     loc = location or {}
     elevation = loc.get("elevation")
     try:
@@ -154,7 +163,7 @@ def normalize_venue(location: dict | None) -> Venue:
         latitude=loc.get("latitude"),
         longitude=loc.get("longitude"),
         elevation=elevation,
-        timezone=loc.get("timezone"),
+        timezone=loc.get("timezone") or static_timezone_for(loc),
         dome=bool(loc.get("dome", False)),
     )
 

@@ -1503,3 +1503,124 @@ orphaned PROPOSED entries. The legend now defines **APPROVED** as a resolved own
 behavior-change entries, equivalent in force to RATIFIED. **Existing stamps are deliberately not
 rewritten:** restamping resolved history to match a legend would be the tail wagging the dog, and
 the audit trail is more trustworthy showing the words the owner actually used.
+
+---
+
+## Venue timezone fallback — a ratified coefficient neutered by a null input  (behavior-change, data-layer)  — **RATIFIED (owner, 2026-08-03)**
+
+Logged under the **D19 behavior-change pattern**: a wiring/data defect whose correction changes
+model output, with the before/after measured and stated. **Found by owner testing of
+`cfb hypothetical`** — not by any automated gate. Worth recording plainly: the reverse-audit
+ledger, the B-batch, and the pre-flight all passed over it, because every one of them checks
+whether a *number* is justified, and none checks whether the *input it multiplies* ever arrives.
+
+### The defect
+
+CFBD serves `"timezone": null` for **8 of 138** FBS venues — the key is present, only the value is
+absent — of which **2 are in the tracked P4+independents slate**: **Northwestern** (Evanston IL)
+and **Rutgers** (Piscataway NJ). `travel_points` (`factors/physical_coefficients.py:74-77`) keys
+**only** on `time_zones_crossed`, so `(None or 0) - (None or 0) = 0` and the ratified `tz_per_zone`
+returned `0.0` for genuine multi-zone trips — USC's three-zone trip to Rutgers scored the same as a
+same-city game.
+
+**Root cause: a CFBD upstream gap, not a build defect.** `normalize_venue` passed the null through
+faithfully (correct honest-missing behaviour); there was simply no table to fall back to.
+**SPEC Appendix A had specified one all along** — *"Geo math … Computed from CFBD venue data
++ static timezone table"* — and it was never built. This entry builds it.
+
+The other six null venues (FIU, Hawai'i, Kennesaw State, South Alabama, UAB, UNLV) are non-P4 and
+**out of slate scope by design** — the same finding shape as A6's venue-coverage investigation.
+They are in the table for completeness and cannot affect a 2026 tracked prediction.
+
+### Disposition — the static table, applied at two layers
+
+- **`data/venue_timezones.py`** (new): 8 venue-name → IANA entries, each carrying its source city.
+  Keyed by **venue name** because `compute_schedule_intel` receives venue dicts and never learns the
+  host's team name.
+- **`data.schedule_intel.resolve_venue_timezone()`** — the **read seam**, so already-built bundles
+  are covered and **committed snapshot bytes and `snapshot_id` are untouched**. This is the A6
+  precedent, and the reason the wk1 golden does not move.
+- **`data.normalize.cfbd.normalize_venue()`** — the **build** path, so every future snapshot bakes
+  the value in, satisfying SPEC §5.2's rule that fallback policy belongs in the builder path.
+- Resolution order: source value → static table → **`None`, never a fabricated offset** (binding #4).
+
+**The snapshot was deliberately NOT rebuilt.** `scripts/build_snapshot.py` is a networked entry
+making 7 live fetches, so a rebuild is not byte-reproducible; `snapshot_id` hashes the entire `data`
+block including `venues`, and prediction/projection/ratings envelopes embed it, so a rebuild would
+break four byte-identity gates. Decisively, the committed bundle was built 2026-07-03 with a
+preseason profile that no longer exists (`sp_ratings` 0, `advanced_stats` 0, coverage 39%) — a
+rebuild today is a wholesale different artifact, not a venues-only delta.
+
+### Measured before / after (330 both-teams-tracked games)
+
+**8 of 330 games move**; 21 intel rows gain a timezone.
+
+| wk | matchup | before | after | Δ | zones |
+|---|---|---:|---:|---:|---|
+| 3 | USC @ RUTGERS | −3.5000 | −5.0000 | **−1.5000** | 3 east — **clamped by `travel_cap`** |
+| 9 | NORTHWESTERN @ OREGON | −2.5000 | −3.7000 | −1.2000 | 2 west |
+| 3 | COLORADO @ NORTHWESTERN | −2.5000 | −3.1000 | −0.6000 | 1 east |
+| 4 | NORTHWESTERN @ INDIANA | −2.5000 | −3.1000 | −0.6000 | 1 east |
+| 7 | NORTHWESTERN @ MICHIGAN STATE | −2.5000 | −3.1000 | −0.6000 | 1 east |
+| 10 | RUTGERS @ WISCONSIN | −2.5000 | −3.1000 | −0.6000 | 1 west |
+| 11 | NEBRASKA @ RUTGERS | −2.5000 | −3.1000 | −0.6000 | 1 east |
+| 11 | NORTHWESTERN @ OHIO STATE | −2.5000 | −3.1000 | −0.6000 | 1 east |
+
+**Max Δ = 1.5000 pts = 60% of the ratified ~2.5-pt HFA.** **Every delta reproduces the ratified
+3b.1 constants exactly** — `tz_per_zone = 0.6` (1 zone → 0.6, 2 → 1.2) and 3 zones → 1.8 **clamped
+to `travel_cap = 1.5`**. That internal consistency is the evidence this **restores intended
+behaviour** rather than introducing a new magnitude: no ratified constant changed.
+
+**A second-order consequence, recorded:** on USC@RUTGERS the newly-activated `TravelBurden` lifts
+the active-factor count 2 → 3, crossing **B4's 3-active-factor gate**, so the variance detector
+engages on a game where it previously returned `insufficient_data`. Expected, and a concrete
+instance of B4's reachability caveat: the preseason vehicle understates how often that gate runs.
+
+**Hashes — as predicted before implementation:** wk1 predictions payload **and** envelope
+identical (`0cf87d68…2371`); `data/ratings/2026_week_01.json` identical; golden byte-identity
+unchanged, no regeneration. **`data/projections/2026_week_01.json` regenerated through the pipeline
+writer — 10 of 138 teams changed**, per the derived-artifact invariant. Full six-target sweep green.
+
+### Regression pins — assert MEANING (seven)
+
+All 68 tracked venues resolve a timezone (the load-bearing pin: fails if CFBD drops another one and
+the table is not updated); a 3-zone eastward trip **clamps to `travel_cap`**, not 3 × `tz_per_zone`;
+a neutral site stays honestly `None`; a venue in neither source records missing, never a fabricated
+offset; a **dateless** input still yields `None` (UTC offset is DST-dependent — the confirmed-correct
+hypothetical behaviour, pinned so it cannot be "fixed" into a fabrication); no static-table key is
+ambiguous (guarding the `Memorial Stadium` class, shared by Kansas/Missouri); and **both layers
+resolve identically from the same table**, so a future snapshot rebuild cannot silently disagree
+with the read seam.
+
+### Defect-family taxonomy — three tallies, stated so 2027's sweep is unambiguous
+
+This entry **founds a new family** rather than joining an existing one:
+
+1. **"Input never arrives" — NEW, now TWO members:** **A6** (venue elevation in metres, so the feet
+   comparison was never true) and **this** (venue timezone null, so the zone difference was always
+   zero). Characteristic: *the constant is correct and ratified; the input it consumes never shows
+   up, so the coefficient cannot fire.* **A6 belongs to both this family and the next.**
+2. **"Never-true comparison" — unchanged at FOUR:** A1, B2, the momentum `±2.0` unreachable bound,
+   and A6.
+3. **"Unreachable bound" (a subfamily of 2) — unchanged at THREE:** A1 (`threshold == _max_output`),
+   B2 (`max_impact > _max_output`), momentum's unreachable `±2.0`.
+
+**2027 sweeps for: a third input-never-arrives, a fifth never-true comparison, and a fourth
+unreachable bound.** The point-scale-artifact family is a separate tally and stays at **four**
+(3c.5 floors, A4 ladder, B1 `/5.0`, B4 CV cutoffs).
+
+**Method lesson.** Every audit this project has run asks *"is this number justified?"* None asked
+*"does the input this number multiplies ever arrive?"* Two defects have now been found only by a
+human exercising the CLI. **A 2027 audit should include an input-liveness pass: for each ratified
+coefficient, confirm the field it consumes is non-null somewhere in the real slate.**
+
+### Known states carried to 2027 (not fixed)
+
+- **Northwestern's `latitude`/`longitude` are also null**, so its `travel_distance` is `None`.
+  **`travel_distance` has zero consumers** in `factors/`/`engine/`/`analytics/` — display-only —
+  so this affects no prediction. One line, deliberately not fixed to keep the change surgical.
+- **The provenance manifest cannot record this fallback** (field-group granularity, no sub-field
+  `fallback_reason`; and a read-seam fill never reaches it). Provenance lives in `docs/SCHEMA.md`
+  and in the table itself. **Adding sub-field provenance is a 2027 item.**
+- **`cfb hypothetical` does not explain why `tz` is unavailable without `--date`.** A one-line CLI
+  hint would have saved this investigation; 2027.
