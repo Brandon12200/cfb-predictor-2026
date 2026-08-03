@@ -357,7 +357,7 @@ remain; **the ledger is first (it gates the tag), then Phase 5, then the freeze 
    the two open design questions (commit identity: Actions-bot vs authored; branch protection vs bot
    pushes). `season.json` is the config home — §10.6's fields (kickoff windows, freeze tag, budget)
    **add** to it.
-4. **Freeze sequence (`docs/FREEZE_CHECKLIST.md`)** — `calibration-auditor` pre-flight (~Aug 20, must
+4. **Freeze sequence (`docs/FREEZE_CHECKLIST.md`)** — `calibration-auditor` pre-flight (immediately pre-tag, must
    return FREEZE-READY) → **tag `v2026-frozen`** (owner) + extend the freeze-enforcement hook to
    `factors/`/`engine/`/calibration → then **AFTER the tag**: two full-cycle rehearsals (rehearsal-marked
    commits) + a failure-injection drill (proves the auto-Issue path) + a graded opening-weekend (Week 1) dress rehearsal (D8 abolished Week 0).

@@ -30,7 +30,7 @@ then start with the reverse-audit ledger (it gates the tag). **Not authoritative
    (Tuesday catch-up-grade→predict; daily Wed–Sat capture; cron slack). Secrets (`ODDS_API_KEY`,
    `CFBD_API_KEY`). Run the **`pipeline-adversary`** failure-class audit during dev + before each rehearsal.
    Resolve the two open design questions (see (c)). `season.json` is the config home — §10.6's fields ADD to it.
-3. **Freeze sequence (`docs/FREEZE_CHECKLIST.md`)** — `calibration-auditor` pre-flight (~Aug 20, must return
+3. **Freeze sequence (`docs/FREEZE_CHECKLIST.md`)** — `calibration-auditor` pre-flight (immediately pre-tag, must return
    **FREEZE-READY**) → **tag `v2026-frozen`** (owner-only) + extend the freeze-enforcement hook to
    `factors/`/`engine/`/calibration → then **AFTER the tag**: two full-cycle rehearsals (rehearsal-marked
    commits) + a failure-injection drill (proves the auto-Issue path) + a graded **opening-weekend (Week 1) dress rehearsal** (D8 abolished Week 0).

@@ -655,8 +655,10 @@ confirmed against source.
 
 Each A-item is a **freeze-blocker decision**; each B-item is a **PROPOSED** constant awaiting your
 ratify/revise. Recommended order: resolve **A** first (bugs/retirements change what B needs to cover), then
-ratify **B** as one consolidated batch. Track on `docs/FREEZE_CHECKLIST.md`. The auditor re-runs (~Aug 20)
-as the final pre-flight and must come back **FREEZE-READY** before the tag.
+ratify **B** as one consolidated batch. Track on `docs/FREEZE_CHECKLIST.md`. The auditor re-runs
+**immediately pre-tag** as the final pre-flight and must come back **FREEZE-READY** before the tag.
+*(Dates in this section were written 2026-07-09 while the ledger was open; the tag trigger is the
+FREEZE-READY verdict, not a calendar date — **D26**.)*
 
 ---
 
@@ -891,7 +893,7 @@ physical: `ByeAdvantage` 191/734, `ConsecutiveRoad` 185/734, `TravelBurden` 152/
 `Sandwich`, `PressureSituation`, `RevengeGame`. Design-dormant: `MarketSentiment`. Structurally
 dormant: `HeadToHeadRecord` (A1).
 
-### B1 — `_calculate_confidence_score` (`engine/prediction_engine.py:524-573`)  (`reasoned`)
+### B1 — `_calculate_confidence_score` (`engine/prediction_engine.py:523-573`)  (`reasoned`)
 
 The formula 3c.5's NO_BET floor and 3c.6's A/B/C tiers both key off.
 
@@ -987,10 +989,11 @@ strong 0.75 / extreme 1.0`.
 because A3 concerned a *neighbouring* item in this same file. A3 was the `factor_categories`
 **map**; B4 is the **cutoffs**, and they reach further:
 `_determine_variance_level(cv)` (`:266-277`) → `variance_level` (`:97`) → consumed by **two
-ratified gates** — (1) **3c.5 floor 3**, the hard NO_BET gate (`prediction_engine.py:411-413`,
-`NO_BET_VARIANCE_LEVELS = {'extreme'}` plus `NO_BET_VARIANCE_ACTIONS = {'AVOID_OR_MINIMUM'}`, which
-`_generate_recommendation` derives from the same ladder), and (2) **B1's ratified variance
-adjustments** (`+0.25/+0.1/−0.1/−0.2/−0.3`), keyed on the label these cutoffs produce.
+ratified gates** — (1) **3c.5 floor 3**, the hard NO_BET gate — `NO_BET_VARIANCE_LEVELS = {'extreme'}` and
+`NO_BET_VARIANCE_ACTIONS = {'AVOID_OR_MINIMUM'}` (`prediction_engine.py:25-26`), consumed in
+`_evaluate_no_bet` (`:334`, `:338`); the action gate reads the recommendation that
+`_generate_recommendation` derives from the same ladder — and (2) **B1's ratified variance
+adjustments** (`prediction_engine.py:555-565`) (`+0.25/+0.1/−0.1/−0.2/−0.3`), keyed on the label these cutoffs produce.
 **3c.5 and B1 were both ratified against labels these five numbers produce.** `variance_level`
 derives from the **overall** CV, never from the A3 map, so A3's "diagnostic only" does not transfer.
 
