@@ -53,11 +53,43 @@ class StyleMismatchCalculator(BaseFactorCalculator):
         }
 
     def calculate(self, home_team: str, away_team: str, context: Optional[Dict[str, Any]] = None) -> float:
+        """Style-mismatch factor — DORMANT FOR ALL OF 2026. RATIFIED (owner, 2026-08-03; B-1).
+
+        **TWO INDEPENDENT BLOCKERS. Removing this return alone does NOT restore the factor.**
+
+        1. **This gate.** `calculate()` returns 0.0 unconditionally for 2026.
+        2. **The internals are UNRATIFIED and UNMEASURED.** The ~20 branch constants in
+           `_calculate_success_rate_mismatch`, `_calculate_explosiveness_mismatch`,
+           `_calculate_run_pass_mismatch` and `_calculate_havoc_mismatch` carry **no** magnitude
+           argument in `docs/CALIBRATION_LOG.md` — none could honestly be written against a vehicle
+           holding `advanced_stats` for **zero** teams. B8's own PROPOSED text flagged them
+           ("~20 internal branch thresholds… 3d ratified only the output range, not the pre-clamp
+           weighting"); the ratification never returned to it.
+
+        **Clearing (1) without ratifying (2) restores an UNLOGGED CALIBRATION SURFACE** — the exact
+        reverse-coverage failure the 2026-07-09 shakedown existed to close. A **third**, separate
+        blocker predates both: the pace component is dormant per 3d.2.
+
+        **Precedent — `MarketSentiment` (B9):** `advanced_stats` **is** still collected into every
+        weekly snapshot, so 2027 inherits a full season of real inputs and can back-compute this
+        factor offline against actual outcomes before ratifying its internals per-number.
+        Activation is earned with evidence, not assumed.
+
+        **NOT deleted, deliberately.** Deletion would change the registered factor count and thus
+        the weight-normalisation denominator, moving every other factor's normalized weight — and
+        therefore every prediction. The implementation is preserved verbatim below as
+        `_calculate_2027_reference()`, uncalled, as the basis for that back-computation. Kept
+        registered and honestly dormant (dormancy-as-design, binding principle #4).
         """
-        Calculate style mismatch adjustment.
-        
-        Positive values indicate home team style advantage.
-        Negative values indicate away team style advantage.
+        return 0.0
+
+    def _calculate_2027_reference(self, home_team: str, away_team: str,
+                                  context: Optional[Dict[str, Any]] = None) -> float:
+        """The 2026 implementation, PRESERVED AND UNCALLED for the 2027 back-computation.
+
+        This is the former body of `calculate()`, unchanged. It is not wired to anything while the
+        factor is dormant (see `calculate()` for both blockers). Do not call it without first
+        ratifying the branch constants it depends on.
         """
         if not context:
             self.logger.debug("No context available for style mismatch")

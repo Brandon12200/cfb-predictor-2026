@@ -150,10 +150,45 @@ def _adv(sr_off, plays):
 def test_style_mismatch_is_pace_invariant():
     """Regression pin on the *meaning* (3d.2): the factor must not respond to raw play-count / pace
     differences — a huge `plays` gap that the old phantom would have fired on leaves the output
-    unchanged, while the genuine style signal (success-rate gap) still produces a non-zero value."""
+    unchanged, while the genuine style signal (success-rate gap) still produces a non-zero value.
+
+    **Repointed at `_calculate_2027_reference` (B-1, owner 2026-08-03).** `calculate()` is now
+    dormant for all of 2026 and returns 0.0 unconditionally, which would make this assertion pass
+    vacuously and silently retire the 3d.2 protection. The pace-phantom fix is a property of the
+    *implementation*, which is preserved verbatim — so the pin follows it there and keeps its teeth
+    for the 2027 reactivation. The dormancy itself is pinned separately, below.
+    """
     f = StyleMismatchCalculator()
     balanced = {"advanced_stats": {"HOME": _adv(0.58, 200), "AWAY": _adv(0.40, 200)}}
     lopsided_pace = {"advanced_stats": {"HOME": _adv(0.58, 1000), "AWAY": _adv(0.40, 150)}}
-    out = f.calculate("HOME", "AWAY", balanced)
-    assert out == f.calculate("HOME", "AWAY", lopsided_pace)  # pace-invariant
+    out = f._calculate_2027_reference("HOME", "AWAY", balanced)
+    assert out == f._calculate_2027_reference("HOME", "AWAY", lopsided_pace)  # pace-invariant
     assert out != 0.0                                          # real (non-pace) style signal present
+
+
+def test_style_mismatch_dormant_for_2026_even_with_populated_advanced_stats():
+    """B-1 dormancy pin, asserting the MEANING, not a stored value (the LARAMIE doctrine).
+
+    The load-bearing case: `advanced_stats` POPULATED with a strong, genuine style mismatch — the
+    exact input that *would* produce a large value if the unratified internals ran — must still
+    yield 0.0 in 2026. A test that only checked the empty-stats case would pass for the entire life
+    of an accidental reactivation, which is precisely how the LARAMIE units bug survived.
+
+    This fails the moment someone removes the dormancy gate, which is the point: blocker (1) cannot
+    be cleared silently. Blocker (2) — the ~20 unratified branch constants — is not testable and is
+    stated in `calculate()`'s docstring and the log instead.
+    """
+    f = StyleMismatchCalculator()
+    strong_mismatch = {"advanced_stats": {"HOME": _adv(0.58, 200), "AWAY": _adv(0.40, 200)}}
+
+    # The reference implementation demonstrates the signal is real and non-trivial...
+    assert f._calculate_2027_reference("HOME", "AWAY", strong_mismatch) != 0.0
+    # ...and the live factor must nonetheless stay silent for all of 2026.
+    assert f.calculate("HOME", "AWAY", strong_mismatch) == 0.0
+
+    # Honest-missing still holds, and is a DIFFERENT case from dormancy (binding principle #4).
+    assert f.calculate("HOME", "AWAY", {"advanced_stats": {}}) == 0.0
+    assert f.calculate("HOME", "AWAY", None) == 0.0
+
+    # The ratified ±1.5 range (3d.3) is untouched by the dormancy.
+    assert f.get_output_range() == (-1.5, 1.5)
