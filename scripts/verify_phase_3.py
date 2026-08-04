@@ -107,6 +107,21 @@ check("6 physical sub-signal factors registered; old SchedulingFatigue + Lookahe
       _PHYS <= _loaded and "SchedulingFatigue" not in _loaded and "LookaheadSandwich" not in _loaded,
       f"{sorted(_PHYS & _loaded)}")
 
+# --- Registry integrity: the tripwire against a SILENT import failure post-freeze --------------
+# `_load_all_factors` discovers factors by scanning the directory and swallows per-module import
+# errors (it logs and continues). A silent failure would drop a factor, shrink the normalization
+# denominator, RENORMALIZE EVERY REMAINING WEIGHT, and produce a different model under the same
+# frozen tag — with no other signal. Both numbers are ratified facts, not preferences: 15 factors
+# and a raw-weight sum of 1.5400 (the denominator every normalized weight divides by, and the basis
+# of the edge-ceiling entry in CALIBRATION_LOG).
+_EXPECTED_FACTOR_COUNT = 15
+_EXPECTED_RAW_WEIGHT_SUM = 1.5400
+_raw_sum = sum(f.original_weight for f in factor_registry.factors.values())
+check("registry integrity: 15 factors registered, raw weight sum 1.5400 (silent-import tripwire)",
+      len(factor_registry.factors) == _EXPECTED_FACTOR_COUNT
+      and abs(_raw_sum - _EXPECTED_RAW_WEIGHT_SUM) < 1e-9,
+      f"{len(factor_registry.factors)} factors, raw sum {_raw_sum:.4f}")
+
 # Each physical sub-signal appears separately in factor_breakdown on a firing context (SPEC §7.2).
 _ctx = {"home_intel": {"bye": True, "altitude": 7000.0, "time_zones_crossed": 0},
         "away_intel": {"short_week": True, "time_zones_crossed": 3, "consecutive_road_games": 3,

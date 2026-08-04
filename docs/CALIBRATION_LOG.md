@@ -1630,3 +1630,101 @@ coefficient, confirm the field it consumes is non-null somewhere in the real sla
   and in the table itself. **Adding sub-field provenance is a 2027 item.**
 - **`cfb hypothetical` does not explain why `tz` is unavailable without `--date`.** A one-line CLI
   hint would have saved this investigation; 2027.
+
+---
+
+## Edge ceiling vs the `min_edge` ladder — a structural property  (`reasoned`)  — **RATIFIED (owner, 2026-08-04)**
+
+**Document-not-retune.** No threshold, weight, or normalization value changes. Raised by an external
+review; **every figure below was independently recomputed from the live registry, and three of the
+review's numbers were corrected.** The corrected figures are the record — **2027 should read these
+and disregard the review's originals**, which are not reproduced here precisely so there is one set
+of numbers.
+
+### The ceiling
+
+Maximum attainable `|total_adjustment|` with every **live additive** factor simultaneously at max
+output, max confidence (`VERY_HIGH = 0.9`) and the same direction. `edge = |total_adjustment ×
+multiplicative_adjustment|`, and the sole MODIFIER (`MarketSentiment`) is dormant at 1.0, so
+edge = `|total_adjustment|`.
+
+| Scenario | Ceiling | vs 0.75 | vs 1.0 | vs 1.5 |
+|---|---:|---|---|---|
+| **Theoretical** — all live additive aligned | **1.0023** | reachable, 74.8% of ceiling | reachable at **99.8%** | **unreachable** |
+| **Physically realizable** — `ByeAdvantage` XOR `ShortWeek` | **0.8795** | reachable, **85.3%** | **unreachable** | **unreachable** |
+| **On the current vehicle** — also minus input-dormant | **0.7042** | **unreachable** | unreachable | unreachable |
+
+**Correction A (vs the review): the 1.0 branch is ARITHMETICALLY reachable**, at 99.8% of the
+absolute ceiling — not impossible by construction. It is **physically** unreachable because
+`ByeAdvantage` (a bye last week) and `ShortWeek` (`rest_days ≤ 6`) are **mutually exclusive**: a bye
+guarantees long rest. The distinction is recorded deliberately — "impossible by construction" and
+"impossible given the schedule" are different claims, and only the second is true.
+
+**Correction B: the 0.75 branch needs 74.8%** of the theoretical ceiling, or **85.3%** of the
+realizable one — not the ~87% the review reported. 85.3% is the fair figure to quote.
+
+**Correction C: the dormancy share is 30.5%** (`0.4700 / 1.5400`), not ~25.7%. The gap is **this
+project's own doing**: `StyleMismatch` (0.15 raw) became dormant under **B-1** on 2026-08-03, after
+the review was written. Dormant/multiplicative raw weight is `HeadToHeadRecord 0.06 +
+PressureSituation 0.06 + RevengeGame 0.10 + StyleMismatch 0.15 + MarketSentiment 0.10`.
+
+### The mechanism — the dormancy share suppresses the normalized scale
+
+`_validate_and_normalize_weights` divides every factor's raw weight by the **raw sum across all 15
+registered factors (1.5400)** — dormant factors included. A dormant factor therefore keeps its share
+of the denominator while contributing zero, so the **live** factors' normalized weights sum to only
+**~69.5% of unity**. The 3c.5 ladder was ratified against an implicitly full budget; roughly a third
+of that budget is now held by factors that cannot fire.
+
+**Consequence, ratified explicitly:** the `1.0` and `1.5` rungs of the dynamic `min_edge_threshold`
+are **dead in 2026**, and `0.75` demands ~85% of the entire realizable factor budget pulling one
+way. This is the **A4 finding one layer down**: A4 recorded that the `prediction_type` ladder is
+unreachable pre-floor; this records that the *floor ladder itself* is largely unreachable.
+
+### Corollary — `confidence_score` is coarsely quantized, sharpening B1
+
+Measured over the 330-game tracked slate: **38 distinct values**, range `0.3337–0.7444`, stdev
+`0.0538`; a single value (`0.6332`) covers **30.3%** of games and the top two ~52%. Tier
+distribution **A 2 / B 318 / C 10**.
+
+**It is NOT "week-level"** — per week there are 8–13 distinct values across 10–33 games, and the same
+values recur across different weeks. The accurate description is **coarsely quantized and
+data-availability-driven**, which is exactly **B1's ratified consequence** (`confidence_score` is in
+practice a data-availability score) becoming visible as near-degeneracy.
+
+**⚠ The review's "five matchups at 0.72" claim does NOT verify** and is recorded as **unverified**:
+zero games fall in `[0.715, 0.725]`, none round to 0.72, and the maximum observed is **0.7444**.
+
+**Phase-4 attribution obligation:** treat `confidence_tier` as a **coarse, data-availability
+stratum**, not a per-game conviction signal. Slicing attribution by tier is slicing mostly by how
+complete that week's data was.
+
+### Why logged, not retuned
+
+Changing a threshold or the normalization moves `confidence_score` and the edge on **every** game,
+re-opening **3c.5's floors** and **3c.6's tiers** — both ratified *against this formula* — days
+before the tag, with no measured basis for choosing a replacement. Identical argument to B1's
+`/5.0` divisor and B4's CV cutoffs.
+
+**Mitigation — the measurement season is intact.** NO_BET games still persist a hypothetical lean
+and are graded (D22 / 3c.5), so per-sub-signal ATS% and CLV accrue **whether or not a bet cleared
+the floor**. A quiet season is selectivity working (L4), and it still generates the evidence needed
+to fix this properly.
+
+**2027 obligation:** recalibrate the thresholds **and** the normalization against this season's
+attribution — in particular, decide whether **dormant factors should be excluded from the
+normalization denominator**, which is the single change that would restore the ladder's intended
+scale without touching any ratified coefficient.
+
+### Integrity fixes landed alongside (same PR)
+
+- **`data/calibration/2025_evidence.json` `meta.source` is now repo-relative.** It held an absolute
+  machine path, and `verify-phase-3` rebuilds the pack and asserts **byte equality with the committed
+  file** — so the reproducibility gate passed only on the machine that generated it. Verified passing
+  from a different working directory.
+- **Registry-integrity tripwire** — `verify-phase-3` check plus unit pins asserting **15 registered
+  factors and raw-weight sum 1.5400**, with a second pin that normalized == raw / raw_sum for every
+  factor. `_load_all_factors` swallows per-module import errors, so a silent failure post-freeze
+  would drop a factor, shrink the denominator, **renormalize every remaining weight, and run a
+  different model under the same tag**. Deliberately a gate and tests, **not a runtime `assert` in
+  the frozen path** — an assertion there would convert a degraded import into a mid-season crash.

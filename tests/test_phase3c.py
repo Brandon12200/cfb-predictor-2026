@@ -243,3 +243,33 @@ def test_fabrication_tripwire_would_flag_planted_tokens():
     assert any(tok in planted for tok in tokens)
     clean = "trend = home_diff - away_diff  # real completed games only"
     assert not any(tok in clean for tok in tokens)
+
+
+# ── Registry integrity (owner-ratified 2026-08-04) ────────────────────────────────────────────
+def test_registry_integrity_15_factors_and_raw_weight_sum():
+    """Tripwire against a SILENT import failure renormalizing the model post-freeze.
+
+    `_load_all_factors` scans the factors directory and swallows per-module import errors — it logs
+    and continues. If a module ever failed to import after the tag, that factor would vanish, the
+    raw-weight sum (the normalization denominator) would shrink, and EVERY remaining factor's
+    normalized weight would grow: a different model running under the same frozen tag, with no
+    other signal.
+
+    Both numbers are ratified facts, not preferences. 1.5400 is the denominator every normalized
+    weight divides by and the basis of the edge-ceiling entry in CALIBRATION_LOG — if this test
+    fails, the model changed, and no calibration entry describes the new one.
+    """
+    assert len(factor_registry.factors) == 15, sorted(factor_registry.factors)
+    raw_sum = sum(f.original_weight for f in factor_registry.factors.values())
+    assert abs(raw_sum - 1.5400) < 1e-9, f"raw weight sum {raw_sum!r}, expected 1.5400"
+
+
+def test_normalized_weights_derive_from_the_raw_sum():
+    """The mechanism the pin above protects: normalized = raw / raw_sum, for every factor.
+
+    Pinned so the relationship itself cannot drift silently — this is what makes a dropped factor
+    change the others' weights rather than merely removing one contribution.
+    """
+    raw_sum = sum(f.original_weight for f in factor_registry.factors.values())
+    for name, f in factor_registry.factors.items():
+        assert abs(f.weight - f.original_weight / raw_sum) < 1e-9, name
