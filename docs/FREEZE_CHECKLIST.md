@@ -52,24 +52,42 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   **Venue coverage investigated and closed: not a defect** — 68 is SPEC §5.5's specified P4+independents
   scope, not a gap. See CALIBRATION_LOG "A6".
 
-- [ ] **Formal pre-freeze calibration audit — RAN 2026-08-03 @ `560d268`: NOT-FREEZE-READY**
-  (2 blockers, 5 should-fix, 2 nits). Full verdict and per-finding dispositions:
-  **`docs/preflight_verdict.md`**. **Early by choice:** ran on *ledger-close* rather than the
-  original ~2026-08-20 calendar date, per **D26** — the trigger is the FREEZE-READY verdict, not a
-  date; running early is what created room to disposition what it found.
-  **Re-run condition:** any change to `factors/`, `engine/`, calibration config, or
-  `docs/CALIBRATION_LOG.md` after the pre-flight and before the tag **invalidates the verdict and
-  the pre-flight re-runs.**
-  **Owner intent, on the record: the tag follows FREEZE-READY promptly — days, not weeks.** The audit
-  grades the log as it stands when it runs, so: **if anything touches the frozen paths (`factors/`,
-  `engine/`, weight/threshold config) or `docs/CALIBRATION_LOG.md` between the pre-flight and the tag, the
-  pre-flight RE-RUNS.** A stale FREEZE-READY verdict does not carry across a change to what it graded.
-  Run the **`calibration-auditor`** agent over
-  the complete `docs/CALIBRATION_LOG.md`: every entry evidence-class-labeled with the class matching the
-  claim; magnitudes HFA-scale-checked; ratification stamps present; **no orphaned PROPOSED entries**;
-  cross-entry consistency; and the reverse check — grep the frozen paths (`factors/`, `engine/`) for numeric
-  literals and flag any constant lacking a log entry. This is the freeze's formal pre-flight; resolve every
-  finding before tagging.
+- [x] **Formal pre-freeze calibration audit — COMPLETE. FINAL VERDICT: FREEZE-READY**
+  (re-run 2026-08-04 @ `d112d4e` — **0 blockers**, 2 should-fix, 1 nit, none tag-blocking).
+  **Authoritative verdict: `docs/preflight_verdict_rerun.md`.**
+
+  Two runs, both on `main`, full charter each time:
+
+  | Run | Commit | Verdict |
+  |---|---|---|
+  | 1 — 2026-08-03 | `560d268` | **NOT-FREEZE-READY** — 2 blockers, 5 should-fix, 2 nits (`docs/preflight_verdict.md`) |
+  | 2 — 2026-08-04 | `d112d4e` | **FREEZE-READY** — 0 blockers (`docs/preflight_verdict_rerun.md`) |
+
+  > **⚠ `docs/preflight_verdict.md` (run 1) is SUPERSEDED and retained only as the audit trail of
+  > what was found and fixed.** Its NOT-FREEZE-READY verdict and its nine findings are all closed —
+  > see PR #25 for the dispositions. **Do not read run 1 as the freeze state.**
+
+  Between the runs: PR **#25** (all nine run-1 findings dispositioned; `StyleMismatch` dormant,
+  eleven momentum constants ratified per-number), PR **#26** (venue-timezone fallback — a
+  behavior-affecting data fix), PR **#27** (edge-ceiling structural property + two integrity fixes).
+  Run 2 re-verified both prior blockers **closed in source**, found **no regressions**, and
+  independently recomputed the edge-ceiling figures by hand rather than trusting the script.
+
+  **Early by choice:** ran on *ledger-close* rather than the original ~2026-08-20 calendar date, per
+  **D26** — the trigger is the FREEZE-READY verdict, not a date; running early created the room to
+  disposition what run 1 found.
+
+  **Re-run condition, STILL BINDING until the tag exists:** any change to `factors/`, `engine/`, the
+  weight/threshold/calibration config, or `docs/CALIBRATION_LOG.md` **invalidates the FREEZE-READY
+  verdict and forces a third run.** A verdict does not carry across a change to what it graded.
+
+  **Two non-blocking should-fix items carried to the F-close PR** (neither gates the tag; full
+  reasoning in the re-run verdict): **S-1** — delete `docs/HANDOFF_FREEZE.md`, which its own
+  lifecycle header already requires and which is now stale on the remaining path and two
+  defect-family tallies; **S-2** — add `engine/matchup_pricer.py:205`'s `uncertainty > 0.5` to
+  `docs/CALIBRATION_EXCLUSIONS.md` as a caveat-string threshold (verified non-tunable: it gates only
+  a human-readable string, while the rating-signal weight comes from the ratified D11 formula at
+  `:167`, independent of it).
 
 - [ ] **Extend the freeze-enforcement hook** to make `factors/`, `engine/`, and the
   weight/threshold/calibration config **immutable at tag time** (today the hooks protect the append-only
