@@ -21,6 +21,7 @@ import glob
 import json
 import math
 import os
+from pathlib import Path
 from typing import Any
 
 # Bucket edges (illustrative; the ratified A/B/C tier + NO_BET-floor boundaries are set in 3c
@@ -103,6 +104,22 @@ def _binned(pairs: list[tuple[dict, dict]], key: str, edges: tuple[float, ...]) 
     return [{"bucket": labels[i], **_bucket_stats(buckets[i])} for i in range(len(labels))]
 
 
+def _repo_relative(path: str) -> str:
+    """A repo-relative form of `path`, so the committed artifact is machine-independent.
+
+    `meta.source` is compared byte-for-byte by `verify-phase-3`'s reproduce-from-archive check
+    (`scripts/verify_phase_3.py`), which rebuilds the pack and asserts equality with the committed
+    file. Storing an absolute path made that gate pass only on the machine that generated it — a
+    reproducibility gate that was itself not reproducible. Paths outside the repo are returned
+    unchanged rather than guessed at.
+    """
+    repo = Path(__file__).resolve().parent.parent
+    try:
+        return str(Path(path).resolve().relative_to(repo))
+    except ValueError:
+        return path
+
+
 def build_calibration_evidence(archive_dir: str) -> dict[str, Any]:
     """The evidence pack: overall + by confidence / predicted-edge / prediction-type."""
     pairs = _load_archive(archive_dir)
@@ -118,7 +135,7 @@ def build_calibration_evidence(archive_dir: str) -> dict[str, Any]:
 
     return {
         "meta": {
-            "source": archive_dir,
+            "source": _repo_relative(archive_dir),
             "games_joined": len(pairs),
             "resolved": len(overall),                # had an outcome (win + loss + push)
             "graded": overall_stats["n_graded"],     # win + loss only (excludes pushes; = bucket denominators)

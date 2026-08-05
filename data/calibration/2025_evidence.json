@@ -140,7 +140,7 @@
     "not_a_fit": "descriptive evidence only; calibration is set by reasoning over this, never by optimizing these numbers (SPEC \u00a73/\u00a712)",
     "pushes": 6,
     "resolved": 300,
-    "source": "/Users/brandonkenney/Projects/cfb-contrarian-predictor-2026/data/archive/2025"
+    "source": "data/archive/2025"
   },
   "overall": {
     "ats_win_pct": 0.466,
