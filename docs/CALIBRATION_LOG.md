@@ -1635,7 +1635,11 @@ coefficient, confirm the field it consumes is non-null somewhere in the real sla
 
 ## Edge ceiling vs the `min_edge` ladder — a structural property  (`reasoned`)  — **RATIFIED (owner, 2026-08-04)**
 
-**Document-not-retune.** No threshold, weight, or normalization value changes. Raised by an external
+**Document-not-retune.** No threshold, weight, or normalization value changes.
+
+**Provenance:** *surfaced by external review, verified-and-corrected in-house — twice, including a correction to the first correction (see the boxed retraction below).* This is the **third** finding in the found-outside-the-audit family, with **A6** (elevation units) and the **venue-timezone gap**: each was a real defect that every internal gate passed over, and each was found by someone looking at the system from outside its own checks. **2027 should assume the fourth exists.**
+
+Raised by an external
 review; **every figure below was independently recomputed from the live registry, and three of the
 review's numbers were corrected.** The corrected figures are the record — **2027 should read these
 and disregard the review's originals**, which are not reproduced here precisely so there is one set
@@ -1656,6 +1660,13 @@ edge = `|total_adjustment|`.
 **Correction A (vs the review): the 1.0 branch is reachable in principle**, at 99.8% of the ceiling —
 not impossible by construction. **1.5 is the only structurally unreachable rung.**
 
+> **Vehicle note (owner ruling):** these counts are measured on the **committed week-1 snapshot** —
+> the frozen, reproducible basis, so **5 of 330 governs**. The same measurement against the *live*
+> CFBD schedule returned **0 of 331**: the real slate has drifted by a game since the 2026-07-03
+> build, and the bye/short-week pairing moved with it. **That drift is a second, independent reason
+> the Phase-R re-measurement item exists** — the frozen vehicle and the live season will not agree,
+> and every figure in this entry is a property of the former.
+>
 > **⚠ A claim in the first draft of THIS entry was wrong and is corrected here, on the record.**
 > It asserted that `ByeAdvantage` and `ShortWeek` are *mutually exclusive* ("a bye guarantees long
 > rest") and discounted the ceiling to 0.8795 accordingly. **That reasoning proves only that one
@@ -1722,6 +1733,16 @@ normalization denominator**, which is the single change that would restore the l
 scale without touching any ratified coefficient.
 
 ### Reproducibility of this entry
+
+**A STANDING GATE, not just a regenerable script.** `verify-phase-3` now **asserts** the documented
+ceilings (1.0023 / 0.8269, tolerance 0.0005) and the ladder relationship (1.5 unreachable; 1.0
+vehicle-unreachable; 0.75 reachable at 90.7%), so any future weight change or dormancy wake fails
+**loudly** and forces re-documentation rather than silently orphaning this entry. The script does the
+computing; the gate does the asserting — one implementation. **A tolerance bump is never the fix.**
+
+**Failure ordering, verified by simulation:** a dropped factor fails the **registry-integrity pin
+first**, reporting the count and raw sum — the *cause* — before the ceiling check reports its drift,
+which is only a *symptom*. Confirmed by removing a factor and replaying both gates in source order.
 
 **`scripts/measure_edge_ceiling.py` is committed** (freeze-exempt, offline) and regenerates every
 figure above: the ceilings, the dormancy share, the bye/short-week co-occurrence count, and the
