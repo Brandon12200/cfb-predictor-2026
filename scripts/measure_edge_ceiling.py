@@ -26,8 +26,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-logging.disable(logging.CRITICAL)
-
 import data.data_manager as dm  # noqa: E402
 from data.schedule_intel import compute_schedule_intel  # noqa: E402
 from data.snapshot import load_snapshot  # noqa: E402
@@ -120,6 +118,10 @@ def confidence_profile(snap: dict) -> dict:
 
 
 def main() -> int:
+    # Scoped to the CLI entry: `verify_phase_3.py` imports `ceilings()` from this module, and a
+    # module-scope disable would silently mute logging for that whole process.
+    logging.disable(logging.CRITICAL)
+
     snap = load_snapshot(1, 2026)
 
     raw_sum = sum(f.original_weight for f in REGISTRY.factors.values())

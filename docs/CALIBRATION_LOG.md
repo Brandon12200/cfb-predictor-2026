@@ -1655,7 +1655,7 @@ edge = `|total_adjustment|`.
 | Scenario | Ceiling | vs 0.75 | vs 1.0 | vs 1.5 |
 |---|---:|---|---|---|
 | **Theoretical** — all live additive aligned | **1.0023** | reachable, **74.8%** of ceiling | reachable at **99.8%** | **unreachable** |
-| **On the current vehicle** — minus input-dormant (`ExperienceDifferential`, `Sandwich`) | **0.8269** | reachable, 90.7% | **unreachable** | **unreachable** |
+| **On the current vehicle** — minus input-dormant (`ExperienceDifferential`, `Sandwich`) | **0.8269** | reachable, **90.7%** | **unreachable** | **unreachable** |
 
 **Correction A (vs the review): the 1.0 branch is reachable in principle**, at 99.8% of the ceiling —
 not impossible by construction. **1.5 is the only structurally unreachable rung.**
@@ -1692,9 +1692,10 @@ of the denominator while contributing zero, so the **live** factors' normalized 
 **~69.5% of unity**. The 3c.5 ladder was ratified against an implicitly full budget; roughly a third
 of that budget is now held by factors that cannot fire.
 
-**Consequence, ratified explicitly:** the `1.0` and `1.5` rungs of the dynamic `min_edge_threshold`
-are **dead in 2026**, and `0.75` demands ~85% of the entire realizable factor budget pulling one
-way. This is the **A4 finding one layer down**: A4 recorded that the `prediction_type` ladder is
+**Consequence, ratified explicitly:** the `1.5` rung of the dynamic `min_edge_threshold` is
+**structurally unreachable**, the `1.0` rung is **dead on this vehicle** (reachable only in
+principle, at 99.8% of the theoretical ceiling), and `0.75` demands **90.7% of the vehicle's
+budget** pulling one way — see the table above, which is the single source for these figures. This is the **A4 finding one layer down**: A4 recorded that the `prediction_type` ladder is
 unreachable pre-floor; this records that the *floor ladder itself* is largely unreachable.
 
 ### Corollary — `confidence_score` is coarsely quantized, sharpening B1
