@@ -1,4 +1,14 @@
-# Pre-freeze `calibration-auditor` verdict — **NOT-FREEZE-READY**
+# Pre-freeze `calibration-auditor` verdict (RUN 1) — **SUPERSEDED**
+
+> **⚠ THIS VERDICT IS SUPERSEDED AND IS NOT THE FREEZE STATE.** It is retained as the audit trail of
+> what run 1 found. **All nine findings are closed** (PR #25), and the **re-run on 2026-08-04 @
+> `d112d4e` returned FREEZE-READY** — the authoritative verdict is
+> **`docs/preflight_verdict_rerun.md`**. Read this file only for the history of what was caught and
+> fixed, never as the current state of the model.
+
+---
+
+## Original run-1 verdict, unaltered below — **NOT-FREEZE-READY**
 
 **Run:** 2026-08-03, on `main` @ `560d268` (immediately after PR #23 closed the ledger with B4).
 **Scope:** the complete `docs/CALIBRATION_LOG.md` (1,325 lines) + the frozen paths `factors/` and
