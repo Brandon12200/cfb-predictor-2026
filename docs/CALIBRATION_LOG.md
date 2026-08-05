@@ -1650,18 +1650,23 @@ edge = `|total_adjustment|`.
 
 | Scenario | Ceiling | vs 0.75 | vs 1.0 | vs 1.5 |
 |---|---:|---|---|---|
-| **Theoretical** — all live additive aligned | **1.0023** | reachable, 74.8% of ceiling | reachable at **99.8%** | **unreachable** |
-| **Physically realizable** — `ByeAdvantage` XOR `ShortWeek` | **0.8795** | reachable, **85.3%** | **unreachable** | **unreachable** |
-| **On the current vehicle** — also minus input-dormant | **0.7042** | **unreachable** | unreachable | unreachable |
+| **Theoretical** — all live additive aligned | **1.0023** | reachable, **74.8%** of ceiling | reachable at **99.8%** | **unreachable** |
+| **On the current vehicle** — minus input-dormant (`ExperienceDifferential`, `Sandwich`) | **0.8269** | reachable, 90.7% | **unreachable** | **unreachable** |
 
-**Correction A (vs the review): the 1.0 branch is ARITHMETICALLY reachable**, at 99.8% of the
-absolute ceiling — not impossible by construction. It is **physically** unreachable because
-`ByeAdvantage` (a bye last week) and `ShortWeek` (`rest_days ≤ 6`) are **mutually exclusive**: a bye
-guarantees long rest. The distinction is recorded deliberately — "impossible by construction" and
-"impossible given the schedule" are different claims, and only the second is true.
+**Correction A (vs the review): the 1.0 branch is reachable in principle**, at 99.8% of the ceiling —
+not impossible by construction. **1.5 is the only structurally unreachable rung.**
 
-**Correction B: the 0.75 branch needs 74.8%** of the theoretical ceiling, or **85.3%** of the
-realizable one — not the ~87% the review reported. 85.3% is the fair figure to quote.
+> **⚠ A claim in the first draft of THIS entry was wrong and is corrected here, on the record.**
+> It asserted that `ByeAdvantage` and `ShortWeek` are *mutually exclusive* ("a bye guarantees long
+> rest") and discounted the ceiling to 0.8795 accordingly. **That reasoning proves only that one
+> TEAM cannot hold both states.** The factors compare **across** teams, so home-bye +
+> away-short-week co-fires in the same direction — verified constructible, and it **occurs on
+> 5 of the 330 tracked games**. **No exclusivity discount is applied.** The lesson is the one this
+> project keeps relearning: a plausible structural argument is not a measurement. Both are now
+> reproducible via `scripts/measure_edge_ceiling.py`.
+
+**Correction B: the 0.75 branch needs 74.8%** of the theoretical ceiling — not the ~87% the review
+reported.
 
 **Correction C: the dormancy share is 30.5%** (`0.4700 / 1.5400`), not ~25.7%. The gap is **this
 project's own doing**: `StyleMismatch` (0.15 raw) became dormant under **B-1** on 2026-08-03, after
@@ -1715,6 +1720,15 @@ to fix this properly.
 attribution — in particular, decide whether **dormant factors should be excluded from the
 normalization denominator**, which is the single change that would restore the ladder's intended
 scale without touching any ratified coefficient.
+
+### Reproducibility of this entry
+
+**`scripts/measure_edge_ceiling.py` is committed** (freeze-exempt, offline) and regenerates every
+figure above: the ceilings, the dormancy share, the bye/short-week co-occurrence count, and the
+confidence quantization + tier split. Added because this entry creates a **Phase-4 attribution
+obligation**, and an obligation resting on an unreproducible ad hoc run is exactly what the
+calibration audit exists to catch — the flawed exclusivity claim above was found precisely because
+the number was re-derived rather than trusted.
 
 ### Integrity fixes landed alongside (same PR)
 
