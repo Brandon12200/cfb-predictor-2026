@@ -202,6 +202,15 @@ DENIED_PROTECTED = [
     "echo '{}' >> data/lines/2026_week_01.json",
     "python scripts/x.py > data/ratings/2026_week_01.json",
     "rm data/projections/2026_week_01.json",
+    # --- FROZEN MODEL PATHS, added at the v2026-frozen tag (2026-08-05). The freeze checklist
+    # required extending this live matrix once factors/ and engine/ joined PROTECTED.
+    "rm factors/physical_coefficients.py",
+    "rm -rf engine",
+    "sed -i s/1.2/9.9/ factors/physical_coefficients.py",
+    "echo x > engine/prediction_engine.py",
+    "mv factors/factor_registry.py /tmp/",
+    "cp /tmp/evil.py engine/power_ratings.py",
+    "truncate -s 0 engine/variance_detector.py",
     # --- Third review round: the trailing slash was load-bearing and should not have been. ---
     # `rm -rf data/predictions` (no trailing slash) is the MORE natural spelling and matched
     # nothing. This would also have silently defeated the freeze-day extension to factors/.
@@ -439,8 +448,15 @@ def test_working_directory_is_resolved_not_ignored():
     assert run_hook("sed -i s/a/b/ f.json", cwd="data/predictions") == BLOCKED
     assert run_hook("echo x > f.json", cwd="data/predictions") == BLOCKED
 
-    # Ordinary work from a non-protected directory is untouched.
-    assert run_hook("rm -rf __pycache__", cwd="factors") == ALLOWED
+    # Ordinary work from a non-protected directory is untouched. NOTE: `factors/` was the control
+    # here until the v2026-frozen tag put it in PROTECTED — a freeze-exempt directory is now
+    # required for this case, which is the change working as intended.
+    assert run_hook("rm -rf __pycache__", cwd="analytics") == ALLOWED
+
+    # And standing inside a FROZEN directory refuses a relative write, exactly as it does inside an
+    # append-only one — the frozen paths inherited the cwd rule from the shared PROTECTED tuple.
+    assert run_hook("rm -rf __pycache__", cwd="factors") == BLOCKED
+    assert run_hook("sed -i s/a/b/ physical_coefficients.py", cwd="factors") == BLOCKED
     assert run_hook("rm -rf snapshots/tmp", cwd="data") == ALLOWED
     assert run_hook("cd docs && rm -rf build") == ALLOWED
     assert run_hook("ls predictions", cwd="data") == ALLOWED

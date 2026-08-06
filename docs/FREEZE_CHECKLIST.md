@@ -1,9 +1,16 @@
 # Freeze checklist — before tagging `v2026-frozen`
 
-> **The reverse-audit ledger is CLOSED** (A1–A6, B1–B10 — 2026-07-25, merged through PR #20).
-> Remaining pre-tag work, in order: **lint-scope fold-in → `calibration-auditor` pre-flight →
-> FREEZE-READY → owner cuts the tag.** Full carry-forward for a fresh session:
-> **`docs/HANDOFF_FREEZE.md`**.
+> # ✅ THE FREEZE IS COMPLETE — `v2026-frozen` cut 2026-08-05 at `6910675`.
+>
+> Everything below is the record of how it was reached. **`factors/` and `engine/` are now
+> immutable** (`.claude/hooks/protected_paths.py`), and the model's behaviour is pinned by the
+> slate-hash gate in `verify-phase-3`. Output-altering changes require a documented **SPEC §3
+> exception plus a new tag**.
+>
+> **Next session starts at `docs/HANDOFF_PHASE5.md`**, not here. `docs/HANDOFF_FREEZE.md` was
+> deleted at F-close per its own lifecycle header; its durable content lives in
+> `docs/CALIBRATION_LOG.md`, `docs/DECISIONS.md` and `docs/2027_NOTES.md`, and the file itself
+> remains readable at `git show v2026-frozen:docs/HANDOFF_FREEZE.md`.
 
 Durable home for everything that **must happen before the freeze tag**. **The tag is cut on
 FREEZE-READY, target ~2026-08-08** — per owner ruling 2026-08-03 (originally g1, July), superseding
@@ -81,15 +88,20 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   weight/threshold/calibration config, or `docs/CALIBRATION_LOG.md` **invalidates the FREEZE-READY
   verdict and forces a third run.** A verdict does not carry across a change to what it graded.
 
-  **Two non-blocking should-fix items carried to the F-close PR** (neither gates the tag; full
-  reasoning in the re-run verdict): **S-1** — delete `docs/HANDOFF_FREEZE.md`, which its own
-  lifecycle header already requires and which is now stale on the remaining path and two
-  defect-family tallies; **S-2** — add `engine/matchup_pricer.py:205`'s `uncertainty > 0.5` to
-  `docs/CALIBRATION_EXCLUSIONS.md` as a caveat-string threshold (verified non-tunable: it gates only
-  a human-readable string, while the rating-signal weight comes from the ratified D11 formula at
-  `:167`, independent of it).
+  **Both non-blocking should-fix items are CLOSED in the F-close PR:** **S-1** —
+  `docs/HANDOFF_FREEZE.md` deleted per its own lifecycle header; **S-2** —
+  `engine/matchup_pricer.py:205`'s `uncertainty > 0.5` added to `docs/CALIBRATION_EXCLUSIONS.md` as
+  a caveat-string threshold, which needs no third pre-flight run because the auditor verified it
+  non-tunable in the same run that recommended listing it.
 
-- [ ] **Extend the freeze-enforcement hook** to make `factors/`, `engine/`, and the
+  > **One deliberate dangling reference, left alone on purpose.** `docs/CALIBRATION_LOG.md:1461`
+  > cites `docs/HANDOFF_FREEZE.md` §(b) — but as a *historical* statement about what that file once
+  > framed, not as a live pointer, and the file is still readable at the tag. **Editing
+  > `CALIBRATION_LOG.md` would invalidate the FREEZE-READY verdict and force a third audit run**
+  > (the re-run condition), so it was left untouched. Recorded here so it reads as a decision
+  > rather than an oversight.
+
+- [x] **Extend the freeze-enforcement hook — DONE at F-close (2026-08-05).** Made `factors/`, `engine/`, and the
   weight/threshold/calibration config **immutable at tag time** (today the hooks protect the append-only
   data dirs; at the freeze they must also refuse edits to the frozen code paths unless a documented
   SPEC §3 exception + new tag is in play).
@@ -101,12 +113,14 @@ evaporating PR body. Phase 3 is complete (3a→3d); this is the Phase-3 → free
   are already what stops `git checkout <sha> -- factors/`.)* `tests/test_hook_guard_bash.py` pins the
   inheritance with a sandboxed `PROTECTED` containing `factors/`; extend its live matrix at the tag.
 
-- [ ] **Confirm all calibration is locked** — every constant ratified (Phases 2 / 3b / 3c / 3d all
+- [x] **All calibration locked — CONFIRMED by the FREEZE-READY re-run.** — every constant ratified (Phases 2 / 3b / 3c / 3d all
   RATIFIED); `make verify-phase-1/2/3` green; `make test` green.
 
 ## The tag
 
-- [ ] **Tag `v2026-frozen`** (owner-only) once the above are clean. Freezes `factors/`, `engine/`, and
+- [x] **Tag `v2026-frozen` — CUT 2026-08-05 at `6910675`** (owner-only), on the merge commit of the
+  PR that put the FREEZE-READY verdict on `main`, so the permanent record never shows a tag against
+  docs asserting NOT-FREEZE-READY. Freezes `factors/`, `engine/`, and
   weight/threshold config for the season. After this, output-altering changes require the SPEC §3 exception
   process (a dated exception entry + a new tag).
 

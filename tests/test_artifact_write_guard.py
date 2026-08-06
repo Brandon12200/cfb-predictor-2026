@@ -54,11 +54,91 @@ def test_guard_coverage_matches_the_immutability_hook():
     formerly lived in `protect_immutable.py`; it was extracted so the Bash guard could share it
     rather than keep a second copy that drifts.
     """
-    import re
+    import importlib.util
 
-    shared = (conftest._REPO_ROOT / ".claude" / "hooks" / "protected_paths.py").read_text()
-    block = shared.split("PROTECTED = ", 1)[1].split(")", 1)[0]
-    hook_dirs = {m.rstrip("/").split("/")[-1] for m in re.findall(r'"([^"]+)"', block)}
+    # IMPORT the tuple rather than text-parsing it. The previous version sliced on the first ")"
+    # after `PROTECTED = (`, which silently produced an EMPTY set once explanatory comments
+    # containing parentheses were added at the freeze — a test that would have passed vacuously.
+    spec = importlib.util.spec_from_file_location(
+        "protected_paths", conftest._REPO_ROOT / ".claude" / "hooks" / "protected_paths.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    hook_dirs = {p.rstrip("/").split("/")[-1] for p in mod.PROTECTED}
     guard_dirs = {p.name for p in conftest._PROTECTED_ARTIFACT_DIRS}
-    assert hook_dirs == guard_dirs, f"hook={hook_dirs} guard={guard_dirs}"
-    assert "reports" not in guard_dirs, "reports/ is a rendering (D23), never guarded"
+
+    # The runtime guard covers the append-only ARTIFACT dirs; the hook additionally covers the
+    # FROZEN MODEL paths added at the v2026-frozen tag. The artifact set must match exactly; the
+    # frozen additions are the only permitted difference.
+    frozen = {"factors", "engine"}
+    assert hook_dirs - frozen == guard_dirs, f"hook={hook_dirs} guard={guard_dirs}"
+    assert frozen <= hook_dirs, "factors/ and engine/ must be frozen at the tag"
+    assert "reports" not in hook_dirs, "reports/ is a rendering (D23), never guarded"
+
+# ── protect_immutable.py, invoked as the harness invokes it ───────────────────────────────────
+# Until the freeze this hook had NO subprocess-level coverage anywhere in the suite — its only
+# tests were indirect (shared-tuple + import checks). That gap hid a real hole: the frozen paths
+# inherited the artifact directories' "new files may be added" exemption, so a NEW file could be
+# written into `factors/`. These run the real hook the way the harness does.
+
+def _run_protect_immutable(rel_path: str, tool: str = "Edit") -> int:
+    import json
+    import os
+    import subprocess
+    import sys
+
+    hook = conftest._REPO_ROOT / ".claude" / "hooks" / "protect_immutable.py"
+    payload = {"tool_name": tool,
+               "tool_input": {"file_path": str(conftest._REPO_ROOT / rel_path)},
+               "cwd": str(conftest._REPO_ROOT)}
+    proc = subprocess.run([sys.executable, str(hook)], input=json.dumps(payload),
+                          capture_output=True, text=True, timeout=30,
+                          env={**os.environ, "CLAUDE_PROJECT_DIR": str(conftest._REPO_ROOT)})
+    return proc.returncode
+
+
+BLOCKED, ALLOWED = 2, 0
+
+
+def test_frozen_model_code_refuses_edits_to_existing_files():
+    """The core of the v2026-frozen tag: `factors/` and `engine/` are immutable."""
+    for rel in ("factors/physical_coefficients.py", "factors/factor_registry.py",
+                "engine/prediction_engine.py", "engine/power_ratings.py",
+                "engine/variance_detector.py"):
+        assert _run_protect_immutable(rel) == BLOCKED, rel
+
+
+def test_frozen_model_code_refuses_NEW_files_too():
+    """Regression pin on a real hole found at F-close review.
+
+    The frozen paths originally inherited the artifact rule "only modification is refused; new
+    files may be added" — correct for `data/predictions/`, where the pipeline writes a new file
+    every week, and WRONG for frozen code. `factor_registry._load_all_factors` discovers factors by
+    SCANNING THE DIRECTORY, so a new file dropped into `factors/` would be auto-registered, shrink
+    nothing but change the normalization denominator, and renormalize every other factor's weight —
+    a different model under the same tag, added rather than edited.
+    """
+    for rel in ("factors/brand_new_factor.py", "engine/brand_new_module.py",
+                "factors/nested/deeper.py"):
+        assert _run_protect_immutable(rel, tool="Write") == BLOCKED, rel
+
+
+def test_append_only_artifacts_still_permit_NEW_files():
+    """The contrast that makes the above a real distinction, not a blanket rule.
+
+    The weekly pipeline MUST be able to write a new prediction file; only overwriting an existing
+    one is refused. Breaking this would break the season.
+    """
+    assert _run_protect_immutable("data/predictions/2026_week_99.json", tool="Write") == ALLOWED
+    # ...while an existing artifact stays immutable.
+    existing = sorted((conftest._REPO_ROOT / "data" / "predictions").glob("*.json"))
+    if existing:
+        rel = existing[0].relative_to(conftest._REPO_ROOT)
+        assert _run_protect_immutable(str(rel)) == BLOCKED
+
+
+def test_freeze_exempt_paths_remain_writable():
+    """The freeze must not seize the paths Phase 5 has to work in."""
+    for rel in ("analytics/predictions.py", "data/schedule_intel.py", "scripts/grade.py",
+                "cli/cfb.py", "docs/SCHEMA.md"):
+        assert _run_protect_immutable(rel) == ALLOWED, rel

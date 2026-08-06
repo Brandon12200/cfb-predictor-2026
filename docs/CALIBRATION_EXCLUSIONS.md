@@ -47,6 +47,14 @@ entry**, not because of what the numbers are "about."
   display/precision, never a model magnitude. (The value `x` being rounded is NOT excluded — audit it on its
   own line.)
 - **Epsilons / float tolerances** — e.g. `1e-9` in push / equality comparisons.
+- **Caveat-string thresholds** — a literal that gates only a human-readable warning appended to a
+  `caveats` list, with no path to any spread/edge/confidence value. Named instance:
+  `engine/matchup_pricer.py:205`'s `uncertainty > 0.5`, which appends a "high rating uncertainty"
+  string; the rating-signal weight itself comes from the ratified **D11** formula at `:167`,
+  independent of this literal. *(Added 2026-08-05 as pre-flight finding S-2. **This needs no third
+  pre-flight run:** the auditor verified the literal non-tunable in the very run that recommended
+  listing it, so recording that conclusion is a scope no-op against its own finding — it removes an
+  item from the reverse check rather than changing what the check would conclude.)*
 - **Indices / loop & slice bounds / enum ordering** — e.g. `weights[:len(differentials)]`, list indices.
 
 ## Out of the reverse-check scope entirely

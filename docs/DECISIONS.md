@@ -285,3 +285,37 @@ Removing the +1 collapses 57.0% onto the independent Vegas number — **the enti
 **Decision (owner):** **The trigger is the `calibration-auditor` FREEZE-READY verdict, not a date.** The date is a target: **~2026-08-08**. All six documents updated to *"tag on FREEZE-READY, target ~Aug 8, per owner ruling 2026-08-03 (originally g1, July)"*. **2026-08-29 remains the absolute outer bound** (the tag must precede the Week-1 prediction run, SPEC §3 / §16.2 / D8).
 **Why SPEC.md was edited despite §16 being owner-only:** the ~Aug 24 date was a **planning date, not a model constant** — it constrains when work happens, not what the model computes, so it is not calibration and not a §16 resolved decision. Recorded here explicitly because editing SPEC is otherwise an owner-only act, and a future reader should see a ruling rather than drift.
 **Downstream schedule, also binding (owner, same ruling):** **pipeline PR by Aug 14; first rehearsal cycle by Aug 17.** Recorded on `docs/FREEZE_CHECKLIST.md` under the post-tag regimen. The new schedule is *tighter* than the one it replaces and therefore adds runway before Week 1 — no work item is at risk from the change.
+
+---
+
+## D27 — Home-lean asymmetry: Phase-4 attribution must split CLV by lean side and beat a naive home-lean baseline — **RATIFIED (owner, 2026-08-05)**
+**Date:** 2026-08-05
+**Recorded here, NOT in `docs/CALIBRATION_LOG.md`, deliberately:** the FREEZE-READY verdict's re-run condition makes any change to `CALIBRATION_LOG.md` invalidate it and force another audit run. This is an **attribution obligation**, not a calibration change — no constant moves — so `DECISIONS.md` is the correct home and the verdict stands untouched.
+**Context:** measured at the tagged state (`v2026-frozen` = `6910675`), over the 330 both-teams-tracked games, the model's preseason lean is overwhelmingly one-sided:
+
+| | count |
+|---|---:|
+| Games with a side (`edge_direction` home or away) | **230 of 330** |
+| …leaning **home** | **195** |
+| …leaning **away** | **35** |
+| Neutral / no lean (CLV `null` per D22 f3) | 100 |
+
+**That is a 5.57 : 1 home skew, and it is STRUCTURAL, not a signal.** The physical factors that dominate the live budget are asymmetric by construction: `TravelBurden` and `ConsecutiveRoad` can only ever penalise the *visitor*, and `Altitude` only advantages the *host*. A model whose live signal is mostly "the away team travelled" will lean home almost every time.
+**Decision (owner):** **Phase-4 attribution MUST report CLV and ATS% split by lean side, and against a naive always-lean-home baseline.** A single blended season headline is **not acceptable** as the primary result.
+**Rationale — this is the D17 lesson, pre-empted.** D17's "57.0% ATS / +8.82% ROI" headline was a measurement artifact: the harness graded "home covered the model's own number", so it measured a systematic home lean and reported it as skill. Honest regrade: 46.6% / −11.0%. **With a 5.57:1 home skew, an unsplit 2026 headline is exposed to the identical failure** — it would be dominated by how home teams happened to do against the spread, and would be uninterpretable as evidence about the model. Splitting by side, and differencing against the naive baseline, is what makes the number mean something.
+**Quantified mitigation, recorded:** **230 of 330 games carry a gradable lean.** NO_BET games persist their hypothetical lean and are graded (D22 / 3c.5), so the season still yields ~70% coverage for the `reasoned`→`measured` conversion even though every preseason game is NO_BET. The 100 neutral games are genuinely unscoreable for CLV (D22 f3: no side ⇒ no perspective ⇒ `null`, never `0.0`) and form their own selectivity bucket.
+**Consequences:** `analytics/attribution.py` gains lean-side stratification and the naive-baseline comparison before the first season report; the away-lean cell will be small (~35 preseason, more in-season as situational factors wake) and **must carry its Wilson interval** — the 3c evidence-discipline rule, since a 35-game cell is far too thin for a point estimate. Both figures are reproducible offline via `scripts/slate_fingerprint.py`'s vehicle.
+
+---
+
+## D28 — `config.py` is deliberately NOT frozen at the tag — **RATIFIED (owner, 2026-08-05)**
+**Date:** 2026-08-05
+**Context:** `docs/FREEZE_CHECKLIST.md` required that "`factors/`, `engine/`, **and the weight/threshold/calibration config**" become immutable at the tag. `factors/` and `engine/` are unambiguous. "The calibration config" needed an interpretation, because the phrase could be read to include `config.py`.
+**Decision (owner):** **`PROTECTED` gains `factors/` and `engine/` only.** `config.py` and `season.json` stay writable.
+**Rationale, verified rather than assumed:**
+1. **Every ratified calibration constant already lives inside the two frozen directories** — the 3b.1 physical coefficients, `prediction_engine`'s NO_BET floors and confidence tiers (3c.5/3c.6), the `factor_registry` hierarchy overrides (B2), `power_ratings`' `EloConfig` (D9/D11/D12), `variance_detector`'s CV cutoffs (B4). Freezing the two directories freezes the calibration completely.
+2. **`config.py`'s residual threshold-shaped literals are DEAD.** `min_confidence_threshold`, `max_confidence_threshold` and `edge_thresholds` have **zero consumers** across `factors/`, `engine/`, `analytics/` and `cli/` — verified by grep; the **A5** retirement removed the live category weights and left these orphaned. Freezing them would lock nothing calibrational. *(They are a 2027 cleanup item — `docs/2027_NOTES.md` §6.)*
+3. **`config.py` holds live operational settings Phase 5 must change** — the Odds monthly budget, rate limits, cache TTL, logging. Freezing the file would block legitimate pipeline work for no calibration benefit.
+4. **`season.json` is operational too** (calendar + CLI defaults, D24), and Phase 5's §10.6 fields are due to be ADDED to it.
+**Recorded because this is an interpretation of a binding principle** (CLAUDE.md #3), not a mechanical step — the kind of reading that should be pinned in the decision log rather than left as a comment in a hook. The reasoning is duplicated in `.claude/hooks/protected_paths.py` so the next reader finds it at the point of use.
+**Countervailing protection:** the freeze does not rest on path rules alone. `verify-phase-3`'s **slate-hash gate** asserts the model's behavioural fingerprint over all 330 tracked games, so a change reaching output through *any* unfrozen path — `config.py` included — fails loudly.
