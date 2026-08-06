@@ -38,7 +38,7 @@ PROTECTED = (
     "engine/",
 )
 
-# `config.py` is deliberately NOT frozen. Its residual threshold-shaped literals
+# `config.py` is deliberately NOT frozen (ratified: DECISIONS.md **D28**). Its residual threshold-shaped literals
 # (`min_confidence_threshold`, `max_confidence_threshold`, `edge_thresholds`) have **zero
 # consumers** — verified by grep across `factors/`, `engine/`, `analytics/` and `cli/`; the A5
 # retirement removed the live category weights and left these orphaned. Freezing the file would

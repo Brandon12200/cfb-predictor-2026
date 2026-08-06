@@ -66,15 +66,23 @@ provenance) and **branch-protection interaction** with bot pushes.
 All are outside `factors/`/`engine/`, so all are fixable now. **None was fixed during the freeze
 session** — the pre-tag window stayed on what gated the tag.
 
-1. **⚠ The `cfb` console script is broken for six subcommands.** `cfb status`, `cfb slate`,
-   `cfb grade`, `cfb report`, `cfb data snapshot`, `cfb data inspect` all fail with
-   `ModuleNotFoundError: No module named 'scripts'` when run via the **installed console script**.
-   Cause: `scripts/` has no `__init__.py` and is not in the packaged set (`pyproject.toml` ships
-   `py-modules = ["main", "config"]` plus found packages). **`python -m cli.cfb status` from the repo
-   root works** (cwd lands on `sys.path`), which is why this survived Phase 4.5's acceptance.
-   **The pipeline is unaffected — it calls `scripts/*.py` directly by design** — but the documented
-   human interface is partly broken. Fix by packaging `scripts/` properly or by inlining the six
-   imports.
+1. **⚠ The `cfb` console script is broken for MOST of its subcommands — TWO unpackaged
+   directories, not one.** `pyproject.toml`'s `[tool.setuptools.packages.find] include` lists
+   `["cli*", "engine*", "factors*", "data*", "utils*"]` — **neither `scripts*` nor `analytics*`**.
+   Verified at F-close by running the installed console script:
+
+   | Invocation | Fails with |
+   |---|---|
+   | `cfb status`, `cfb grade`, `cfb report`, `cfb data snapshot`, `cfb data inspect` | `ModuleNotFoundError: No module named 'scripts'` |
+   | `cfb slate <wk>`, `cfb predict week <wk>`, `cfb predict game`, `cfb predict rerun` | `ModuleNotFoundError: No module named 'analytics'` (via `cli/cfb.py:50` `_load_slate`) |
+
+   That is **~9 invocations, including the flagship `cfb predict week`**. **`python -m cli.cfb …`
+   from the repo root works** (cwd lands on `sys.path`), which is why this survived Phase 4.5's
+   acceptance and why it is invisible in development.
+
+   **The pipeline is unaffected — it calls `scripts/*.py` directly by design (§b.2)** — but the
+   documented human interface is largely broken on a clean install. **Fixing only `scripts/` would
+   leave `slate` and all three `predict` subcommands broken**; the fix must cover both directories.
 2. **`README.md:80,118` document an invocation that errors.**
    `python main.py hypothetical --home "Ohio State" --away "Texas"` →
    `cfb: error: unrecognized arguments: --home --away`. It mixes the new subcommand form with the
@@ -172,7 +180,7 @@ rehearsal. Run `pipeline-adversary` during development and **before each rehears
 ## (j) Reading list
 
 `docs/PHASE5_NOTES.md` (cadence, binding) → SPEC §10 → `docs/2027_NOTES.md` (the drawer: dormant set,
-dead constants, family tallies, the ceiling/denominator obligation) → `docs/DECISIONS.md` D22–D27 →
+dead constants, family tallies, the ceiling/denominator obligation) → `docs/DECISIONS.md` D22–D28 →
 `docs/preflight_verdict_rerun.md` → `docs/SCHEMA.md` §3a.
 
 *Delete this file when Phase 5 closes.*
