@@ -155,6 +155,32 @@ check("min_edge ladder reachability holds (1.5 unreachable; 1.0 vehicle-unreacha
       _ladder_ok,
       f"0.75 needs {100 * 0.75 / _c['vehicle']:.1f}% of the vehicle ceiling")
 
+# --- THE FREEZE, ASSERTED BEHAVIOURALLY (v2026-frozen, 2026-08-05) ----------------------------
+# Path-based protection freezes `factors/` and `engine/`, but a prediction is a function of the
+# frozen code AND the freeze-EXEMPT `data/` seam — and that seam has moved model output TWICE after
+# ratification (A6's metres/feet conversion; the venue-timezone fallback). No hook can see that.
+# This gate hashes what the model actually PRODUCES over the 330-game tracked slate, so any change
+# anywhere that moves a prediction fails here and forces a documented SPEC §3 exception.
+#
+# Generated at the tagged commit (`v2026-frozen` = 6910675). Script computes, gate asserts.
+# ⚠ If this fails, the correct response is almost never to update the constant. Either the change
+# was unintended — revert it — or it was intended, in which case it needs a SPEC §3 exception entry
+# and a NEW tag, because the model that ran the season is no longer the model that was frozen.
+_snap_for_fp = ROOT / "data" / "snapshots" / "2026_week_01" / "snapshot.json"
+if _snap_for_fp.exists():
+    from scripts.slate_fingerprint import fingerprint as _fingerprint  # noqa: E402
+
+    _FROZEN_SLATE_SHA256 = "eab7ffdb90df6fb549bbed0f9ebc291e00f710f592bc4e3699e41a3f52a20e2d"
+    _FROZEN_SLATE_GAMES = 330
+    _fp = _fingerprint()
+    check("frozen-model behavioural fingerprint over the 330-game tracked slate (v2026-frozen)",
+          _fp["sha256"] == _FROZEN_SLATE_SHA256 and _fp["n_games"] == _FROZEN_SLATE_GAMES,
+          f"{_fp['n_games']} games, sha256 {_fp['sha256'][:16]}… "
+          f"(frozen {_FROZEN_SLATE_SHA256[:16]}…) — a mismatch means model output moved; "
+          "that needs a SPEC §3 exception and a new tag, not a constant update")
+else:
+    check("frozen-model behavioural fingerprint", False, "no committed wk1 snapshot")
+
 # Each physical sub-signal appears separately in factor_breakdown on a firing context (SPEC §7.2).
 _ctx = {"home_intel": {"bye": True, "altitude": 7000.0, "time_zones_crossed": 0},
         "away_intel": {"short_week": True, "time_zones_crossed": 3, "consecutive_road_games": 3,

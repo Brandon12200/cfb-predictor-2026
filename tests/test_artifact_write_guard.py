@@ -54,11 +54,23 @@ def test_guard_coverage_matches_the_immutability_hook():
     formerly lived in `protect_immutable.py`; it was extracted so the Bash guard could share it
     rather than keep a second copy that drifts.
     """
-    import re
+    import importlib.util
 
-    shared = (conftest._REPO_ROOT / ".claude" / "hooks" / "protected_paths.py").read_text()
-    block = shared.split("PROTECTED = ", 1)[1].split(")", 1)[0]
-    hook_dirs = {m.rstrip("/").split("/")[-1] for m in re.findall(r'"([^"]+)"', block)}
+    # IMPORT the tuple rather than text-parsing it. The previous version sliced on the first ")"
+    # after `PROTECTED = (`, which silently produced an EMPTY set once explanatory comments
+    # containing parentheses were added at the freeze — a test that would have passed vacuously.
+    spec = importlib.util.spec_from_file_location(
+        "protected_paths", conftest._REPO_ROOT / ".claude" / "hooks" / "protected_paths.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    hook_dirs = {p.rstrip("/").split("/")[-1] for p in mod.PROTECTED}
     guard_dirs = {p.name for p in conftest._PROTECTED_ARTIFACT_DIRS}
-    assert hook_dirs == guard_dirs, f"hook={hook_dirs} guard={guard_dirs}"
-    assert "reports" not in guard_dirs, "reports/ is a rendering (D23), never guarded"
+
+    # The runtime guard covers the append-only ARTIFACT dirs; the hook additionally covers the
+    # FROZEN MODEL paths added at the v2026-frozen tag. The artifact set must match exactly; the
+    # frozen additions are the only permitted difference.
+    frozen = {"factors", "engine"}
+    assert hook_dirs - frozen == guard_dirs, f"hook={hook_dirs} guard={guard_dirs}"
+    assert frozen <= hook_dirs, "factors/ and engine/ must be frozen at the tag"
+    assert "reports" not in hook_dirs, "reports/ is a rendering (D23), never guarded"
