@@ -56,13 +56,23 @@ def classify_drop(home_raw: str | None, away_raw: str | None,
         return "unparseable_week"
     unresolved = [(raw, canon) for raw, canon in ((home_raw, home), (away_raw, away))
                   if canon is None]
+    resolved = [c for c in (home, away) if c is not None]
     try:
-        from data.team_registry import get_fcs_names
-        fcs = get_fcs_names()
+        from data.team_registry import get_fbs_canonical_names, get_fcs_names
+        fcs, fbs = get_fcs_names(), get_fbs_canonical_names()
     except Exception:  # noqa: BLE001 — classification must never break a snapshot build
-        fcs = set()
+        fcs, fbs = set(), set()
+
     if all((raw or "").upper() in fcs for raw, _ in unresolved):
         return "fcs_opponent_out_of_scope"
+    # Neither side is a program we know at all — two lower-division teams playing each other.
+    # Correctly out of scope and NOT a defect. Kept distinct because CFBD posts the whole
+    # season: ~114 of these a year would otherwise drown the one class that matters.
+    if not any(c in fbs for c in resolved):
+        return "non_fbs_matchup"
+    # An FBS team's opponent could not be identified — so a game involving a team we track is
+    # being lost. THIS is the defect class: it means an alias is missing, and it is the reason
+    # the reconciler lists these game-by-game with their raw source names.
     return "unresolved_team_name"
 
 

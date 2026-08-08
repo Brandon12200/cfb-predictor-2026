@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 import cli.app
 from cli.app import run_project
 
@@ -84,16 +86,49 @@ def test_project_team_tolerates_older_schema(tmp_path, monkeypatch, capsys):
     assert "GEORGIA" in out and "8.00" in out  # renders from the sparse record
 
 
-def test_project_surfaces_unscheduled_fbs_team(capsys):
-    # Cal has no games in the committed snapshot → surfaced (not silently dropped).
+def test_cal_now_has_a_schedule(capsys):
+    """**This test previously pinned a defect.**
+
+    It asserted Cal shows "No schedule data" — true at the time, but only because the normalizer
+    could not resolve CFBD's "California" and dropped all ten of Cal's games. The test was
+    therefore enforcing the broken contract: had someone fixed the normalizer, this would have
+    failed and looked like the fix was wrong. It now asserts the corrected state (SPEC §3
+    exception 1).
+    """
     assert run_project(["--team", "Cal", "--quiet"]) == 0
-    assert "No schedule data" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "No schedule data" not in out
+    assert "CAL" in out and "remaining 11" in out
 
 
-def test_project_json_includes_all_fbs_and_coverage(capsys):
+def test_project_json_includes_every_fbs_team(capsys):
     assert run_project(["--format", "json", "--quiet"]) == 0
     data = json.loads(capsys.readouterr().out)
     teams = {t["team"] for t in data["teams"]}
-    assert "CAL" in teams  # unscheduled FBS team is present, not dropped
+    assert "CAL" in teams
     cal = next(t for t in data["teams"] if t["team"] == "CAL")
-    assert cal["projected_wins"] is None
+    assert cal["projected_wins"] is not None, "Cal's games are restored; it must project"
+    # The four CANONICAL_OVERRIDES teams that used to fall out of the schedule entirely.
+    for team in ("CAL", "APPALACHIAN STATE", "LOUISIANA MONROE", "UMASS"):
+        assert team in teams
+
+
+def test_every_fbs_team_appears_and_the_artifact_records_coverage(capsys):
+    """A team with no games must be surfaced, never silently dropped (D14). The CLI lists every
+    FBS team; the coverage tally lives in the projections artifact, which is where D14 put it."""
+    import json as _json
+    from pathlib import Path
+
+    from data.team_registry import get_fbs_canonical_names
+
+    assert run_project(["--format", "json", "--quiet"]) == 0
+    data = json.loads(capsys.readouterr().out)
+    assert {t["team"] for t in data["teams"]} == set(get_fbs_canonical_names())
+
+    artifact = (Path(__file__).resolve().parent.parent
+                / "data" / "projections" / "2026_week_01.json")
+    if not artifact.exists():
+        pytest.skip("no committed projections")
+    cov = _json.loads(artifact.read_text())["meta"]["coverage"]
+    assert cov["fbs_total"] == len(get_fbs_canonical_names())
+    assert cov["unscheduled"] == [], f"unscheduled FBS teams: {cov['unscheduled']}"
