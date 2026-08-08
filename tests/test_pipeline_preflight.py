@@ -137,13 +137,13 @@ def test_an_early_run_records_its_slack():
 def test_timing_never_contributes_to_the_exit_code():
     pf = Preflight()
     check_timing(pf, CAL, datetime(2026, 9, 12, 23, 59, tzinfo=ET))
-    assert emit(pf, "capture", 2) == 0
+    assert emit(pf, "capture", 2, quiet=True) == 0
 
 
 def test_a_freeze_abort_does_set_the_exit_code():
     pf = Preflight()
     check_freeze(pf, "v-does-not-exist")
-    assert emit(pf, "capture", 2) == 1
+    assert emit(pf, "capture", 2, quiet=True) == 1
 
 
 # --- snapshot quality --------------------------------------------------------------------------
