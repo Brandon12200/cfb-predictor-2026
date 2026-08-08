@@ -27,6 +27,10 @@ PROTECTED = (
     "data/ratings/",
     "data/projections/",
     "data/graded/",
+    # The Odds spend ledger (Phase 5, SPEC §10.5): one appended entry per credit spent, month
+    # partitioned. Append-only for the same reason as the rest of the tier — a rewritten balance
+    # is a falsified measurement, and this one is what the burn-rate alarm reads.
+    "data/quota/",
     # --- FROZEN MODEL CODE — added at the `v2026-frozen` tag, 2026-08-05 -----------------------
     # The tag freezes the model for the season (SPEC §3, CLAUDE.md binding principle 3). Every
     # ratified calibration constant lives inside these two directories: the 3b.1 physical

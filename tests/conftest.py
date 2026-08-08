@@ -23,7 +23,8 @@ import pytest
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _PROTECTED_ARTIFACT_DIRS = tuple(
     _REPO_ROOT / "data" / name
-    for name in ("predictions", "results", "archive", "lines", "ratings", "projections", "graded")
+    for name in ("predictions", "results", "archive", "lines", "ratings", "projections", "graded",
+                 "quota")
 )
 
 # Files that assert on real timing/HTTP behavior and must keep real time.sleep

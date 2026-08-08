@@ -80,16 +80,6 @@ jobs:
           suffix: ${{ steps.setup.outputs.commit_suffix }}
           push: ${{ inputs.dry_run != true }}
 
-      # The Tuesday snapshot build spends an Odds credit too (SnapshotBuilder makes one
-      # get_ncaaf_spreads call). Without restoring the persisted balance here, that spend is
-      # invisible to the capture job's pre-spend guard, whose picture then runs stale-high by
-      # exactly this job's weekly spend.
-      - uses: actions/cache@v4
-        with:
-          path: data/odds_quota.json
-          key: odds-quota-${{ github.run_id }}
-          restore-keys: odds-quota-
-
       - name: Build the snapshot
         env:
           CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
@@ -109,7 +99,7 @@ jobs:
       # and leaving it unstaged means the next capture's commit silently carries this run's write.
       - uses: ./.github/actions/cfb-commit
         with:
-          paths: data/snapshots data/lines
+          paths: data/snapshots data/lines data/quota
           message: "snapshot: ${{ steps.setup.outputs.year }} week ${{ steps.setup.outputs.week_padded }}"
           suffix: ${{ steps.setup.outputs.commit_suffix }}
           push: ${{ inputs.dry_run != true }}

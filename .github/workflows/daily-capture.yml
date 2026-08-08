@@ -60,17 +60,10 @@ jobs:
           year: ${{ inputs.year || '2026' }}
           skip-secrets: ${{ inputs.dry_run == true }}
 
-      # Cross-run memory for the pre-spend guard. data/odds_quota.json is gitignored, so a fresh
-      # checkout otherwise falls back to the last snapshot manifest's build-time balance — bounded
-      # to one week, but permanently blind in between. Committing the file was rejected: it belongs
-      # to no artifact tier and two workflows writing it concurrently is a merge conflict on a file
-      # whose whole purpose is being trivially correct.
-      - uses: actions/cache@v4
-        with:
-          path: data/odds_quota.json
-          key: odds-quota-${{ github.run_id }}
-          restore-keys: odds-quota-
-
+      # Cross-run memory for the pre-spend guard is now the committed append-only ledger
+      # (data/quota/, SPEC §10.5) — it survives a fresh checkout by being in the repo, which the
+      # actions/cache workaround could not guarantee: an evicted cache left the guard blind and
+      # falling back to a week-stale snapshot figure.
       - name: Capture line observation
         id: capture
         env:
@@ -100,7 +93,7 @@ jobs:
       - uses: ./.github/actions/cfb-commit
         if: steps.capture.outputs.rc == '0'
         with:
-          paths: data/lines
+          paths: data/lines data/quota
           message: "lines: ${{ steps.setup.outputs.year }} week ${{ steps.setup.outputs.week_padded }} observation ${{ steps.setup.outputs.et_now }}"
           suffix: ${{ steps.setup.outputs.commit_suffix }}
           push: ${{ inputs.dry_run != true }}

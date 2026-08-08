@@ -262,7 +262,8 @@ is closed at the source instead of held back at the commit.)*
 * **Backfill a week:** dispatch with an explicit `week`. Explicit always wins.
 * **A claim already exists:** the predict step skips. That is correct and not an error — claims are
   byte-immutable forever.
-* **Superseded:** `scripts/setup_cron.sh` is dead (it hard-exits on a missing `automate_weekly.sh`
-  and assumes a `venv/` Phase 0 deleted). Kept only until it is deleted in the follow-up PR.
+* **Superseded and deleted:** `scripts/setup_cron.sh` (SPEC §10's "audit and supersede"). It was
+  already dead — it hard-exited on a missing `automate_weekly.sh` and assumed a `venv/` Phase 0
+  removed — and these workflows replace it.
 * **Local checks:** `make verify-phase-5`; `python scripts/pipeline_week.py --format human`;
   `python scripts/pipeline_preflight.py --role capture --skip-secrets`.
