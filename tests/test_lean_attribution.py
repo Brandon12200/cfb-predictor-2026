@@ -19,7 +19,8 @@ from analytics.attribution import by_lean_side
 from analytics.reports import _lean_block, report_context
 
 
-def rec(gid: str, *, side, vegas, home_score, away_score, closing=None, graded=True):
+def rec(gid: str, *, side, vegas, home_score, away_score, closing=None, graded=True,
+        is_hypothetical=False):
     """A joined record (predictions ⋈ graded) with only the fields the split reads."""
     from analytics.calibration_evidence import ats_outcome
     from utils.prediction_schema import clv as clv_from_close
@@ -30,6 +31,9 @@ def rec(gid: str, *, side, vegas, home_score, away_score, closing=None, graded=T
         "closing_spread": closing, "graded": graded,
         "home_team": "H", "away_team": "A", "week": 1,
     }
+    # `join` only sets is_hypothetical when a graded record exists, so an ungraded record carries
+    # None — mirrored here so the fixture cannot be more forgiving than the real join.
+    base["is_hypothetical"] = is_hypothetical if graded else None
     base["ats_result"] = ats_outcome(base, base) if graded else None
     base["clv"] = clv_from_close(vegas, closing, side)
     return base
@@ -152,6 +156,78 @@ def test_baseline_is_computed_over_the_matched_game_set():
     lean = by_lean_side(games)
     assert lean["model_overall"]["n_graded"] == 6
     assert lean["baseline_always_home"]["n_graded"] == 6
+
+
+# --- placed vs hypothetical: the labelling that keeps this from reading as a bet record ----------
+#
+# Preseason EVERY game is NO_BET, so the block that now leads every report can be 100%
+# "what would have happened". An unlabelled measurement read as a track record is D17 in
+# miniature, which is why each branch is pinned rather than eyeballed once.
+
+def _slate(n_hyp: int, n_placed: int, graded: bool = True):
+    games = [rec(f"hyp{i}", side="home", vegas=-3.0, home_score=28, away_score=10,
+                 graded=graded, is_hypothetical=True) for i in range(n_hyp)]
+    games += [rec(f"plc{i}", side="home", vegas=-3.0, home_score=28, away_score=10,
+                  graded=graded, is_hypothetical=False) for i in range(n_placed)]
+    return games
+
+
+def test_an_all_no_bet_slate_is_labelled_hypothetical():
+    lean = by_lean_side(_slate(n_hyp=6, n_placed=0))
+    assert lean["meta"]["all_hypothetical"] is True
+    assert (lean["meta"]["n_hypothetical"], lean["meta"]["n_placed"]) == (6, 0)
+    assert lean["sides"]["home"]["n_hypothetical"] == 6
+
+    text = "\n".join(_lean_block(report_context(_slate(n_hyp=6, n_placed=0))))
+    assert "hypothetical leans, not placed bets" in text
+    assert "No wager was recommended" in text
+    assert "Mixed:" not in text
+
+
+def test_a_mixed_slate_says_which_is_which():
+    lean = by_lean_side(_slate(n_hyp=3, n_placed=2))
+    assert lean["meta"]["all_hypothetical"] is False
+    assert (lean["meta"]["n_hypothetical"], lean["meta"]["n_placed"]) == (3, 2)
+
+    text = "\n".join(_lean_block(report_context(_slate(n_hyp=3, n_placed=2))))
+    assert "Mixed: 2 placed bet(s) and 3 hypothetical" in text
+    assert "hypothetical leans, not placed bets" not in text
+
+
+def test_an_all_placed_slate_carries_no_caveat():
+    lean = by_lean_side(_slate(n_hyp=0, n_placed=5))
+    assert lean["meta"]["all_hypothetical"] is False
+    assert (lean["meta"]["n_hypothetical"], lean["meta"]["n_placed"]) == (0, 5)
+
+    text = "\n".join(_lean_block(report_context(_slate(n_hyp=0, n_placed=5))))
+    assert "hypothetical" not in text.lower().split("| lean")[0]
+
+
+def test_an_ungraded_slate_claims_neither():
+    """`all_hypothetical` is computed over the GRADED set, so an empty one must not assert it."""
+    lean = by_lean_side(_slate(n_hyp=4, n_placed=0, graded=False))
+    assert lean["meta"]["all_hypothetical"] is False
+    assert lean["meta"]["n_graded"] == 0
+
+    text = "\n".join(_lean_block(report_context(_slate(n_hyp=4, n_placed=0, graded=False))))
+    assert "hypothetical leans, not placed bets" not in text
+    assert "Mixed:" not in text
+    assert "No graded bets yet" in text
+
+
+def test_the_committed_preseason_golden_carries_the_label():
+    """The real artifact the first live reports will look like — every game NO_BET."""
+    import json
+    from pathlib import Path
+
+    from analytics.reports import render_week
+    root = Path(__file__).resolve().parent.parent
+    golden = root / "docs" / "examples" / "prediction_schema_v2_2026_week_01.json"
+    graded = root / "docs" / "examples" / "graded_record_2026_week_01.json"
+    if not (golden.exists() and graded.exists()):
+        pytest.skip("goldens not present")
+    text = render_week(json.loads(golden.read_text()), json.loads(graded.read_text()))
+    assert "hypothetical leans, not placed bets" in text
 
 
 # --- honest-empty -------------------------------------------------------------------------------
