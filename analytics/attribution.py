@@ -29,8 +29,13 @@ def _rate_and_clv(records: list[dict], *, clv_key: str = "clv") -> dict[str, Any
     lo, hi = wilson_interval(wins, n)
     clvs = [r[clv_key] for r in records if isinstance(r.get(clv_key), (int, float))]
     beat = sum(1 for c in clvs if c > 0)
+    # Placed vs hypothetical, on the same convention as kpis/calibration/selectivity. Preseason
+    # every game is NO_BET, so a lean-split cell can be 100% "what would have happened" — and an
+    # unlabeled measurement being read as a track record is the D17 failure in miniature.
+    hypothetical = sum(1 for r in records if r.get("is_hypothetical"))
     return {
         "n_games": len(records), "n_graded": n, "wins": wins, "losses": losses, "pushes": pushes,
+        "n_placed": len(records) - hypothetical, "n_hypothetical": hypothetical,
         "ats_win_pct": round(wins / n, 4) if n else None,
         "wilson_95": [round(lo, 4), round(hi, 4)] if n else None,
         "avg_clv": round(statistics.mean(clvs), 3) if clvs else None,
@@ -83,12 +88,17 @@ def by_lean_side(joined: list[dict]) -> dict[str, Any]:
              else round(model_overall["ats_win_pct"] - baseline["ats_win_pct"], 4))
 
     n_home, n_away = sides["home"]["n_games"], sides["away"]["n_games"]
+    n_hypothetical = sum(1 for r in matched if r.get("is_hypothetical"))
     return {
         "meta": {
             "n_games": len(joined),
             "n_with_side": len(with_side),
             "n_neutral": len(neutral),
             "home_away_ratio": round(n_home / n_away, 2) if n_away else None,
+            "n_graded": len(matched),
+            "n_placed": len(matched) - n_hypothetical,
+            "n_hypothetical": n_hypothetical,
+            "all_hypothetical": bool(matched) and n_hypothetical == len(matched),
             "note": ("Leans are structurally home-skewed: TravelBurden/ConsecutiveRoad only "
                      "penalise the visitor and Altitude only advantages the host (D27). Read the "
                      "away cell's Wilson interval before drawing anything from it."),

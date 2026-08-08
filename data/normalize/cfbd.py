@@ -39,6 +39,11 @@ def _float(value: Any) -> float | None:
         return None
 
 
+# Sentinel for sources that carry no week at all (Odds events). Distinct from `None`, which means
+# "a week was expected here and could not be parsed" — a different, real defect.
+WEEK_NOT_APPLICABLE = -1
+
+
 def classify_drop(home_raw: str | None, away_raw: str | None,
                   home: str | None, away: str | None, week: int | None) -> str:
     """Why a CFBD row did not become a tracked game (SPEC §5.5.3 — excluded WITH a reason).

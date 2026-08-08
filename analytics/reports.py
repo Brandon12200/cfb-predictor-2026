@@ -69,6 +69,18 @@ def _lean_block(ctx: dict) -> list[str]:
         "### Games of interest, by lean side (D27 — read this before the blended numbers)", "",
         f"_{m['n_with_side']} of {m['n_games']} games carry a gradable lean "
         f"({sides['home']['n_games']} home / {sides['away']['n_games']} away, {ratio})._", "",
+    ]
+    # Say plainly what these rows ARE. If every graded lean is hypothetical, this is not a bet
+    # record and must not be readable as one.
+    if m.get("all_hypothetical"):
+        lines += [f"_**These are hypothetical leans, not placed bets.** All {m['n_graded']} graded "
+                  f"games were NO_BET — this is what the model would have done had it bet, which "
+                  f"is how selectivity gets measured (3c.5). No wager was recommended._", ""]
+    elif m.get("n_hypothetical"):
+        lines += [f"_Mixed: {m['n_placed']} placed bet(s) and {m['n_hypothetical']} hypothetical "
+                  f"NO_BET lean(s), graded together here. The blended block below covers the "
+                  f"placed bets alone; `Selectivity` separates the two._", ""]
+    lines += [
         "| lean | games | W-L-P | ATS win% | Wilson 95% | avg CLV |",
         "|---|---|---|---|---|---|",
         row("home", sides["home"]),

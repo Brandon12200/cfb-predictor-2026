@@ -52,10 +52,12 @@ def normalize_lines(raw_events: list[dict], fetched_at: str,
         away = _norm(away_raw)
         if home is None or away is None:
             if excluded is not None:
-                from data.normalize.cfbd import classify_drop
+                from data.normalize.cfbd import WEEK_NOT_APPLICABLE, classify_drop
+                # Odds events carry no week, so the shared classifier is told the week is not
+                # applicable rather than being handed a real-looking 0 it would have to guess at.
                 excluded.append({
                     "home": home_raw, "away": away_raw, "week": None,
-                    "reason": classify_drop(home_raw, away_raw, home, away, 0),
+                    "reason": classify_drop(home_raw, away_raw, home, away, WEEK_NOT_APPLICABLE),
                 })
             continue
         lines: list[BookLine] = []
