@@ -1,0 +1,146 @@
+# Tuesday — catch-up grade FIRST, then snapshot, then predict (PHASE5_NOTES §1, binding).
+#
+# The order is not stylistic. Grading first means a broken catch-up is found before an Odds credit
+# is spent. Committing the snapshot BEFORE building predictions is load-bearing: model_version is
+# `git describe --dirty`, so an uncommitted snapshot in the working tree would stamp every claim of
+# the week `-dirty`. See docs/PIPELINE.md.
+name: Weekly predict (Tue)
+
+on:
+  schedule:
+    # 09:17 ET (13:17 UTC under EDT). Anchored to EDT deliberately: after the 2026-11-01 EST flip
+    # a fixed UTC time lands an hour EARLIER in ET, which is always the safe direction. Minute is
+    # :17 because top-of-hour Actions crons are the most heavily delayed.
+    - cron: "17 13 * * 2"
+  workflow_dispatch:
+    inputs:
+      week:
+        description: "Week number; blank = resolve from season.json in ET"
+        required: false
+        type: string
+      year:
+        required: false
+        type: string
+        default: "2026"
+      dry_run:
+        description: "Run everything, commit and push nothing"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  # Shared across all three cadence workflows: they all push to the same branch, so they must
+  # serialize. cancel-in-progress is false because cancelling can tear a run between an Odds spend
+  # and record_quota, or between two of the three commits.
+  group: cfb-pipeline-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # MANDATORY: tags, for model_version() and the freeze assertion
+
+      - id: setup
+        uses: ./.github/actions/cfb-setup
+        with:
+          role: predict
+          week: ${{ inputs.week }}
+          year: ${{ inputs.year || '2026' }}
+          skip-secrets: ${{ inputs.dry_run == true }}
+
+      - name: Catch-up grade (Sunday/Monday finishers + postponements)
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+        run: |
+          set -euo pipefail
+          # grade_weeks is pre-filtered to weeks that HAVE a claim: grade.py exits 1 on a week with
+          # none, and that is not a failure. Filtering here means any non-zero exit is genuine.
+          for W in ${{ steps.setup.outputs.grade_weeks }}; do
+            echo "::group::catch-up grade week $W"
+            python scripts/fetch_results.py --week "$W" --year "${{ steps.setup.outputs.year }}" \
+              2>&1 | tee -a "$RUNNER_TEMP/pipeline.log" || \
+              [ "${PIPESTATUS[0]}" = "3" ]   # 3 = nothing completed yet, not a failure
+            python scripts/grade.py --week "$W" --year "${{ steps.setup.outputs.year }}" \
+              2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+            echo "::endgroup::"
+          done
+
+      - uses: ./.github/actions/cfb-commit
+        with:
+          paths: data/results data/graded
+          message: "grading: ${{ steps.setup.outputs.year }} catch-up through week ${{ steps.setup.outputs.week_padded }}"
+          suffix: ${{ steps.setup.outputs.commit_suffix }}
+          push: ${{ inputs.dry_run != true }}
+
+      - name: Build the snapshot
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: |
+          python scripts/build_snapshot.py --week "${{ steps.setup.outputs.week }}" \
+            --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          exit "${PIPESTATUS[0]}"
+
+      - name: Snapshot quality gate
+        run: |
+          python scripts/check_snapshot_quality.py --week "${{ steps.setup.outputs.week }}" \
+            --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          exit "${PIPESTATUS[0]}"
+
+      # Stages data/lines/ too: SnapshotBuilder seeds line observation #1 via record_observation,
+      # and leaving it unstaged means the next capture's commit silently carries this run's write.
+      - uses: ./.github/actions/cfb-commit
+        with:
+          paths: data/snapshots data/lines
+          message: "snapshot: ${{ steps.setup.outputs.year }} week ${{ steps.setup.outputs.week_padded }}"
+          suffix: ${{ steps.setup.outputs.commit_suffix }}
+          push: ${{ inputs.dry_run != true }}
+
+      # The claim is byte-immutable forever (D22), so its prior existence is both the skip
+      # condition and this job's idempotency guard — which is what makes week 1's 10-day window
+      # safe to run repeatedly.
+      - name: Build predictions
+        if: steps.setup.outputs.prediction_exists != 'true'
+        run: |
+          python scripts/build_predictions.py --week "${{ steps.setup.outputs.week }}" \
+            --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          exit "${PIPESTATUS[0]}"
+
+      - name: Claim already made
+        if: steps.setup.outputs.prediction_exists == 'true'
+        run: echo "::notice::week ${{ steps.setup.outputs.week_padded }} already has a committed
+          claim — byte-immutable (D22), skipping the predict step."
+
+      # The pre-registration artifact: exactly one file, its own commit, its own timestamp.
+      # No report, no snapshot, no graded file rides in here.
+      - uses: ./.github/actions/cfb-commit
+        if: steps.setup.outputs.prediction_exists != 'true'
+        with:
+          paths: data/predictions
+          message: "predictions: ${{ steps.setup.outputs.year }} week ${{ steps.setup.outputs.week_padded }} (pre-kickoff)"
+          suffix: ${{ steps.setup.outputs.commit_suffix }}
+          push: ${{ inputs.dry_run != true }}
+
+      - uses: ./.github/actions/report-failure
+        if: failure()
+        with:
+          stage: predict
+          week: ${{ steps.setup.outputs.week_padded }}
+          mode: ${{ steps.setup.outputs.mode }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: ./.github/actions/clear-failure
+        if: success()
+        with:
+          stage: predict
+          week: ${{ steps.setup.outputs.week_padded }}
+          mode: ${{ steps.setup.outputs.mode }}
+          token: ${{ secrets.GITHUB_TOKEN }}

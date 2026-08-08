@@ -1,0 +1,117 @@
+# CI — SPEC §13: "CI runs it on every push".
+#
+# No `paths-ignore` on pull_request: a docs-only PR would then never produce a required check and
+# could never merge. It is moot on push anyway — GITHUB_TOKEN pushes do not trigger workflows, so
+# the pipeline's own data commits skip CI for free.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Empty, not absent: any accidental network call fails loudly rather than reaching a real API
+  # with a real key. tests/conftest.py blocks requests independently; this is the second layer.
+  CFBD_API_KEY: ""
+  ODDS_API_KEY: ""
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # tests/test_frozen_vehicle.py re-derives the pinned SHA from the tag
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: make install
+      - run: make lint
+      - run: make test
+
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      # Matrixed to NAME the failure: "verify-phase-3 failed" is a completely different alarm from
+      # "verify-phase-1 failed", and a matrix makes that legible in the check list.
+      matrix:
+        phase: ["0", "1", "2", "4", "4-5", "5"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: make install
+      - run: make verify-phase-${{ matrix.phase }}
+
+  # Phase 3 gets its own job so its failure carries its own instructions. Once D29 pinned the
+  # gate's vehicle this is a pure "did this commit move model output" check, which is exactly the
+  # thing that should block a merge.
+  verify-freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: make install
+      - name: Behavioural fingerprint of the frozen model
+        run: make verify-phase-3
+      - if: failure()
+        run: |
+          {
+            echo "### verify-phase-3 failed — model output moved"
+            echo
+            echo "This commit changed what the frozen model produces over the 330-game tracked slate."
+            echo
+            echo "**Do NOT update the fingerprint constant.** Either the change was unintended —"
+            echo "revert it — or it was intended, in which case it needs a documented SPEC §3"
+            echo "exception entry and a NEW tag, because the model that ran the season would no"
+            echo "longer be the model that was frozen."
+            echo
+            echo "If the *vehicle* check failed instead, the gate's input changed rather than the"
+            echo "model: restore \`data/archive/frozen/2026_week_01_snapshot.json\` (D29)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # A rehearsal branch is acceptance evidence and is never merged (D-3). This makes that
+  # structural rather than a convention someone has to remember.
+  no-rehearsal-merge:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refuse to merge a rehearsal branch
+        run: |
+          PREFIX="$(python -c "import json;print(json.load(open('season.json'))['pipeline']['rehearsal']['branch_prefix'])")"
+          case "${{ github.head_ref }}" in
+            "$PREFIX"*)
+              echo "::error::'${{ github.head_ref }}' is a rehearsal branch. Rehearsal artifacts are"
+              echo "::error::acceptance evidence and stay unmerged — merging would write rehearsal"
+              echo "::error::predictions into the byte-immutable claim slots the live run needs."
+              exit 1 ;;
+            *) echo "not a rehearsal branch — ok" ;;
+          esac

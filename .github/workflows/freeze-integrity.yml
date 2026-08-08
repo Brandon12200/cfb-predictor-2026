@@ -1,0 +1,98 @@
+# Daily freeze integrity + the external-data-event probe.
+#
+# Two of these three checks also run in CI, and that is deliberate: CI answers "did THIS COMMIT
+# move model output", which only fires when someone pushes. This job answers "is the freeze still
+# intact, and has the world changed underneath it" on a clock, during the quiet weeks when nobody
+# is pushing at all.
+#
+# sp_watch is the reason the scheduled run is worth having. The fingerprint reads a committed
+# snapshot, so re-running it on a timer detects nothing external by construction.
+name: Freeze integrity (daily)
+
+on:
+  schedule:
+    - cron: "43 11 * * *"   # 07:43 ET — no other job occupies that slot
+  workflow_dispatch:
+
+concurrency:
+  group: freeze-integrity
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: make install
+
+      # Path-level freeze proof, in milliseconds, immune to a whitespace-preserving edit.
+      - name: Frozen trees match the tag
+        run: |
+          set -euo pipefail
+          TAG="$(python -c "import json;print(json.load(open('season.json'))['pipeline']['freeze_tag'])")"
+          for D in factors engine; do
+            HEAD_TREE="$(git rev-parse "HEAD:$D")"
+            TAG_TREE="$(git rev-parse "$TAG:$D")"
+            if [ "$HEAD_TREE" != "$TAG_TREE" ]; then
+              echo "::error::$D/ has drifted from $TAG ($HEAD_TREE != $TAG_TREE)"
+              exit 1
+            fi
+            echo "$D/ matches $TAG (${HEAD_TREE:0:12})"
+          done 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+
+      - name: Behavioural fingerprint
+        run: make verify-phase-3 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+
+      # 2 CFBD calls, ZERO Odds credits. Exit 2 = the data arrived.
+      - name: SP+ / returning-production watch
+        id: spwatch
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+        run: |
+          set +e
+          python scripts/sp_watch.py 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          echo "rc=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Fail on a probe error
+        if: steps.spwatch.outputs.rc != '0' && steps.spwatch.outputs.rc != '2'
+        run: |
+          echo "::error::sp_watch exited ${{ steps.spwatch.outputs.rc }}"
+          exit 1
+
+      # An arrival opens an Issue and leaves the job GREEN. The correct response is the SPEC §3
+      # exception process plus a new tag — a decision, not a revert — and a red check would only
+      # pressure someone into making that change quietly.
+      - name: SP+ has arrived — open an Issue
+        if: steps.spwatch.outputs.rc == '2'
+        uses: ./.github/actions/report-failure
+        with:
+          stage: freeze
+          title: "CFBD has published 2026 SP+ / returning production — SPEC §3 exception needed"
+          body: >
+            The frozen model's inputs have changed. D10 activates SP+ and the returning-production
+            prior with no code change, so `Sandwich` wakes up and preseason ratings start moving.
+            Model output will move and `verify-phase-3` will fail CORRECTLY on the next snapshot
+            rebuild. That needs a dated SPEC §3 exception entry and a NEW tag — never a constant
+            update. Re-measure the slate and record the delta before the graded dress rehearsal.
+          mode: live
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: ./.github/actions/report-failure
+        if: failure()
+        with:
+          stage: freeze
+          mode: live
+          token: ${{ secrets.GITHUB_TOKEN }}

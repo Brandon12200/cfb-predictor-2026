@@ -1,0 +1,73 @@
+name: cfb-commit
+description: >
+  Stage an explicit path set, skip cleanly when nothing changed, commit under the pipeline's own
+  identity, and push with a rebase-retry. One call per artifact tier — the taxonomy (D22/D23) is
+  enforced by WHAT each call stages, so a rendering never rides inside a claim commit.
+
+inputs:
+  paths:
+    description: Space-separated pathspecs to stage. Deliberately explicit — never `git add -A`.
+    required: true
+  message:
+    description: Commit subject
+    required: true
+  suffix:
+    description: Appended to the subject (e.g. " [rehearsal]")
+    required: false
+    default: ""
+  push:
+    description: "false for dry runs — commits locally and pushes nothing"
+    required: false
+    default: "true"
+
+outputs:
+  committed:
+    description: "true if a commit was created"
+    value: ${{ steps.commit.outputs.committed }}
+
+runs:
+  using: composite
+  steps:
+    - id: commit
+      shell: bash
+      run: |
+        set -euo pipefail
+        git add -- ${{ inputs.paths }}
+
+        # Never --allow-empty. record_observation rewrites the lines file every run even when it
+        # appends nothing, but writes sorted, indented JSON — so the bytes are identical and this
+        # correctly reports "no change" instead of manufacturing an empty commit.
+        if git diff --cached --quiet; then
+          echo "::notice::no change under '${{ inputs.paths }}' — skipping commit"
+          echo "committed=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        # A project machine identity, not a person and not a tool reference (D3): naming this
+        # project's pipeline is honest provenance, whereas a human name on a machine commit is not.
+        # The Run: trailer binds the commit to an immutable Actions log — the tamper-evident link
+        # SPEC §10 asks the commit to carry.
+        git -c user.name="cfb-pipeline" \
+            -c user.email="pipeline@users.noreply.github.com" \
+            commit -q \
+              -m "${{ inputs.message }}${{ inputs.suffix }}" \
+              -m "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+        echo "committed=true" >> "$GITHUB_OUTPUT"
+        git --no-pager log -1 --format='%h %s'
+
+    - name: Push
+      if: inputs.push == 'true' && steps.commit.outputs.committed == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        # A human can push to the branch mid-run. Rebase is safe here specifically because every
+        # pipeline commit is an ADDITION under an append-only tree — there is nothing to conflict
+        # with textually.
+        for attempt in 1 2 3; do
+          if git push origin "HEAD:${GITHUB_REF_NAME}"; then exit 0; fi
+          echo "::warning::push rejected (attempt $attempt) — rebasing onto origin/${GITHUB_REF_NAME}"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+          sleep $(( 5 * attempt ))
+        done
+        echo "::error::push failed after 3 attempts"
+        exit 1

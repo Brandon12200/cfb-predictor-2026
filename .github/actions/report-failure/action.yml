@@ -1,0 +1,109 @@
+name: report-failure
+description: >
+  Open (or update) a deduplicated GitHub Issue for a failed pipeline run, with logs attached.
+  A composite invoked as an `if: failure()` step in the SAME job — a reusable workflow runs as a
+  separate job and cannot see the failing job's log file or step outcomes.
+
+inputs:
+  stage:
+    description: predict | capture | grade | ci | freeze
+    required: true
+  week:
+    required: false
+    default: ""
+  mode:
+    description: live | rehearsal
+    required: false
+    default: live
+  title:
+    description: Override the generated title
+    required: false
+    default: ""
+  body:
+    description: Extra context prepended to the log tail
+    required: false
+    default: ""
+  cooldown-minutes:
+    description: Minimum gap between comments on an already-open issue
+    required: false
+    default: "360"
+  token:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Upload logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: pipeline-${{ inputs.stage }}-${{ github.run_id }}
+        path: ${{ runner.temp }}/pipeline.log
+        if-no-files-found: ignore
+        retention-days: 30
+
+    - name: Capture the working-tree state
+      shell: bash
+      run: |
+        # What was half-written when it died — the single most useful thing when a run dies
+        # between producing an artifact and committing it.
+        {
+          echo "### git status"; git status --porcelain || true
+          echo; echo "### staged diff (names)"; git diff --cached --name-only || true
+          echo; echo "### unstaged diff (names)"; git diff --name-only || true
+        } >> "${RUNNER_TEMP}/pipeline.log"
+
+    - name: Open or update the issue
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        STAGE="${{ inputs.stage }}"
+        WEEK="${{ inputs.week }}"
+        RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+        LABELS=(pipeline-failure "stage:${STAGE}")
+        [ -n "$WEEK" ] && LABELS+=("week:${WEEK}")
+        [ "${{ inputs.mode }}" = "rehearsal" ] && LABELS+=(rehearsal)
+
+        for L in "${LABELS[@]}"; do
+          gh label create "$L" --color B60205 --description "cfb pipeline" >/dev/null 2>&1 || true
+        done
+
+        TITLE="${{ inputs.title }}"
+        [ -z "$TITLE" ] && TITLE="pipeline: ${STAGE} failed${WEEK:+ — 2026 week ${WEEK}}"
+
+        TAIL="$(tail -n 120 "${RUNNER_TEMP}/pipeline.log" 2>/dev/null || echo '(no log captured)')"
+        BODY="$(printf '%s\n\n**Run:** %s\n**Ref:** `%s` (%s)\n\n<details><summary>last 120 log lines</summary>\n\n```\n%s\n```\n\n</details>\n' \
+                 "${{ inputs.body }}" "$RUN_URL" "$GITHUB_REF_NAME" "${{ inputs.mode }}" "$TAIL")"
+
+        # Dedupe by LABEL, never by `--search "in:title"`: the issue search index is eventually
+        # consistent and lags by seconds to minutes — exactly the window in which back-to-back
+        # failures need to find each other. Label filtering is a direct query.
+        ARGS=(--state open --json number,updatedAt --limit 1)
+        for L in "${LABELS[@]}"; do ARGS+=(--label "$L"); done
+        EXISTING="$(gh issue list "${ARGS[@]}" --jq '.[0].number // empty')"
+
+        if [ -z "$EXISTING" ]; then
+          LABEL_CSV="$(IFS=,; echo "${LABELS[*]}")"
+          gh issue create --title "$TITLE" --body "$BODY" --label "$LABEL_CSV" \
+            --assignee "${GITHUB_REPOSITORY_OWNER}" 2>/dev/null \
+            || gh issue create --title "$TITLE" --body "$BODY" --label "$LABEL_CSV"
+          echo "::notice::opened a new pipeline-failure issue"
+          exit 0
+        fi
+
+        # An open issue exists. Comment only outside the cooldown — this caps COMMENTS as well as
+        # issues, which the naive "one issue" design forgets: a job failing every 20 minutes over a
+        # weekend would otherwise leave 100 comments.
+        LAST="$(gh issue view "$EXISTING" --json comments \
+                 --jq '(.comments | last | .createdAt) // ""')"
+        if [ -n "$LAST" ]; then
+          AGE=$(( ( $(date -u +%s) - $(date -u -d "$LAST" +%s 2>/dev/null || echo 0) ) / 60 ))
+          if [ "$AGE" -lt "${{ inputs.cooldown-minutes }}" ]; then
+            echo "::notice::issue #${EXISTING} commented ${AGE}m ago (< cooldown) — not commenting again"
+            exit 0
+          fi
+        fi
+        gh issue comment "$EXISTING" --body "$BODY"
+        echo "::notice::commented on existing issue #${EXISTING}"
