@@ -166,9 +166,23 @@ check("min_edge ladder reachability holds (1.5 unreachable; 1.0 vehicle-unreacha
 # ⚠ If this fails, the correct response is almost never to update the constant. Either the change
 # was unintended — revert it — or it was intended, in which case it needs a SPEC §3 exception entry
 # and a NEW tag, because the model that ran the season is no longer the model that was frozen.
-_snap_for_fp = ROOT / "data" / "snapshots" / "2026_week_01" / "snapshot.json"
-if _snap_for_fp.exists():
+# The gate's INPUT is the pinned tag-time vehicle under the append-only tier, never the live
+# `data/snapshots/2026_week_01/` bundle — the Phase-5 pipeline rebuilds that one on the week-1 run,
+# which would make this gate report "model output moved" every time the pipeline merely ran (D29).
+# The vehicle's own sha256 is asserted FIRST so "the gate's input changed" cannot be misread as
+# "the model moved". The fingerprint constant below is unchanged and is never to be updated.
+from data.snapshot.store import FROZEN_VEHICLE as _VEHICLE  # noqa: E402
+from data.snapshot.store import FROZEN_VEHICLE_SHA256 as _FROZEN_VEHICLE_SHA256  # noqa: E402
+from data.snapshot.store import frozen_vehicle_sha256 as _vehicle_sha  # noqa: E402
+
+if _VEHICLE.exists():
     from scripts.slate_fingerprint import fingerprint as _fingerprint  # noqa: E402
+
+    _veh = _vehicle_sha()
+    check("frozen gate vehicle is the tag-time wk1 snapshot, byte-for-byte (D29)",
+          _veh == _FROZEN_VEHICLE_SHA256,
+          f"sha256 {_veh[:16]}… (pinned {_FROZEN_VEHICLE_SHA256[:16]}…) — if THIS moved, the "
+          "gate's input changed, not the model; restore the vehicle rather than reading on")
 
     _FROZEN_SLATE_SHA256 = "eab7ffdb90df6fb549bbed0f9ebc291e00f710f592bc4e3699e41a3f52a20e2d"
     _FROZEN_SLATE_GAMES = 330
@@ -179,7 +193,8 @@ if _snap_for_fp.exists():
           f"(frozen {_FROZEN_SLATE_SHA256[:16]}…) — a mismatch means model output moved; "
           "that needs a SPEC §3 exception and a new tag, not a constant update")
 else:
-    check("frozen-model behavioural fingerprint", False, "no committed wk1 snapshot")
+    check("frozen-model behavioural fingerprint", False,
+          f"no pinned gate vehicle at {_VEHICLE}")
 
 # Each physical sub-signal appears separately in factor_breakdown on a firing context (SPEC §7.2).
 _ctx = {"home_intel": {"bye": True, "altitude": 7000.0, "time_zones_crossed": 0},
@@ -279,23 +294,30 @@ check("ExperienceDifferential handles None/missing coaching data (honest-missing
 # every factor is dormant and edges collapse; the floors correctly refuse to bet a no-signal slate.
 # Asserting this so nobody mistakes an empty bettable slate for breakage in August — selectivity
 # working as DESIGNED, not a bug.
-_snap_f = ROOT / "data" / "snapshots" / "2026_week_01" / "snapshot.json"
-if _snap_f.exists():
+# Reads the pinned vehicle (D29), and prices INSIDE `engine_reads` — the engine loads its own
+# snapshot via the data manager, so enumerating from the vehicle without the redirect would price
+# against whatever is on disk instead.
+if _VEHICLE.exists():
     import logging as _lg  # noqa: E402
+
+    from data.snapshot.store import load_frozen_vehicle as _load_vehicle  # noqa: E402
     from engine.prediction_engine import PredictionEngine  # noqa: E402
+    from scripts.slate_fingerprint import engine_reads as _engine_reads  # noqa: E402
     _lg.disable(_lg.CRITICAL)
-    _eng2 = PredictionEngine()
+    _vehicle_bundle = _load_vehicle()
     _types = []
-    for _line in json.loads(_snap_f.read_text())["data"]["betting_lines"].values():
-        _h, _a = _line.get("home_team"), _line.get("away_team")
-        if _h and _a:
-            _types.append(_eng2.generate_prediction(_h, _a, week=1).get("prediction_type"))
+    with _engine_reads(_vehicle_bundle):
+        _eng2 = PredictionEngine()
+        for _line in _vehicle_bundle["data"]["betting_lines"].values():
+            _h, _a = _line.get("home_team"), _line.get("away_team")
+            if _h and _a:
+                _types.append(_eng2.generate_prediction(_h, _a, week=1).get("prediction_type"))
     _lg.disable(_lg.NOTSET)
     check("L4 NO_BET: 2026 wk1 dry-run slate is all NO_BET (no signal preseason — selectivity, not breakage)",
           len(_types) > 0 and all(t == "NO_BET" for t in _types),
           f"{_types.count('NO_BET')}/{len(_types)} NO_BET")
 else:
-    check("L4 NO_BET dry-run slate", False, "no 2026 wk1 snapshot")
+    check("L4 NO_BET dry-run slate", False, f"no pinned gate vehicle at {_VEHICLE}")
 
 # L3 confidence tiers — monotonic in confidence_score is a STRUCTURAL sanity check on the NEW
 # model (SPEC §3/§7.5), NEVER a 2025-ATS gate (the archive confidence→ATS table is inadmissible).
@@ -332,11 +354,14 @@ _GOLDEN = ROOT / "docs" / "examples" / "prediction_schema_v2_2026_week_01.json"
 # churns per commit until the freeze tag; generated_at is a wall-clock-shaped stamp.
 _VOLATILE_META = ("model_version", "generated_at")
 
-if _GOLDEN.exists() and _snap_f.exists():
-    from data.snapshot.store import load_snapshot as _load_snap  # noqa: E402
+if _GOLDEN.exists() and _VEHICLE.exists():
     _golden = json.loads(_GOLDEN.read_text())
-    _live = build_predictions(_load_snap(1, 2026), week=1,
-                              model_version=_golden["meta"].get("model_version"))
+    # Pinned vehicle (D29) + the engine redirect: `build_predictions` uses its `snapshot` argument
+    # for enumeration only and prices through the data manager, so both must point at the vehicle.
+    _gold_bundle = _load_vehicle()
+    with _engine_reads(_gold_bundle):
+        _live = build_predictions(_gold_bundle, week=1,
+                                  model_version=_golden["meta"].get("model_version"))
 
     def _strip_volatile(_d):
         _d = json.loads(json.dumps(_d))
@@ -378,8 +403,8 @@ if _GOLDEN.exists() and _snap_f.exists():
     check("3d field-inventory parity: golden + live agree on keys and value types (V2_RECORD_KEYS)",
           _parity)
 else:
-    check("3d schema-v2 golden example + wk1 snapshot present", False,
-          "missing docs/examples golden or wk1 snapshot")
+    check("3d schema-v2 golden example + pinned gate vehicle present", False,
+          "missing docs/examples golden or data/archive/frozen/ vehicle")
 
 # (4) The 2025 v1->v2 converter round-trips a real archive entry (pure, read-only on the archive).
 _arch = ROOT / "data" / "archive" / "2025" / "predictions" / "2025_week_01.json"
