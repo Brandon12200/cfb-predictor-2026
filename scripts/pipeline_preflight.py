@@ -30,7 +30,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import subprocess
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -40,7 +39,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from data.odds_budget import last_remaining  # noqa: E402
 from utils.season_calendar import load_calendar, pipeline_timezone  # noqa: E402
-from utils.version import model_version  # noqa: E402
+from utils.version import frozen_tree_hashes, model_version  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 FROZEN_TREES = ("factors", "engine")
@@ -66,15 +65,14 @@ class Preflight:
         self.notes.append(msg)
 
 
-def _git(*args: str) -> str | None:
-    out = subprocess.run(["git", *args], capture_output=True, text=True, cwd=str(ROOT))
-    return out.stdout.strip() if out.returncode == 0 else None
-
-
 def check_freeze(pf: Preflight, freeze_tag: str) -> None:
-    """ABORT: the frozen trees must be byte-identical to the tag."""
-    for tree in FROZEN_TREES:
-        head, tagged = _git("rev-parse", f"HEAD:{tree}"), _git("rev-parse", f"{freeze_tag}:{tree}")
+    """ABORT: the frozen trees must be byte-identical to the tag.
+
+    Reads the shared `utils.version.frozen_tree_hashes` primitive rather than shelling git here —
+    `cfb status` and the daily freeze-integrity job answer the same question, and a second copy is
+    how two guards drift apart (D25.4).
+    """
+    for tree, (head, tagged) in frozen_tree_hashes(freeze_tag, FROZEN_TREES).items():
         if tagged is None:
             pf.abort(
                 f"cannot resolve `{freeze_tag}:{tree}` — the freeze tag is not in this checkout. "

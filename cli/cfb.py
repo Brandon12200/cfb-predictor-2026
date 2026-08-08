@@ -261,7 +261,7 @@ def cmd_data_inspect(args) -> int:
 
 def cmd_status(args) -> int:
     from scripts.status import main as status_main
-    from utils.version import model_version
+    from utils.version import frozen_tag, frozen_trees_match, model_version
     # Current week + frozen tag alongside the source-health/quota view.
     today = datetime.now().date()
     try:
@@ -269,7 +269,21 @@ def cmd_status(args) -> int:
         print(f"Current week: {week} (inferred from {today.isoformat()})")
     except WeekInferenceError:
         print(f"Current week: — (outside the season as of {today.isoformat()})")
-    print(f"Frozen tag: {model_version()}")
+    # The tag and the build stamp are DIFFERENT things. `model_version()` is
+    # `git describe --tags --always --dirty`, which returns the bare tag only at the tagged commit —
+    # so labelling `v2026-frozen-15-g8715415-dirty` as "Frozen tag" reads as though the freeze had
+    # moved. The tag is shown as itself; the build stamp is shown as what it is; and the line that
+    # actually answers "is the model still frozen?" is the tree comparison, not either string.
+    tag = frozen_tag()
+    if tag:
+        match = frozen_trees_match(tag)
+        state = ("factors/ + engine/ match the tag" if match
+                 else "⚠ FROZEN PATHS DIFFER FROM THE TAG" if match is False
+                 else "match unverified (tag or git unavailable)")
+        print(f"Frozen tag: {tag} — {state}")
+    else:
+        print("Frozen tag: — (no tag reachable; a shallow clone fetches none)")
+    print(f"Build:      {model_version()}")
     return status_main(["--ping"] if args.ping else [])
 
 

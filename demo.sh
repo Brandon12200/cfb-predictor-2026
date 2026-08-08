@@ -1,136 +1,100 @@
 #!/bin/bash
+# CFB Contrarian Predictor 2026 — guided tour of the supported `cfb` interface.
+#
+# Read-only: nothing here writes an artifact. Predictions are byte-immutable claims (D22), so the
+# demo deliberately never passes `--save`.
+#
+# Install first:  make install    (editable install; provides the `cfb` console script)
 
-# College Football Market Edge Platform - Demo Script
-# Shows the full capabilities of the system
+set -u
 
-echo "================================================"
-echo "  College Football Market Edge Platform - Live Demo"
-echo "================================================"
-echo ""
+banner() {
+    echo ""
+    echo "================================================"
+    echo "  $1"
+    echo "================================================"
+    echo ""
+}
 
-# Check if virtual environment exists
-if [ ! -d "venv" ]; then
-    echo "⚠️  Virtual environment not found. Run setup first:"
-    echo "   python -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
+pause() { echo ""; read -r -p "Press Enter to continue..."; }
+
+if ! command -v cfb >/dev/null 2>&1; then
+    echo "⚠️  The 'cfb' command is not installed. Run:  make install"
     exit 1
 fi
 
-# Activate virtual environment
-source venv/bin/activate
+banner "CFB Contrarian Predictor 2026 — Live Demo"
+echo "A rule-based, frozen-weight contrarian spread model."
+echo "Weights were frozen at the v2026-frozen tag and do not change during the season."
+pause
 
-echo "📊 Demo 1: Basic Game Analysis"
-echo "--------------------------------"
-echo "Analyzing a marquee matchup: Texas @ Ohio State"
+banner "1. System health, and proof the model is still frozen"
+echo "Shows the current week, the freeze tag, whether factors/ and engine/ still"
+echo "match that tag, and per-source key + quota status."
 echo ""
-python main.py --home "Ohio State" --away "Texas"
-echo ""
-read -p "Press Enter to continue..."
+cfb status
+pause
 
+banner "2. The week's slate"
+echo "The FBS-vs-FBS games with a prediction-time line, from the committed snapshot."
 echo ""
-echo "📈 Demo 2: Detailed Factor Breakdown"
-echo "--------------------------------"
-echo "Same game with factor details to see what drives the prediction"
-echo ""
-python main.py --home "Ohio State" --away "Texas" --show-factors
-echo ""
-read -p "Press Enter to continue..."
+cfb slate 1
+pause
 
+banner "3. Predicting a full week"
+echo "Every game is serialized — including NO_BET, which is the point: the model"
+echo "logs what it declined, so selectivity can be graded later."
 echo ""
-echo "🏈 Demo 3: List Current Week Games"
-echo "--------------------------------"
-echo "See all Power 4 games available for analysis"
-echo ""
-python main.py --list-games current | head -20
+cfb predict week 1 | head -30
 echo "..."
-echo ""
-read -p "Press Enter to continue..."
+pause
 
+banner "4. What drove one game"
+echo "Per-sub-signal factor breakdown for a single matchup on the slate."
 echo ""
-echo "🔍 Demo 4: Team Name Validation"
-echo "--------------------------------"
-echo "System handles many team name variations"
-echo ""
-python main.py --validate-team "OSU"
-echo ""
-python main.py --validate-team "Buckeyes"
-echo ""
-read -p "Press Enter to continue..."
+cfb predict game "Baylor @ Auburn" --week 1 --show-factors
+pause
 
+banner "5. A hypothetical matchup"
+echo "Any two teams, priced off the current ratings — not restricted to the slate."
+echo "Travel, altitude and rest are applied, so the number moves with the venue."
 echo ""
-echo "📊 Demo 6: Weekly Analysis"
-echo "--------------------------------"
-echo "Analyze all Week 1 games with betting lines (showing first few)"
-echo ""
-python main.py --analyze-week 1 --min-edge 1.0 2>/dev/null | head -30
-echo ""
-read -p "Press Enter to continue..."
+cfb hypothetical "Texas vs Ohio State" --show-factors
+pause
 
+banner "6. Season projections"
+echo "Projected wins for every FBS team, from the same frozen pricer."
 echo ""
-echo "🔧 Demo 7: System Health Check"
-echo "--------------------------------"
-echo "Verify API connections and configuration"
-echo ""
-python main.py --check-config
-echo ""
-read -p "Press Enter to continue..."
+cfb project | head -20
+echo "..."
+pause
 
+banner "7. Inspecting the data behind a prediction"
+echo "Provenance for the week's snapshot: which sources were live, which fields are"
+echo "honestly missing, and the field-level coverage. Missing data is recorded as"
+echo "missing — never neutral-filled."
 echo ""
-echo "📈 Demo 8: Data Quality Example"
-echo "--------------------------------"
-echo "Showing how system handles missing data gracefully"
-echo ""
-echo "Testing with an FCS team (should be filtered):"
-python main.py --home "Alabama" --away "Mercer" 2>&1 | grep -E "(FCS|quality|filtered)"
-echo ""
-echo "Testing with valid teams but no betting line:"
-python main.py --home "Army" --away "Navy" 2>&1 | grep -E "(No betting|not available)"
-echo ""
-read -p "Press Enter to continue..."
+cfb data inspect --week 1 | head -25
+echo "..."
 
-echo ""
-echo "✨ Demo 9: Cache Performance"
-echo "--------------------------------"
-echo "First call (cold cache):"
-time python main.py --home "Georgia" --away "Florida" --quiet
-echo ""
-echo "Second call (warm cache - should be much faster):"
-time python main.py --home "Georgia" --away "Florida" --quiet
-echo ""
-read -p "Press Enter to continue..."
+banner "Demo complete"
+cat <<'NOTES'
+What this system is:
 
-echo ""
-echo "🎯 Demo 10: Finding Best Bets"
-echo "--------------------------------"
-echo "Analyzing multiple games to find strongest edges"
-echo ""
+  • Rule-based and frozen. No in-season weight changes; the freeze is enforced by
+    hooks, by a tree-hash check, and by a behavioural fingerprint over the slate.
+  • Honest about absence. Missing data is recorded with provenance, never faked.
+  • Forward-tested only. Predictions are committed before kickoff and graded after,
+    so the audit trail is the product.
 
-games=("LSU:Clemson" "Notre Dame:Miami" "Auburn:Baylor")
+Preseason, every game is NO_BET. That is selectivity working as designed, not
+breakage — the maximum attainable edge preseason sits below the betting floor
+because most factors are dormant until real games are played.
 
-for game in "${games[@]}"
-do
-    IFS=':' read -r away home <<< "$game"
-    echo "Checking $away @ $home..."
-    python main.py --home "$home" --away "$away" 2>/dev/null | grep -E "(Edge Size|Confidence|Recommendation)" | head -3
-    echo ""
-done
-
-echo ""
-echo "================================================"
-echo "           Demo Complete!"
-echo "================================================"
-echo ""
-echo "Key Features Demonstrated:"
-echo "  ✅ Multi-source data integration (CFBD, ESPN, Odds)"
-echo "  ✅ 11-factor quantitative analysis"
-echo "  ✅ Automatic weight normalization"
-echo "  ✅ Team name normalization (130+ variations)"
-echo "  ✅ Cache optimization (78% hit rate)"
-echo "  ✅ Graceful error handling"
-echo "  ✅ Production-ready architecture"
-echo ""
-echo "For more information:"
-echo "  - README.md: Full documentation"
-echo "  - docs/ARCHITECTURE.md: System design"
-echo "  - docs/PERFORMANCE.md: Benchmarks and metrics"
-echo "  - docs/PROJECT_OVERVIEW.md: Technical details"
+Further reading:
+  docs/PIPELINE.md        the weekly automation and its commit choreography
+  docs/SPEC.md            the build plan and the binding decisions
+  docs/DECISIONS.md       every owner ruling, with its reasoning
+  docs/CALIBRATION_LOG.md every constant, with the evidence behind it
+NOTES
 echo ""

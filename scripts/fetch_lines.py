@@ -22,6 +22,7 @@ string-matching stdout to tell them apart.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from dataclasses import asdict
 from datetime import UTC, datetime
@@ -30,7 +31,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from data.normalize import odds as odds_norm  # noqa: E402
-from data.odds_budget import last_remaining, record_quota  # noqa: E402
+from data.odds_budget import append_ledger, last_remaining, record_quota  # noqa: E402
 from data.snapshot.lines import record_observation  # noqa: E402
 from data.snapshot.store import SnapshotNotFoundError, load_snapshot  # noqa: E402
 
@@ -72,7 +73,11 @@ def main(argv: list[str] | None = None) -> int:
         # lines are what land in the auto-Issue. Matches fetch_results.py's handling.
         print(f"Odds fetch failed: {type(exc).__name__}: {exc}")
         return EXIT_ERROR
-    record_quota(client.last_quota)  # persist the fresh balance for the next run's guard
+    # Both stores: the committed append-only ledger (the SPEC §10.5 record, survives a fresh
+    # checkout) and the legacy single-value cache (gitignored, kept as a fallback).
+    record_quota(client.last_quota)
+    append_ledger(client.last_quota, caller="fetch_lines", week=args.week,
+                  run_id=os.environ.get("GITHUB_RUN_ID"))
 
     gamelines = odds_norm.normalize_lines(raw, fetched_at)
     games = {key: asdict(gl) for gl in gamelines.values()

@@ -226,14 +226,32 @@ so the crons are duplicated into the workflows and a test asserts the two agree.
 
 ---
 
-## 9. Reporting gate (D36, temporary)
+## 9. What the Sunday report leads with (D27)
 
-The Sunday job **generates reports but does not commit them** until `analytics/attribution.py`
-carries D27's lean-side split and the naive always-lean-home baseline. Preseason leans run
-**195 home / 35 away — 5.57:1, structural**, because `TravelBurden`/`ConsecutiveRoad` only penalise
-the visitor and `Altitude` only advantages the host. An unsplit season headline over that skew is
-D17's failure re-committed, automatically, every Sunday. The gate greps for the split so it opens by
-itself; a test asserts it is still closed. **Hard deadline: the first graded Sunday.**
+**The report opens with the lean-side split, not a blended headline** — and that ordering is
+behaviour, pinned by tests, not a layout preference.
+
+Preseason leans run **195 home / 35 away — 5.57:1, and structural**: `TravelBurden` and
+`ConsecutiveRoad` can only ever penalise the visitor, and `Altitude` only advantages the host. A
+single blended number over that skew is dominated by how home teams happened to do against the
+spread, and is uninterpretable as evidence about the model. That is precisely D17's retired "57.0%
+ATS" — a systematic home lean measured and reported as skill.
+
+So every report carries, before anything else: ATS% and CLV **split by lean side**, each with its
+Wilson interval; a **naive always-lean-home baseline** over the same games, graded against the
+**Vegas line**; and the difference. The away cell is thin (~35 preseason) and the report says so
+inline rather than letting a point estimate stand.
+
+The naive baseline is *not* the retired D17 diagnostic, which graded always-home against the
+model's **own** contrarian number — that survives under its honest name in
+`scripts/grading.py::home_covered_model_spread_diagnostic` and must never be confused with this one.
+
+Validated against an independent oracle: over the 2025 archive the baseline reproduces D17's
+separately-recorded **54.4% (160/294)** to the game, and the model's **46.6%**, giving the −7.8%
+delta the comparison exists to surface.
+
+*(A temporary D36 gate withheld the Sunday report commit until this landed. It is removed; the risk
+is closed at the source instead of held back at the commit.)*
 
 ---
 
@@ -244,7 +262,8 @@ itself; a test asserts it is still closed. **Hard deadline: the first graded Sun
 * **Backfill a week:** dispatch with an explicit `week`. Explicit always wins.
 * **A claim already exists:** the predict step skips. That is correct and not an error — claims are
   byte-immutable forever.
-* **Superseded:** `scripts/setup_cron.sh` is dead (it hard-exits on a missing `automate_weekly.sh`
-  and assumes a `venv/` Phase 0 deleted). Kept only until it is deleted in the follow-up PR.
+* **Superseded and deleted:** `scripts/setup_cron.sh` (SPEC §10's "audit and supersede"). It was
+  already dead — it hard-exited on a missing `automate_weekly.sh` and assumed a `venv/` Phase 0
+  removed — and these workflows replace it.
 * **Local checks:** `make verify-phase-5`; `python scripts/pipeline_week.py --format human`;
   `python scripts/pipeline_preflight.py --role capture --skip-secrets`.

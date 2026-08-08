@@ -153,21 +153,20 @@ def test_grade_commits_reports_separately_from_outcomes():
         assert text.count(tier) == 1, f"{tier} staged more or less than once"
 
 
-def test_report_commit_is_gated_until_the_lean_split_lands():
-    """D36: an unsplit season headline over a 5.57:1 structural home skew repeats D17, and
-    publishing it automatically every Sunday is worse than publishing nothing."""
-    text = (WORKFLOWS / "weekly-grade.yml").read_text()
-    assert "report_gate" in text
-    assert "steps.report_gate.outputs.ready == 'true'" in text
-
-
-def test_the_gate_opens_exactly_when_attribution_gains_the_split():
-    """The gate greps analytics/attribution.py for `edge_direction`, so it must be closed NOW and
-    must open on its own when the split lands — not need a second edit someone could forget."""
-    text = (WORKFLOWS / "weekly-grade.yml").read_text()
-    assert 'grep -q "edge_direction" analytics/attribution.py' in text
-    have_split = "edge_direction" in (ROOT / "analytics" / "attribution.py").read_text()
-    assert not have_split, (
-        "analytics/attribution.py now has edge_direction — the D36 gate has served its purpose. "
-        "Remove the gate step from weekly-grade.yml and delete this assertion."
+def test_the_lean_split_is_in_place_so_the_report_gate_is_gone():
+    """The D36 gate withheld the Sunday report commit until D27's split landed. The split is in
+    (`analytics/attribution.py::by_lean_side`), so the gate is removed — and this asserts BOTH
+    halves, so the gate cannot be dropped while the split is still missing."""
+    assert "edge_direction" in (ROOT / "analytics" / "attribution.py").read_text(), (
+        "the lean-side split is gone from attribution.py — restore it, or restore the D36 gate: "
+        "an unsplit season headline over a 5.57:1 structural home skew repeats D17."
     )
+    text = (WORKFLOWS / "weekly-grade.yml").read_text()
+    assert "report_gate" not in text, "the D36 gate is obsolete once the split has landed"
+
+
+def test_the_report_leads_with_the_lean_split_not_the_blend():
+    """D27: a blended headline is not acceptable as the primary result. Ordering is behaviour, so
+    it is pinned here as well as in the renderer's own tests."""
+    reports = (ROOT / "analytics" / "reports.py").read_text()
+    assert reports.index("_lean_block(ctx)") < reports.index("_kpi_block(ctx)")

@@ -183,13 +183,21 @@ while _d <= date(2026, 12, 31):
 check("pipeline_week never raises and never goes backwards across the whole season",
       _never_raises and _monotonic)
 
-# === The Sunday reporting gate (D36) =============================================================
+# === The Sunday report is safe to publish (D27 / D36) ============================================
 
-_has_split = "edge_direction" in (ROOT / "analytics" / "attribution.py").read_text()
-_gated = "steps.report_gate.outputs.ready == 'true'" in _grade
-check("the Sunday report commit is gated until D27's lean-side split lands (or the split is in)",
-      _has_split or _gated,
-      "split present — remove the gate" if _has_split else "gate closed, split still pending (D36)")
+# The D36 gate withheld the report commit until the split existed. Now that it does, the check
+# becomes the stronger one: the split must BE there, and the report must LEAD with it. A blended
+# headline over a 5.57:1 structural home skew is D17's failure, and the Sunday job publishes
+# automatically — so this is asserted rather than trusted.
+_attribution = (ROOT / "analytics" / "attribution.py").read_text()
+_reports = (ROOT / "analytics" / "reports.py").read_text()
+check("D27: attribution stratifies by lean side and carries the naive always-lean-home baseline",
+      "edge_direction" in _attribution and "baseline_always_home" in _attribution
+      and "def by_lean_side" in _attribution)
+check("D27: the report leads with the lean split, not the blended headline",
+      "_lean_block(ctx)" in _reports and _reports.index("_lean_block(ctx)") < _reports.index("_kpi_block(ctx)"))
+check("the obsolete D36 report-commit gate is removed from the Sunday workflow",
+      "report_gate" not in _grade)
 
 # === Test coverage of the cycle itself ===========================================================
 

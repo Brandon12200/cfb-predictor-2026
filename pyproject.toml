@@ -33,7 +33,12 @@ cfb = "cli.cfb:main"
 py-modules = ["main", "config"]
 
 [tool.setuptools.packages.find]
-include = ["cli*", "engine*", "factors*", "data*", "utils*"]
+# `scripts*` and `analytics*` are NOT optional: cli/cfb.py imports from both (lazily, inside the
+# command handlers), so omitting them left 9 of 11 `cfb` subcommands raising ModuleNotFoundError on
+# a clean install — including the flagship `cfb predict week`. Fixing only one of the two would
+# still leave `cfb slate` and all three `predict` subcommands broken, since those fail on
+# `analytics` while `grade`/`report`/`status`/`data *` fail on `scripts`.
+include = ["cli*", "engine*", "factors*", "data*", "utils*", "analytics*", "scripts*"]
 
 [tool.ruff]
 line-length = 100

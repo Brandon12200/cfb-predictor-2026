@@ -45,11 +45,11 @@ The reframe is the point. This is a worse result for the old model and a better 
 
 The finished weekly loop is zero-touch, on a schedule, via GitHub Actions:
 
-- **Tuesday — predict.** Fetch the slate, build the data snapshot, run the engine, and commit the week's predictions to git *before* kickoff. The commit timestamp is the tamper-evident record.
-- **Saturday — closing lines.** Capture near-kickoff spreads for the predicted games, added alongside the prediction and never editing it.
-- **Sunday — grade.** Fetch final scores, compute ATS outcomes and CLV, regenerate the reports, and commit results.
+- **Tuesday — grade, then predict.** Catch up on any games that finished since the last grade (Sunday/Monday finishers, postponements), then fetch the slate, build the snapshot, run the engine, and commit the week's predictions to git *before* kickoff. The claim is committed on its own, and that commit's timestamp is the tamper-evident record.
+- **Wednesday–Saturday — closing lines.** Capture spreads daily, plus four waves through Saturday ahead of the noon / 3:30 / 7:00 / 10:30 ET kickoff windows. Each game's close is the last observation before *that game's* own kickoff, so a late-night kickoff isn't graded against a stale morning number. Observations are appended; the prediction is never edited.
+- **Sunday — grade.** Fetch final scores, compute ATS outcomes and CLV, regenerate the reports, and commit — results, grades and reports as separate commits, because they are different kinds of artifact.
 
-A failed step opens an issue and degrades gracefully; the pipeline is idempotent, and any run can be reproduced from the cached snapshot with zero API calls and identical output.
+A failed step opens a GitHub issue with logs and closes it again on recovery; the pipeline is idempotent, and any run can be reproduced from the cached snapshot with zero API calls and identical output. `docs/PIPELINE.md` is the operating manual.
 
 ## Measurement
 
@@ -77,14 +77,18 @@ ODDS_API_KEY=...   # the-odds-api.com — prediction-time and closing spreads
 Commands that run today:
 
 ```bash
-python main.py hypothetical --home "Ohio State" --away "Texas" --show-factors
-python main.py project --team "Georgia"        # experimental season projections + drift
+cfb status                                     # health, freeze state, quota
+cfb slate 1                                    # the week's FBS-vs-FBS games with a line
+cfb predict week 1                             # price the slate (NO_BET games included)
+cfb hypothetical "Texas vs Ohio State" --show-factors
+cfb project --team "Georgia"                   # experimental season projections + drift
 python scripts/build_snapshot.py --week 1      # cache a week's inputs as a snapshot
-python scripts/build_calibration_evidence.py   # 2025 evidence pack for calibration
 make verify-phase-1                            # executable acceptance checks for a phase
 ```
 
-The polished, slate-first `cfb` command set (`cfb predict week`, `cfb grade`, `cfb report`, …) is the Phase 4.5 target interface; today's entry points are the `main.py` subcommands and the `scripts/` tools above.
+`cfb` is the human interface and shipped in Phase 4.5; `main.py` survives as a deprecation shim for
+one release. The **automation calls `scripts/*.py` directly** — those are the canonical entry
+points (`docs/PIPELINE.md`). Run `./demo.sh` for a guided tour, or `cfb --help` for the full set.
 
 ## A guided tour
 
@@ -115,7 +119,7 @@ Coverage is 39%, and the gaps are recorded as gaps: preseason SP+ and returning 
 **Pricing a matchup.** Ask it for a marquee game:
 
 ```
-$ python main.py hypothetical --home "Ohio State" --away "Texas" --show-factors
+$ cfb hypothetical "Texas vs Ohio State" --show-factors
 Hypothetical: TEXAS @ OHIO STATE — priced from 2026 week 1 snapshot (c86311adcba8)
   Model spread : OHIO STATE -2.5
   Model favors : OHIO STATE by 2.5
@@ -135,7 +139,7 @@ The number is Ohio State −2.5 — and all of it is home field. Both teams sit 
 **Season projections.** The same pricer, run over every remaining game, rolls up win totals:
 
 ```
-$ python main.py project
+$ cfb project
 Season projections — 2026 as of week 1 (EXPERIMENTAL — never drives bets; SPEC §6.5)
   (only one week of projections so far — drift begins once week 2 exists.)
   TEAM                  RATING  PROJ W    ΔWK   ΔPRE
@@ -149,7 +153,7 @@ Season projections — 2026 as of week 1 (EXPERIMENTAL — never drives bets; SP
 Every team projects near .500 because every rating is still flat — the spread you see is schedule shape (how many games, how many at home), not team quality. That is the honest preseason state, not a bug; the feature is the time-lapse, as the `ΔWK`/`ΔPRE` drift columns fill in from Week 2 and teams separate. Drilling into one team shows the per-game reasoning:
 
 ```
-$ python main.py project --team "Georgia"
+$ cfb project --team "Georgia"
 GEORGIA — 2026 projection as of week 1 (EXPERIMENTAL)
   rating 1500 (uncertainty 1.00) | record 0-0 | remaining 11 | projected 5.69-5.31
    WK OPP                  SITE      SPREAD   WIN%  RESULT

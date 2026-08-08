@@ -202,6 +202,13 @@ DENIED_PROTECTED = [
     "echo '{}' >> data/lines/2026_week_01.json",
     "python scripts/x.py > data/ratings/2026_week_01.json",
     "rm data/projections/2026_week_01.json",
+    # --- The Odds spend ledger, added with the Phase-5 fix batch. Same reasoning as the freeze
+    # additions below: a directory joining PROTECTED must join this live matrix too, or the
+    # guard's coverage and its evidence drift apart.
+    "rm data/quota/odds_2026_09.json",
+    "rm -rf data/quota",
+    "echo '{}' > data/quota/odds_2026_09.json",
+    "sed -i 's/481/999/' data/quota/odds_2026_09.json",
     # --- FROZEN MODEL PATHS, added at the v2026-frozen tag (2026-08-05). The freeze checklist
     # required extending this live matrix once factors/ and engine/ joined PROTECTED.
     "rm factors/physical_coefficients.py",

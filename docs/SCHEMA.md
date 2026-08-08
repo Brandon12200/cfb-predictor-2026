@@ -68,6 +68,16 @@ Per team-week: `rest_days`, `bye`/`opponent_bye`, `short_week`, `travel_distance
 
 Per field-group per team/game, the snapshot records: `source` (which client answered — CFBD / ESPN / Odds / …), `fetched_at` (ISO), `cache` (hit/miss), `fallback_reason` (if the fallback chain was used), or `missing` (nothing available). This replaces the coarse `data_sources` string list. `data_quality` becomes an itemized report derived from these facts, not a single percentage.
 
+### 2a. `manifest.reconciliation` — excluded-with-reason (SPEC §5.5.3, Phase 5)
+
+The weekly slate reconciliation: **a game may be excluded, but never invisibly.** CFBD returns ~888 season rows and ~734 become tracked games; before this, nothing recorded that difference or its reason, and both drop sites carried comments claiming a "slate reconciler" that did not exist.
+
+Keys: `cfbd_rows_fetched`, `games_normalized`; `excluded_from_normalization` (`total`, `by_reason`, and the **per-game list for `unresolved_team_name` only**); `week_slate` (`tracked_games`, `out_of_scope`, `out_of_scope_games`); `odds_cross_reference` (`events_normalized`, `matched_to_slate`, `unmatched_odds_events`, `slate_games_without_a_line`, `unresolved_events`).
+
+The classification is the point. **`fcs_opponent_out_of_scope` is correct behaviour** (§16.1) and is counted only — listing 150+ FCS rows a week would bury the signal. **`unresolved_team_name` is a defect**: a tracked game lost to an alias gap, listed game-by-game with the raw source names so it can actually be fixed.
+
+**It lives in the manifest, never in `data`.** `compute_snapshot_id(data)` runs strictly before the manifest is assembled, so the reconciliation block provably cannot move `snapshot_id`, the schema-v2 golden or the behavioural fingerprint — which is what made it safe to add after the freeze. Pinned by `tests/test_slate_reconciliation.py::test_the_reconciliation_cannot_move_the_snapshot_id`. Readers use `.get`: snapshots built before the detector carry no block.
+
 ---
 
 ## 3. Prediction result schema + reproducibility contract

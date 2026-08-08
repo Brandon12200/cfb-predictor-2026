@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from analytics.attribution import per_factor
+from analytics.attribution import by_lean_side, per_factor
 from analytics.calibration import brier_score, calibration_table
 from analytics.join import join
 from analytics.kpis import kpi_pack
@@ -38,8 +38,78 @@ def report_context(joined: list[dict]) -> dict[str, Any]:
         "calibration": calibration_table(joined),
         "selectivity": selectivity_report(joined),
         "attribution": per_factor(joined),
+        "lean": by_lean_side(joined),
         "counts": {"games": len(joined), "graded": len(graded)},
     }
+
+
+def _lean_cell(s: dict) -> str:
+    """One side's CLV cell, stating its reason inline when empty (September readers see cells)."""
+    if s["n_clv"]:
+        return f"{_num(s['avg_clv'])} pts (beat close {_pct(s['clv_positive_pct'])}, n={s['n_clv']})"
+    if s["n_games"]:
+        return "— no closing lines captured yet (honest-missing)"
+    return "— (no games on this side)"
+
+
+def _lean_block(ctx: dict) -> list[str]:
+    """D27's split — the PRIMARY result. Deliberately rendered before the blended KPIs, because a
+    single blended headline over a 5.57:1 structural home skew is not acceptable as the headline."""
+    lean = ctx["lean"]
+    m, sides, base = lean["meta"], lean["sides"], lean["baseline_always_home"]
+
+    def row(label: str, s: dict) -> str:
+        w = s["wilson_95"]
+        wil = f"[{w[0]:.0%}–{w[1]:.0%}]" if w else "—"
+        return (f"| {label} | {s['n_games']} | {s['wins']}-{s['losses']}-{s['pushes']} | "
+                f"{_pct(s['ats_win_pct'])} | {wil} | {_lean_cell(s)} |")
+
+    ratio = f"{m['home_away_ratio']}:1" if m["home_away_ratio"] is not None else "—"
+    lines = [
+        "### Games of interest, by lean side (D27 — read this before the blended numbers)", "",
+        f"_{m['n_with_side']} of {m['n_games']} games carry a gradable lean "
+        f"({sides['home']['n_games']} home / {sides['away']['n_games']} away, {ratio})._", "",
+    ]
+    # Say plainly what these rows ARE. If every graded lean is hypothetical, this is not a bet
+    # record and must not be readable as one.
+    if m.get("all_hypothetical"):
+        lines += [f"_**These are hypothetical leans, not placed bets.** All {m['n_graded']} graded "
+                  f"games were NO_BET — this is what the model would have done had it bet, which "
+                  f"is how selectivity gets measured (3c.5). No wager was recommended._", ""]
+    elif m.get("n_hypothetical"):
+        lines += [f"_Mixed: {m['n_placed']} placed bet(s) and {m['n_hypothetical']} hypothetical "
+                  f"NO_BET lean(s), graded together here. The blended block below covers the "
+                  f"placed bets alone; `Selectivity` separates the two._", ""]
+    lines += [
+        "| lean | games | W-L-P | ATS win% | Wilson 95% | avg CLV |",
+        "|---|---|---|---|---|---|",
+        row("home", sides["home"]),
+        row("away", sides["away"]),
+        row("_naive: always lean home_", base),
+    ]
+
+    delta = lean["vs_baseline"]["ats_delta"]
+    if delta is None:
+        lines += ["", "_No graded bets yet, so the model cannot be differenced against the naive "
+                  "always-lean-home baseline. That comparison — not the raw win% — is what makes "
+                  "the number evidence about the model (D27)._"]
+    else:
+        verdict = ("**above**" if delta > 0 else "**at or below**")
+        lines += ["", f"_Model {_pct(lean['model_overall']['ats_win_pct'])} vs naive baseline "
+                  f"{_pct(base['ats_win_pct'])} on the same games: **{delta:+.1%}** — "
+                  f"{verdict} always taking the home team._"]
+        if delta <= 0:
+            lines += ["", "_The model's side-selection has not beaten 'always take the home team' "
+                      "on this sample. That is the comparison D17 existed to force, so it is "
+                      "reported at the top rather than buried._"]
+
+    if sides["away"]["n_graded"] and sides["away"]["n_graded"] < 50:
+        lines += ["", f"_The away cell is thin (n={sides['away']['n_graded']} graded). Its Wilson "
+                  f"interval, not its point estimate, is the honest reading._"]
+    if lean["neutral"]["n_games"]:
+        lines += ["", f"_{lean['neutral']['n_games']} neutral games: {lean['neutral']['reason']}_"]
+    lines += ["", f"_{m['note']}_"]
+    return lines
 
 
 def _kpi_block(ctx: dict) -> list[str]:
@@ -55,7 +125,10 @@ def _kpi_block(ctx: dict) -> list[str]:
         clv_cell = f"— no closing lines captured (honest-missing), n={clv['n_no_clv']}"
     else:
         clv_cell = "— (no placed bets)"
-    lines = ["### Placeable strategy (real bets)", "",
+    lines = ["### Placeable strategy — blended (secondary; see the lean split above)", "",
+             "_Blended across both lean sides. Per D27 this is **not** the headline: with a "
+             "structurally home-skewed lean, a single number here is dominated by how home teams "
+             "did against the spread._", "",
              "| metric | value |", "|---|---|",
              f"| ATS record | {ats['wins']}-{ats['losses']}-{ats['pushes']} |",
              f"| ATS win% | {_pct(ats['ats_win_pct'])}  {wil} |",
@@ -145,7 +218,7 @@ def render_week(predictions_env: dict, graded_env: dict | None, *, title: str | 
     out = [f"# {head}", "",
            f"_{cov['graded']}/{cov['games']} games graded. Model: {meta.get('model_version', '—')} "
            f"(schema v{meta.get('schema_version', '—')}), year {year}._", ""]
-    out += _kpi_block(ctx) + [""] + _calibration_block(ctx) + [""]
+    out += _lean_block(ctx) + [""] + _kpi_block(ctx) + [""] + _calibration_block(ctx) + [""]
     out += _selectivity_block(ctx) + [""] + _attribution_block(ctx) + [""]
     return "\n".join(out) + "\n"
 
@@ -161,6 +234,6 @@ def render_season(weeks: list[tuple[dict, dict | None]], *, title: str, subtitle
     if subtitle:
         out += [f"_{subtitle}_", ""]
     out += [f"_{cov['graded']}/{cov['games']} games graded across {len(weeks)} week(s)._", ""]
-    out += _kpi_block(ctx) + [""] + _calibration_block(ctx) + [""]
+    out += _lean_block(ctx) + [""] + _kpi_block(ctx) + [""] + _calibration_block(ctx) + [""]
     out += _selectivity_block(ctx) + [""] + _attribution_block(ctx) + [""]
     return "\n".join(out) + "\n"
