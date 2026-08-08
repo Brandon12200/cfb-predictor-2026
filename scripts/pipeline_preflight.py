@@ -104,12 +104,20 @@ def check_model_version(pf: Preflight, freeze_tag: str) -> None:
         pf.note(f"model_version {mv}")
 
 
+# Which secrets each role needs. Module-level and exported because the workflow files must thread
+# exactly these into the step that runs the preflight, and a test asserts they do — a second copy
+# of this mapping in the test is how the two would drift apart (D25.4).
+ROLE_SECRETS: dict[str, tuple[str, ...]] = {
+    "predict": ("CFBD_API_KEY", "ODDS_API_KEY"),
+    "capture": ("ODDS_API_KEY",),
+    "grade": ("CFBD_API_KEY",),
+    "freeze": ("CFBD_API_KEY",),
+}
+
+
 def check_secrets(pf: Preflight, role: str) -> None:
     """ABORT: fail here, not forty lines into a snapshot build."""
-    needed = {"predict": ("CFBD_API_KEY", "ODDS_API_KEY"),
-              "capture": ("ODDS_API_KEY",),
-              "grade": ("CFBD_API_KEY",),
-              "freeze": ("CFBD_API_KEY",)}.get(role, ())
+    needed = ROLE_SECRETS.get(role, ())
     for name in needed:
         if not (os.environ.get(name) or "").strip():
             pf.abort(f"{name} is unset or empty — required for role '{role}'.")

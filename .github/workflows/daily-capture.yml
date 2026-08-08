@@ -59,6 +59,7 @@ jobs:
           week: ${{ inputs.week }}
           year: ${{ inputs.year || '2026' }}
           skip-secrets: ${{ inputs.dry_run == true }}
+          odds-api-key: ${{ secrets.ODDS_API_KEY }}
 
       # Cross-run memory for the pre-spend guard is now the committed append-only ledger
       # (data/quota/, SPEC §10.5) — it survives a fresh checkout by being in the repo, which the
