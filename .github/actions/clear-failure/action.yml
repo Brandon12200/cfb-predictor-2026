@@ -13,6 +13,10 @@ inputs:
   mode:
     required: false
     default: live
+  kind:
+    description: Event class to clear. Only ever clears `failure` — an arrival is not "recovered".
+    required: false
+    default: failure
   token:
     required: true
 
@@ -20,17 +24,24 @@ runs:
   using: composite
   steps:
     - shell: bash
+      # Inputs via `env:`, never `${{ }}` into the script — same reasoning as report-failure.
       env:
         GH_TOKEN: ${{ inputs.token }}
+        IN_STAGE: ${{ inputs.stage }}
+        IN_WEEK: ${{ inputs.week }}
+        IN_MODE: ${{ inputs.mode }}
+        IN_KIND: ${{ inputs.kind }}
       run: |
         set -euo pipefail
         RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-        ARGS=(--state open --json number --limit 10 --label pipeline-failure --label "stage:${{ inputs.stage }}")
-        [ -n "${{ inputs.week }}" ] && ARGS+=(--label "week:${{ inputs.week }}")
-        [ "${{ inputs.mode }}" = "rehearsal" ] && ARGS+=(--label rehearsal)
+        KIND="${IN_KIND:-failure}"
+        ARGS=(--state open --json number --limit 10
+              --label "pipeline-${KIND}" --label "stage:${IN_STAGE}")
+        [ -n "$IN_WEEK" ] && ARGS+=(--label "week:${IN_WEEK}")
+        [ "$IN_MODE" = "rehearsal" ] && ARGS+=(--label rehearsal)
 
         for N in $(gh issue list "${ARGS[@]}" --jq '.[].number'); do
-          gh issue comment "$N" --body "Recovered — a subsequent \`${{ inputs.stage }}\` run succeeded: ${RUN_URL}"
+          gh issue comment "$N" --body "Recovered — a subsequent \`${IN_STAGE}\` run succeeded: ${RUN_URL}"
           gh issue close "$N"
           echo "::notice::closed #${N} (recovered)"
         done

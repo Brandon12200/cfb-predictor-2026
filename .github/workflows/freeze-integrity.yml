@@ -76,6 +76,11 @@ jobs:
         uses: ./.github/actions/report-failure
         with:
           stage: freeze
+          # `kind: transition` gives this its own label and dedupe bucket. Sharing
+          # `pipeline-failure` meant an open "the freeze job failed" issue swallowed the arrival
+          # as a comment, under a title that read as a broken job — and the title override below
+          # could never apply, because it only applies when an issue is CREATED.
+          kind: transition
           title: "CFBD has published 2026 SP+ / returning production — SPEC §3 exception needed"
           body: >
             The frozen model's inputs have changed. D10 activates SP+ and the returning-production
@@ -90,5 +95,18 @@ jobs:
         if: failure()
         with:
           stage: freeze
+          kind: failure
+          mode: live
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # This workflow had no close path at all, unlike the three cadence workflows — so a
+      # freeze-integrity failure stayed open forever once fixed. It clears only `kind: failure`:
+      # an SP+ arrival is not "recovered" by a later green run, because the data is still there.
+      # That issue is closed deliberately, by the retag that resolves it.
+      - uses: ./.github/actions/clear-failure
+        if: success()
+        with:
+          stage: freeze
+          kind: failure
           mode: live
           token: ${{ secrets.GITHUB_TOKEN }}
