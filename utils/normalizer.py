@@ -192,13 +192,26 @@ class TeamNameNormalizer:
 
         This is D7's own doctrine applied at runtime: that entry already forbids a CFBD team
         resolving "by implicit fuzzy match rather than one of these three explicit routes".
+
+        **Accepted cost, stated rather than left implicit:** this also stops fuzzy typo-correction
+        of tracked teams themselves — `"Ohio Statee"` now returns ``None`` instead of
+        ``"OHIO STATE"``, so a mistyped name in `cfb hypothetical` no longer self-corrects. That is
+        the right trade: the same mechanism that forgives a human typo is the one that turned
+        Samford into Stanford in an authoritative data feed, and a wrong-but-confident resolution
+        is far more expensive than a rejected one. Add an explicit alias if a spelling deserves to
+        resolve.
         """
         matches = get_close_matches(clean_name, self._all_names, n=1, cutoff=0.8)
         if not matches:
             return None
 
         resolved = self.alias_mappings.get(matches[0], matches[0])
-        if resolved in self.team_mappings:
+        # Compare case-insensitively. `_all_names` also holds the mixed-case ESPN/Odds display
+        # forms ("Michigan", "Texas"), whose uppercase IS an FBS canonical but which are not
+        # literally keys of `team_mappings` — a route by which a fuzzy hit could confer FBS
+        # membership without tripping the guard. No live bypass was found, but this guard is
+        # supposed to hold by construction rather than by luck.
+        if resolved.upper() in self.team_mappings:
             logger.debug(
                 "Refusing fuzzy match %r -> %r: fuzzy matching may not confer FBS membership "
                 "(add an explicit alias if this mapping is genuinely correct).",

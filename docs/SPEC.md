@@ -86,10 +86,18 @@ Roster turnover (transfer portal, NIL) makes prior-season **team performance dat
 > | lean home / away / neutral | 195 / 35 / 100 | 198 / 33 / 107 |
 > | **confidence tier A / B / C** | **2 / 318 / 10** | **322 / 6 / 10** |
 > | `NO_BET` | 330 of 330 | **338 of 338** |
-> | max \|edge\| | 0.0000 | 0.0000 |
+> | max \|`edge_size`\| (fingerprint vehicle) | 0.2805 | 0.3156 |
+> | max \|`edge_size`\| (real-lined games only) | 0.1403 | 0.1403 |
 >
 > Slate membership verified by identity, not arithmetic: **+10 real Cal games**, **−2 fabrications**
 > (`USC@HOUSTON` was *Southern@Houston*; `STANFORD@AUBURN` was *Samford@Auburn*).
+>
+> **On the edge figures.** Every game stays `NO_BET` because `edge_size` remains far below the
+> 0.75 floor, not because it is zero — physical schedule factors (bye, altitude, travel) do fire
+> preseason. Observed max **0.3156** against a vehicle ceiling of 0.8269 and a floor of 0.75. *(An
+> earlier draft of this table recorded `0.0000`: the measuring script read a non-existent
+> `predicted_edge` key and silently defaulted to zero. Caught in review, corrected here, and
+> recorded because an audit-trail entry that carries a wrong number is worse than no entry.)*
 >
 > **The tier inversion is the most consequential line.** Tier A goes from 2 games to 322 because
 > manifest coverage rose **39.0% → 63.3%** and `confidence` is data-availability-driven (B1). It

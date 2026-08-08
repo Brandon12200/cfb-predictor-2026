@@ -105,13 +105,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Refuse to merge a rehearsal branch
+        # HEAD_REF comes through `env:`, never `${{ }}` into the script. A branch name is
+        # fork-controlled and git permits backticks and `$(` in ref names, so interpolating it
+        # would execute the PR author's chosen commands on the runner — the same class this PR
+        # fixes in the issue-reporting composites. It stops being hypothetical the moment the
+        # repository goes public (D37) and external PRs can run this job.
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           PREFIX="$(python -c "import json;print(json.load(open('season.json'))['pipeline']['rehearsal']['branch_prefix'])")"
-          case "${{ github.head_ref }}" in
+          case "$HEAD_REF" in
             "$PREFIX"*)
-              echo "::error::'${{ github.head_ref }}' is a rehearsal branch. Rehearsal artifacts are"
-              echo "::error::acceptance evidence and stay unmerged — merging would write rehearsal"
-              echo "::error::predictions into the byte-immutable claim slots the live run needs."
+              echo "::error::'$HEAD_REF' is a rehearsal branch. Rehearsal artifacts are acceptance"
+              echo "::error::evidence and stay unmerged — merging would write rehearsal predictions"
+              echo "::error::into the byte-immutable claim slots the live run needs."
               exit 1 ;;
             *) echo "not a rehearsal branch — ok" ;;
           esac
