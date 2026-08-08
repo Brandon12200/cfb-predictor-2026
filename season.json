@@ -1,6 +1,6 @@
 {
   "season": 2026,
-  "note": "Config home for the cfb CLI (D24). The `weeks` calendar is folded from data/season_calendar_2026.json (D8) \u2014 kept in sync by tests/test_cfb_cli.py::test_season_json_weeks_match_corroborated_calendar. cli_defaults are the `cfb` command defaults (config-over-flags, SPEC \u00a79.6). Phase 5 ADDS its \u00a710.6 fields (kickoff windows, freeze tag, budget) to THIS file.",
+  "note": "Config home for the cfb CLI (D24). The `weeks` calendar is folded from data/season_calendar_2026.json (D8) \u2014 kept in sync by tests/test_cfb_cli.py::test_season_json_weeks_match_corroborated_calendar. cli_defaults are the `cfb` command defaults (config-over-flags, SPEC \u00a79.6). Phase 5 ADDED its \u00a710.6 fields under the `pipeline` key below (kickoff windows, freeze tag, slate filter, data-quality thresholds, Odds budget).",
   "weeks": {
     "1": {
       "start": "2026-08-29",
@@ -69,5 +69,61 @@
     "min_edge": 0.0,
     "tier": null,
     "save": false
+  },
+  "pipeline": {
+    "_note": "SPEC §10.6 pipeline config (Phase 5). Every key here has a named consumer — see the key→consumer table in docs/PIPELINE.md. `schedule_et.*.cron_utc` is the one deliberately non-executable key: GitHub Actions cannot read this file, so the crons are duplicated in .github/workflows/ and a test asserts the two agree.",
+    "timezone": "America/New_York",
+    "freeze_tag": "v2026-frozen",
+    "slate_filter": "fbs_vs_fbs",
+    "schedule_et": {
+      "predict": [
+        {"days": ["tue"], "time": "09:17", "cron_utc": "17 13 * * 2"}
+      ],
+      "capture": [
+        {"days": ["wed", "thu", "fri"], "time": "17:23", "cron_utc": "23 21 * * 3,4,5"},
+        {"days": ["sat"], "time": "10:23", "cron_utc": "23 14 * * 6"},
+        {"days": ["sat"], "time": "14:23", "cron_utc": "23 18 * * 6"},
+        {"days": ["sat"], "time": "17:23", "cron_utc": "23 21 * * 6"},
+        {"days": ["sat"], "time": "20:23", "cron_utc": "23 0 * * 0"}
+      ],
+      "grade": [
+        {"days": ["sun"], "time": "12:47", "cron_utc": "47 16 * * 0"}
+      ],
+      "freeze_integrity": [
+        {"days": ["daily"], "time": "07:43", "cron_utc": "43 11 * * *"}
+      ]
+    },
+    "dst_note": "Crons are single UTC expressions anchored to EDT (UTC-4). After the 2026-11-01 EST flip a fixed UTC time lands one hour EARLIER in ET — always the safe direction for a pre-kickoff capture. No dual crons and no date guards: Actions cron has no date ranges, and a second cron guarded by a string literal is a booby trap. The intended ET time is recorded above and every run logs its actual ET time, so the drift is auditable rather than silent.",
+    "kickoff_windows_et": {
+      "wed": ["19:00"],
+      "thu": ["19:00"],
+      "fri": ["19:00"],
+      "sat": ["12:00", "15:30", "19:00", "22:30"],
+      "sun": ["13:00"],
+      "mon": ["19:00"]
+    },
+    "jitter_slack_minutes": 60,
+    "data_quality": {
+      "min_slate_games": 1,
+      "min_registry_teams": 130,
+      "min_snapshot_coverage_pct": 30.0,
+      "on_breach": {
+        "min_slate_games": "fail",
+        "min_registry_teams": "fail",
+        "min_snapshot_coverage_pct": "warn"
+      },
+      "_note": "min_snapshot_coverage_pct is 30.0 because the committed preseason manifest reports 39% over 10 slate games — a threshold set from in-season intuition would fail every August build. It is `warn`, not `fail`: an honestly-low-coverage snapshot is still evidence and must still be committed."
+    },
+    "odds_budget": {
+      "monthly_credits": 500,
+      "min_credits_capture": 20,
+      "min_credits_snapshot": 40,
+      "expected_weekly_credits": 8,
+      "alert_below": 100,
+      "_note": "One get_ncaaf_spreads(regions=us, markets=spreads) call = 1 credit. The ratified cadence spends ~8/week (~35/month) against 500, so exhaustion is not the risk — a retry storm is, which is what expected_weekly_credits exists to detect. min_credits_snapshot is the higher floor because the Tuesday snapshot is the week's foundation."
+    },
+    "rehearsal": {
+      "branch_prefix": "rehearsal/"
+    }
   }
 }
