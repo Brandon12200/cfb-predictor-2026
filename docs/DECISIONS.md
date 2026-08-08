@@ -334,3 +334,67 @@ Removing the +1 collapses 57.0% onto the independent Vegas number — **the enti
 **Implementation:** one accessor, no second copy to drift — `data.snapshot.store.{FROZEN_VEHICLE, FROZEN_VEHICLE_SHA256, FROZEN_VEHICLE_SOURCE, load_frozen_vehicle, frozen_vehicle_sha256}`, imported by `verify_phase_3.py`, `slate_fingerprint.py` and both tests.
 **One trap found while implementing, recorded because it is silent:** `PredictionEngine` loads its own snapshot through `data.data_manager`, so handing a bundle to `analytics.predictions.build_predictions` redirects **enumeration only** — pricing still reads whatever is on disk. Every gate call site must wrap the engine call in `scripts.slate_fingerprint.engine_reads(bundle)` or it gets a **split read** (enumeration pinned, pricing live) that looks correct and is not. The redirect is factored into that one context manager for this reason.
 **Scope:** freeze-exempt files only (`scripts/`, `tests/`, `data/snapshot/store.py`). `factors/`, `engine/` and every calibration constant are untouched.
+
+---
+
+## D30 — Pipeline commit identity: a project machine identity with a run-URL trailer — **RATIFIED (owner, 2026-08-07)**
+**Date:** 2026-08-07
+**Context:** One of two design questions parked since `docs/PHASE5_NOTES.md` §4. SPEC §10 leans on the automated commit as **tamper-evident provenance**, while **D3** forbids AI attribution or tool references in commit text. Machine commits sit between the two and needed one recorded reconciliation.
+**Decision (owner):** automated commits are authored as **`cfb-pipeline <pipeline@users.noreply.github.com>`**, with a second message paragraph `Run: <actions-run-url>`.
+**Rationale:** naming *this project's pipeline* is not AI attribution — it identifies the mechanism, which is exactly what honest provenance requires. The run-URL trailer binds each commit to an immutable Actions log carrying its own timestamps, inputs and logs; that is the tamper-evident link SPEC §10 asks the commit to provide, and it is a URL rather than a credit line.
+**Rejected:** `github-actions[bot]` (shared across every automation, carries no project meaning, and is a tool reference in the author field); the owner's own identity (**the actual provenance lie** — a human name on a machine commit, which is what D3 exists to prevent).
+
+---
+
+## D31 — Branch protection: protect `main`, bypass for the Actions app — **RATIFIED (owner, 2026-08-07)**
+**Date:** 2026-08-07
+**Context:** The second parked `PHASE5_NOTES` §4 question. The pipeline pushes 3–7 commits a week directly to `main`; a protected `main` with no exception makes the cadence fail on its first Tuesday.
+**Decision (owner):** protect `main`, add a ruleset **bypass for the `github-actions` app**, and require the `ci / test` check on pull requests. Owner action; confirmed before the first rehearsal.
+**Rejected — and the reason matters:** having the pipeline open a PR and auto-merge adds latency between "claim computed" and "claim committed", which is corrosive for a pre-registration artifact whose timestamp is the evidence. It also carries a defect produced by a *repo setting* rather than by code: **if the repository enforces squash-merge, the three-commit Sunday taxonomy collapses into one commit carrying results + graded + reports together** — a direct D22/D23 violation. Viable only with merge- or rebase-merge plus a CI check refusing squash, which is more machinery than the bypass.
+
+---
+
+## D32 — Rehearsals run on an unmerged branch, not a separate artifact tree — **RATIFIED (owner, 2026-08-07; reversing an earlier leaning)**
+**Date:** 2026-08-07
+**Context:** `PHASE5_NOTES` §3 requires two full-cycle rehearsals against the **real Week-1 slate**. But a rehearsal that writes `data/predictions/2026_week_01.json` consumes the byte-immutable claim slot the live Week-1 run needs (D22), and the slot is hook-guarded so it cannot simply be overwritten later. The owner's initial leaning was a separate append-only `data/rehearsals/` tree.
+**The finding that reversed it:** the collision is larger than the claim slot. **`scripts/build_snapshot.py` has no `--out`**, so a rehearsal also overwrites `data/snapshots/2026_week_01/`, which backs three `verify-phase-3` gates (D29).
+**Decision (owner):** rehearsals run on an **unmerged `rehearsal/*` branch**.
+**Rationale:** every script runs its **exact production code path with zero flags** — a rehearsal that exercises different code is not a rehearsal. `main` keeps both the pristine gate vehicle and the untouched claim slot. Marking is the ref name: **unforgeable**, and it satisfies the owner's stated requirement that marking must actually protect the claim slot (commit-message marking alone cannot). Artifacts persist and diff across rehearsals. **Zero new code** — the alternative required threading `--base`/`--out` through 3–4 scripts in the week before the PR, which is new untested code on the critical path, and would make the rehearsal exercise a path the live run never takes.
+**Consequences:** mode is derived from the ref (`main` + `schedule` ⇒ live; `rehearsal/*` ⇒ rehearsal), **never from a dispatch input** — a mode that cannot be typed cannot be mistyped. CI **fails any PR whose head ref matches `rehearsal/*`**, so rehearsal artifacts cannot reach the live claim slots by merge. Rehearsal branches are tagged and left unmerged as acceptance evidence.
+
+---
+
+## D33 — The slate-hash gate runs on push AND on a timer; `sp_watch` is the external probe — **RATIFIED (owner, 2026-08-07)**
+**Date:** 2026-08-07
+**Context:** Planning assumed `verify-phase-3` would "go red when CFBD publishes SP+". **That is wrong, and the correction changed what got built:** the gate reads a *committed* snapshot, so it is a deterministic function of the commit. It fails when a commit changes that input — never spontaneously. A scheduled re-run therefore cannot detect an external data event **by construction**.
+**Decision (owner):**
+1. **`verify-phase-3` on every push/PR as a required check.** With the vehicle pinned (D29) it is a pure "did this commit move model output" gate, which is exactly what should block a merge.
+2. **A daily `freeze-integrity` job** carrying a `git rev-parse HEAD:factors` vs `<tag>:factors` tree-hash assertion, the fingerprint, and **`scripts/sp_watch.py`** — 2 CFBD calls, **zero Odds credits**, counting `/ratings/sp` and `/player/returning` rows against a committed 0/0 baseline. The scheduled run matters because CI only fires when someone pushes, and the quiet pre-season weeks are exactly when nobody does.
+3. **`sp_watch` opens an Issue; it does not fail a check.** The correct response to SP+ landing is the SPEC §3 exception process plus a new tag — a decision, not a revert — and a red required check would only pressure someone into making that change quietly.
+**Why it is worth building:** learning on the day, rather than discovering it mid-rehearsal, is several days of owner turnaround against a fixed 2026-08-29 kickoff.
+
+---
+
+## D34 — `model_version` keeps the descriptive `git describe` form — **RATIFIED (owner, 2026-08-07)**
+**Date:** 2026-08-07
+**⚠ This entry SUPERSEDES the phrasing in D21.2 and does not edit it** (owner ruling: supersede, never edit, a ratified entry). D21.2 states `model_version` "resolves to `v2026-frozen` once tagged". Read that clause through this entry.
+**Context:** `utils.version.model_version()` is `git describe --tags --always --dirty`, which returns the bare tag **only when HEAD is exactly the tagged commit**. Two freeze-exempt commits after the tag it already returned `v2026-frozen-2-gea21d28`, and every Phase-5 commit widens the suffix. So the season's claims will carry `v2026-frozen-N-g<sha>`, not the bare tag. Surfaced while re-verifying `HANDOFF_PHASE5` §(d).4, whose "already correct, no action" was true at the tag and stale immediately after.
+**Decision (owner):** **keep the descriptive form.** `v2026-frozen-8-gb7a4a33` identifies the **exact tree** that produced the claim — strictly better provenance than a bare tag, which would make every week's file indistinguishable. `docs/SCHEMA.md` is corrected directly (it is a description, not a ratified decision); D21.2 stands as written and is read through this entry.
+**The failure this closes, which is worse than the wording:** `actions/checkout` defaults to `fetch-depth: 1` and fetches **no tags**, so on a runner `--always` makes `git describe` silently return a **bare short SHA** — a commit hash in the provenance field the entire pre-registration story rests on, in a file that is byte-immutable forever. Mitigated three ways: `fetch-depth: 0` on every job, a `cfb-setup` step that refuses to proceed with no tags, and a preflight **ABORT** if `model_version()` does not start with the freeze tag.
+
+---
+
+## D35 — Saturday capture waves: a refinement of the daily cadence, not a replacement — **RATIFIED (owner, 2026-08-07)**
+**Date:** 2026-08-07
+**Context:** `PHASE5_NOTES` §1 binds capture to "daily Wed–Sat, **not** Saturday-only". Read as one capture per day, a single Saturday-morning fetch leaves a 22:30 ET kickoff with a **12-hour-stale** "close", and `closing_observation` — being honest per-game as-of-T — would faithfully report that stale number. CLV becomes noise for the largest part of the slate.
+**Decision (owner):** Wed/Thu/Fri once each, plus **four Saturday waves** (10:23 / 14:23 / 17:23 / 20:23 ET) ahead of the 12:00 / 15:30 / 19:00 / 22:30 ET kickoff windows. Ratified explicitly as a **superset** of the binding daily cadence, so it refines `PHASE5_NOTES` §1 rather than re-deriving it.
+**Cost, measured not assumed:** one `get_ncaaf_spreads(regions=us, markets=spreads)` call = **1 credit**; ~8/week ≈ **35/month against a 500/month tier (7%)**. **No spend decision was required.** The real budget risk is a retry storm, which the preflight burn-rate check exists to catch; `expected_weekly_credits` is asserted against the actual scheduled capture count so a cadence change cannot leave that alarm quietly wrong.
+
+---
+
+## D36 — The Sunday report commit is gated until D27's lean-side split lands — **RATIFIED (owner, 2026-08-07)**
+**Date:** 2026-08-07
+**Context:** **D27 requires** CLV and ATS% to be reported **split by lean side and against a naive always-lean-home baseline**, "before the first season report". Verified during Phase-5 planning: `analytics/` has **no lean-side stratification and no naive baseline** — `grep edge_direction analytics/{reports,attribution,kpis}.py` returns nothing. Wilson intervals already exist and are threaded through; the split does not. Meanwhile the Sunday workflow's job is to publish `reports/` automatically.
+**Decision (owner):** the Sunday job **generates reports but does not commit them** until the split lands. The gate greps `analytics/attribution.py` for `edge_direction`, so it **opens by itself** rather than needing a second edit someone could forget; a test asserts it is still closed today and instructs its own removal when the split arrives.
+**Rationale:** preseason leans run **195 home / 35 away — 5.57:1, and structural**, because `TravelBurden`/`ConsecutiveRoad` can only penalise the visitor and `Altitude` only advantages the host. An unsplit season headline over that skew is **D17's exact failure** — a systematic home lean reported as skill — except re-committed and pushed automatically every Sunday. Publishing that is worse than publishing nothing.
+**Deadline (owner):** the split has a **hard deadline of the first graded Sunday**, not the soft follow-up-PR target. The away-lean cell (~35 preseason) **must carry its Wilson interval**.

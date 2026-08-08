@@ -1,4 +1,4 @@
-.PHONY: help install test lint predict grade report verify-phase-0 verify-phase-1 verify-phase-2 verify-phase-3 verify-phase-4 verify-phase-4-5
+.PHONY: help install test lint predict grade report verify-phase-0 verify-phase-1 verify-phase-2 verify-phase-3 verify-phase-4 verify-phase-4-5 verify-phase-5
 
 PY ?= python
 
@@ -52,3 +52,6 @@ verify-phase-4:
 
 verify-phase-4-5:
 	$(PY) scripts/verify_phase_4_5.py
+
+verify-phase-5:
+	$(PY) scripts/verify_phase_5.py
