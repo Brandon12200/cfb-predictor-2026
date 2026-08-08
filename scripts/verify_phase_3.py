@@ -171,6 +171,12 @@ check("min_edge ladder reachability holds (1.5 unreachable; 1.0 vehicle-unreacha
 # which would make this gate report "model output moved" every time the pipeline merely ran (D29).
 # The vehicle's own sha256 is asserted FIRST so "the gate's input changed" cannot be misread as
 # "the model moved". The fingerprint constant below is unchanged and is never to be updated.
+import json as _json  # noqa: E402
+
+# The tag name comes from the config (D24), never a literal — a retag must move one place, not many.
+_CONFIGURED_TAG = (_json.loads((ROOT / "season.json").read_text())
+                   .get("pipeline", {}).get("freeze_tag", "<unset>"))
+
 from data.snapshot.store import FROZEN_VEHICLE as _VEHICLE  # noqa: E402
 from data.snapshot.store import FROZEN_VEHICLE_SHA256 as _FROZEN_VEHICLE_SHA256  # noqa: E402
 from data.snapshot.store import frozen_vehicle_sha256 as _vehicle_sha  # noqa: E402
@@ -192,7 +198,8 @@ if _VEHICLE.exists():
     _FROZEN_SLATE_SHA256 = "1c5187eb9c2a5b7170717cd05aaaf99a93e74e202430b66f10194e7e4f490434"
     _FROZEN_SLATE_GAMES = 338
     _fp = _fingerprint()
-    check("frozen-model behavioural fingerprint over the 330-game tracked slate (v2026-frozen)",
+    check(f"frozen-model behavioural fingerprint over the {_FROZEN_SLATE_GAMES}-game tracked "
+          f"slate ({_CONFIGURED_TAG})",
           _fp["sha256"] == _FROZEN_SLATE_SHA256 and _fp["n_games"] == _FROZEN_SLATE_GAMES,
           f"{_fp['n_games']} games, sha256 {_fp['sha256'][:16]}… "
           f"(frozen {_FROZEN_SLATE_SHA256[:16]}…) — a mismatch means model output moved; "

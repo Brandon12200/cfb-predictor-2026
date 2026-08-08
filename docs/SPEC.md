@@ -49,6 +49,17 @@ Roster turnover (transfer portal, NIL) makes prior-season **team performance dat
 
 ### 3.1 Freeze exceptions (the §3.2 process — one entry per exception, each with a new tag)
 
+**Retagging includes every tag-name reference, and tests must derive the tag rather than hardcode
+it.** Cutting `v2026-frozen-2` left `season.json`'s `freeze_tag` at `v2026-frozen`, so the
+preflight's tree-hash assertion and the daily freeze-integrity job were validating the freeze
+against a **superseded tag — and passing**, because the frozen trees are identical at both. Two
+tests then failed in CI for a downstream reason (one inferred "are we past the tag?" by comparing
+against that stale constant). Nine red jobs, one stale string. The rule: `season.json`'s
+`freeze_tag` is the single source of truth (D24); live code and tests read it or `frozen_tag()`,
+never a literal; prose and history may name old tags freely. Pinned by
+`tests/test_frozen_status.py::test_the_configured_freeze_tag_is_the_current_tag` and
+`::test_no_live_code_hardcodes_a_superseded_tag_name`.
+
 **Ratifying a transition includes updating `scripts/sp_watch.py`'s `BASELINE` to the newly-ratified
 row counts.** This is a step of the process, not housekeeping. The baseline records *what the
 current tag was measured against*; leaving a ratified source at its old value makes the probe
