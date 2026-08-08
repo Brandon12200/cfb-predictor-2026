@@ -49,6 +49,13 @@ Roster turnover (transfer portal, NIL) makes prior-season **team performance dat
 
 ### 3.1 Freeze exceptions (the §3.2 process — one entry per exception, each with a new tag)
 
+**Ratifying a transition includes updating `scripts/sp_watch.py`'s `BASELINE` to the newly-ratified
+row counts.** This is a step of the process, not housekeeping. The baseline records *what the
+current tag was measured against*; leaving a ratified source at its old value makes the probe
+re-report the same arrival on every run forever, and — the failure that matters — the **next**,
+genuinely new arrival then dedupes onto that stale issue instead of opening a fresh, correctly-named
+one. Caught before it shipped on exception 1, and pinned by `tests/test_sp_watch_baseline.py`.
+
 > #### Exception 1 — 2026-08-08 — CFBD published preseason returning production; normalizer fabrication corrected
 > **New tag:** `v2026-frozen-2`, superseding `v2026-frozen` (`6910675`).
 >

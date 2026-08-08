@@ -24,7 +24,6 @@ from scripts.pipeline_preflight import (
     check_timing,
     emit,
 )
-from scripts.sp_watch import BASELINE, arrivals
 
 ROOT = Path(__file__).resolve().parent.parent
 CAL = json.loads((ROOT / "season.json").read_text())
@@ -180,21 +179,8 @@ def test_the_real_registry_clears_the_floor():
 
 
 # --- SP+ watch ---------------------------------------------------------------------------------
-
-def test_baseline_is_the_dormant_state_recorded_at_the_freeze():
-    assert BASELINE == {"sp_ratings": 0, "returning_production": 0}
-
-
-def test_still_dormant_reports_no_arrival():
-    assert arrivals({"sp_ratings": 0, "returning_production": 0}) == []
-
-
-def test_any_rows_count_as_arrival():
-    assert arrivals({"sp_ratings": 137, "returning_production": 0}) == ["sp_ratings"]
-    assert arrivals({"sp_ratings": 137, "returning_production": 134}) == [
-        "returning_production", "sp_ratings"]
-
-
-def test_a_single_row_is_enough_to_trip_it():
-    """Partial publication still changes the model's inputs."""
-    assert arrivals({"sp_ratings": 1, "returning_production": 0}) == ["sp_ratings"]
+#
+# Moved to tests/test_sp_watch_baseline.py. These assertions pinned the PRE-transition baseline
+# ({"sp_ratings": 0, "returning_production": 0}), which SPEC §3 exception 1 superseded when
+# returning production published at 136 rows. Keeping a second, overlapping set of baseline
+# assertions here is how the two would drift — the dedicated file is the single home.

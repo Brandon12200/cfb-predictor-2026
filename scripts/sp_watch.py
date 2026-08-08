@@ -3,10 +3,12 @@
 
 **Why a separate probe.** `verify-phase-3`'s behavioural fingerprint reads a *committed* snapshot
 (the pinned vehicle, D29), so it is a deterministic function of the commit: re-running it on a
-timer detects nothing about the outside world. Yet the outside world holds an event that changes
-the model's inputs — CFBD has not published 2026 preseason SP+ or returning production (verified
-0 rows on 2026-08-03, while the 2025 equivalents return 137/134). D10 makes both auto-activate the
-moment they appear, with **no code change**.
+timer detects nothing about the outside world. Yet the outside world holds events that change the
+model's inputs, and D10 makes them auto-activate the moment they appear, with **no code change**.
+
+**Status.** Returning production arrived on 2026-08-08 (0 → 136 rows) and was ratified under SPEC
+§3 exception 1 with the tag `v2026-frozen-2`. **Preseason SP+ is still unpublished (0 rows) and is
+the one outstanding transition this probe is watching for.**
 
 **What happens when they land**, and why this is worth 30 lines and 2 CFBD calls:
   * `Sandwich` wakes up (currently 0/330 activations, for want of SP+ ranks).
@@ -38,11 +40,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 EXIT_UNCHANGED, EXIT_ERROR, EXIT_ARRIVED = 0, 1, 2
 
-# The state at the freeze, verified live 2026-08-03 and unchanged at the tag. These are a
-# BASELINE, not a target: when either goes non-zero the model's inputs have changed and the
-# response is a SPEC §3 exception plus a new tag. Updating these numbers is part of ratifying
-# that transition — it is deliberately a code change, not a config tweak.
-BASELINE = {"sp_ratings": 0, "returning_production": 0}
+# The RATIFIED state — what the current freeze tag was measured against. An observation ABOVE a
+# baseline means the model's inputs have moved since that tag, and the response is a SPEC §3
+# exception plus a new tag.
+#
+# **Updating these numbers is part of ratifying a transition, not an afterthought.** Leaving a
+# ratified arrival at 0 makes this probe re-report it on every run forever, and — worse — the next,
+# genuinely new arrival dedupes onto that stale issue instead of opening a fresh one. That is
+# exactly what would have happened to the SP+ transition: with `returning_production` left at 0,
+# SP+ landing would have returned BOTH sources under a title naming both, rather than a clean
+# "SP+ has arrived". Recorded in SPEC §3.1 as a step of the exception process.
+#
+# Current state (SPEC §3 exception 1, tag `v2026-frozen-2`): returning production published at
+# 136 rows and is ratified; **preseason SP+ remains unpublished and is the one outstanding
+# transition.**
+BASELINE = {"sp_ratings": 0, "returning_production": 136}
 
 
 def counts(year: int) -> dict[str, int]:
@@ -78,8 +90,14 @@ def main(argv: list[str] | None = None) -> int:
                          indent=2, sort_keys=True))
 
     if not landed:
-        body = (f"SP+ watch ({args.year}): still dormant — "
-                + ", ".join(f"{k} {v} rows" for k, v in sorted(observed.items())))
+        # Name the state per source against its ratified baseline: "dormant" is wrong for a source
+        # that has published and been ratified — it is at its expected level, not asleep.
+        parts = []
+        for k, v in sorted(observed.items()):
+            base = BASELINE.get(k, 0)
+            state = "awaited" if base == 0 and v == 0 else "at ratified level"
+            parts.append(f"{k} {v} rows ({state}, baseline {base})")
+        body = f"SP+ watch ({args.year}): no new arrival — " + ", ".join(parts)
     else:
         body = "\n".join([
             f"### ⚠ CFBD has published {args.year} " + " and ".join(landed),
