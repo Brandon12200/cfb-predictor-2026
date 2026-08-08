@@ -28,19 +28,64 @@ def _skip_without_tag():
         pytest.skip("no reachable tag (shallow clone)")
 
 
+def test_the_configured_freeze_tag_is_the_current_tag():
+    """**The retag lesson, pinned.** `season.json`'s `freeze_tag` is the single source of truth
+    (D24) for every freeze assertion — the preflight's tree-hash check and the daily
+    freeze-integrity job both read it. After `v2026-frozen-2` was cut it still said
+    `v2026-frozen`, so those checks were validating against a SUPERSEDED tag and passing (the
+    frozen trees are identical at both, so nothing complained). Retagging includes moving this."""
+    _skip_without_tag()
+    assert TAG == frozen_tag(), (
+        f"season.json freeze_tag is {TAG!r} but the repository's current tag is {frozen_tag()!r} — "
+        f"a retag left the config behind, and every freeze assertion is now checking the wrong "
+        f"reference."
+    )
+
+
+def test_no_live_code_hardcodes_a_superseded_tag_name():
+    """Literal tag names in *live* code are what a retag has to remember. Prose and history may
+    name old tags freely; assertions and config may not."""
+    import re
+    current = frozen_tag()
+    if current is None:
+        pytest.skip("no reachable tag")
+    offenders = []
+    for path in (ROOT / "season.json",):
+        for i, line in enumerate(path.read_text().splitlines(), 1):
+            for m in re.finditer(r"v2026-frozen[\w.-]*", line):
+                if m.group(0) != current:
+                    offenders.append(f"{path.name}:{i}: {m.group(0)}")
+    assert not offenders, f"stale tag references in live config: {offenders}"
+
+
 def test_frozen_tag_returns_the_bare_tag_not_the_build_stamp():
     _skip_without_tag()
     assert frozen_tag() == TAG
     assert "-g" not in (frozen_tag() or ""), "frozen_tag must not carry the describe suffix"
 
 
-def test_model_version_is_the_build_stamp_and_they_differ_after_the_tag():
-    """The whole reason the label was wrong: these are different strings post-tag."""
+def test_model_version_is_the_build_stamp_and_relates_correctly_to_the_tag():
+    """The whole reason the label was wrong: the build stamp and the tag are different things.
+
+    **This test used a stale constant to decide which state it was in.** It compared
+    `model_version()` against `TAG` to infer "are we past the tag", but `TAG` came from a
+    `season.json` the retag had not updated — so at HEAD == `v2026-frozen-2` it concluded "past the
+    tag" and then asserted the two must differ, which they do not. The state is now derived from
+    `frozen_tag()` itself, and BOTH states are asserted explicitly instead of one being inferred.
+    """
     _skip_without_tag()
-    mv = model_version()
-    assert mv.startswith(TAG)
-    if mv != TAG:  # any freeze-exempt commit after the tag
-        assert frozen_tag() != mv
+    mv, tag = model_version(), frozen_tag()
+    assert tag is not None
+    assert mv.startswith(tag), f"build stamp {mv!r} does not begin with the nearest tag {tag!r}"
+
+    if mv == tag:
+        # HEAD is exactly at the tagged commit — the two legitimately coincide. This is the state
+        # immediately after a retag, and it is correct, not a defect.
+        assert "-g" not in mv
+    else:
+        # Any freeze-exempt commit after the tag: `git describe` appends `-N-g<sha>`.
+        assert mv.startswith(f"{tag}-"), mv
+        assert mv != tag
 
 
 def test_the_frozen_trees_currently_match_the_tag():
@@ -66,9 +111,26 @@ def test_an_unresolvable_tag_reports_unknown_rather_than_matching():
 
 
 def test_a_drifted_tree_reports_false():
-    """Compare a real tree against a directory that is genuinely different."""
+    """The False branch, forced deterministically.
+
+    This previously compared `docs` at HEAD against `docs` at the tag — which only differed
+    *because HEAD happened to be ahead of the tag*. The moment a retag put HEAD exactly on the tag,
+    the comparator stopped drifting and the test failed for a reason that had nothing to do with
+    the behaviour under test. Incidental state is not a fixture.
+
+    `scripts/` demonstrably changed between `v2026-frozen` and `v2026-frozen-2` (the exception-1
+    work lives there), and that is a permanent fact of history rather than a property of where
+    HEAD sits, so this comparison is False now and stays False.
+    """
     _skip_without_tag()
-    assert frozen_trees_match(TAG, trees=("factors", "docs")) is False
+    import shutil
+    import subprocess
+    if shutil.which("git") is None:
+        pytest.skip("git unavailable")
+    if subprocess.run(["git", "rev-parse", "--verify", "v2026-frozen^{commit}"],
+                      capture_output=True, cwd=str(ROOT)).returncode != 0:
+        pytest.skip("the superseded tag is unreachable (shallow checkout)")
+    assert frozen_trees_match("v2026-frozen", trees=("scripts",)) is False
 
 
 def test_cfb_status_labels_the_tag_and_the_build_separately(capsys, monkeypatch):

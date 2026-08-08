@@ -73,7 +73,7 @@
   "pipeline": {
     "_note": "SPEC §10.6 pipeline config (Phase 5). Every key here has a named consumer — see the key→consumer table in docs/PIPELINE.md. `schedule_et.*.cron_utc` is the one deliberately non-executable key: GitHub Actions cannot read this file, so the crons are duplicated in .github/workflows/ and a test asserts the two agree.",
     "timezone": "America/New_York",
-    "freeze_tag": "v2026-frozen",
+    "freeze_tag": "v2026-frozen-2",
     "slate_filter": "fbs_vs_fbs",
     "schedule_et": {
       "predict": [

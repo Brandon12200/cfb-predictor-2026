@@ -184,7 +184,11 @@ def emit(pf: Preflight, role: str, week: int | None, *, quiet: bool = False) -> 
     if not quiet:
         print(body)
 
-    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    # `quiet` must also suppress the step-summary write. It did not, so in CI the unit tests'
+    # synthetic ABORT blocks were appended to the REAL run summary — a reader saw
+    # "ABORT: factors/ has drifted" against a tag that does not exist, produced by a passing test.
+    # A self-test must not be able to write to the production report.
+    summary = None if quiet else os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         with open(summary, "a") as fh:
             fh.write(body + "\n")
@@ -201,7 +205,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     cal = load_calendar()
-    freeze_tag = (cal.get("pipeline", {}) or {}).get("freeze_tag", "v2026-frozen")
+    # No silent default. Defaulting to a tag name means a missing/renamed config key would assert
+    # the freeze against a SUPERSEDED tag and pass — the freeze check would be validating the wrong
+    # reference while reporting success. An absent key must abort instead.
+    freeze_tag = (cal.get("pipeline", {}) or {}).get("freeze_tag")
+    if not freeze_tag:
+        print("ABORT: season.json has no `pipeline.freeze_tag` — the freeze cannot be asserted "
+              "against an unknown reference.")
+        return EXIT_ABORT
     now = datetime.now(ZoneInfo(pipeline_timezone(cal)))
 
     pf = Preflight()
