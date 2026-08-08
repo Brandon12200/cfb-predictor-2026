@@ -235,6 +235,21 @@ both `pipeline-adversary` and `code-reviewer`.** That convergence is the signal 
 the same gap found by an adversarial enumeration *and* by a line-by-line diff review is the one to
 point the failure-injection drill at first.
 
+7. **The confidence tiers inverted at the RP transition, and nobody calibrated for it.** SPEC §3
+   exception 1 moved tier A from **2 games to 322** (B 318 → 6) purely because manifest coverage
+   rose 39.0% → 63.3% and `confidence` is data-availability-driven (B1). No constant changed. It
+   bet nothing differently in August because everything was NO_BET — but the whole D27 reporting
+   stratification and the Phase-4 calibration tables are built on tiers that now mean something
+   different from what they meant at the freeze. **2027 must recalibrate the tier boundaries
+   against a season where coverage is high throughout**, rather than inheriting boundaries fitted
+   to a near-empty preseason.
+8. **Node 20 runtime deprecation.** The pinned `actions/checkout@v4`, `setup-python@v5`,
+   `cache@v4` and `upload-artifact@v4` warn on the runner; they need a major bump when GitHub
+   retires Node 20.
+9. **`utils/normalizer.py` is still unlinted legacy** — ~99 pre-existing ruff violations, kept out
+   of `LINT_PATHS` deliberately so a behaviour-critical fix was not buried in cosmetics (the same
+   reasoning `FREEZE_CHECKLIST` records for `factor_registry`). Lint it at a 2027 unfreeze.
+
 6. **Fixed at review, recorded because the asymmetry is the lesson:** `write_predictions` overwrote
    unconditionally while the *human* CLI path (`cli/cfb.py::_save_slate`) had refused since 4.5.
    The byte-immutable guarantee therefore held for the interactive path and not for the automated

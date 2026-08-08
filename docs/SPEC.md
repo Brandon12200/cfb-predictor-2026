@@ -47,6 +47,63 @@ Roster turnover (transfer portal, NIL) makes prior-season **team performance dat
 2. **Freeze date: tag `v2026-frozen` on FREEZE-READY, target ~2026-08-08** (per owner ruling 2026-08-03 (originally g1, July); supersedes the earlier ~2026-08-24 planning date, which the g1 "tag when the ledger closes" ruling had already overtaken). The freeze must precede the first prediction run; 2026-08-29 remains the absolute outer bound. **The trigger is the `calibration-auditor` FREEZE-READY verdict, not a calendar date** — the date is a target, the verdict is the gate. After this date, no changes to weights, thresholds, factor logic, or confidence math for the entire season. Bug fixes that alter outputs require a documented exception entry and a new tag.
 3. **Shadow model (stretch, Phase 6).** A learned model may run alongside for comparison but never drives a recommendation. Its predictions are logged and graded identically. `tests/test_shadow_mode.py` already exists — audit and build on it if useful.
 
+### 3.1 Freeze exceptions (the §3.2 process — one entry per exception, each with a new tag)
+
+> #### Exception 1 — 2026-08-08 — CFBD published preseason returning production; normalizer fabrication corrected
+> **New tag:** `v2026-frozen-2`, superseding `v2026-frozen` (`6910675`).
+>
+> **Trigger.** `scripts/sp_watch.py` — built for exactly this — detected `returning_production`
+> moving **0 → 136 rows**. Preseason **SP+ remains 0 rows**, so this is an RP-only transition. D10
+> activates the returning-production prior with **no code change**, so the frozen model's inputs
+> changed underneath the tag. This is the gate doing its job, not a defect.
+>
+> **Second, independent cause, found while measuring the first.** Rebuilding the snapshot exercised
+> the new dropped-game detector (SPEC §5.5.3), which surfaced a **pre-existing** violation of the
+> no-fabricated-data principle: `difflib` fuzzy matching at cutoff 0.8 resolved **16 FCS programs
+> onto FBS teams**, and where both sides of an FCS game resolved a **fabricated FBS game entered
+> `data["games"]`** — including NORTH DAKOTA STATE playing itself.
+>
+> **⚠ The superseded `v2026-frozen` vehicle contained ~10 such fabricated games.** They were there
+> at the tag and were discovered post-hoc; nothing detected them before, because both drop sites
+> simply `continue`d and the comments claimed a "slate reconciler" that did not exist. **Harmless
+> preseason** — no game is completed, so the Elo was unaffected and every game was NO_BET — but
+> in-season a completed FCS result would have moved an FBS team's Elo (Samford's result credited to
+> Stanford). Corrected here. The superseded vehicle is **retained** at
+> `data/archive/frozen/2026_week_01_snapshot.json` as the record of what the first freeze measured.
+>
+> A related seam was fixed with it: `CANONICAL_OVERRIDES` governed the registry build but never
+> reached the runtime alias vocabulary, so `"California"` resolved to `None` and **all ten of Cal's
+> tracked games were dropped** (with App State, UL Monroe and Massachusetts).
+>
+> **Measured delta** (`v2026-frozen` vehicle → `v2026-frozen-2` vehicle, frozen engine, tracked slate):
+>
+> | | v2026-frozen | v2026-frozen-2 |
+> |---|---:|---:|
+> | behavioural fingerprint | `eab7ffdb…20e2d` | **`1c5187eb…0434`** |
+> | tracked-slate games | 330 | **338** |
+> | `returning_production` teams | 0 | 136 |
+> | `sp_ratings` teams | 0 | **0** |
+> | lean home / away / neutral | 195 / 35 / 100 | 198 / 33 / 107 |
+> | **confidence tier A / B / C** | **2 / 318 / 10** | **322 / 6 / 10** |
+> | `NO_BET` | 330 of 330 | **338 of 338** |
+> | max \|edge\| | 0.0000 | 0.0000 |
+>
+> Slate membership verified by identity, not arithmetic: **+10 real Cal games**, **−2 fabrications**
+> (`USC@HOUSTON` was *Southern@Houston*; `STANFORD@AUBURN` was *Samford@Auburn*).
+>
+> **The tier inversion is the most consequential line.** Tier A goes from 2 games to 322 because
+> manifest coverage rose **39.0% → 63.3%** and `confidence` is data-availability-driven (B1). It
+> changes no bet today — everything is still NO_BET and the structural edge ceiling is untouched —
+> but it inverts the stratification D27's reports and the Phase-4 calibration tables rest on.
+> **Carried to `docs/2027_NOTES.md` as a recalibration obligation.**
+>
+> **`Sandwich` did NOT wake** and will not until preseason SP+ *ranks* publish specifically.
+>
+> **Scope.** No change to `factors/`, `engine/`, or any calibration constant. The exception covers
+> the model's *inputs* changing under a ratified auto-activation (D10) plus a freeze-exempt
+> correction in `utils/normalizer.py` and `data/normalize/`. The fingerprint constant was updated
+> **only** as part of this ratified exception and a new tag — never to make a red gate green.
+
 ## 4. Phase 0 — Repo Hygiene & Audit (do first)
 
 Before any feature work:
