@@ -22,17 +22,19 @@ Usage: python scripts/slate_fingerprint.py [--json]   (offline)
 from __future__ import annotations
 
 import argparse
+import contextlib
 import copy
 import hashlib
 import json
 import logging
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import data.data_manager as dm  # noqa: E402
-from data.snapshot import load_snapshot  # noqa: E402
+from data.snapshot import load_frozen_vehicle  # noqa: E402
 from data.team_registry import get_all_tracked_teams  # noqa: E402
 from engine.prediction_engine import PredictionEngine  # noqa: E402
 
@@ -53,6 +55,25 @@ def _scrub(obj):
     return obj
 
 
+@contextlib.contextmanager
+def engine_reads(bundle: dict) -> Iterator[dict]:
+    """Point the frozen engine's snapshot reader at `bundle` for the duration.
+
+    Load-bearing for every frozen-gate call site. `PredictionEngine` loads its own snapshot
+    through `data.data_manager` — so handing a bundle to a caller (e.g.
+    `analytics.predictions.build_predictions`, whose docstring says as much) redirects only
+    *enumeration*; pricing would still read whatever is on disk. Without this wrapper a gate
+    reading the pinned vehicle gets a **split read** — enumeration pinned, pricing live — which
+    is worse than either, because it looks correct.
+    """
+    original = dm.load_snapshot
+    try:
+        dm.load_snapshot = lambda week, year=2026, base=None: bundle  # noqa: ARG005
+        yield bundle
+    finally:
+        dm.load_snapshot = original
+
+
 def tracked_slate(snapshot: dict) -> list[dict]:
     tracked = get_all_tracked_teams()
     return sorted(
@@ -63,8 +84,14 @@ def tracked_slate(snapshot: dict) -> list[dict]:
 
 
 def fingerprint(snapshot: dict | None = None) -> dict:
-    """`{"n_games", "sha256"}` over the full engine output for the tracked slate."""
-    snap = snapshot or load_snapshot(1, 2026)
+    """`{"n_games", "sha256"}` over the full engine output for the tracked slate.
+
+    Defaults to the **pinned** tag-time vehicle (`data/archive/frozen/`, D29), never the live
+    `data/snapshots/2026_week_01/` bundle — the Phase-5 pipeline rebuilds that one every week-1
+    run, which would make this gate measure whether the pipeline ran rather than whether the
+    model moved.
+    """
+    snap = snapshot or load_frozen_vehicle()
     games = tracked_slate(snap)
 
     bundle = copy.deepcopy(snap)
@@ -74,17 +101,13 @@ def fingerprint(snapshot: dict | None = None) -> dict:
             "home_team": g["home_team"], "away_team": g["away_team"],
             "vegas_spread": PLACEHOLDER_SPREAD, "observation": {"fetched_at": None},
         })
-    original = dm.load_snapshot
-    try:
-        dm.load_snapshot = lambda week, year=2026, base=None: bundle  # noqa: ARG005
+    with engine_reads(bundle):
         engine = PredictionEngine()
         records = {
             f"{g.get('week'):02d}|{g['away_team']}@{g['home_team']}":
                 engine.generate_prediction(g["home_team"], g["away_team"], week=g.get("week"))
             for g in games
         }
-    finally:
-        dm.load_snapshot = original
 
     payload = {"volatile_excluded": list(VOLATILE),
                "placeholder_spread": PLACEHOLDER_SPREAD,

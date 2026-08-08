@@ -21,18 +21,18 @@ from pathlib import Path
 import pytest
 
 from analytics.predictions import build_predictions
-from data.snapshot.store import load_snapshot
+from data.snapshot.store import FROZEN_VEHICLE, load_frozen_vehicle
+from scripts.slate_fingerprint import engine_reads
 
 ROOT = Path(__file__).resolve().parent.parent
 GOLDEN = ROOT / "docs" / "examples" / "prediction_schema_v2_2026_week_01.json"
-SNAPSHOT = ROOT / "data" / "snapshots" / "2026_week_01" / "snapshot.json"
 
 # Mirrors `scripts/verify_phase_3.py:_VOLATILE_META`.
 _VOLATILE_META = ("model_version", "generated_at")
 
 pytestmark = pytest.mark.skipif(
-    not (GOLDEN.exists() and SNAPSHOT.exists()),
-    reason="requires the committed wk1 snapshot and golden example",
+    not (GOLDEN.exists() and FROZEN_VEHICLE.exists()),
+    reason="requires the pinned gate vehicle and golden example",
 )
 
 
@@ -48,11 +48,18 @@ def _canonical(doc: dict) -> str:
 
 
 def test_golden_reproduces_byte_identical_from_the_snapshot():
-    """The live writer must reproduce the committed golden exactly, minus VOLATILE meta."""
+    """The live writer must reproduce the committed golden exactly, minus VOLATILE meta.
+
+    Reads the pinned tag-time vehicle (D29), not `data/snapshots/2026_week_01/`, which the
+    Phase-5 pipeline rebuilds. `engine_reads` is required, not decorative: `build_predictions`
+    uses its argument for enumeration and prices through the data manager.
+    """
     golden = json.loads(GOLDEN.read_text())
-    live = build_predictions(
-        load_snapshot(1, 2026), week=1, model_version=golden["meta"].get("model_version")
-    )
+    bundle = load_frozen_vehicle()
+    with engine_reads(bundle):
+        live = build_predictions(
+            bundle, week=1, model_version=golden["meta"].get("model_version")
+        )
     if _canonical(golden) != _canonical(live):
         g = {r["game_id"]: r for r in golden["predictions"]}
         live_recs = {r["game_id"]: r for r in live["predictions"]}

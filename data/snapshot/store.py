@@ -15,6 +15,24 @@ from typing import Any
 
 _SNAPSHOTS_DIR = Path(__file__).resolve().parent.parent / "snapshots"
 
+# The freeze gates' pinned input. `data/snapshots/2026_week_01/` is a LIVE bundle: the Phase-5
+# pipeline rebuilds it every week-1 run, and `write_snapshot` overwrites unconditionally. The
+# behavioural fingerprint, the L4 all-NO_BET assertion and the schema-v2 golden reproduction all
+# need the snapshot *as it stood at the tag*, so they read this byte-for-byte copy under the
+# append-only tier instead. Moving the gate's read path is not weakening it — the fingerprint
+# constant is untouched, and any change reaching model output through the freeze-exempt read seam
+# (`data/normalize`, `data/schedule_intel`, the registry) still trips it, because the gate re-runs
+# the engine over this input rather than replaying a stored result. See DECISIONS D29.
+FROZEN_VEHICLE = Path(__file__).resolve().parent.parent / "archive" / "frozen" / \
+    "2026_week_01_snapshot.json"
+
+# SHA-256 of the vehicle's bytes, derived from `git show v2026-frozen:<snapshot path>` — NOT from
+# the working tree, which has moved since the tag. `tests/test_frozen_vehicle.py` re-derives this
+# from the tag on every run, so the claim "these are the tag-time bytes" is proven rather than
+# asserted. One definition, imported by the gate and the test (no second copy to drift).
+FROZEN_VEHICLE_SHA256 = "5c2c50ba97ebffa40810d4506771773334af9a41f393155fec7f8a3943ef318f"
+FROZEN_VEHICLE_SOURCE = ("v2026-frozen", "data/snapshots/2026_week_01/snapshot.json")
+
 
 class SnapshotNotFoundError(RuntimeError):
     """Raised when a requested snapshot bundle does not exist on disk."""
@@ -47,6 +65,27 @@ def load_snapshot(week: int, year: int = 2026, base: Path | None = None) -> dict
             f"run `python scripts/build_snapshot.py --week {week}`."
         )
     return json.loads(path.read_text())
+
+
+def load_frozen_vehicle(path: Path | None = None) -> dict[str, Any]:
+    """The tag-time week-1 snapshot, pinned as the immutable input to the freeze gates (D29).
+
+    Single accessor so the fingerprint gate, the L4 slate assertion, the schema-v2 golden
+    reproduction and their tests cannot drift onto different inputs.
+    """
+    p = path or FROZEN_VEHICLE
+    if not p.exists():
+        raise SnapshotNotFoundError(
+            f"Frozen gate vehicle missing at {p}. It is a byte-for-byte copy of the "
+            f"`v2026-frozen` week-1 snapshot and is required by the freeze gates (D29)."
+        )
+    return json.loads(p.read_text())
+
+
+def frozen_vehicle_sha256(path: Path | None = None) -> str:
+    """SHA-256 of the pinned vehicle's bytes — asserted separately from the behavioural
+    fingerprint so 'the gate's input changed' reports differently from 'model output moved'."""
+    return hashlib.sha256((path or FROZEN_VEHICLE).read_bytes()).hexdigest()
 
 
 def available_weeks(year: int = 2026, base: Path | None = None) -> list[int]:

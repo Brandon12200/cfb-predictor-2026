@@ -1,0 +1,122 @@
+# Wed–Sat line capture (PHASE5_NOTES §1: daily, NOT Saturday-only) plus intra-Saturday waves.
+#
+# Each game's close is the last observation before THAT game's own kickoff (per-game as-of-T,
+# `closing_observation`), so the schedule's job is simply to have a recent observation standing
+# before each kickoff window. One Saturday-morning fetch would leave a 22:30 ET kickoff with a
+# 12-hour-stale "close", and closing_observation would faithfully report it — CLV noise for the
+# largest part of the slate. The four Saturday waves are a ratified refinement of the daily
+# cadence, not a replacement for it (D-7).
+name: Daily line capture (Wed–Sat)
+
+on:
+  schedule:
+    - cron: "23 21 * * 3,4,5"  # Wed/Thu/Fri 17:23 ET — ~1h37m before a 19:00 ET kickoff
+    - cron: "23 14 * * 6"      # Sat 10:23 ET — before the 12:00 wave
+    - cron: "23 18 * * 6"      # Sat 14:23 ET — before the 15:30 wave
+    - cron: "23 21 * * 6"      # Sat 17:23 ET — before the 19:00 wave
+    - cron: "23  0 * * 0"      # Sat 20:23 ET — before the 22:30 wave. SUNDAY in UTC; this line is
+                               # why week resolution must use ET (see utils.season_calendar).
+  workflow_dispatch:
+    inputs:
+      week:
+        required: false
+        type: string
+      year:
+        required: false
+        type: string
+        default: "2026"
+      dry_run:
+        required: false
+        type: boolean
+        default: false
+      min_credits:
+        description: "Override the Odds floor; set very high to drill the budget-refusal path"
+        required: false
+        type: string
+        default: ""
+
+concurrency:
+  group: cfb-pipeline-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: setup
+        uses: ./.github/actions/cfb-setup
+        with:
+          role: capture
+          week: ${{ inputs.week }}
+          year: ${{ inputs.year || '2026' }}
+          skip-secrets: ${{ inputs.dry_run == true }}
+
+      # Cross-run memory for the pre-spend guard. data/odds_quota.json is gitignored, so a fresh
+      # checkout otherwise falls back to the last snapshot manifest's build-time balance — bounded
+      # to one week, but permanently blind in between. Committing the file was rejected: it belongs
+      # to no artifact tier and two workflows writing it concurrently is a merge conflict on a file
+      # whose whole purpose is being trivially correct.
+      - uses: actions/cache@v4
+        with:
+          path: data/odds_quota.json
+          key: odds-quota-${{ github.run_id }}
+          restore-keys: odds-quota-
+
+      - name: Capture line observation
+        id: capture
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: |
+          set +e
+          ARGS=(--week "${{ steps.setup.outputs.week }}" --year "${{ steps.setup.outputs.year }}")
+          if [ -n "${{ inputs.min_credits }}" ]; then ARGS+=(--min-credits "${{ inputs.min_credits }}"); fi
+          python scripts/fetch_lines.py "${ARGS[@]}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          echo "rc=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      # Exit 3 is the budget refusal: a designed outcome, not a failure. The job stays green,
+      # commits nothing, and says so. Any other non-zero is a real failure.
+      - name: Budget refusal (not a failure)
+        if: steps.capture.outputs.rc == '3'
+        run: |
+          echo "### Odds budget refusal" >> "$GITHUB_STEP_SUMMARY"
+          echo "The pre-spend guard declined this capture; no credit was spent and nothing was committed." >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::Odds budget guard refused the fetch — see the step summary."
+
+      - name: Fail on a real error
+        if: steps.capture.outputs.rc != '0' && steps.capture.outputs.rc != '3'
+        run: |
+          echo "::error::fetch_lines exited ${{ steps.capture.outputs.rc }}"
+          exit 1
+
+      - uses: ./.github/actions/cfb-commit
+        if: steps.capture.outputs.rc == '0'
+        with:
+          paths: data/lines
+          message: "lines: ${{ steps.setup.outputs.year }} week ${{ steps.setup.outputs.week_padded }} observation ${{ steps.setup.outputs.et_now }}"
+          suffix: ${{ steps.setup.outputs.commit_suffix }}
+          push: ${{ inputs.dry_run != true }}
+
+      - uses: ./.github/actions/report-failure
+        if: failure()
+        with:
+          stage: capture
+          week: ${{ steps.setup.outputs.week_padded }}
+          mode: ${{ steps.setup.outputs.mode }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: ./.github/actions/clear-failure
+        if: success()
+        with:
+          stage: capture
+          week: ${{ steps.setup.outputs.week_padded }}
+          mode: ${{ steps.setup.outputs.mode }}
+          token: ${{ secrets.GITHUB_TOKEN }}

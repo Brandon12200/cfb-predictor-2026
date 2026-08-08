@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 _CONFIG_PATH = Path(__file__).resolve().parent.parent / "season.json"
 
@@ -59,6 +60,56 @@ def infer_week_for_date(today: date, calendar: dict | None = None) -> int:
         f"Cannot infer CFB week: {today.isoformat()} is outside the {season} "
         f"season ({first} .. {last}). Re-run with an explicit --week."
     )
+
+
+DEFAULT_PIPELINE_TIMEZONE = "America/New_York"
+
+
+def pipeline_timezone(calendar: dict | None = None) -> str:
+    """IANA zone the pipeline's cadence is expressed in (``season.json`` ``pipeline.timezone``).
+
+    Falls back to ET so this stays usable if the config block is absent.
+    """
+    cal = calendar if calendar is not None else load_calendar()
+    return (cal.get("pipeline") or {}).get("timezone") or DEFAULT_PIPELINE_TIMEZONE
+
+
+def pipeline_today(calendar: dict | None = None, now: datetime | None = None) -> date:
+    """Today's date **in the pipeline's timezone**, not the runner's.
+
+    GitHub Actions runners are UTC. A Saturday-evening ET capture is already Sunday in UTC, so a
+    UTC-derived date can resolve into the following week and file an observation under the wrong
+    one. Every pipeline entry point takes its date from here.
+    """
+    tz = ZoneInfo(pipeline_timezone(calendar))
+    return (now.astimezone(tz) if now is not None else datetime.now(tz)).date()
+
+
+def pipeline_week(today: date, calendar: dict | None = None) -> int:
+    """The week the PIPELINE should operate on for ``today`` — a different question from
+    ``infer_week_for_date``, which answers "which week's games are being played right now".
+
+    ``weeks`` is a **game-window** calendar (D8, CFBD-corroborated): week 1 is
+    ``2026-08-29 … 2026-09-07``. But the week-1 prediction run happens on the Tuesday *before*
+    kickoff — **2026-08-25** — which is inside no window at all, so ``infer_week_for_date`` raises
+    and the entire first live cycle dies before it does anything. The pipeline needs "the next week
+    still open for work", not "the week containing today".
+
+    Rule: **the lowest-numbered week whose ``end`` is on or after ``today``**, clamped to the last
+    week once the season's final window has closed. Never raises — a pipeline that cannot name its
+    week has no safe fallback, and an operator reading a wrong-but-stated week is far better off
+    than a workflow that aborts at 09:17 on a Tuesday.
+
+    Consequence worth knowing: this returns 1 for every day from before the season through
+    2026-09-07, so the Tuesday job runs "week 1" twice. That is handled by the byte-immutable claim
+    file already existing (D22) — the predict step is skipped, which is also its idempotency guard.
+    """
+    cal = calendar if calendar is not None else load_calendar()
+    weeks = cal["weeks"]
+    for wk in sorted(weeks, key=lambda k: int(k)):
+        if today <= date.fromisoformat(weeks[wk]["end"]):
+            return int(wk)
+    return int(max(weeks, key=lambda k: int(k)))
 
 
 def resolve_week(explicit: int | None, today: date | None = None,

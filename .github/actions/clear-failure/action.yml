@@ -1,0 +1,36 @@
+name: clear-failure
+description: >
+  Close any open pipeline-failure issue matching this stage/week after a successful run.
+  Without self-clearing, issues accumulate and get hand-closed all season, and an open
+  `pipeline-failure` label stops meaning anything. With it, the label is always a live problem.
+
+inputs:
+  stage:
+    required: true
+  week:
+    required: false
+    default: ""
+  mode:
+    required: false
+    default: live
+  token:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+        ARGS=(--state open --json number --limit 10 --label pipeline-failure --label "stage:${{ inputs.stage }}")
+        [ -n "${{ inputs.week }}" ] && ARGS+=(--label "week:${{ inputs.week }}")
+        [ "${{ inputs.mode }}" = "rehearsal" ] && ARGS+=(--label rehearsal)
+
+        for N in $(gh issue list "${ARGS[@]}" --jq '.[].number'); do
+          gh issue comment "$N" --body "Recovered — a subsequent \`${{ inputs.stage }}\` run succeeded: ${RUN_URL}"
+          gh issue close "$N"
+          echo "::notice::closed #${N} (recovered)"
+        done

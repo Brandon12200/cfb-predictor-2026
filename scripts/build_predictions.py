@@ -36,18 +36,39 @@ ROOT = Path(__file__).resolve().parent.parent
 PREDICTIONS_DIR = ROOT / "data" / "predictions"
 
 
-def write_predictions(predictions: dict, path: Path) -> Path:
+def write_predictions(predictions: dict, path: Path, *, force: bool = False) -> Path:
+    """Write a slate. **Refuses to overwrite an existing file under `data/predictions/`** (D22).
+
+    The refusal lives here, at the shared seam, rather than only in `cli/cfb.py::_save_slate`:
+    Phase 5 wires this writer into unattended automation, where the only other guard is a
+    workflow-level `if:` condition and the `protect_immutable` hook does not run at all (it
+    intercepts an agent's Edit/Write tool calls, not a script executing on a runner). A claim is
+    byte-immutable forever, so an accidental overwrite is unrecoverable.
+
+    The guard is scoped to the claim tier, so `--out` to a scratch path (e.g. regenerating
+    `docs/examples/`'s golden) is unaffected.
+    """
+    path = Path(path)
+    in_claim_tier = path.parent.resolve() == PREDICTIONS_DIR.resolve()
+    if path.exists() and in_claim_tier and not force:
+        raise FileExistsError(
+            f"{path} already exists — predictions are byte-immutable (D22). Grading writes a "
+            f"separate artifact; re-deriving a claim is not a normal operation. Pass --force only "
+            f"to deliberately replace an uncommitted claim."
+        )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(predictions, indent=2, sort_keys=True) + "\n")
     return path
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build a schema-v2 prediction slate from a snapshot.")
     parser.add_argument("--week", type=int, help="Week to predict; defaults to the latest built.")
     parser.add_argument("--year", type=int, default=2026)
     parser.add_argument("--out", type=str, help="Output path (default data/predictions/YYYY_week_NN.json).")
-    args = parser.parse_args()
+    parser.add_argument("--force", action="store_true",
+                        help="deliberately replace an existing claim (D22 — normally refused)")
+    args = parser.parse_args(argv)
 
     week = args.week if args.week is not None else latest_snapshot_week(args.year)
     if week is None:
@@ -61,7 +82,11 @@ def main() -> int:
 
     predictions = build_predictions(snapshot, week=week, model_version=model_version())
     out = Path(args.out) if args.out else PREDICTIONS_DIR / f"{args.year}_week_{week:02d}.json"
-    path = write_predictions(predictions, out)
+    try:
+        path = write_predictions(predictions, out, force=args.force)
+    except FileExistsError as exc:
+        print(str(exc))
+        return 1
     meta = predictions["meta"]
     rel = path.relative_to(Path.cwd()) if path.is_relative_to(Path.cwd()) else path
     print(f"Wrote {rel}")

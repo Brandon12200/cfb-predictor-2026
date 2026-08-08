@@ -1,0 +1,112 @@
+name: cfb-setup
+description: >
+  Python + deps, live/rehearsal mode resolution, week resolution and the pipeline preflight.
+  The caller MUST have already run actions/checkout with `fetch-depth: 0` — a local composite
+  cannot check out the repo it lives in, and without tags the freeze cannot be proven. The
+  preflight aborts if the tag is missing, so a forgotten fetch-depth fails loudly rather than
+  stamping claims with a bare SHA.
+
+inputs:
+  role:
+    description: predict | capture | grade | freeze
+    required: true
+  week:
+    description: Explicit week; blank resolves from the pipeline timezone via season.json
+    required: false
+    default: ""
+  year:
+    required: false
+    default: "2026"
+  skip-secrets:
+    description: "true for dry runs that make no API call"
+    required: false
+    default: "false"
+
+outputs:
+  week:
+    value: ${{ steps.resolve.outputs.week }}
+  week_padded:
+    value: ${{ steps.resolve.outputs.week_padded }}
+  year:
+    value: ${{ steps.resolve.outputs.year }}
+  et_now:
+    value: ${{ steps.resolve.outputs.et_now }}
+  et_date:
+    value: ${{ steps.resolve.outputs.et_date }}
+  prediction_exists:
+    value: ${{ steps.resolve.outputs.prediction_exists }}
+  grade_weeks:
+    value: ${{ steps.resolve.outputs.grade_weeks }}
+  mode:
+    value: ${{ steps.mode.outputs.mode }}
+  commit_suffix:
+    value: ${{ steps.mode.outputs.commit_suffix }}
+
+runs:
+  using: composite
+  steps:
+    - name: Verify tags were fetched
+      shell: bash
+      run: |
+        if [ -z "$(git tag --list | head -1)" ]; then
+          echo "::error::No tags in this checkout. Every pipeline job needs"
+          echo "::error::  - uses: actions/checkout@v4"
+          echo "::error::    with: { fetch-depth: 0 }"
+          echo "::error::Without tags, model_version() returns a bare SHA and every claim this"
+          echo "::error::season would be stamped with a commit hash where the freeze tag belongs."
+          exit 1
+        fi
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: pip
+        cache-dependency-path: pyproject.toml
+
+    - name: Install runtime deps
+      shell: bash
+      run: python -m pip install --quiet --upgrade pip && python -m pip install --quiet -e .
+
+    # Mode is derived from the ref, never from a dispatch input: a mode that cannot be typed
+    # cannot be mistyped. Scheduled runs on the default branch are LIVE; anything on the
+    # rehearsal prefix is a REHEARSAL; anything else refuses to run at all.
+    - name: Resolve live/rehearsal mode
+      id: mode
+      shell: bash
+      run: |
+        DEFAULT="${{ github.event.repository.default_branch }}"
+        PREFIX="$(python -c "import json;print(json.load(open('season.json'))['pipeline']['rehearsal']['branch_prefix'])")"
+        if [ "$GITHUB_REF_NAME" = "$DEFAULT" ]; then
+          echo "mode=live" >> "$GITHUB_OUTPUT"
+          echo "commit_suffix=" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" != "schedule" ]; then
+            echo "::warning::Manual LIVE run on $DEFAULT — this writes real artifacts."
+          fi
+        elif case "$GITHUB_REF_NAME" in "$PREFIX"*) true ;; *) false ;; esac; then
+          echo "mode=rehearsal" >> "$GITHUB_OUTPUT"
+          echo "commit_suffix= [rehearsal]" >> "$GITHUB_OUTPUT"
+          echo "::notice::Rehearsal run on $GITHUB_REF_NAME — artifacts stay on this branch."
+        else
+          echo "::error::Refusing to run on '$GITHUB_REF_NAME' — must be '$DEFAULT' or '${PREFIX}*'."
+          exit 1
+        fi
+
+    - name: Resolve week
+      id: resolve
+      shell: bash
+      run: |
+        ARGS=(--year "${{ inputs.year }}")
+        if [ -n "${{ inputs.week }}" ]; then ARGS+=(--week "${{ inputs.week }}"); fi
+        # Propagate the script's exit code through the pipe. Without this a crash here reports
+        # success, argparse's error text lands in $GITHUB_OUTPUT as malformed lines, and the real
+        # failure surfaces one step later as a confusing empty --week.
+        python scripts/pipeline_week.py "${ARGS[@]}" | tee -a "$GITHUB_OUTPUT"
+        exit "${PIPESTATUS[0]}"
+
+    - name: Preflight
+      shell: bash
+      run: |
+        ARGS=(--role "${{ inputs.role }}" --week "${{ steps.resolve.outputs.week }}")
+        if [ "${{ inputs.skip-secrets }}" = "true" ]; then ARGS+=(--skip-secrets); fi
+        python scripts/pipeline_preflight.py "${ARGS[@]}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+        exit "${PIPESTATUS[0]}"
