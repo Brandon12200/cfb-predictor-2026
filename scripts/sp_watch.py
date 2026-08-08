@@ -10,6 +10,13 @@ model's inputs, and D10 makes them auto-activate the moment they appear, with **
 §3 exception 1 with the tag `v2026-frozen-2`. **Preseason SP+ is still unpublished (0 rows) and is
 the one outstanding transition this probe is watching for.**
 
+**Known gap, recorded not fixed.** The comparison is strictly `>`, so it detects sources *growing*
+past their ratified baseline but not *shrinking*. Nothing else covers that: the fingerprint gate
+reads the pinned static vehicle and never re-queries CFBD, by design — which makes this probe the
+only live observer of CFBD state in the codebase, and a regression currently unobserved. Accepted
+because it degrades safely (affected teams fall back to D10's tested flat-prior path, a documented
+state rather than fabrication). See `docs/2027_NOTES.md`.
+
 **What happens when they land**, and why this is worth 30 lines and 2 CFBD calls:
   * `Sandwich` wakes up (currently 0/330 activations, for want of SP+ ranks).
   * The returning-production prior starts moving preseason ratings off the flat baseline.

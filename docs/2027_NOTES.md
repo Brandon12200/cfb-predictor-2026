@@ -243,10 +243,17 @@ point the failure-injection drill at first.
    different from what they meant at the freeze. **2027 must recalibrate the tier boundaries
    against a season where coverage is high throughout**, rather than inheriting boundaries fitted
    to a near-empty preseason.
-8. **Node 20 runtime deprecation.** The pinned `actions/checkout@v4`, `setup-python@v5`,
+8. **An external source SHRINKING is unobserved.** `scripts/sp_watch.py` compares strictly `>` against
+   its ratified baseline, so it catches a source growing but not one losing rows. Nothing else covers
+   it: the fingerprint gate reads the pinned static vehicle (D29) and never re-queries CFBD, deliberately,
+   so `sp_watch` is the **only live observer of CFBD state in the codebase**. Accepted for 2026 because
+   it degrades safely — affected teams fall back to D10's tested flat-prior path — but a source silently
+   withdrawing rows mid-season would move model inputs with nothing prompting a review. 2027 should
+   observe both directions.
+9. **Node 20 runtime deprecation.** The pinned `actions/checkout@v4`, `setup-python@v5`,
    `cache@v4` and `upload-artifact@v4` warn on the runner; they need a major bump when GitHub
    retires Node 20.
-9. **`utils/normalizer.py` is still unlinted legacy** — ~99 pre-existing ruff violations, kept out
+10. **`utils/normalizer.py` is still unlinted legacy** — ~99 pre-existing ruff violations, kept out
    of `LINT_PATHS` deliberately so a behaviour-critical fix was not buried in cosmetics (the same
    reasoning `FREEZE_CHECKLIST` records for `factor_registry`). Lint it at a 2027 unfreeze.
 
