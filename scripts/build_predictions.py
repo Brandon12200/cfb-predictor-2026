@@ -42,12 +42,12 @@ def write_predictions(predictions: dict, path: Path) -> Path:
     return path
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build a schema-v2 prediction slate from a snapshot.")
     parser.add_argument("--week", type=int, help="Week to predict; defaults to the latest built.")
     parser.add_argument("--year", type=int, default=2026)
     parser.add_argument("--out", type=str, help="Output path (default data/predictions/YYYY_week_NN.json).")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     week = args.week if args.week is not None else latest_snapshot_week(args.year)
     if week is None:

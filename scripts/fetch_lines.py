@@ -12,6 +12,11 @@ last-known remaining credits (persisted from the prior fetch, or the latest snap
 build-time balance) are below `--min-credits` — an honest pre-spend stop, not an overrun.
 
 Usage: python scripts/fetch_lines.py --week N [--year 2026] [--min-credits 20]
+
+Exit codes (Phase 5): 0 appended, 1 error (no snapshot / fetch failed), **3 budget refusal**.
+A budget stop is a designed outcome, not a failure — the scheduled capture job commits nothing
+and stays green on 3, but alarms on 1. They shared exit 1 until Phase 5, which left the workflow
+string-matching stdout to tell them apart.
 """
 
 from __future__ import annotations
@@ -30,13 +35,16 @@ from data.snapshot.lines import record_observation  # noqa: E402
 from data.snapshot.store import SnapshotNotFoundError, load_snapshot  # noqa: E402
 
 
-def main() -> int:
+EXIT_OK, EXIT_ERROR, EXIT_BUDGET_REFUSAL = 0, 1, 3
+
+
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Append a slate line observation to the store.")
     parser.add_argument("--week", type=int, required=True)
     parser.add_argument("--year", type=int, default=2026)
     parser.add_argument("--min-credits", type=int, default=20,
                         help="refuse the fetch if last-known Odds credits fall below this")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # The snapshot defines the slate we predict — only its games belong in this week's
     # line store (never the whole season's currently-listed odds).
@@ -45,14 +53,14 @@ def main() -> int:
     except SnapshotNotFoundError:
         print(f"No snapshot for {args.year} week {args.week} — "
               f"run `python scripts/build_snapshot.py --week {args.week}` first.")
-        return 1
+        return EXIT_ERROR
 
     # Budget guard: honest pre-spend check against the last-known remaining credits.
     remaining, source = last_remaining()
     if remaining is not None and remaining < args.min_credits:
         print(f"Refusing fetch: {remaining} Odds credits remain ({source}) < --min-credits "
               f"{args.min_credits}. Monthly budget guard (D5).")
-        return 1
+        return EXIT_BUDGET_REFUSAL
 
     from data.clients.odds import get_odds_client
     client = get_odds_client()
@@ -68,7 +76,7 @@ def main() -> int:
     print(f"Appended {added} slate observation(s) at {fetched_at} "
           f"({len(games)}/{len(slate)} slate games had lines). "
           f"Odds credits remaining: {(client.last_quota or {}).get('remaining')}")
-    return 0
+    return EXIT_OK
 
 
 if __name__ == "__main__":
