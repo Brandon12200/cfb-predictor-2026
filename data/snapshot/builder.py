@@ -58,8 +58,13 @@ class SnapshotBuilder:
 
         # 2-3. Fetch + normalize each league-wide group; a raising source degrades to
         #      missing (recorded), it does not abort the build.
+        # `excluded_*` collect what did NOT survive normalization, with a reason each. They feed
+        # the manifest's reconciliation block — never `data` — so they cannot move `snapshot_id`.
+        excluded_games: list[dict] = []
+        excluded_odds: list[dict] = []
+
         raw_games = self._fetch("games", lambda: self.cfbd.get_games(year), sources)
-        games = cfbd.normalize_games(raw_games or [])
+        games = cfbd.normalize_games(raw_games or [], excluded=excluded_games)
 
         raw_adv = self._fetch("advanced_stats",
                               lambda: self.cfbd.get_advanced_season_stats(year), sources)
@@ -81,7 +86,8 @@ class SnapshotBuilder:
 
         raw_odds = self._fetch("betting_lines",
                                lambda: self.odds.get_ncaaf_spreads(), sources)
-        lines = odds_norm.normalize_lines(raw_odds or [], sources["betting_lines"]["fetched_at"])
+        lines = odds_norm.normalize_lines(raw_odds or [], sources["betting_lines"]["fetched_at"],
+                                          excluded=excluded_odds)
         sources["betting_lines"]["quota"] = getattr(self.odds, "last_quota", None)
         sources["registry"] = {"source": "cfbd",
                                "fetched_at": self.registry.provenance.get("fetched_at")}
@@ -124,8 +130,17 @@ class SnapshotBuilder:
         slate_lines: dict[str, dict] = {}  # full GameLines for the append-only store
         schedule_intel: dict[str, dict] = {}
         game_coverage: dict[str, dict[str, str]] = {}
+        out_of_scope: list[dict] = []
         for g in games:
             if g.week != week or g.home_team not in tracked_set or g.away_team not in tracked_set:
+                # Scope filtering is a legitimate exclusion, but SPEC §5.5.3 requires it be
+                # visible: only this week's games, and only tracked-vs-tracked, reach the slate.
+                if g.week == week:
+                    untracked = sorted({t for t in (g.home_team, g.away_team)
+                                        if t not in tracked_set})
+                    out_of_scope.append({"home": g.home_team, "away": g.away_team,
+                                         "week": g.week, "reason": "not_tracked",
+                                         "untracked": untracked})
                 continue
             key = f"{g.away_team}@{g.home_team}"
             gl = lines.get((g.home_team, g.away_team))
@@ -169,8 +184,16 @@ class SnapshotBuilder:
         built_at = self.clock()
         meta = {"snapshot_id": snapshot_id, "week": week, "year": year, "built_at": built_at}
 
+        # Built AFTER compute_snapshot_id, and stored in the manifest rather than in `data` — so
+        # the reconciliation record provably cannot move `snapshot_id`, the schema-v2 golden or the
+        # behavioural fingerprint. That ordering is the whole reason this is safe to add
+        # post-freeze; it is pinned by a test.
+        reconciliation = self._reconcile(
+            week, raw_games or [], games, betting, lines,
+            excluded_games, excluded_odds, out_of_scope)
+
         manifest = self._manifest(meta, sources, team_coverage, game_coverage,
-                                  calendar_warnings)
+                                  calendar_warnings, reconciliation)
         write_snapshot(week, {"meta": meta, "data": data}, manifest, year=year,
                        base=self.base_dir)
         # Seed the append-only line-observation store (observation #1). This is OUTSIDE
@@ -198,8 +221,59 @@ class SnapshotBuilder:
                               "fallback_reason": f"{type(exc).__name__}: {exc}"}
             return None
 
+    def _reconcile(self, week: int, raw_games: list[dict], games: list,
+                   betting: dict, lines: dict, excluded_games: list[dict],
+                   excluded_odds: list[dict], out_of_scope: list[dict]) -> dict[str, Any]:
+        """The weekly slate reconciliation (SPEC §5.5.3): every game excluded, WITH its reason.
+
+        The rule this implements is "a game can be excluded, but never invisibly". Before it, a
+        CFBD row that failed name resolution and a row correctly filtered as FBS-vs-FCS both just
+        `continue`d, so an FBS game lost to an unresolved alias was indistinguishable from working
+        as designed — and the code comments claimed a "slate reconciler" that did not exist.
+
+        Cross-references the two sources both ways, which is the half §5.5.3 asks for and nothing
+        provided: Odds events that match no tracked slate game, and slate games with no line.
+        """
+        by_reason: dict[str, list[dict]] = {}
+        for row in excluded_games:
+            by_reason.setdefault(row["reason"], []).append(row)
+
+        slate_pairs = {(g["home_team"], g["away_team"]) for g in betting.values()}
+        odds_pairs = set(lines.keys())
+        unmatched_odds = sorted(f"{a}@{h}" for h, a in odds_pairs - slate_pairs)
+        no_line = sorted(k for k, v in betting.items() if v.get("observation") is None)
+
+        return {
+            "cfbd_rows_fetched": len(raw_games),
+            "games_normalized": len(games),
+            "excluded_from_normalization": {
+                "total": len(excluded_games),
+                "by_reason": {r: len(v) for r, v in sorted(by_reason.items())},
+                # The defect class is listed game-by-game; the in-scope-by-design class is counted
+                # only, because 150+ FCS rows a week would bury the thing worth reading.
+                "unresolved_team_name": sorted(
+                    f"{r['away']}@{r['home']}" for r in by_reason.get("unresolved_team_name", [])),
+            },
+            "week_slate": {
+                "week": week,
+                "tracked_games": len(betting),
+                "out_of_scope": len(out_of_scope),
+                "out_of_scope_games": sorted(f"{r['away']}@{r['home']}" for r in out_of_scope),
+            },
+            "odds_cross_reference": {
+                "events_normalized": len(lines),
+                "excluded_events": len(excluded_odds),
+                "unresolved_events": sorted(
+                    f"{r['away']}@{r['home']}" for r in excluded_odds),
+                "matched_to_slate": len(slate_pairs & odds_pairs),
+                "unmatched_odds_events": unmatched_odds,
+                "slate_games_without_a_line": no_line,
+            },
+        }
+
     def _manifest(self, meta: dict, sources: dict, team_coverage: dict,
-                  game_coverage: dict, calendar_warnings: list[str]) -> dict[str, Any]:
+                  game_coverage: dict, calendar_warnings: list[str],
+                  reconciliation: dict[str, Any] | None = None) -> dict[str, Any]:
         present = missing = 0
         for cov in team_coverage.values():
             for v in cov.values():
@@ -215,6 +289,7 @@ class SnapshotBuilder:
             "sources": sources,
             "coverage": {"teams": team_coverage, "games": game_coverage},
             "calendar_warnings": calendar_warnings,
+            "reconciliation": reconciliation or {},
             "summary": {
                 "teams": len(team_coverage),
                 "slate_games": len(game_coverage),

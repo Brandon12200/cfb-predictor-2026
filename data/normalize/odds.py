@@ -35,11 +35,15 @@ def _home_point(bookmaker: dict, home_raw: str) -> float | None:
     return None
 
 
-def normalize_lines(raw_events: list[dict],
-                    fetched_at: str) -> dict[tuple[str, str], GameLines]:
+def normalize_lines(raw_events: list[dict], fetched_at: str,
+                    excluded: list[dict] | None = None) -> dict[tuple[str, str], GameLines]:
     """Raw Odds events → {(home, away) canonical: GameLines} with a single "as-of T"
     observation stamped `fetched_at` and the game's `kickoff` (`commence_time`).
-    Unresolved/FCS games are skipped (the slate reconciler logs coverage gaps)."""
+
+    Pass ``excluded`` to collect the events whose team names did not resolve, each with a reason —
+    an Odds event we cannot map is a game we may be pricing blind, so it is surfaced rather than
+    skipped silently (SPEC §5.5.3/§5.5.4).
+    """
     out: dict[tuple[str, str], GameLines] = {}
     for event in raw_events:
         home_raw = event.get("home_team", "")
@@ -47,6 +51,12 @@ def normalize_lines(raw_events: list[dict],
         home = _norm(home_raw)
         away = _norm(away_raw)
         if home is None or away is None:
+            if excluded is not None:
+                from data.normalize.cfbd import classify_drop
+                excluded.append({
+                    "home": home_raw, "away": away_raw, "week": None,
+                    "reason": classify_drop(home_raw, away_raw, home, away, 0),
+                })
             continue
         lines: list[BookLine] = []
         for bm in event.get("bookmakers", []):

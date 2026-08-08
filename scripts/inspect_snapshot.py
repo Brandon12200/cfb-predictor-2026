@@ -44,6 +44,8 @@ def render_manifest(manifest: dict, snapshot: dict, game: str | None = None) -> 
     for grp, c in sorted(tallies.items()):
         lines.append(f"  {grp:16} {dict(c)}")
 
+    lines += _render_reconciliation(manifest)
+
     if game:
         lines += _render_game(manifest, snapshot, game)
     else:
@@ -53,6 +55,44 @@ def render_manifest(manifest: dict, snapshot: dict, game: str | None = None) -> 
         for key, cov in sorted(gc.items()):
             lines.append(f"  {key:28} {cov}")
     return "\n".join(lines)
+
+
+def _render_reconciliation(manifest: dict) -> list[str]:
+    """Slate reconciliation (SPEC §5.5.3) — what was excluded, and why.
+
+    Reads `.get` throughout: snapshots built before the detector existed carry no reconciliation
+    block, and an older bundle must still inspect cleanly rather than raise.
+    """
+    rec = manifest.get("reconciliation") or {}
+    if not rec:
+        return ["", "reconciliation: (not recorded — snapshot predates the detector)"]
+
+    exc = rec.get("excluded_from_normalization", {})
+    slate = rec.get("week_slate", {})
+    odds = rec.get("odds_cross_reference", {})
+    out = [
+        "",
+        f"reconciliation: {rec.get('cfbd_rows_fetched', '?')} CFBD rows → "
+        f"{rec.get('games_normalized', '?')} games → {slate.get('tracked_games', '?')} on the "
+        f"week-{slate.get('week', '?')} slate",
+    ]
+    for reason, count in sorted((exc.get("by_reason") or {}).items()):
+        flag = "  ⚠" if reason == "unresolved_team_name" else "   "
+        out.append(f"{flag} excluded {count:5} — {reason}")
+    for key in exc.get("unresolved_team_name", []):
+        out.append(f"     ⚠ unresolved: {key}  (an FBS game lost here would be a real defect)")
+    if slate.get("out_of_scope"):
+        out.append(f"    out of scope this week: {slate['out_of_scope']} "
+                   f"(not both teams tracked)")
+    out.append(f"    odds: {odds.get('events_normalized', '?')} events, "
+               f"{odds.get('matched_to_slate', '?')} matched to the slate")
+    for key in odds.get("unmatched_odds_events", []):
+        out.append(f"    ⚠ odds event with no tracked slate game: {key}")
+    for key in odds.get("slate_games_without_a_line", []):
+        out.append(f"    slate game with no line (honest-missing): {key}")
+    for key in odds.get("unresolved_events", []):
+        out.append(f"    ⚠ odds event name unresolved: {key}")
+    return out
 
 
 def _render_game(manifest: dict, snapshot: dict, game: str) -> list[str]:

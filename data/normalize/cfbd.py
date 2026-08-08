@@ -39,15 +39,51 @@ def _float(value: Any) -> float | None:
         return None
 
 
-def normalize_games(raw_games: list[dict]) -> list[ScheduleGame]:
-    """CFBD `/games` rows → canonical league-wide season games (scheduling_fatigue)."""
+def classify_drop(home_raw: str | None, away_raw: str | None,
+                  home: str | None, away: str | None, week: int | None) -> str:
+    """Why a CFBD row did not become a tracked game (SPEC §5.5.3 — excluded WITH a reason).
+
+    The distinction that matters: **FBS-vs-FCS is correctly out of scope** (§16.1), whereas an FBS
+    team whose alias the normalizer cannot resolve is a **defect** — a tracked game silently lost.
+    Both used to `continue` identically, which is why the second case had no way to be noticed.
+    """
+    if week is None:
+        return "unparseable_week"
+    unresolved = [(raw, canon) for raw, canon in ((home_raw, home), (away_raw, away))
+                  if canon is None]
+    try:
+        from data.team_registry import get_fcs_names
+        fcs = get_fcs_names()
+    except Exception:  # noqa: BLE001 — classification must never break a snapshot build
+        fcs = set()
+    if all((raw or "").upper() in fcs for raw, _ in unresolved):
+        return "fcs_opponent_out_of_scope"
+    return "unresolved_team_name"
+
+
+def normalize_games(raw_games: list[dict],
+                    excluded: list[dict] | None = None) -> list[ScheduleGame]:
+    """CFBD `/games` rows → canonical league-wide season games (scheduling_fatigue).
+
+    Pass ``excluded`` to collect the rows that did NOT become games, each with a reason. CFBD
+    returns ~888 rows for a season and ~734 become tracked games; before this the 154-row
+    difference was invisible, and an FBS game lost to an unresolved alias would have looked
+    identical to an FCS game correctly filtered out.
+    """
     out: list[ScheduleGame] = []
     for g in raw_games:
-        home = _norm(g.get("homeTeam"))
-        away = _norm(g.get("awayTeam"))
+        home_raw, away_raw = g.get("homeTeam"), g.get("awayTeam")
+        home = _norm(home_raw)
+        away = _norm(away_raw)
         week = _int(g.get("week"))
         if home is None or away is None or week is None:
-            continue  # unresolved teams are dropped here; the slate reconciler logs them
+            if excluded is not None:
+                excluded.append({
+                    "home": home_raw, "away": away_raw,
+                    "week": week,
+                    "reason": classify_drop(home_raw, away_raw, home, away, week),
+                })
+            continue
         out.append(ScheduleGame(
             week=week,
             home_team=home,
