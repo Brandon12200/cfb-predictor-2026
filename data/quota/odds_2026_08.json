@@ -1,0 +1,28 @@
+{
+  "entries": [
+    {
+      "at": "2026-08-08T14:18:35.800697+00:00",
+      "caller": "build_snapshot",
+      "remaining": 499,
+      "run_id": null,
+      "used": 1,
+      "week": 1
+    },
+    {
+      "at": "2026-08-08T14:42:37.567902+00:00",
+      "caller": "build_snapshot",
+      "remaining": 498,
+      "run_id": null,
+      "used": 2,
+      "week": 1
+    },
+    {
+      "at": "2026-08-08T14:44:08.742552+00:00",
+      "caller": "build_snapshot",
+      "remaining": 497,
+      "run_id": null,
+      "used": 3,
+      "week": 1
+    }
+  ]
+}

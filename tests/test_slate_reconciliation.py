@@ -120,7 +120,20 @@ def test_normalize_lines_records_unresolved_events():
     normalize_lines([{"home_team": "Zzz Tech", "away_team": "Qqq State", "bookmakers": []}],
                     "2026-08-08T00:00:00Z", excluded=excluded)
     assert len(excluded) == 1
-    assert excluded[0]["reason"] in ("unresolved_team_name", "fcs_opponent_out_of_scope")
+    # Neither side is a program we know, so this is `non_fbs_matchup` — informational, not the
+    # defect class. `unresolved_team_name` is reserved for "an FBS team's opponent could not be
+    # identified", which is the only case that means a tracked game is being lost.
+    assert excluded[0]["reason"] == "non_fbs_matchup"
+
+
+def test_the_defect_class_is_reserved_for_a_lost_tracked_game():
+    """Crying wolf is a real failure mode: CFBD posts ~114 lower-division matchups a season, and
+    if those share a reason with a genuinely lost FBS game nobody reads the warning."""
+    from data.normalize.cfbd import classify_drop
+    # Two unknown lower-division schools -> informational.
+    assert classify_drop("Aurora", "Rockford", None, None, 1) == "non_fbs_matchup"
+    # An FBS team whose opponent we cannot identify -> the defect class.
+    assert classify_drop("Zzz Tech", "Georgia", None, "GEORGIA", 1) == "unresolved_team_name"
 
 
 # --- the cross-reference §5.5.3 asks for --------------------------------------------------------

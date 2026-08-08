@@ -162,7 +162,7 @@ def test_selectivity_flags_all_no_bet_slate():
     s = selectivity_report(_golden_joined())
     assert s["all_no_bet_slate"] is True
     assert s["no_bet_hypothetical"]["n_games"] == 4       # 4 home-lean NO_BETs graded hypothetically
-    assert s["no_lean"]["n_games"] == 6                   # 6 neutral no-side
+    assert s["no_lean"]["n_games"] == 7                   # 7 neutral no-side
 
 
 def test_attribution_measures_per_sub_signal_on_golden():

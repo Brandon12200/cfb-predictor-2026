@@ -3,11 +3,14 @@ Team name normalization system for College Football Market Edge Platform.
 Handles mapping between different API formats and user inputs for 130+ FBS teams.
 """
 
+import logging
 import re
 from typing import Dict, List, Optional, Set
 from difflib import get_close_matches
 
-from data.team_registry import get_fbs_canonical_names, get_fcs_names
+from data.team_registry import CANONICAL_OVERRIDES, get_fbs_canonical_names, get_fcs_names
+
+logger = logging.getLogger(__name__)
 
 
 class TeamNameNormalizer:
@@ -167,21 +170,55 @@ class TeamNameNormalizer:
         return name
     
     def _fuzzy_match(self, clean_name: str) -> Optional[str]:
-        """Attempt fuzzy matching for near-misses."""
-        # Get close matches from all known names
-        matches = get_close_matches(
-            clean_name, 
-            self._all_names, 
-            n=1, 
-            cutoff=0.8
-        )
-        
-        if matches:
-            matched_name = matches[0]
-            # Return the normalized form
-            return self.alias_mappings.get(matched_name, matched_name)
-        
-        return None
+        """Near-miss matching that CANNOT cross into the FBS universe.
+
+        **Why this fails closed.** `difflib` at cutoff 0.8 does not distinguish "a typo of an FBS
+        team" from "a different school whose name happens to be similar". Measured against the real
+        CFBD feed, 16 FCS programs resolved onto FBS teams — Samford→STANFORD, Southern→USC,
+        Mississippi Valley State→MISSISSIPPI STATE, North Carolina A&T→NORTH CAROLINA. When both
+        sides of an FCS game resolved, a **fabricated FBS game entered the snapshot**, including
+        NORTH DAKOTA STATE playing itself. Ten such games were already in the tag-time vehicle.
+
+        A fabricated game is a violation of the no-fabricated-data principle with real downstream
+        cost: `data["games"]` drives schedule intelligence, and in-season it would attribute a
+        completed FCS result to an FBS team's Elo.
+
+        So membership in the tracked universe is now decided **only** by the authoritative routes —
+        exact canonical, explicit alias, or a `CANONICAL_OVERRIDES` entry. Fuzzy matching may still
+        resolve *within* the non-FBS vocabulary, but a fuzzy result that lands on an FBS canonical
+        is refused. An unresolved name returns ``None`` and is recorded with a reason by the slate
+        reconciler (SPEC §5.5.3) — visible, and fixable by adding an alias, rather than silently
+        becoming the wrong team.
+
+        This is D7's own doctrine applied at runtime: that entry already forbids a CFBD team
+        resolving "by implicit fuzzy match rather than one of these three explicit routes".
+
+        **Accepted cost, stated rather than left implicit:** this also stops fuzzy typo-correction
+        of tracked teams themselves — `"Ohio Statee"` now returns ``None`` instead of
+        ``"OHIO STATE"``, so a mistyped name in `cfb hypothetical` no longer self-corrects. That is
+        the right trade: the same mechanism that forgives a human typo is the one that turned
+        Samford into Stanford in an authoritative data feed, and a wrong-but-confident resolution
+        is far more expensive than a rejected one. Add an explicit alias if a spelling deserves to
+        resolve.
+        """
+        matches = get_close_matches(clean_name, self._all_names, n=1, cutoff=0.8)
+        if not matches:
+            return None
+
+        resolved = self.alias_mappings.get(matches[0], matches[0])
+        # Compare case-insensitively. `_all_names` also holds the mixed-case ESPN/Odds display
+        # forms ("Michigan", "Texas"), whose uppercase IS an FBS canonical but which are not
+        # literally keys of `team_mappings` — a route by which a fuzzy hit could confer FBS
+        # membership without tripping the guard. No live bypass was found, but this guard is
+        # supposed to hold by construction rather than by luck.
+        if resolved.upper() in self.team_mappings:
+            logger.debug(
+                "Refusing fuzzy match %r -> %r: fuzzy matching may not confer FBS membership "
+                "(add an explicit alias if this mapping is genuinely correct).",
+                clean_name, resolved,
+            )
+            return None
+        return resolved
     
     def _build_all_names_index(self) -> Set[str]:
         """Build index of all possible team names for fuzzy matching."""
@@ -589,12 +626,27 @@ class TeamNameNormalizer:
         }
         
         aliases.update(state_mappings)
-        
+
+        # CFBD's own spellings, from the registry's single source of truth.
+        #
+        # `CANONICAL_OVERRIDES` records where CFBD's `school` field diverges from our canonical
+        # name (D7). It was applied only when the registry artifact was BUILT, never at runtime —
+        # so `normalize("California")` returned None and every Cal game was dropped, along with
+        # "App State", "UL Monroe", "Massachusetts", "Ole Miss", "Hawai'i", "San José State" and
+        # "Florida Atlantic". Ten real tracked-vs-tracked games were lost to this alone.
+        #
+        # Wiring it here rather than re-typing the pairs keeps one source of truth: a future
+        # override is picked up by the registry build and by name resolution from the same edit.
+        for cfbd_spelling, canonical in CANONICAL_OVERRIDES.items():
+            cleaned = self._clean_input(cfbd_spelling)
+            if canonical in self.team_mappings:
+                aliases[cleaned] = canonical
+
         # Add identity mappings for all team names
         for team in self.team_mappings.keys():
             if team not in aliases:
                 aliases[team] = team
-        
+
         return aliases
     
     def _build_fcs_teams(self) -> Set[str]:

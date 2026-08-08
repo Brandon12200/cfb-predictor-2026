@@ -184,8 +184,13 @@ if _VEHICLE.exists():
           f"sha256 {_veh[:16]}… (pinned {_FROZEN_VEHICLE_SHA256[:16]}…) — if THIS moved, the "
           "gate's input changed, not the model; restore the vehicle rather than reading on")
 
-    _FROZEN_SLATE_SHA256 = "eab7ffdb90df6fb549bbed0f9ebc291e00f710f592bc4e3699e41a3f52a20e2d"
-    _FROZEN_SLATE_GAMES = 330
+    # ⚠ UPDATED ONCE, under SPEC §3 exception 1 (2026-08-08) and a NEW tag — never as a way of
+    # making a red gate green. CFBD published preseason returning production, which D10 activates
+    # with no code change, and the same rebuild corrected a normalizer defect that had been
+    # fabricating games. Both are recorded in SPEC §3 with the measured delta. The superseded
+    # constant was eab7ffdb90df6fb549bbed0f9ebc291e00f710f592bc4e3699e41a3f52a20e2d over 330 games.
+    _FROZEN_SLATE_SHA256 = "1c5187eb9c2a5b7170717cd05aaaf99a93e74e202430b66f10194e7e4f490434"
+    _FROZEN_SLATE_GAMES = 338
     _fp = _fingerprint()
     check("frozen-model behavioural fingerprint over the 330-game tracked slate (v2026-frozen)",
           _fp["sha256"] == _FROZEN_SLATE_SHA256 and _fp["n_games"] == _FROZEN_SLATE_GAMES,

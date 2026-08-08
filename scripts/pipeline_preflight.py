@@ -104,12 +104,20 @@ def check_model_version(pf: Preflight, freeze_tag: str) -> None:
         pf.note(f"model_version {mv}")
 
 
+# Which secrets each role needs. Module-level and exported because the workflow files must thread
+# exactly these into the step that runs the preflight, and a test asserts they do — a second copy
+# of this mapping in the test is how the two would drift apart (D25.4).
+ROLE_SECRETS: dict[str, tuple[str, ...]] = {
+    "predict": ("CFBD_API_KEY", "ODDS_API_KEY"),
+    "capture": ("ODDS_API_KEY",),
+    "grade": ("CFBD_API_KEY",),
+    "freeze": ("CFBD_API_KEY",),
+}
+
+
 def check_secrets(pf: Preflight, role: str) -> None:
     """ABORT: fail here, not forty lines into a snapshot build."""
-    needed = {"predict": ("CFBD_API_KEY", "ODDS_API_KEY"),
-              "capture": ("ODDS_API_KEY",),
-              "grade": ("CFBD_API_KEY",),
-              "freeze": ("CFBD_API_KEY",)}.get(role, ())
+    needed = ROLE_SECRETS.get(role, ())
     for name in needed:
         if not (os.environ.get(name) or "").strip():
             pf.abort(f"{name} is unset or empty — required for role '{role}'.")
@@ -161,7 +169,7 @@ def report_budget(pf: Preflight, cal: dict, role: str) -> None:
                 f"(only {remaining} of {monthly} left).")
 
 
-def emit(pf: Preflight, role: str, week: int | None) -> int:
+def emit(pf: Preflight, role: str, week: int | None, *, quiet: bool = False) -> int:
     lines = [f"### Preflight — role `{role}`" + (f", week {week:02d}" if week else "")]
     for n in pf.notes:
         lines.append(f"- ok: {n}")
@@ -170,7 +178,11 @@ def emit(pf: Preflight, role: str, week: int | None) -> int:
     for a in pf.aborts:
         lines.append(f"- **ABORT**: {a}")
     body = "\n".join(lines)
-    print(body)
+    # `quiet` is for the unit tests, which exercise the ABORT/WARN branches and would otherwise
+    # print full preflight blocks into the production freeze-integrity log — where a reader sees
+    # "ABORT: factors/ has drifted" against a tag that does not exist and reasonably panics.
+    if not quiet:
+        print(body)
 
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:

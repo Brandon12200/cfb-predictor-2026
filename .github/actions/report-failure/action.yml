@@ -15,6 +15,12 @@ inputs:
     description: live | rehearsal
     required: false
     default: live
+  kind:
+    description: >
+      Event class. Becomes the `pipeline-<kind>` label and separates dedupe buckets, so an
+      "SP+ arrived" notification can never be swallowed by an open "the job failed" issue.
+    required: false
+    default: failure
   title:
     description: Override the generated title
     required: false
@@ -59,28 +65,46 @@ runs:
 
     - name: Open or update the issue
       shell: bash
+      # EVERY input reaches the script through `env:`, never through `${{ }}` interpolation.
+      # Actions substitutes `${{ }}` into the script text BEFORE bash parses it, so any backtick
+      # in an input becomes command substitution and any `$(...)` executes. That is not theoretical
+      # here: it silently ate two words from a real issue comment (`Sandwich` and `verify-phase-3`
+      # were run as commands and replaced with empty strings). Once the repository is public,
+      # issue-shaped text is untrusted input and this is a security boundary, not formatting.
       env:
         GH_TOKEN: ${{ inputs.token }}
+        IN_STAGE: ${{ inputs.stage }}
+        IN_WEEK: ${{ inputs.week }}
+        IN_MODE: ${{ inputs.mode }}
+        IN_TITLE: ${{ inputs.title }}
+        IN_BODY: ${{ inputs.body }}
+        IN_KIND: ${{ inputs.kind }}
+        IN_COOLDOWN: ${{ inputs.cooldown-minutes }}
       run: |
         set -euo pipefail
-        STAGE="${{ inputs.stage }}"
-        WEEK="${{ inputs.week }}"
+        STAGE="$IN_STAGE"
+        WEEK="$IN_WEEK"
+        KIND="${IN_KIND:-failure}"
         RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
-        LABELS=(pipeline-failure "stage:${STAGE}")
+        # `kind` separates event classes that must never share a dedupe bucket. A freeze-integrity
+        # FAILURE and an SP+ ARRIVAL are both stage:freeze, and when they collided the arrival —
+        # the most important signal this pipeline emits — was appended as a comment to an issue
+        # titled "pipeline: freeze failed", where its own title override could never apply.
+        LABELS=("pipeline-${KIND}" "stage:${STAGE}")
         [ -n "$WEEK" ] && LABELS+=("week:${WEEK}")
-        [ "${{ inputs.mode }}" = "rehearsal" ] && LABELS+=(rehearsal)
+        [ "$IN_MODE" = "rehearsal" ] && LABELS+=(rehearsal)
 
         for L in "${LABELS[@]}"; do
           gh label create "$L" --color B60205 --description "cfb pipeline" >/dev/null 2>&1 || true
         done
 
-        TITLE="${{ inputs.title }}"
-        [ -z "$TITLE" ] && TITLE="pipeline: ${STAGE} failed${WEEK:+ — 2026 week ${WEEK}}"
+        TITLE="$IN_TITLE"
+        [ -z "$TITLE" ] && TITLE="pipeline: ${STAGE} ${KIND}${WEEK:+ — 2026 week ${WEEK}}"
 
         TAIL="$(tail -n 120 "${RUNNER_TEMP}/pipeline.log" 2>/dev/null || echo '(no log captured)')"
         BODY="$(printf '%s\n\n**Run:** %s\n**Ref:** `%s` (%s)\n\n<details><summary>last 120 log lines</summary>\n\n```\n%s\n```\n\n</details>\n' \
-                 "${{ inputs.body }}" "$RUN_URL" "$GITHUB_REF_NAME" "${{ inputs.mode }}" "$TAIL")"
+                 "$IN_BODY" "$RUN_URL" "$GITHUB_REF_NAME" "$IN_MODE" "$TAIL")"
 
         # Dedupe by LABEL, never by `--search "in:title"`: the issue search index is eventually
         # consistent and lags by seconds to minutes — exactly the window in which back-to-back
@@ -105,7 +129,7 @@ runs:
                  --jq '(.comments | last | .createdAt) // ""')"
         if [ -n "$LAST" ]; then
           AGE=$(( ( $(date -u +%s) - $(date -u -d "$LAST" +%s 2>/dev/null || echo 0) ) / 60 ))
-          if [ "$AGE" -lt "${{ inputs.cooldown-minutes }}" ]; then
+          if [ "$AGE" -lt "$IN_COOLDOWN" ]; then
             echo "::notice::issue #${EXISTING} commented ${AGE}m ago (< cooldown) — not commenting again"
             exit 0
           fi

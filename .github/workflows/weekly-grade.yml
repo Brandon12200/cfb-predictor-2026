@@ -50,6 +50,7 @@ jobs:
           week: ${{ inputs.week }}
           year: ${{ inputs.year || '2026' }}
           skip-secrets: ${{ inputs.dry_run == true }}
+          cfbd-api-key: ${{ secrets.CFBD_API_KEY }}
 
       - name: Fetch finals
         id: results

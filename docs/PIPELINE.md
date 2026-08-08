@@ -126,6 +126,27 @@ Every step tees to `$RUNNER_TEMP/pipeline.log`. On failure, `report-failure`:
 3. opens **or comments on** an issue deduped by the **label triple** `pipeline-failure` +
    `stage:<x>` + `week:NN`.
 
+### Rule: untrusted values reach a shell through `env:`, never `${{ }}`
+
+Actions substitutes `${{ }}` into a `run:` script **before bash parses it**, so a backtick or `$( )`
+in the value executes. This is not hypothetical here — it silently ate two words from a real issue
+comment (`` `Sandwich` `` and `` `verify-phase-3` `` were run as commands), which is how it was
+found.
+
+The boundary is **who controls the value**, and it is worth stating precisely rather than
+pretending no interpolation exists anywhere:
+
+* **Untrusted → must use `env:`.** Anything a non-collaborator can set: issue/PR text, and
+  `github.head_ref` (a fork's branch name — git permits backticks in ref names). Both are now
+  routed through `env:`. This became live rather than theoretical when the repo went public (D37).
+* **Trusted → interpolation is acceptable.** Values this repo produces: `steps.*.outputs.*` from
+  `pipeline_week.py` (digits and ISO dates), `matrix.phase` (a literal list), composite `inputs.*`
+  passed from our own workflows, and `github.event.repository.default_branch`. One is deliberately
+  unquoted — `git add -- ${{ inputs.paths }}` relies on word-splitting a path list.
+
+When adding a step, ask which side of that line the value sits on. If it could ever originate
+outside the repo, it goes in `env:`.
+
 **Dedupe is by label, never by `--search "in:title"`.** GitHub's issue search index is eventually
 consistent and lags seconds to minutes — exactly the window in which back-to-back failures need to
 find each other. Comments are also cooled down (default 6h), so a job failing all weekend leaves one
