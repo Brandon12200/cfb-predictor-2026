@@ -39,19 +39,15 @@ jobs:
       - run: make install
 
       # Path-level freeze proof, in milliseconds, immune to a whitespace-preserving edit.
-      - name: Frozen trees match the tag
+      # Deliberately the SAME assertion the cadence jobs run, invoked through the same script
+      # rather than reimplemented here — a second copy of a guard is how two guards drift apart,
+      # and a drifted guard is worse than none because it reads as covered (D25.4).
+      - name: Freeze + provenance preflight
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
         run: |
-          set -euo pipefail
-          TAG="$(python -c "import json;print(json.load(open('season.json'))['pipeline']['freeze_tag'])")"
-          for D in factors engine; do
-            HEAD_TREE="$(git rev-parse "HEAD:$D")"
-            TAG_TREE="$(git rev-parse "$TAG:$D")"
-            if [ "$HEAD_TREE" != "$TAG_TREE" ]; then
-              echo "::error::$D/ has drifted from $TAG ($HEAD_TREE != $TAG_TREE)"
-              exit 1
-            fi
-            echo "$D/ matches $TAG (${HEAD_TREE:0:12})"
-          done 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          python scripts/pipeline_preflight.py --role freeze 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          exit "${PIPESTATUS[0]}"
 
       - name: Behavioural fingerprint
         run: make verify-phase-3 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"

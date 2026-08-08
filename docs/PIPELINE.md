@@ -226,7 +226,7 @@ so the crons are duplicated into the workflows and a test asserts the two agree.
 
 ---
 
-## 9. Reporting gate (D-8, temporary)
+## 9. Reporting gate (D36, temporary)
 
 The Sunday job **generates reports but does not commit them** until `analytics/attribution.py`
 carries D27's lean-side split and the naive always-lean-home baseline. Preseason leans run

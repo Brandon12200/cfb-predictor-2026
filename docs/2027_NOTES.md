@@ -193,3 +193,49 @@ log like a lab notebook with results pending.
 5. **Composite blocks are audited per-number.** "The block is ratified" never ratifies the numbers
    inside it — and B7/B8 proved the corollary: ratifying a `config` dict does not cover the branch
    arithmetic in the methods it feeds.
+
+---
+
+## 8. Phase-5 pipeline — carry-forward from the `pipeline-adversary` audit (2026-08-07)
+
+Enumerated against the finished pipeline before the PR. **None blocks the pipeline's own written
+acceptance criteria** (`scripts/verify_phase_5.py`, `docs/PIPELINE.md`), so all are inherited
+deliberately rather than fixed at the deadline. Ordered by 2027 value.
+
+1. **Postponement blind spot on the CAPTURE side (the one with in-season consequence).**
+   `scripts/fetch_lines.py` scopes each capture to the *current* week's snapshot slate, while the
+   workflow resolves the week from today's date. A game postponed across a `pipeline_week` boundary
+   is in no later week's slate, so it **receives no further line observations**, and
+   `closing_observation` then honestly reports the last pre-postponement observation as its
+   "close" — a stale close for exactly the games most likely to move. The grading side handles
+   postponements correctly (`fetch_results` matches by pair across the whole season and records
+   `completed_in_week`); only capture is week-scoped. Fix shape: key capture off *claims with no
+   result yet* rather than off the calendar week's snapshot.
+2. **CFBD spend is unguarded and the catch-up loop is unbounded.** There is no CFBD analogue to
+   `data/odds_budget.py`, and `pipeline_week.gradable_weeks` returns every week with a claim, so
+   the Tuesday catch-up makes one `get_games(year)` call per historical week, every week, forever
+   (~15/Tuesday by season's end). Harmless against Tier-1's 5,000/mo — but that quota is **shared
+   with basketball** (D5) and nothing tracks the creep. Fix shape: bound the loop to weeks with an
+   open `ungraded`/`pending` remainder, and add a CFBD budget note.
+3. **No season-end kill switch.** The cadence keeps firing after week 15 (`pipeline_week` clamps
+   there by design). The runs are idempotent no-ops, but they are an unbounded silent tail — and
+   they compound item 2.
+4. **A mid-run credential revocation degrades quietly.** `SnapshotBuilder._fetch` correctly records
+   each failed source as `missing` with a `fallback_reason` (binding #4, no fabrication), and
+   `min_snapshot_coverage_pct` is `warn` by ratified policy — so a key revoked *between* source
+   fetches yields a claim built on holes, announced only in a step-summary warning. The claim is
+   honest and the coverage is recorded; what is missing is an **alert path** distinguishing "early
+   season, data genuinely absent" from "credential died mid-run".
+5. **No simulated-date test for the 2026-11-01 DST flip.** The mechanism is DST-immune by
+   construction (fixed UTC crons anchored to EDT shift *earlier* in ET, the safe direction; the
+   timing check localises to ET), so this is coverage, not a defect.
+
+**Two of these — 1 and the direct-overwrite path in item 6 below — were independently surfaced by
+both `pipeline-adversary` and `code-reviewer`.** That convergence is the signal worth remembering:
+the same gap found by an adversarial enumeration *and* by a line-by-line diff review is the one to
+point the failure-injection drill at first.
+
+6. **Fixed at review, recorded because the asymmetry is the lesson:** `write_predictions` overwrote
+   unconditionally while the *human* CLI path (`cli/cfb.py::_save_slate`) had refused since 4.5.
+   The byte-immutable guarantee therefore held for the interactive path and not for the automated
+   one — the reverse of where it matters. Now enforced at the shared seam, scoped to the claim tier.

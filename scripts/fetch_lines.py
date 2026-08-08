@@ -65,7 +65,13 @@ def main(argv: list[str] | None = None) -> int:
     from data.clients.odds import get_odds_client
     client = get_odds_client()
     fetched_at = datetime.now(UTC).isoformat()
-    raw = client.get_ncaaf_spreads()
+    try:
+        raw = client.get_ncaaf_spreads()
+    except Exception as exc:
+        # A clean message rather than a raw traceback: this runs unattended, and the last 120 log
+        # lines are what land in the auto-Issue. Matches fetch_results.py's handling.
+        print(f"Odds fetch failed: {type(exc).__name__}: {exc}")
+        return EXIT_ERROR
     record_quota(client.last_quota)  # persist the fresh balance for the next run's guard
 
     gamelines = odds_norm.normalize_lines(raw, fetched_at)

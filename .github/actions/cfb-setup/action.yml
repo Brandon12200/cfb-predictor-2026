@@ -97,7 +97,11 @@ runs:
       run: |
         ARGS=(--year "${{ inputs.year }}")
         if [ -n "${{ inputs.week }}" ]; then ARGS+=(--week "${{ inputs.week }}"); fi
+        # Propagate the script's exit code through the pipe. Without this a crash here reports
+        # success, argparse's error text lands in $GITHUB_OUTPUT as malformed lines, and the real
+        # failure surfaces one step later as a confusing empty --week.
         python scripts/pipeline_week.py "${ARGS[@]}" | tee -a "$GITHUB_OUTPUT"
+        exit "${PIPESTATUS[0]}"
 
     - name: Preflight
       shell: bash

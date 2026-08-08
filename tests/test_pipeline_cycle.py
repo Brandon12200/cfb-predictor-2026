@@ -98,6 +98,43 @@ def test_predictions_are_written_for_the_slate(predictions):
     assert predictions["meta"]["model_version"] == "v2026-frozen-test"
 
 
+def test_the_writer_refuses_to_overwrite_an_existing_claim(tmp_path, monkeypatch, predictions):
+    """D22 at the shared seam, not only in the workflow's `if:`.
+
+    Phase 5 wires this writer into unattended automation, where `protect_immutable.py` does not run
+    at all (it intercepts an agent's Edit/Write tool calls, not a script on a runner). Before this
+    guard, the sole protection for a byte-immutable claim was one workflow conditional, and a
+    direct `python scripts/build_predictions.py --week N` would have silently overwritten it.
+    """
+    import scripts.build_predictions as bp
+
+    claims = tmp_path / "claim_tier"
+    claims.mkdir(exist_ok=True)
+    monkeypatch.setattr(bp, "PREDICTIONS_DIR", claims)
+    target = claims / "2026_week_01.json"
+
+    bp.write_predictions(predictions, target)
+    original = target.read_bytes()
+
+    with pytest.raises(FileExistsError, match="byte-immutable"):
+        bp.write_predictions({"meta": {}, "predictions": []}, target)
+    assert target.read_bytes() == original, "the claim was modified despite the refusal"
+
+    # Deliberate override still works, for an uncommitted claim.
+    bp.write_predictions({"meta": {}, "predictions": []}, target, force=True)
+    assert target.read_bytes() != original
+
+
+def test_a_scratch_path_outside_the_claim_tier_is_not_guarded(tmp_path, predictions):
+    """`--out docs/examples/...` regenerates the golden; the guard is scoped to the claim tier."""
+    import scripts.build_predictions as bp
+
+    scratch = tmp_path / "scratch.json"
+    bp.write_predictions(predictions, scratch)
+    bp.write_predictions(predictions, scratch)  # must not raise
+    assert scratch.exists()
+
+
 def test_the_claim_is_byte_stable_on_a_rerun(cycle, predictions):
     """Determinism from a frozen snapshot — the property the pre-registration story rests on."""
     again = build_predictions(cycle["snapshot"], week=WEEK, model_version="v2026-frozen-test")

@@ -103,7 +103,7 @@ jobs:
             --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
 
       # ---------------------------------------------------------------------------------------
-      # D-8 GATE. The reports are generated above (so a rehearsal can inspect them), but they are
+      # D36 GATE. The reports are generated above (so a rehearsal can inspect them), but they are
       # NOT committed until analytics/ carries D27's lean-side split and the naive
       # always-lean-home baseline. Preseason leans run 195 home / 35 away — 5.57:1, structural,
       # because TravelBurden/ConsecutiveRoad only penalise the visitor and Altitude only advantages
@@ -112,8 +112,9 @@ jobs:
       #
       # Remove this gate in the PR that lands the split. Hard deadline: the first graded Sunday.
       # ---------------------------------------------------------------------------------------
-      - name: Report commit gate (D-8)
+      - name: Report commit gate (D36)
         id: report_gate
+        if: steps.results.outputs.rc == '0'
         run: |
           if grep -q "edge_direction" analytics/attribution.py; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
@@ -121,7 +122,7 @@ jobs:
             echo "ready=false" >> "$GITHUB_OUTPUT"
             echo "::warning::reports generated but NOT committed — analytics/attribution.py has no lean-side split yet (D27); an unsplit headline over a 5.57:1 home skew repeats D17."
             {
-              echo "### Reports withheld (D-8 gate)"
+              echo "### Reports withheld (D36 gate)"
               echo "Generated but not committed: \`analytics/attribution.py\` has no lean-side"
               echo "stratification, so the season headline would be an unsplit blend over a"
               echo "5.57:1 structural home skew (D27). Land the split to open this gate."

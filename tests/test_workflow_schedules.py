@@ -154,7 +154,7 @@ def test_grade_commits_reports_separately_from_outcomes():
 
 
 def test_report_commit_is_gated_until_the_lean_split_lands():
-    """D-8: an unsplit season headline over a 5.57:1 structural home skew repeats D17, and
+    """D36: an unsplit season headline over a 5.57:1 structural home skew repeats D17, and
     publishing it automatically every Sunday is worse than publishing nothing."""
     text = (WORKFLOWS / "weekly-grade.yml").read_text()
     assert "report_gate" in text
@@ -168,6 +168,6 @@ def test_the_gate_opens_exactly_when_attribution_gains_the_split():
     assert 'grep -q "edge_direction" analytics/attribution.py' in text
     have_split = "edge_direction" in (ROOT / "analytics" / "attribution.py").read_text()
     assert not have_split, (
-        "analytics/attribution.py now has edge_direction — the D-8 gate has served its purpose. "
+        "analytics/attribution.py now has edge_direction — the D36 gate has served its purpose. "
         "Remove the gate step from weekly-grade.yml and delete this assertion."
     )

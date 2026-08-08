@@ -183,13 +183,13 @@ while _d <= date(2026, 12, 31):
 check("pipeline_week never raises and never goes backwards across the whole season",
       _never_raises and _monotonic)
 
-# === The Sunday reporting gate (D-8) =============================================================
+# === The Sunday reporting gate (D36) =============================================================
 
 _has_split = "edge_direction" in (ROOT / "analytics" / "attribution.py").read_text()
 _gated = "steps.report_gate.outputs.ready == 'true'" in _grade
 check("the Sunday report commit is gated until D27's lean-side split lands (or the split is in)",
       _has_split or _gated,
-      "split present — remove the gate" if _has_split else "gate closed, split still pending (D-8)")
+      "split present — remove the gate" if _has_split else "gate closed, split still pending (D36)")
 
 # === Test coverage of the cycle itself ===========================================================
 

@@ -50,6 +50,11 @@ runs:
           echo "### git status"; git status --porcelain || true
           echo; echo "### staged diff (names)"; git diff --cached --name-only || true
           echo; echo "### unstaged diff (names)"; git diff --name-only || true
+          # Committed-but-unpushed work. In a push failure the tree is CLEAN and the three checks
+          # above show nothing — this is the only line that reveals the artifact that was produced,
+          # committed, and then stranded locally.
+          echo; echo "### committed but not pushed"
+          git log --oneline "origin/${GITHUB_REF_NAME}..HEAD" 2>/dev/null || echo "(no upstream ref)"
         } >> "${RUNNER_TEMP}/pipeline.log"
 
     - name: Open or update the issue
