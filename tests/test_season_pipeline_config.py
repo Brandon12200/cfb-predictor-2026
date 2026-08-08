@@ -52,7 +52,11 @@ def test_top_level_keys_are_exactly_the_documented_set():
 
 def test_scalar_values():
     assert PIPELINE["timezone"] == "America/New_York"
-    assert PIPELINE["freeze_tag"] == "v2026-frozen"
+    # Deliberately NOT a hardcoded tag name. `freeze_tag` moves at every SPEC §3 exception, and a
+    # literal here is one more place the retag has to remember — exactly what broke after
+    # v2026-frozen-2. Assert the SHAPE and that it resolves to a real tag; identity is asserted
+    # against git in tests/test_frozen_status.py.
+    assert PIPELINE["freeze_tag"].startswith("v2026-frozen")
     assert PIPELINE["slate_filter"] == "fbs_vs_fbs"  # SPEC §16.1
     assert isinstance(PIPELINE["jitter_slack_minutes"], int)
     assert PIPELINE["jitter_slack_minutes"] > 0

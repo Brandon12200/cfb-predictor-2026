@@ -31,6 +31,8 @@ def check(name: str, ok: bool, detail: str = "") -> None:
 
 SEASON = json.loads((ROOT / "season.json").read_text())
 PIPELINE = SEASON.get("pipeline", {})
+_HAS_GIT = subprocess.run(["git", "rev-parse", "--git-dir"],
+                          capture_output=True, cwd=str(ROOT)).returncode == 0
 WORKFLOWS = ROOT / ".github" / "workflows"
 ACTIONS = ROOT / ".github" / "actions"
 
@@ -40,8 +42,15 @@ check("season.json carries the §10.6 pipeline block", bool(PIPELINE),
       f"{len(PIPELINE)} keys")
 check("the Phase-4.5 config home is untouched (weeks + cli_defaults still present, D24)",
       "weeks" in SEASON and "cli_defaults" in SEASON and len(SEASON["weeks"]) == 15)
-check("freeze tag recorded in config", PIPELINE.get("freeze_tag") == "v2026-frozen",
-      str(PIPELINE.get("freeze_tag")))
+# NOT a hardcoded tag name — `freeze_tag` moves at every SPEC §3 exception, and a literal here is
+# one more place a retag must remember. Assert it exists and resolves to a real tag instead.
+_cfg_tag = PIPELINE.get("freeze_tag")
+_tag_resolves = bool(_cfg_tag) and subprocess.run(
+    ["git", "rev-parse", "--verify", f"{_cfg_tag}^{{commit}}"],
+    capture_output=True, cwd=str(ROOT)).returncode == 0
+check("freeze tag recorded in config and resolves to a real tag",
+      bool(_cfg_tag) and (_tag_resolves or not _HAS_GIT),
+      f"{_cfg_tag} ({'resolves' if _tag_resolves else 'unresolvable — shallow checkout?'})")
 check("slate filter is FBS-vs-FBS (SPEC §16.1)", PIPELINE.get("slate_filter") == "fbs_vs_fbs")
 
 # Every pipeline key must have a consumer. A key nothing reads is config theatre, and the
@@ -136,7 +145,9 @@ check("the Odds budget guard is a distinct exit code, not a stdout string match"
 
 # === The freeze holds (this phase must not move the model) =======================================
 
-_tag = PIPELINE.get("freeze_tag", "v2026-frozen")
+# No silent default: a missing freeze_tag must surface, not fall back to a superseded tag name and
+# quietly assert the freeze against the wrong reference.
+_tag = PIPELINE.get("freeze_tag") or "<freeze_tag MISSING from season.json>"
 _trees = {d: (subprocess.run(["git", "rev-parse", f"HEAD:{d}"], capture_output=True, text=True,
                              cwd=str(ROOT)).stdout.strip(),
               subprocess.run(["git", "rev-parse", f"{_tag}:{d}"], capture_output=True, text=True,
