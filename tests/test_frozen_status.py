@@ -49,8 +49,13 @@ def test_no_stale_tag_name_in_live_config():
     coverage that let a stale literal survive in `data/snapshot/store.py`'s error message. Prose,
     docstrings and history legitimately name superseded tags (they are describing the past), so a
     repo-wide literal ban is not the right rule. What must never go stale is the CONFIG that
-    assertions read, plus any runtime string that claims to name the current tag — the latter is
-    covered by `test_runtime_messages_derive_the_tag_name` below.
+    assertions read.
+
+    **Scope stated honestly, because the first attempt at this docstring overclaimed.** It said
+    runtime strings were "covered below", while the sibling test scanned only one function — and a
+    second stale instance survived in `.claude/hooks/protect_immutable.py`'s block message. Both
+    known runtime strings are now checked by `test_runtime_messages_do_not_name_a_stale_tag`, and
+    that test names the files it scans rather than implying it scans everything.
     """
     import re
     current = frozen_tag()
@@ -65,15 +70,28 @@ def test_no_stale_tag_name_in_live_config():
     assert not offenders, f"stale tag references in live config: {offenders}"
 
 
-def test_runtime_messages_derive_the_tag_name():
-    """A runtime message naming "the frozen tag" must derive it, or it goes stale at the next
-    retag — which is exactly what happened to `load_frozen_vehicle`'s error string."""
-    src = (ROOT / "data" / "snapshot" / "store.py").read_text()
-    body = src.split("def load_frozen_vehicle", 1)[1].split("\ndef ", 1)[0]
+def test_runtime_messages_do_not_name_a_stale_tag():
+    """A message a user SEES must not name a superseded tag — it goes stale at every retag.
+
+    The scanned set is enumerated rather than implied: these are the runtime strings known to
+    mention the freeze tag. `load_frozen_vehicle` derives it from `FROZEN_VEHICLE_SOURCE`;
+    `protect_immutable`'s block message refers to "the freeze tag" generically, since a hook has no
+    reason to name a specific one. Docstrings and module headers are excluded deliberately — they
+    describe history, and history legitimately names old tags.
+    """
+    import re
+
+    store = (ROOT / "data" / "snapshot" / "store.py").read_text()
+    body = store.split("def load_frozen_vehicle", 1)[1].split("\ndef ", 1)[0]
     assert "FROZEN_VEHICLE_SOURCE[0]" in body, (
         "load_frozen_vehicle's error message must derive the tag name, not hardcode it"
     )
-    assert '`v2026-frozen`' not in body
+    assert "`v2026-frozen`" not in body
+
+    hook = (ROOT / ".claude" / "hooks" / "protect_immutable.py").read_text()
+    emitted = [ln for ln in hook.splitlines()
+               if "Blocked:" in ln and re.search(r"v2026-frozen[\w.-]*", ln)]
+    assert not emitted, f"the hook's block message names a specific tag: {emitted}"
 
 
 def test_frozen_tag_returns_the_bare_tag_not_the_build_stamp():
