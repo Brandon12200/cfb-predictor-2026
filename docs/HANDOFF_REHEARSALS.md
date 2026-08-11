@@ -47,7 +47,15 @@ deliberate, not an oversight.
 There is no carried-forward defect list. The nine-item hardening batch (PR #39) closed the last of
 it. Merged this session: **#30** (the pipeline), **#31** (reporting split + fixes), **#34** (normalizer
 fails closed + the retag), **#35** (tag references), **#37** (deploy-key push + derived exports),
-**#39** (the hardening batch). Every one carried a `code-reviewer` GO on its final diff.
+**#39** (the hardening batch).
+
+**Five of the six carry a `code-reviewer` GO recorded in the repo** — in the PR body, or in
+`docs/pr-summaries/`. **#35 does not.** It was reviewed in-session, but that review left no durable
+artifact, so from the repository alone it is unverifiable. Recorded here rather than smoothed over,
+because "every PR was reviewed" is exactly the kind of claim a context-free successor would take as
+established. **The lesson, which applies to you: a review that is not written down did not happen,
+as far as the repo is concerned.** Put the verdict and the reviewed SHA in the PR body or a
+`docs/pr-summaries/` file, every time.
 
 ### Open issues — one, and it is by design
 
@@ -115,8 +123,21 @@ branch**. This is the first time the commit choreography runs for real on a pred
 5. **No commit lands on `main`.** Verify by ref, not by memory.
 6. **The week-1 claim slot on `main` is still empty.** `git ls-tree -r origin/main --name-only |
    grep predictions/2026` returns nothing.
-7. Re-dispatch predict on the same branch: the predict step **skips** because the claim file exists,
-   and **zero commits** are produced. Byte-immutability is also the idempotency guard.
+7. **Re-dispatch predict on the same branch and check the RIGHT idempotency property.** The claim is
+   idempotent; the cycle is not.
+
+   - **Must hold:** the "Build predictions" step **skips** (`Claim already made` runs instead) and
+     the `predictions:` commit is **not** created — both are gated on
+     `steps.setup.outputs.prediction_exists` (`weekly-predict.yml:143-160`). Byte-immutability is
+     also the idempotency guard, and it is what makes week 1's 10-day window safe.
+   - **Expected, and NOT a failure:** a **new `snapshot:` commit**. "Build the snapshot" and
+     "Regenerate the derived exports" are deliberately **ungated**, so a re-dispatch makes a fresh
+     Odds call, appends a line observation and a quota-ledger entry, and stamps new `fetched_at`
+     values into the manifest. Fresh market data on a re-run is the point of the daily cadence.
+
+   **Do not write this criterion as "zero commits are produced."** That is what the pipeline is
+   *not* designed to do, and a successor holding the cycle to it would either flag a healthy
+   pipeline as broken or lose trust in the rehearsal as evidence.
 8. No `pipeline-failure` issue opens; none closes.
 9. `verify-phase-3` stays green throughout.
 
@@ -314,8 +335,9 @@ These were learned by shipping something broken, not by reasoning. Each cost a d
    frozen trees are identical at both tags. A check that passes against the wrong input is worse than
    one that fails.
 
-Running bug tally across the project: **16 + this session's 9-item batch.** The pattern that keeps
-recurring is not bad logic — it is **guards that were never executed**.
+This session found and fixed **nine** defects in the hardening batch alone (PR #39), every one of
+them in a *guard* rather than in the model. The pattern that keeps recurring across the project is
+not bad logic — it is **guards that were never executed**.
 
 ---
 
@@ -332,4 +354,10 @@ recurring is not bad logic — it is **guards that were never executed**.
    start on them; they are next year's.
 5. `season.json` → `pipeline` — the config every workflow reads.
 
-**When the season has run cleanly, delete this file.**
+**`docs/HANDOFF_PHASE5.md` is this file's predecessor and is now superseded.** It is still on `main`
+and its own header says to delete it when Phase 5 closes — which it has. Where the two disagree,
+**this file wins**: the older one predates the retag and still describes `v2026-frozen`, the
+330-game fingerprint and Phase 5 as "not begun". Its deletion is a one-line docs PR left for the
+owner rather than taken unilaterally.
+
+**When the season has run cleanly, delete this file too.**
