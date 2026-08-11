@@ -8,7 +8,7 @@
         "kickoff": "2026-09-05T19:30:00Z",
         "observation": {
           "consensus_spread": -7.2,
-          "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+          "fetched_at": "2026-08-11T14:31:17.379270+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -65,7 +65,7 @@
         "kickoff": "2026-09-05T19:30:00Z",
         "observation": {
           "consensus_spread": -7.5,
-          "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+          "fetched_at": "2026-08-11T14:31:17.379270+00:00",
           "lines": [
             {
               "provider": "draftkings",
@@ -116,8 +116,8 @@
         "home_team": "LSU",
         "kickoff": "2026-09-05T23:30:00Z",
         "observation": {
-          "consensus_spread": -9.4,
-          "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+          "consensus_spread": -9.3,
+          "fetched_at": "2026-08-11T14:31:17.379270+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -130,23 +130,18 @@
               "spread_open": null
             },
             {
-              "provider": "draftkings",
-              "spread": -9.5,
-              "spread_open": null
-            },
-            {
               "provider": "betmgm",
               "spread": -9.5,
               "spread_open": null
             },
             {
               "provider": "betrivers",
-              "spread": -10.0,
+              "spread": -9.5,
               "spread_open": null
             },
             {
               "provider": "mybookieag",
-              "spread": -10.0,
+              "spread": -9.5,
               "spread_open": null
             },
             {
@@ -166,7 +161,7 @@
             }
           ]
         },
-        "vegas_spread": -9.4
+        "vegas_spread": -9.3
       },
       "COLORADO@GEORGIA TECH": {
         "away_team": "COLORADO",
@@ -174,7 +169,7 @@
         "kickoff": "2026-09-04T00:00:00Z",
         "observation": {
           "consensus_spread": -6.9,
-          "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+          "fetched_at": "2026-08-11T14:31:17.379270+00:00",
           "lines": [
             {
               "provider": "draftkings",
@@ -231,13 +226,8 @@
         "kickoff": "2026-09-06T23:30:00Z",
         "observation": {
           "consensus_spread": -6.5,
-          "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+          "fetched_at": "2026-08-11T14:31:17.379270+00:00",
           "lines": [
-            {
-              "provider": "draftkings",
-              "spread": -6.5,
-              "spread_open": null
-            },
             {
               "provider": "betrivers",
               "spread": -6.5,
@@ -255,11 +245,6 @@
             },
             {
               "provider": "betus",
-              "spread": -6.5,
-              "spread_open": null
-            },
-            {
-              "provider": "bovada",
               "spread": -6.5,
               "spread_open": null
             },
@@ -283,7 +268,7 @@
         "kickoff": "2026-09-05T01:00:00Z",
         "observation": {
           "consensus_spread": 23.4,
-          "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+          "fetched_at": "2026-08-11T14:31:17.379270+00:00",
           "lines": [
             {
               "provider": "draftkings",
@@ -335,7 +320,7 @@
         "kickoff": "2026-08-29T19:30:00Z",
         "observation": {
           "consensus_spread": -5.5,
-          "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+          "fetched_at": "2026-08-11T14:31:17.379270+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -386,8 +371,8 @@
         "home_team": "TCU",
         "kickoff": "2026-08-29T16:00:00Z",
         "observation": {
-          "consensus_spread": -7.4,
-          "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+          "consensus_spread": -7.5,
+          "fetched_at": "2026-08-11T14:31:17.379270+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -406,7 +391,7 @@
             },
             {
               "provider": "betmgm",
-              "spread": -7.0,
+              "spread": -7.5,
               "spread_open": null
             },
             {
@@ -436,26 +421,16 @@
             }
           ]
         },
-        "vegas_spread": -7.4
+        "vegas_spread": -7.5
       },
       "SMU@FLORIDA STATE": {
         "away_team": "SMU",
         "home_team": "FLORIDA STATE",
         "kickoff": "2026-09-07T23:30:00Z",
         "observation": {
-          "consensus_spread": 1.6,
-          "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+          "consensus_spread": 1.7,
+          "fetched_at": "2026-08-11T14:31:17.379270+00:00",
           "lines": [
-            {
-              "provider": "draftkings",
-              "spread": 1.5,
-              "spread_open": null
-            },
-            {
-              "provider": "bovada",
-              "spread": 1.5,
-              "spread_open": null
-            },
             {
               "provider": "mybookieag",
               "spread": 1.5,
@@ -488,15 +463,15 @@
             }
           ]
         },
-        "vegas_spread": 1.6
+        "vegas_spread": 1.7
       },
       "UCLA@CAL": {
         "away_team": "UCLA",
         "home_team": "CAL",
         "kickoff": "2026-09-06T02:30:00Z",
         "observation": {
-          "consensus_spread": 0.6,
-          "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+          "consensus_spread": 0.8,
+          "fetched_at": "2026-08-11T14:31:17.379270+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -504,18 +479,8 @@
               "spread_open": null
             },
             {
-              "provider": "bovada",
-              "spread": 1.5,
-              "spread_open": null
-            },
-            {
               "provider": "betrivers",
               "spread": 1.0,
-              "spread_open": null
-            },
-            {
-              "provider": "draftkings",
-              "spread": 1.5,
               "spread_open": null
             },
             {
@@ -535,12 +500,12 @@
             },
             {
               "provider": "betmgm",
-              "spread": -1.5,
+              "spread": 1.5,
               "spread_open": null
             }
           ]
         },
-        "vegas_spread": 0.6
+        "vegas_spread": 0.8
       },
       "WISCONSIN@NOTRE DAME": {
         "away_team": "WISCONSIN",
@@ -548,20 +513,10 @@
         "kickoff": "2026-09-06T23:30:00Z",
         "observation": {
           "consensus_spread": -20.4,
-          "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+          "fetched_at": "2026-08-11T14:31:17.379270+00:00",
           "lines": [
             {
               "provider": "fanduel",
-              "spread": -20.5,
-              "spread_open": null
-            },
-            {
-              "provider": "bovada",
-              "spread": -20.5,
-              "spread_open": null
-            },
-            {
-              "provider": "draftkings",
               "spread": -20.5,
               "spread_open": null
             },
@@ -17618,8 +17573,8 @@
     }
   },
   "meta": {
-    "built_at": "2026-08-08T14:44:08.728513+00:00",
-    "snapshot_id": "e5205cf37bd661c0",
+    "built_at": "2026-08-11T14:31:17.864072+00:00",
+    "snapshot_id": "e482833812c69fbb",
     "week": 1,
     "year": 2026
   }

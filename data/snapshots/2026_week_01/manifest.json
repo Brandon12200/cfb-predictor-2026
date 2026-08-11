@@ -731,8 +731,8 @@
     }
   },
   "meta": {
-    "built_at": "2026-08-08T14:44:08.728513+00:00",
-    "snapshot_id": "e5205cf37bd661c0",
+    "built_at": "2026-08-11T14:31:17.864072+00:00",
+    "snapshot_id": "e482833812c69fbb",
     "week": 1,
     "year": 2026
   },
@@ -748,16 +748,13 @@
     },
     "games_normalized": 761,
     "odds_cross_reference": {
-      "events_normalized": 71,
+      "events_normalized": 56,
       "excluded_events": 55,
       "matched_to_slate": 11,
       "slate_games_without_a_line": [],
       "unmatched_odds_events": [
         "AKRON@WAKE FOREST",
-        "ALABAMA@TENNESSEE",
-        "ARIZONA STATE@TEXAS A&M",
         "ARKANSAS@UTAH",
-        "AUBURN@GEORGIA",
         "BALL STATE@OHIO STATE",
         "BOISE STATE@OREGON",
         "CENTRAL MICHIGAN@NEW MEXICO",
@@ -765,13 +762,10 @@
         "EAST CAROLINA@ALABAMA",
         "FAU@FLORIDA",
         "FLORIDA INTERNATIONAL@SOUTH FLORIDA",
-        "FLORIDA STATE@ALABAMA",
-        "FLORIDA@AUBURN",
         "FRESNO STATE@USC",
         "GEORGIA@ALABAMA",
         "GEORGIA@ARKANSAS",
         "HAWAII@STANFORD",
-        "HOUSTON@TEXAS TECH",
         "IOWA STATE@IOWA",
         "KENT STATE@SOUTH CAROLINA",
         "LIBERTY@JAMES MADISON",
@@ -779,36 +773,27 @@
         "MARSHALL@PENN STATE",
         "MEMPHIS@UNLV",
         "MIAMI (OH)@PITTSBURGH",
-        "MIAMI@CLEMSON",
         "MIAMI@NOTRE DAME",
         "MICHIGAN@OHIO STATE",
         "MISSOURI STATE@TEXAS A&M",
         "MISSOURI@KANSAS",
         "NEW MEXICO STATE@FLORIDA STATE",
         "NORTHERN ILLINOIS@IOWA",
-        "NOTRE DAME@BYU",
-        "NOTRE DAME@NORTH CAROLINA",
         "OHIO STATE@INDIANA",
         "OHIO STATE@TEXAS",
         "OHIO@NEBRASKA",
-        "OKLAHOMA@GEORGIA",
         "OKLAHOMA@MICHIGAN",
-        "OKLAHOMA@TEXAS",
         "OREGON STATE@HOUSTON",
         "OREGON@OKLAHOMA STATE",
-        "OREGON@USC",
         "SAM HOUSTON@TROY",
         "SAN JOSE STATE@EASTERN MICHIGAN",
         "SAN JOSE STATE@USC",
-        "SMU@LOUISVILLE",
-        "TEXAS A&M@LSU",
         "TEXAS STATE@TEXAS",
-        "TEXAS@TENNESSEE",
+        "TEXAS@OKLAHOMA",
         "TOLEDO@MICHIGAN STATE",
         "TULANE@DUKE",
         "UMASS@RUTGERS",
         "UNLV@HAWAII",
-        "USC@PENN STATE",
         "UTEP@OKLAHOMA",
         "WASHINGTON STATE@WASHINGTON",
         "WESTERN KENTUCKY@NEVADA",
@@ -924,29 +909,29 @@
     "advanced_stats": {
       "count": 0,
       "fallback_reason": null,
-      "fetched_at": "2026-08-08T14:44:07.234597+00:00",
+      "fetched_at": "2026-08-11T14:31:14.163043+00:00",
       "source": "cfbd"
     },
     "betting_lines": {
-      "count": 126,
+      "count": 111,
       "fallback_reason": null,
-      "fetched_at": "2026-08-08T14:44:08.419501+00:00",
+      "fetched_at": "2026-08-11T14:31:17.379270+00:00",
       "quota": {
-        "remaining": 497,
-        "used": 3
+        "remaining": 490,
+        "used": 10
       },
       "source": "odds"
     },
     "coaching": {
       "count": 138,
       "fallback_reason": null,
-      "fetched_at": "2026-08-08T14:44:07.745870+00:00",
+      "fetched_at": "2026-08-11T14:31:15.171764+00:00",
       "source": "cfbd"
     },
     "games": {
       "count": 1638,
       "fallback_reason": null,
-      "fetched_at": "2026-08-08T14:44:05.478139+00:00",
+      "fetched_at": "2026-08-11T14:31:11.782395+00:00",
       "source": "cfbd"
     },
     "registry": {
@@ -956,19 +941,19 @@
     "returning_production": {
       "count": 136,
       "fallback_reason": null,
-      "fetched_at": "2026-08-08T14:44:08.365591+00:00",
+      "fetched_at": "2026-08-11T14:31:17.317719+00:00",
       "source": "cfbd"
     },
     "season_stats": {
       "count": 0,
       "fallback_reason": null,
-      "fetched_at": "2026-08-08T14:44:07.841264+00:00",
+      "fetched_at": "2026-08-11T14:31:15.342931+00:00",
       "source": "cfbd"
     },
     "sp_ratings": {
       "count": 0,
       "fallback_reason": null,
-      "fetched_at": "2026-08-08T14:44:08.316093+00:00",
+      "fetched_at": "2026-08-11T14:31:16.563684+00:00",
       "source": "cfbd"
     }
   },
