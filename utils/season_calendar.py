@@ -112,6 +112,38 @@ def pipeline_week(today: date, calendar: dict | None = None) -> int:
     return int(max(weeks, key=lambda k: int(k)))
 
 
+# One predict cadence interval. **Derived, not chosen**: `pipeline.schedule_et.predict` fires on a
+# single weekday, so consecutive predict runs are 7 days apart and a one-cycle lead window uniquely
+# selects the LAST predict before a week's kickoff. `tests/test_claim_window.py` asserts the cadence
+# is still weekly, so this cannot quietly go stale if the schedule changes.
+# Owner sign-off recorded in D38 (2026-08-11).
+CLAIM_LEAD_DAYS = 7
+
+
+def claim_window_open(week: int, today: date, calendar: dict | None = None) -> bool:
+    """May the claim for ``week`` be written on ``today``?
+
+    **The defect this exists to prevent.** ``pipeline_week`` returns the lowest-numbered week whose
+    ``end`` has not passed, so from the moment the cadence went live it returned **1** for every
+    Tuesday — and the first Tuesday after the pipeline merged (2026-08-11) wrote the real week-1
+    claim 14 days early, from a preseason snapshot with 11 of ~138 games. Because the claim is
+    byte-immutable and its prior existence is the skip condition, the intended 2026-08-25 run would
+    have silently skipped, and that thin preseason file would have been the season's week-1
+    pre-registration permanently. `pipeline_week` is doing its job correctly here; what was missing
+    was any notion of *when a claim becomes due*.
+
+    Rule: the claim may be written once the week's ``start`` is within one predict cadence
+    (``CLAIM_LEAD_DAYS``). Week 1 starts 2026-08-29, so 08-11 (18 days out) and 08-18 (11 days out)
+    refuse, and **08-25 (4 days out) allows** — the last scheduled predict before kickoff.
+
+    A week already under way or past returns True, so a catch-up or backfill is never blocked by
+    this gate; D22's byte-immutability is what stops a rewrite, and that is a separate guard.
+    """
+    cal = calendar if calendar is not None else load_calendar()
+    start = date.fromisoformat(cal["weeks"][str(week)]["start"])
+    return (start - today).days <= CLAIM_LEAD_DAYS
+
+
 def resolve_week(explicit: int | None, today: date | None = None,
                  calendar: dict | None = None) -> int:
     """Return ``explicit`` if provided, else infer the week from ``today``.

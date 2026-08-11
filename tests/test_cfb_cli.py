@@ -7,7 +7,7 @@ path, exit codes are meaningful, and `season.json` stays in sync with the corrob
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 import pytest
@@ -124,9 +124,16 @@ def test_predict_game_exit_code_ignores_unrelated_slate_drops(capsys, monkeypatc
 
 
 def test_predict_week_save_refuses_overwrite_d22(tmp_path, monkeypatch, capsys):
-    """`--save` writes the claim once; re-saving refuses (predictions are byte-immutable, D22)."""
+    """`--save` writes the claim once; re-saving refuses (predictions are byte-immutable, D22).
+
+    Pinned to a date inside week 1's claim window: this test is about **overwrite** semantics, and
+    since D38 a claim also cannot be written before its week is due. Without the pin it would fail
+    for a scheduling reason that has nothing to do with what it asserts — and would start passing
+    or failing depending on the day it runs.
+    """
     import scripts.build_predictions as bp
     monkeypatch.setattr(bp, "PREDICTIONS_DIR", tmp_path)
+    monkeypatch.setattr(bp, "pipeline_today", lambda cal=None: date(2026, 8, 25))
     assert cfb.main(["predict", "week", "1", "--save", "--format", "json"]) == 0
     assert (tmp_path / "2026_week_01.json").exists()
     capsys.readouterr()

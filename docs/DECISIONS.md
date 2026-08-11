@@ -346,6 +346,13 @@ Removing the +1 collapses 57.0% onto the independent Vegas number — **the enti
 
 ### D30 as-built amendment — the address, not the decision (owner, 2026-08-11)
 
+> ⚠ **PARTLY SUPERSEDED BY D38 (owner, 2026-08-11), same day.** The amended **address** below stands
+> and is still the ratified identity. Its closing **"History is not rewritten"** ruling was
+> **reversed** hours later once the topology was verified: `d54ac10` was rewritten to `745b1cf`, and
+> the attribution window it describes as permanent **does not exist**. The text is kept unedited —
+> supersede, never edit — so the reasoning that was correct when written stays readable next to the
+> evidence that overturned it. **For the current rule, read D38 §3 and §6.**
+
 **The decision above stands unchanged.** A project machine identity with a `Run:` trailer is still the ratified shape. Only the **email string** is amended, because the one originally chosen did the opposite of what the decision intends.
 
 **Defect:** `pipeline@users.noreply.github.com` is GitHub's **legacy** noreply form, `<username>@users.noreply.github.com`, which GitHub resolves to the account whose login is `pipeline` — **a real, unrelated user** (id 403371, 13 followers, 6 public repos). Confirmed on a live commit rather than inferred: the API's `author` field for `d54ac10` returns `login: pipeline`, `html_url: https://github.com/pipeline`. Every machine commit rendered with a stranger's avatar and a link to their profile.
@@ -482,3 +489,58 @@ three cadence workflows uses `ssh-key: ${{ secrets.DEPLOY_KEY }}`.
 ## D22/D23 addendum — `data/quota/` joins the append-only tier — **RATIFIED (owner, 2026-08-08)**
 **Date:** 2026-08-08
 The Odds spend ledger (`data/quota/odds_YYYY_MM.json`, SPEC §10.5) is an **outcome/measurement artifact** under the D23 taxonomy, not a rendering: each entry records a credit that was actually spent, at a wall-clock moment, and a rewritten balance is a falsified measurement. It is therefore **append-only** and joins `PROTECTED` alongside `data/results/`, `data/graded/`, `data/lines/`, `data/ratings/` and `data/projections/`. Month-partitioned to match the tier's reset. It supersedes the `actions/cache` workaround, which lost the balance on eviction and left the pre-spend guard blind with no signal that it had. Because the artifact set is asserted **exactly** in two places (`tests/conftest.py`'s runtime write guard and `tests/test_artifact_write_guard.py`'s hook↔guard equality), adding it forced both to be updated in the same commit — the shared-tuple coupling of D25.4 working as designed.
+
+---
+
+## D38 — The early week-1 claim is VOIDED; the attribution rewrite executes; history welds shut after the first predicted event — **RATIFIED (owner, 2026-08-11)**
+**Date:** 2026-08-11
+
+**Context.** Two defects converged on one day, and the fix window for both closed at kickoff.
+
+### 1. The void
+
+On **2026-08-11 the scheduled Tuesday predict run** (Actions run `31501943662`, `event=schedule`, conclusion `success`) wrote the real week-1 claim — **14 days before the intended 2026-08-25 run**, from a preseason snapshot carrying **11 of a ~138-game slate**. Commit `dcaf4a3e505091ae0095ada7f0267af2f6e9652a`, blob `0cf6fa74e4351df1b952f642c73a0ffa17a8b4fd`, 34575 bytes.
+
+The pipeline was not malfunctioning. `pipeline_week` returns the lowest-numbered week whose `end` has not passed, so it returns **1** for every date from before the season through 2026-09-07; the cadence went live when the pipeline merged, and the first Tuesday after that claimed the slot. What was missing was any notion of **when a claim becomes due**.
+
+The consequence was not recoverable by waiting: a claim is byte-immutable (D22) and its prior existence is the predict step's skip condition, so **both the 08-18 and 08-25 runs would have skipped**, and that 11-game preseason file would have been the season's week-1 pre-registration permanently.
+
+**Decision (owner):** the claim is **voided**. Its bytes are preserved outside the claim tier at `data/archive/voided/2026_week_01_claim.json` — byte-identical, `git hash-object` returns the blob SHA above — with a `.VOIDED.md` marker recording origin, SHAs, producing run and reasoning. Removed from the registry, preserved in the record.
+
+### 2. The D22 override, and its exact boundary
+
+D22's byte-immutability is overridden **only** under the **void-before-outcome doctrine**: **no predicted event had occurred.** Week 1 kicks off 2026-08-29; the void happened 2026-08-11, eighteen days before any game in the file was played and before any external party could rely on it. A void that *cannot* be outcome-motivated is not the failure mode pre-registration exists to prevent — it is a defective artifact removed before it could mean anything.
+
+### 3. The attribution rewrite
+
+The D30 as-built amendment (2026-08-11) fixed the committer address going forward but ruled history untouched. **That ruling is reversed**, on verified topology: every misattributed commit was a descendant of `v2026-frozen-2` (`5f5d3ee`), no tag was equal to or a descendant of any rewritten commit, and the rewrite therefore moves no tag and changes no `factors/` or `engine/` tree hash. The cost of the rewrite was zero on 2026-08-11 and becomes infinite once a claim is relied upon.
+
+One commit carried `pipeline@users.noreply.github.com`, which GitHub's legacy `<username>@users.noreply.github.com` form resolves to a **real, unrelated account** (`pipeline`, id 403371) — confirmed live: the contributors API listed it with 1 contribution.
+
+**`d54ac1057a62daaf9a28f969b503dcb6c9b93095` → `745b1cf72fe9162231ac5b607fb0c9c6c5c331f4`.** Message, `Run:` trailer and both timestamps preserved byte-for-byte; only the author and committer email changed. `dcaf4a3e505091ae0095ada7f0267af2f6e9652a` was pruned, having added only the voided claim. Both operations ran in **one `git filter-repo` pass**, scoped to `5f5d3ee..main`. A full-history pass was attempted first and **rejected**: filter-repo strips the `gpgsig` from GitHub's signed merge commits, which moved both tags — caught in verification, before any push.
+
+### 4. The season-aware claim gate
+
+Ships in this same change, because without it **2026-08-18 recreates the defect** the moment the slot is empty.
+
+`utils.season_calendar.claim_window_open(week, today)` — a claim may be written only once the week's `start` is within **`CLAIM_LEAD_DAYS = 7`**, one predict cadence. **Derived, not chosen:** `pipeline.schedule_et.predict` fires on a single weekday, so a one-cycle lead window uniquely selects the last predict before kickoff. Week 1 starts 08-29, so 08-11 (18 days out) and 08-18 (11 days out) refuse and **08-25 (4 days out) allows**. **Owner sign-off on the 7-day derived window is explicitly recorded here (2026-08-11).** `tests/test_claim_window.py` asserts the predict cadence is still weekly, so the constant cannot go stale silently.
+
+Enforced at **`write_predictions()` — the shared seam every claim writer reaches disk through** — plus the `weekly-predict.yml` step gate as fast-fail. `scripts/build_predictions.py` maps the refusal to `EXIT_CLAIM_WINDOW_CLOSED = 5` (`--ignore-claim-window` overrides for a recorded reason) and `cli/cfb.py::_save_slate` maps it to a CLI error.
+
+**The seam placement was a review finding, not the original design, and the miss is instructive.** The gate was first written in `scripts/build_predictions.py::main()` — the automated caller — which left `cfb predict week N --save`, *the documented canonical way a human writes a claim*, completely ungated: review reproduced the 2026-08-11 incident through it in a single command, exit 0, claim on disk, no warning. `docs/2027_NOTES.md` records that the **D22** overwrite guard had this exact asymmetry once and was fixed by moving it to the shared seam; putting D38's gate in a wrapper reintroduced the same bug shape in the opposite direction — automated path guarded, human path open. **A guard belongs where the writers converge, not in each writer.** A closed window is a **notice and a green job**, following the `EXIT_NO_CLAIM` precedent: failing would file a `pipeline-failure` issue every Tuesday until the window opened, spending the alarm's credibility on a working pipeline. `pipeline_week` is deliberately **unchanged** — it still returns 1 on those dates, and the snapshot, derived exports and line observations still build and commit.
+
+### 5. The advisory errors that bracketed this
+
+Recorded because the pattern matters more than the incidents:
+
+- **`docs/HANDOFF_REHEARSALS.md` asserted the claim slot would stay empty until 2026-08-25, and built Rehearsal-0 criterion 6 on it — without checking that the live Tuesday cron plus `pipeline_week`'s clamping would write it on 08-11.** The guardrail was written as a rule and never tested against the schedule that would break it. `docs/PIPELINE.md` §2 already documented the clamping; both facts sat in the same repository, unreconciled.
+- **The D30 as-built amendment hardened "history is not rewritten" into doctrine one day before the topology made a rewrite genuinely justified**, forcing the owner to reverse a ruling that had just been written down. Doctrine authored at the moment of a small defect outran the evidence.
+- **This ruling's own premise — "no claims exist yet" — was already false when it was written.** The claim landed at 14:31 UTC and the ruling followed. Verification caught it before execution, which is the only reason it is a footnote rather than a fourth defect.
+
+The common thread: **a rule asserted is not a rule verified.** Each was a confident statement about system behaviour that no one had executed against the system.
+
+### 6. The standing weld-shut rule (supersedes the D30 amendment's phrasing)
+
+**After the first predicted event, or the first external reliance on a claim — whichever comes first — claims and history are permanently immutable, with NO override.** Not by owner ruling, not under a SPEC §3 exception, not for a defect. This void is the only one this project will ever perform, and it was legitimate solely because it preceded both conditions.
+
+**Rejected:** keeping the early claim (locks 11 of ~138 games as week 1's pre-registration for the whole season); rewriting history while keeping the claim (changes a byte-immutable claim commit's SHA — the one option that weakens the pre-registration story); a `.mailmap` (does not affect GitHub's contributor graph, which is computed from commit author emails on the default branch).

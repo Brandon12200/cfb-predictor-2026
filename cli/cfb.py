@@ -158,13 +158,25 @@ def cmd_predict_game(args) -> int:
 
 def _save_slate(env: dict, week: int, year: int) -> int:
     """Persist the slate to data/predictions/ (the canonical claim). Refuses to overwrite an existing
-    week file — predictions are byte-immutable (D22); use the pipeline / a new week to (re)write."""
-    from scripts.build_predictions import PREDICTIONS_DIR, write_predictions
+    week file — predictions are byte-immutable (D22); use the pipeline / a new week to (re)write.
+
+    Also refuses to write a claim before its season window opens (D38). That guard lives in
+    `write_predictions`, the seam this and the pipeline share, so this path cannot drift out of
+    step with the automated one — which is exactly what it did when the gate was first written.
+    """
+    from scripts.build_predictions import (
+        PREDICTIONS_DIR,
+        ClaimWindowError,
+        write_predictions,
+    )
     path = PREDICTIONS_DIR / f"{year}_week_{week:02d}.json"
     if path.exists():
         return error(f"{path.relative_to(PREDICTIONS_DIR.parent.parent)} already exists — predictions "
                      f"are byte-immutable (D22). View with `cfb predict rerun --week {week}`.")
-    write_predictions(env, path)
+    try:
+        write_predictions(env, path)
+    except ClaimWindowError as exc:
+        return error(str(exc))
     print(f"Saved {path.relative_to(PREDICTIONS_DIR.parent.parent)}", file=sys.stderr)
     return EXIT_OK
 

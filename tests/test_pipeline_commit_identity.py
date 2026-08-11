@@ -4,7 +4,7 @@
 address is GitHub's **legacy** noreply form, `<username>@users.noreply.github.com`, which GitHub
 resolves to the account whose login is `pipeline` — a real, unrelated user (id 403371). Every
 machine commit therefore rendered on GitHub with a stranger's avatar and a link to their profile.
-Confirmed on a live commit, not inferred: the API's `author` field for `d54ac10` returned
+Confirmed on a live commit, not inferred: the API's `author` field for `745b1cf` returned
 `login: pipeline`, `html_url: https://github.com/pipeline`.
 
 No security exposure — push authority is the deploy key, and the author field is a string, not a

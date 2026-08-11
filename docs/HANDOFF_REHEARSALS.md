@@ -23,13 +23,31 @@ push commits to `main` **by itself** — daily captures Wed/Thu/Fri and four Sat
 by `cfb-pipeline <cfb-pipeline@cfb-predictor-2026.invalid>` appearing on `main` with no human
 involved are **the system working**, not an intrusion. Do not "clean them up".
 
-**One wrinkle you will see in the history and should not investigate.** Pipeline commits made before
-2026-08-11 — including `d54ac10` below — carry the *superseded* address
-`pipeline@users.noreply.github.com`, and GitHub renders them with the avatar and profile link of a
-**real, unrelated user** who happens to hold the login `pipeline`. That was a provenance defect in
-D30's original address, fixed by the D30 as-built amendment; it was never a security issue (push
-authority is the deploy key, and the author field is a string, not a credential). **History is not
-rewritten**, so the attribution window is permanent. Read those commits as machine commits.
+**Every pipeline commit now carries the `.invalid` address and renders unlinked.** There is no
+attribution window: the one commit that carried the superseded
+`pipeline@users.noreply.github.com` — which resolved to a real, unrelated GitHub user — was
+rewritten on 2026-08-11 (`d54ac10` → **`745b1cf`**) under D38, while the freeze tags and every
+`factors/`/`engine/` tree hash stayed byte-identical. **This was the only history rewrite this
+project will ever perform** (D38 §6). If you ever see a machine commit whose author links to a
+profile, something has reverted — `tests/test_pipeline_commit_identity.py` should have caught it.
+
+## ⚠ (a.1) READ THIS FIRST — the week-1 claim was written early, then voided
+
+On **2026-08-11 the scheduled Tuesday predict run wrote the real week-1 claim**, 14 days before the
+intended 2026-08-25 run, from a preseason snapshot carrying **11 of ~138 games**. Nobody dispatched
+it: `pipeline_week` returns week 1 for every date through 2026-09-07, so the first Tuesday after the
+cadence went live claimed the slot. Because a claim is byte-immutable and its existence is the
+predict step's skip condition, **both 08-18 and 08-25 would have skipped** and that thin file would
+have been the season's week-1 pre-registration permanently.
+
+It was **voided** under D38 — legitimate only because no predicted event had occurred — and its
+bytes are preserved at `data/archive/voided/2026_week_01_claim.json` with a `.VOIDED.md` marker.
+
+**The gate that prevents a recurrence shipped in the same change.** `claim_window_open` allows a
+claim only within one predict cadence (7 days) of the week's start: 08-11 and 08-18 refuse,
+**08-25 allows**. A closed window is a green notice, not a failure. **Do not "fix" `pipeline_week`
+to stop returning 1** — that is correct and load-bearing; the snapshot, derived exports and line
+observations must still build on those dates.
 
 ### What has been proven at runtime, not merely tested
 
@@ -40,7 +58,7 @@ Each of these was observed in a real Actions run, not asserted in a unit test:
 | Secrets reach every job that spends | Live capture run; preflight found `ODDS_API_KEY` present |
 | Freeze assertion against `v2026-frozen-2` | Tree-hash equality passed on a runner with `fetch-depth: 0` |
 | Odds fetch + budget guard + quota ledger | Live capture wrote a real observation |
-| **Autonomous push to protected `main`** | **`d54ac10`** — the first machine-authored commit in project history, via the deploy key |
+| **Autonomous push to protected `main`** | **`745b1cf`** — the first machine-authored commit in project history, via the deploy key |
 | CI green on a pipeline data commit | The push triggered CI and it passed |
 | `clear-failure` closes a stale issue | Issue #33 auto-closed on the clean run |
 | Full predict path, end to end | Rehearsal smoke: catch-up grade → commit → snapshot → quality gate → derived exports → commit → build predictions |
@@ -132,8 +150,12 @@ branch**. This is the first time the commit choreography runs for real on a pred
    no avatar, no profile link. If it links to any account, the address has reverted or the domain
    has become resolvable, and `tests/test_pipeline_commit_identity.py` should have caught it.
 5. **No commit lands on `main`.** Verify by ref, not by memory.
-6. **The week-1 claim slot on `main` is still empty.** `git ls-tree -r origin/main --name-only |
-   grep predictions/2026` returns nothing.
+6. **The week-1 claim slot on `main` is still empty** — `git ls-tree -r origin/main --name-only |
+   grep predictions/2026` returns nothing — **and the gate, not luck, is why.** Rehearsal 0 runs on
+   2026-08-17, which is outside the claim window, so the predict job must log the
+   `Claim window not open yet` notice, stay **green**, and write no claim. A rehearsal that produced
+   a claim would mean the D38 gate has regressed. (This criterion was unsatisfiable for six days:
+   the slot was occupied 08-11 → 08-11 by the early claim, now voided.)
 7. **Re-dispatch predict on the same branch and check the RIGHT idempotency property.** The claim is
    idempotent; the cycle is not.
 
@@ -230,6 +252,10 @@ and let the next scheduled run write the claim, never to hand-write the artifact
 - **The week-1 claim slot on `main` stays empty until the scheduled Aug 25 run writes it.** Any
   predict or grade dispatch before then is `dry_run: true` **or** on a `rehearsal/*` branch — never
   live on `main`. Verify the slot is empty after every dispatch; do not assume.
+  **This rule is now enforced by code, not discipline** (D38's claim gate) — because as originally
+  written it was a rule nobody had tested against the schedule, and the schedule broke it on
+  2026-08-11. Your dispatches were never the risk the guardrail should have been guarding against;
+  the cron was. Treat any guardrail stated here as unverified until you can point at the test.
 - Rehearsals run on **unmerged rehearsal branches** (D32). Mode is derived from the ref, and there is
   deliberately **no `rehearsal` dispatch input** — a mode that cannot be typed cannot be mistyped.
 

@@ -14,6 +14,10 @@ Outputs:
   week, week_padded, year, et_now, et_date,
   prediction_exists  — the byte-immutable claim for `week` is already on disk (D22), so the
                        Tuesday job must SKIP predicting rather than attempt an overwrite
+  claim_window_open  — `week`'s claim is DUE: its start is within one predict cadence (D38). False
+                       means the Tuesday job must not write a claim yet. `pipeline_week` returns 1
+                       from before the season onward, so without this the first live Tuesday claims
+                       the slot weeks early — which is exactly what happened on 2026-08-11.
   grade_weeks        — space-separated weeks that have a predictions file and can therefore be
                        graded; `scripts/grade.py` exits 1 on a week with no claim, so the caller
                        filters here instead of treating that exit as a failure
@@ -30,6 +34,7 @@ from zoneinfo import ZoneInfo
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from utils.season_calendar import (  # noqa: E402
+    claim_window_open,
     load_calendar,
     pipeline_timezone,
     pipeline_today,
@@ -63,6 +68,7 @@ def resolve(week: int | None, year: int, calendar: dict | None = None) -> dict[s
         "et_date": today.isoformat(),
         "timezone": pipeline_timezone(cal),
         "prediction_exists": "true" if predictions_path(wk, year).exists() else "false",
+        "claim_window_open": "true" if claim_window_open(wk, today, cal) else "false",
         "grade_weeks": " ".join(str(w) for w in gradable_weeks(wk, year)),
     }
 

@@ -15,6 +15,7 @@ identical cycle must add nothing, because the whole cadence is built on being sa
 from __future__ import annotations
 
 import json
+from datetime import date as _date
 from pathlib import Path
 
 import pytest
@@ -112,6 +113,10 @@ def test_the_writer_refuses_to_overwrite_an_existing_claim(tmp_path, monkeypatch
     claims.mkdir(exist_ok=True)
     monkeypatch.setattr(bp, "PREDICTIONS_DIR", claims)
     target = claims / "2026_week_01.json"
+    # Inside week 1's claim window: this test asserts OVERWRITE semantics, and since D38 a claim
+    # also cannot be written before its week is due. Without the pin it fails for an unrelated
+    # scheduling reason, and its result would depend on the calendar date it runs on.
+    monkeypatch.setattr(bp, "pipeline_today", lambda cal=None: _date(2026, 8, 25))
 
     bp.write_predictions(predictions, target)
     original = target.read_bytes()

@@ -141,7 +141,7 @@ jobs:
       # condition and this job's idempotency guard — which is what makes week 1's 10-day window
       # safe to run repeatedly.
       - name: Build predictions
-        if: steps.setup.outputs.prediction_exists != 'true'
+        if: steps.setup.outputs.prediction_exists != 'true' && steps.setup.outputs.claim_window_open == 'true'
         run: |
           python scripts/build_predictions.py --week "${{ steps.setup.outputs.week }}" \
             --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
@@ -152,10 +152,21 @@ jobs:
         run: echo "::notice::week ${{ steps.setup.outputs.week_padded }} already has a committed
           claim — byte-immutable (D22), skipping the predict step."
 
+      # A DESIGNED STATE, not a failure — the job stays green. Every Tuesday from before the season
+      # onward resolves to week 1 (`pipeline_week` clamps), so without this gate the first live
+      # Tuesday writes the season's week-1 claim weeks early from a preseason snapshot. That is not
+      # hypothetical: it happened on 2026-08-11 and the claim had to be voided (D38). Failing here
+      # instead of noticing would file a failure issue every Tuesday until the window opens.
+      - name: Claim window not open yet
+        if: steps.setup.outputs.prediction_exists != 'true' && steps.setup.outputs.claim_window_open != 'true'
+        run: echo "::notice::week ${{ steps.setup.outputs.week_padded }} is not due yet — a claim is
+          written only within one predict cadence of the week's start (D38). Snapshot and derived
+          exports were still built and committed; no claim was written."
+
       # The pre-registration artifact: exactly one file, its own commit, its own timestamp.
       # No report, no snapshot, no graded file rides in here.
       - uses: ./.github/actions/cfb-commit
-        if: steps.setup.outputs.prediction_exists != 'true'
+        if: steps.setup.outputs.prediction_exists != 'true' && steps.setup.outputs.claim_window_open == 'true'
         with:
           paths: data/predictions
           message: "predictions: ${{ steps.setup.outputs.year }} week ${{ steps.setup.outputs.week_padded }} (pre-kickoff)"
