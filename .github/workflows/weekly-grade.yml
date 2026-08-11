@@ -42,6 +42,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Deploy key, NOT the default GITHUB_TOKEN. The `main-protection` ruleset's
+          # required-status-checks rule blocks DIRECT PUSHES, not just merges: a brand-new commit
+          # has no check results, so every push is refused ("9 of 9 required status checks are
+          # expected"). Observed live on 2026-08-08 — the run did everything right and was refused
+          # at the last step. "Deploy keys" is on the ruleset's bypass list, so pushes made with
+          # this key are not evaluated against that rule.
+          #
+          # Consequence, deliberate: deploy-key pushes DO trigger workflows (GITHUB_TOKEN pushes do
+          # not), so every data commit now runs CI on main. That is why this change also regenerates
+          # the derived exports — without them `verify-phase-2` would go red on the first snapshot
+          # of a new week.
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - id: setup
         uses: ./.github/actions/cfb-setup
