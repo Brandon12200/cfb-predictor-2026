@@ -130,17 +130,23 @@ branch**. This is the first time the commit choreography runs for real on a pred
      the `predictions:` commit is **not** created — both are gated on
      `steps.setup.outputs.prediction_exists` (`weekly-predict.yml:143-160`). Byte-immutability is
      also the idempotency guard, and it is what makes week 1's 10-day window safe.
-   - **Expected, and NOT a failure:** a **new `snapshot:` commit — unconditionally.** "Build the
-     snapshot" and "Regenerate the derived exports" are deliberately **ungated**, and
-     `SnapshotBuilder._fetch()` stamps a fresh `fetched_at` into `manifest.json` for **every** fetch
-     group (games, advanced stats, coaching, SP+, returning production, betting lines) **whether or
-     not that call succeeded** — the `except` branch records `fetched_at` too, and
-     `write_snapshot()` overwrites with no dedup. So the commit fires even if the Odds call fails
-     outright.
+   - **Expected, and NOT a failure — on any run that reaches the commit step:** a **new `snapshot:`
+     commit, regardless of whether the Odds call succeeded.** "Build the snapshot" and "Regenerate
+     the derived exports" are deliberately **ungated**, and `SnapshotBuilder._fetch()` stamps a
+     fresh `fetched_at` into `manifest.json` for **all seven** fetch groups — games, advanced stats,
+     coaching, **season stats**, SP+, returning production, betting lines — in **both** its success
+     and `except` branches (a failed fetch degrades to `missing`, it does not raise), and
+     `write_snapshot()` overwrites with no dedup. So the commit fires even if Odds fails outright.
 
      When Odds *does* succeed you additionally get a new line observation and a quota-ledger entry;
      when it fails you get neither, but still the commit. Do not read "no new observation" as "the
      re-dispatch did nothing". Fresh market data on a re-run is the point of the daily cadence.
+
+     **The scope of that guarantee is the Odds call, not everything.** `build()` calls
+     `registry.validate_membership_counts()` (`builder.py:54`) *before* any fetch, and it raises
+     `RegistryError` on membership drift with no `try` around it in `scripts/build_snapshot.py` —
+     the step fails and **nothing commits at all**. That is a genuine failure and criterion 1
+     already catches it.
 
    **Do not write this criterion as "zero commits are produced."** That is what the pipeline is
    *not* designed to do, and a successor holding the cycle to it would either flag a healthy
