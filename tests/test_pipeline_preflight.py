@@ -145,6 +145,43 @@ def test_a_freeze_abort_does_set_the_exit_code():
     assert emit(pf, "capture", 2, quiet=True) == 1
 
 
+# --- the self-test must not write to the production report --------------------------------------
+
+def test_quiet_suppresses_the_step_summary_write(tmp_path, monkeypatch):
+    """`quiet` suppressed stdout but NOT the `$GITHUB_STEP_SUMMARY` write, so these very tests
+    appended synthetic ABORT blocks to the real Actions run summary — a reader saw
+    "ABORT: factors/ has drifted" against a tag that does not exist, produced by a passing test.
+    Fixed, and pinned here because the fix had no regression test."""
+    summary = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    pf = Preflight()
+    check_freeze(pf, "v-does-not-exist")
+    assert emit(pf, "capture", 2, quiet=True) == 1
+    assert not summary.exists() or summary.read_text() == "", (
+        "a quiet self-test wrote to the production step summary"
+    )
+
+
+def test_a_real_run_does_write_the_step_summary(tmp_path, monkeypatch):
+    """The other direction: suppression must be scoped to quiet, not blanket."""
+    summary = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    pf = Preflight()
+    pf.note("hello")
+    assert emit(pf, "capture", 2) == 0
+    assert "hello" in summary.read_text()
+
+
+def test_a_missing_freeze_tag_aborts_and_reaches_the_summary(tmp_path, monkeypatch):
+    """The one abort that used to print to stdout and return, invisible on the summary page."""
+    import scripts.pipeline_preflight as pp
+    summary = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    monkeypatch.setattr(pp, "load_calendar", lambda: {"pipeline": {"timezone": "America/New_York"}})
+    assert pp.main(["--role", "capture", "--skip-secrets"]) == 1
+    assert "freeze_tag" in summary.read_text()
+
+
 # --- snapshot quality --------------------------------------------------------------------------
 
 THRESHOLDS = CAL["pipeline"]["data_quality"]

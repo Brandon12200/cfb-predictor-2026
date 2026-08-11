@@ -49,6 +49,12 @@ PREDICTIONS_DIR = ROOT / "data" / "predictions"
 RESULTS_DIR = ROOT / "data" / "results"
 
 EXIT_OK, EXIT_ERROR, EXIT_NOTHING_COMPLETED = 0, 1, 3
+# "No claim exists for this week yet" is a DESIGNED preseason state, not a failure: the Sunday job
+# runs every week from now, and the week-1 claim is not written until the Aug 25 predict run. It
+# returned EXIT_ERROR, so every preseason Sunday opened a failure issue (#36) for a pipeline that
+# was working correctly. Same reasoning as the budget refusal (exit 3): distinguish "nothing to do"
+# from "something broke", or the alarm stops meaning anything.
+EXIT_NO_CLAIM = 4
 
 # Fields carried per result record. `game_id`, `home_score` and `away_score` are the contract
 # `analytics.grading` actually reads (`_gradable` + the id join); the rest is provenance so a
@@ -154,9 +160,10 @@ def main(argv: list[str] | None = None) -> int:
 
     predictions_env = _load_json(predictions_path(week, year))
     if predictions_env is None:
-        print(f"No predictions for {year} week {week:02d} — nothing to fetch results against. "
-              f"Run the predict job first.")
-        return EXIT_ERROR
+        print(f"No claim for {year} week {week:02d} yet — nothing to grade. This is the normal "
+              f"preseason state (the week-1 claim is written by the Tuesday predict run); it is "
+              f"not a failure.")
+        return EXIT_NO_CLAIM
 
     from data.clients.cfbd_v2 import get_cfbd_v2_client
     fetched_at = datetime.now(UTC).isoformat()
