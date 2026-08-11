@@ -47,6 +47,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # MANDATORY: tags, for model_version() and the freeze assertion
+          # Deploy key, NOT the default GITHUB_TOKEN. The `main-protection` ruleset's
+          # required-status-checks rule blocks DIRECT PUSHES, not just merges: a brand-new commit
+          # has no check results, so every push is refused ("9 of 9 required status checks are
+          # expected"). Observed live on 2026-08-08 — the run did everything right and was refused
+          # at the last step. "Deploy keys" is on the ruleset's bypass list, so pushes made with
+          # this key are not evaluated against that rule.
+          #
+          # Consequence, deliberate: deploy-key pushes DO trigger workflows (GITHUB_TOKEN pushes do
+          # not), so every data commit now runs CI on main. That is why this change also regenerates
+          # the derived exports — without them `verify-phase-2` would go red on the first snapshot
+          # of a new week.
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - id: setup
         uses: ./.github/actions/cfb-setup
@@ -97,12 +109,31 @@ jobs:
             --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
           exit "${PIPESTATUS[0]}"
 
+      # Derived exports for the week just built. NOT optional housekeeping: `verify-phase-2`
+      # asserts `proj_files == set(built)` — a projection file must exist for EVERY built week — and
+      # SPEC §3's derived-artifact invariant says the committed exports track their inputs. The
+      # Tuesday job built snapshots and never regenerated these, so the first snapshot of week 2
+      # would have turned `verify-phase-2` red on main. Latent until now only because
+      # GITHUB_TOKEN pushes skipped CI; the deploy key makes every data commit run it.
+      #
+      # Both are offline pure functions of the snapshot, and both must land in the SAME push as the
+      # snapshot they derive from, or CI sees a week with a snapshot and no projections.
+      - name: Regenerate the derived exports (ratings + projections)
+        run: |
+          set -euo pipefail
+          python scripts/update_ratings.py --week "${{ steps.setup.outputs.week }}" \
+            --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          python scripts/build_projections.py --week "${{ steps.setup.outputs.week }}" \
+            --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+
       # Stages data/lines/ too: SnapshotBuilder seeds line observation #1 via record_observation,
       # and leaving it unstaged means the next capture's commit silently carries this run's write.
+      # Ratings and projections ride here as same-tier derived exports (D13/D14) — the claim commit
+      # below still stands alone, which is the separation that matters.
       - uses: ./.github/actions/cfb-commit
         with:
-          paths: data/snapshots data/lines data/quota
-          message: "snapshot: ${{ steps.setup.outputs.year }} week ${{ steps.setup.outputs.week_padded }}"
+          paths: data/snapshots data/lines data/quota data/ratings data/projections
+          message: "snapshot: ${{ steps.setup.outputs.year }} week ${{ steps.setup.outputs.week_padded }} (+ derived exports)"
           suffix: ${{ steps.setup.outputs.commit_suffix }}
           push: ${{ inputs.dry_run != true }}
 
