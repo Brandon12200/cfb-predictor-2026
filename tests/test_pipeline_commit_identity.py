@@ -105,7 +105,11 @@ def test_no_file_configures_git_with_the_superseded_address():
     `EMAIL=`), which is the only place it could change what a commit actually says.
     """
     pattern = re.compile(
-        r"""(user\.email|email|EMAIL|GIT_AUTHOR_EMAIL|GIT_COMMITTER_EMAIL)\s*[:=]\s*["']?"""
+        # `user.email="…"`, `email: …`, `GIT_AUTHOR_EMAIL=…` — and, because it is the single most
+        # idiomatic way to set an identity, the SPACE-SEPARATED `git config user.email <addr>` form,
+        # which carries no `=` or `:` at all and slipped past the first version of this pattern.
+        r"""(user\.email|email|EMAIL|GIT_AUTHOR_EMAIL|GIT_COMMITTER_EMAIL)"""
+        r"""\s*(?:[:=]\s*|\s+)["']?"""
         r"""pipeline@users\.noreply\.github\.com""",
     )
     offenders = []
@@ -133,13 +137,37 @@ def test_no_file_configures_git_with_the_superseded_address():
 def test_that_guard_catches_the_revert_it_exists_for():
     """Proof the scan above can fail — the pattern is matched against the exact line that shipped."""
     pattern = re.compile(
-        r"""(user\.email|email|EMAIL|GIT_AUTHOR_EMAIL|GIT_COMMITTER_EMAIL)\s*[:=]\s*["']?"""
+        # `user.email="…"`, `email: …`, `GIT_AUTHOR_EMAIL=…` — and, because it is the single most
+        # idiomatic way to set an identity, the SPACE-SEPARATED `git config user.email <addr>` form,
+        # which carries no `=` or `:` at all and slipped past the first version of this pattern.
+        r"""(user\.email|email|EMAIL|GIT_AUTHOR_EMAIL|GIT_COMMITTER_EMAIL)"""
+        r"""\s*(?:[:=]\s*|\s+)["']?"""
         r"""pipeline@users\.noreply\.github\.com""",
     )
-    shipped = '            -c user.email="pipeline@users.noreply.github.com" \\'
-    assert pattern.search(shipped), "the guard would not catch a straight revert of the action"
-    prose = "D30 originally specified `pipeline@users.noreply.github.com`, which resolved to a user."
-    assert not pattern.search(prose), "the guard must not fire on prose describing the defect"
+    must_catch = [
+        # the exact line that shipped
+        '            -c user.email="pipeline@users.noreply.github.com" \\',
+        # the space-separated `git config` forms — no `=` or `:` anywhere, and the form the first
+        # version of this pattern missed entirely
+        "git config --global user.email pipeline@users.noreply.github.com",
+        'git config user.email "pipeline@users.noreply.github.com"',
+        # environment-variable forms
+        "GIT_AUTHOR_EMAIL=pipeline@users.noreply.github.com",
+        "GIT_COMMITTER_EMAIL: pipeline@users.noreply.github.com",
+        "        email: pipeline@users.noreply.github.com",
+    ]
+    for line in must_catch:
+        assert pattern.search(line), f"the guard would not catch a revert of the form: {line!r}"
+
+    must_not_catch = [
+        "D30 originally specified `pipeline@users.noreply.github.com`, which resolved to a user.",
+        "commits before 2026-08-11 carry pipeline@users.noreply.github.com and link to a stranger",
+    ]
+    for line in must_not_catch:
+        assert not pattern.search(line), (
+            f"the guard fires on prose describing the defect, which would make the fix's own "
+            f"explanation unwritable: {line!r}"
+        )
 
 
 @pytest.mark.parametrize("doc", ["docs/PIPELINE.md", "docs/HANDOFF_REHEARSALS.md"])
