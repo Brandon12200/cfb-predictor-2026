@@ -83,7 +83,7 @@ One push per run; **one commit per artifact tier**. The tiers are D22/D23:
 
 | Job | Commits, in order |
 |---|---|
-| Tuesday | `grading: … catch-up` → `snapshot: …` (+`data/lines`) → **`predictions: … (pre-kickoff)`** |
+| Tuesday | `grading: … catch-up` → `snapshot: …` (+`data/lines`, `data/quota`, **`data/ratings`, `data/projections`**) → **`predictions: … (pre-kickoff)`** |
 | Wed–Sat | `lines: … observation HH:MM ET` |
 | Sunday | `results: …` → `grading: …` → `report: …` |
 
@@ -103,6 +103,38 @@ Empty commits are never created (`git add -- <paths>` then `git diff --cached --
 `--allow-empty`). `record_observation` rewrites the lines file every run even when it appends
 nothing, but writes sorted, indented JSON — so the bytes are identical and the check correctly
 reports "no change".
+
+**Pushes use a deploy key, not `GITHUB_TOKEN`.** `main-protection`'s required-status-checks rule
+gates **pushes, not merely merges**: a brand-new commit has no check results, so a direct push is
+always refused (*"9 of 9 required status checks are expected"*). Observed live on 2026-08-08 — the
+run resolved its secrets, fetched, committed, retried three times and fired its stranded-commit
+diagnostic, all correctly, and was refused at the last step. "Deploy keys" is on the ruleset's
+bypass list, so `actions/checkout` in the three cadence workflows sets
+`ssh-key: ${{ secrets.DEPLOY_KEY }}`. `ci.yml` and `freeze-integrity.yml` deliberately do **not**
+take it — they never push (D31, as-built amendment 2).
+
+Consequence, deliberate: **deploy-key pushes trigger workflows** (GITHUB_TOKEN pushes do not), so
+every data commit runs CI on `main`. That is why the Tuesday job regenerates `data/ratings/` and
+`data/projections/` — `verify-phase-2` requires both for *every built week* (SPEC §3's
+derived-artifact invariant), and without them the first snapshot of a new week would turn `main`
+red. `verify-phase-3` is unaffected: it reads the pinned vehicle (D29), which the pipeline never
+touches.
+
+**A path that does not exist yet is not an error.** `cfb-commit` stages only the pathspecs that
+exist: `git add` on a pathspec matching nothing exits 128, and under `set -e` that killed the step
+— the Tuesday job stages `data/results data/graded` first, and neither exists until something has
+been graded.
+
+**Designed states are not failures.** Distinct exit codes keep the alarm meaningful:
+`fetch_lines` **3** = budget refusal; `fetch_results` **3** = no completed games yet, **4** = no
+claim for this week yet (the normal preseason state — the Sunday job runs every week, but the
+week-1 claim is not written until the Aug 25 predict run). Only anything else fails the job.
+
+**`dry_run` has no issue side effects, in either direction.** It gates `skip-secrets` and `push`,
+and — since the fast-follow batch — the `report-failure` and `clear-failure` steps too. A failing
+dry run must not open a live-labelled issue, and a *passing* one must not **close** a real
+unresolved failure. The second is the worse half, and for one day only run ordering prevented it.
+Rehearsals still belong on a `rehearsal/*` branch so `mode` labels their artifacts (D32).
 
 **Concurrency.** All three cadence workflows share `cfb-pipeline-${{ github.ref }}` with
 `cancel-in-progress: false` — they push to the same branch and must serialize, and cancelling could
@@ -146,6 +178,11 @@ pretending no interpolation exists anywhere:
 
 When adding a step, ask which side of that line the value sits on. If it could ever originate
 outside the repo, it goes in `env:`.
+
+**A changed failure mode is never silenced.** The cooldown throttles *repetition*, but it assumed a
+repeat is the same failure — the capture job failed on missing secrets, then two hours later on a
+rejected push, and the second diagnosis was suppressed because it shared a stage and a week. The
+body now carries a signature of the failing line, and a changed signature bypasses the cooldown.
 
 **Dedupe is by label, never by `--search "in:title"`.** GitHub's issue search index is eventually
 consistent and lags seconds to minutes — exactly the window in which back-to-back failures need to

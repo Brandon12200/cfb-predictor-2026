@@ -125,14 +125,45 @@ runs:
         # An open issue exists. Comment only outside the cooldown — this caps COMMENTS as well as
         # issues, which the naive "one issue" design forgets: a job failing every 20 minutes over a
         # weekend would otherwise leave 100 comments.
+        #
+        # BUT the cooldown assumes a repeat is the SAME failure. It is not always: the capture job
+        # failed on missing secrets, then two hours later on a rejected push — a completely
+        # different diagnosis, silently suppressed because it shared a stage and a week. So the
+        # body carries a signature of the failing line, and a CHANGED signature bypasses the
+        # cooldown. Repetition is throttled; a new failure mode is never silenced.
+        # --- sig-begin (executed verbatim by tests/test_failure_signature.py) ---
+        # Every stage is failure-tolerant. The first version was not: `grep` exits 1 on no match,
+        # `pipefail` propagated that through the pipeline, and a bare assignment is not a tested
+        # condition — so `set -e` killed the step before the `:-` fallback could ever apply. That
+        # crashed the ONE branch this signature exists for (an issue already open), meaning a
+        # second, different-cause failure would have produced no notification at all — strictly
+        # worse than the throttled duplicate it replaced. A no-match is normal, not exceptional:
+        # argparse writes lowercase `error:`, and an early failure can leave no log at all.
+        SIG_LINE="$(grep -aoiE '(::error::|fatal:|error:|abort:|traceback)[^\r\n]{0,120}' \
+                      "${RUNNER_TEMP}/pipeline.log" 2>/dev/null | tail -1 || true)"
+        if [ -z "$SIG_LINE" ]; then
+          # No error-shaped line: fall back to the last non-empty log line, which still
+          # distinguishes one failure mode from another.
+          SIG_LINE="$(grep -av '^[[:space:]]*$' "${RUNNER_TEMP}/pipeline.log" 2>/dev/null \
+                        | tail -1 || true)"
+        fi
+        SIG="$(printf '%s' "${SIG_LINE:-nosig}" | cksum | awk '{print $1}' || true)"
+        SIG="${SIG:-nosig}"
+        # --- sig-end ---
+        BODY="$(printf '%s\n<!-- failure-signature: %s -->\n' "$BODY" "$SIG")"
+
         LAST="$(gh issue view "$EXISTING" --json comments \
                  --jq '(.comments | last | .createdAt) // ""')"
-        if [ -n "$LAST" ]; then
+        LAST_BODY="$(gh issue view "$EXISTING" --json comments \
+                 --jq '(.comments | last | .body) // ""')"
+        if [ -n "$LAST" ] && printf '%s' "$LAST_BODY" | grep -q "failure-signature: ${SIG}"; then
           AGE=$(( ( $(date -u +%s) - $(date -u -d "$LAST" +%s 2>/dev/null || echo 0) ) / 60 ))
           if [ "$AGE" -lt "$IN_COOLDOWN" ]; then
-            echo "::notice::issue #${EXISTING} commented ${AGE}m ago (< cooldown) — not commenting again"
+            echo "::notice::issue #${EXISTING} has the SAME failure signature and was commented ${AGE}m ago (< cooldown) — not commenting again"
             exit 0
           fi
+        elif [ -n "$LAST" ]; then
+          echo "::notice::failure signature CHANGED — commenting despite the cooldown"
         fi
         gh issue comment "$EXISTING" --body "$BODY"
         echo "::notice::commented on existing issue #${EXISTING}"
