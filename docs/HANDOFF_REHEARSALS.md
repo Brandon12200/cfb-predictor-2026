@@ -130,10 +130,17 @@ branch**. This is the first time the commit choreography runs for real on a pred
      the `predictions:` commit is **not** created — both are gated on
      `steps.setup.outputs.prediction_exists` (`weekly-predict.yml:143-160`). Byte-immutability is
      also the idempotency guard, and it is what makes week 1's 10-day window safe.
-   - **Expected, and NOT a failure:** a **new `snapshot:` commit**. "Build the snapshot" and
-     "Regenerate the derived exports" are deliberately **ungated**, so a re-dispatch makes a fresh
-     Odds call, appends a line observation and a quota-ledger entry, and stamps new `fetched_at`
-     values into the manifest. Fresh market data on a re-run is the point of the daily cadence.
+   - **Expected, and NOT a failure:** a **new `snapshot:` commit — unconditionally.** "Build the
+     snapshot" and "Regenerate the derived exports" are deliberately **ungated**, and
+     `SnapshotBuilder._fetch()` stamps a fresh `fetched_at` into `manifest.json` for **every** fetch
+     group (games, advanced stats, coaching, SP+, returning production, betting lines) **whether or
+     not that call succeeded** — the `except` branch records `fetched_at` too, and
+     `write_snapshot()` overwrites with no dedup. So the commit fires even if the Odds call fails
+     outright.
+
+     When Odds *does* succeed you additionally get a new line observation and a quota-ledger entry;
+     when it fails you get neither, but still the commit. Do not read "no new observation" as "the
+     re-dispatch did nothing". Fresh market data on a re-run is the point of the daily cadence.
 
    **Do not write this criterion as "zero commits are produced."** That is what the pipeline is
    *not* designed to do, and a successor holding the cycle to it would either flag a healthy
