@@ -344,6 +344,32 @@ Removing the +1 collapses 57.0% onto the independent Vegas number — **the enti
 **Rationale:** naming *this project's pipeline* is not AI attribution — it identifies the mechanism, which is exactly what honest provenance requires. The run-URL trailer binds each commit to an immutable Actions log carrying its own timestamps, inputs and logs; that is the tamper-evident link SPEC §10 asks the commit to provide, and it is a URL rather than a credit line.
 **Rejected:** `github-actions[bot]` (shared across every automation, carries no project meaning, and is a tool reference in the author field); the owner's own identity (**the actual provenance lie** — a human name on a machine commit, which is what D3 exists to prevent).
 
+### D30 as-built amendment — the address, not the decision (owner, 2026-08-11)
+
+**The decision above stands unchanged.** A project machine identity with a `Run:` trailer is still the ratified shape. Only the **email string** is amended, because the one originally chosen did the opposite of what the decision intends.
+
+**Defect:** `pipeline@users.noreply.github.com` is GitHub's **legacy** noreply form, `<username>@users.noreply.github.com`, which GitHub resolves to the account whose login is `pipeline` — **a real, unrelated user** (id 403371, 13 followers, 6 public repos). Confirmed on a live commit rather than inferred: the API's `author` field for `d54ac10` returns `login: pipeline`, `html_url: https://github.com/pipeline`. Every machine commit rendered with a stranger's avatar and a link to their profile.
+
+**Why it matters, and why it is not a security issue.** Push authority is the deploy key; the author field is a string, not a credential, so nothing was exposed and no one gained access. It is a **provenance** defect, which is the one thing this decision exists to get right: SPEC §10 leans on the automated commit to identify the mechanism that produced it, and instead it identified an uninvolved third party. D30's own rationale — "it identifies the mechanism, which is exactly what honest provenance requires" — was not satisfied by the address D30 named.
+
+**Amended address:** **`cfb-pipeline@cfb-predictor-2026.invalid`**.
+
+**Why `.invalid` rather than another string.** RFC 6761 §6.4 reserves `.invalid` permanently and IANA never delegates it, so the domain has no A and no MX record. Mail can never be delivered there, GitHub can therefore never verify it against an account, and an unverifiable address can never be linked. The author renders unlinked, which is the honest rendering for a machine. The guarantee is **structural**, not "no one has claimed this one yet" — which is precisely the weakness of the original address.
+
+**Verified before shipping** (re-runnable):
+
+```
+dig +short cfb-predictor-2026.invalid A     # empty
+dig +short cfb-predictor-2026.invalid MX    # empty — mail undeliverable, so unverifiable
+dig +short invalid. NS                      # empty — the TLD is not delegated
+gh api "search/users?q=cfb-pipeline%40cfb-predictor-2026.invalid+in:email" -q .total_count   # 0
+gh api users/pipeline -q .id                # 403371 — the control: the OLD address does resolve
+```
+
+**Pinned by** `tests/test_pipeline_commit_identity.py`: the address must sit on a permanently-unresolvable TLD, must not be on `users.noreply.github.com` in any form, must match the amended value exactly, must appear nowhere in the repo in its superseded form, and must agree with what the operating docs tell a successor to expect.
+
+**History is not rewritten.** Commits already authored under the old address — `d54ac10` and any pipeline commit before this amendment merges — **stay exactly as they are**. `data/` artifacts are append-only and immutable (D22/D23), and rewriting history to fix an attribution string would damage the audit trail far more than the mislabel does. **The attribution window is therefore a permanent, bounded feature of this repository's history: pipeline commits authored between `d54ac10` (2026-08-11) and the merge of this amendment link to `github.com/pipeline` and should be read as machine commits regardless.**
+
 ---
 
 ## D31 — Branch protection: protect `main`, bypass for the Actions app — **RATIFIED (owner, 2026-08-07)**

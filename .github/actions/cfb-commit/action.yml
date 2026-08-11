@@ -69,8 +69,16 @@ runs:
         # project's pipeline is honest provenance, whereas a human name on a machine commit is not.
         # The Run: trailer binds the commit to an immutable Actions log — the tamper-evident link
         # SPEC §10 asks the commit to carry.
+        #
+        # The address is on a `.invalid` domain ON PURPOSE, and must stay that way. D30 originally
+        # specified `pipeline@users.noreply.github.com`, which GitHub resolves via its LEGACY
+        # `<username>@users.noreply.github.com` form to a real, unrelated user account — so every
+        # machine commit rendered as a stranger's avatar and profile link. `.invalid` is reserved
+        # permanently by RFC 6761 §6.4 and is never delegated, so it has no MX record, mail to it
+        # can never be delivered, GitHub can therefore never verify it against an account, and the
+        # author stays unlinked. Pinned by tests/test_pipeline_commit_identity.py.
         git -c user.name="cfb-pipeline" \
-            -c user.email="pipeline@users.noreply.github.com" \
+            -c user.email="cfb-pipeline@cfb-predictor-2026.invalid" \
             commit -q \
               -m "${IN_MESSAGE}${IN_SUFFIX}" \
               -m "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"

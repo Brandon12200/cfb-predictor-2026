@@ -19,8 +19,16 @@ Phase 5 is complete and merged. The model is frozen at **`v2026-frozen-2`**; `ma
 schedules *right now*. Nobody has to start them. Between today and Rehearsal 0 the repository will
 push commits to `main` **by itself** — daily captures Wed/Thu/Fri and four Saturday waves
 (`season.json` → `pipeline.schedule_et`), plus a daily freeze-integrity check. New commits authored
-by `cfb-pipeline <pipeline@users.noreply.github.com>` appearing on `main` with no human involved are
-**the system working**, not an intrusion. Do not "clean them up".
+by `cfb-pipeline <cfb-pipeline@cfb-predictor-2026.invalid>` appearing on `main` with no human
+involved are **the system working**, not an intrusion. Do not "clean them up".
+
+**One wrinkle you will see in the history and should not investigate.** Pipeline commits made before
+2026-08-11 — including `d54ac10` below — carry the *superseded* address
+`pipeline@users.noreply.github.com`, and GitHub renders them with the avatar and profile link of a
+**real, unrelated user** who happens to hold the login `pipeline`. That was a provenance defect in
+D30's original address, fixed by the D30 as-built amendment; it was never a security issue (push
+authority is the deploy key, and the author field is a string, not a credential). **History is not
+rewritten**, so the attribution window is permanent. Read those commits as machine commits.
 
 ### What has been proven at runtime, not merely tested
 
@@ -118,8 +126,10 @@ branch**. This is the first time the commit choreography runs for real on a pred
    single most important assertion in the rehearsal.
 3. **The snapshot commit precedes the predict step.** If it does not, `git describe --dirty` stamps
    every claim with a `-dirty` suffix (D34).
-4. Every commit is authored `cfb-pipeline <pipeline@users.noreply.github.com>` and carries a
-   `Run: <actions-run-url>` trailer (D30).
+4. Every commit is authored `cfb-pipeline <cfb-pipeline@cfb-predictor-2026.invalid>` and carries a
+   `Run: <actions-run-url>` trailer (D30 as amended). **The author must render UNLINKED on GitHub** —
+   no avatar, no profile link. If it links to any account, the address has reverted or the domain
+   has become resolvable, and `tests/test_pipeline_commit_identity.py` should have caught it.
 5. **No commit lands on `main`.** Verify by ref, not by memory.
 6. **The week-1 claim slot on `main` is still empty.** `git ls-tree -r origin/main --name-only |
    grep predictions/2026` returns nothing.

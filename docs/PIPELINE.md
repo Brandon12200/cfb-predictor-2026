@@ -142,9 +142,18 @@ tear a run between an Odds spend and `record_quota`, or between two of the Sunda
 carries `timeout-minutes: 20` so a hung job cannot hold the group. Push races are handled by a
 rebase-retry, safe because every pipeline commit is an *addition* under an append-only tree.
 
-**Identity (D30).** Commits are authored by `cfb-pipeline <pipeline@users.noreply.github.com>` with a
-`Run: <actions-run-url>` trailer. A project machine identity is not AI attribution (D3); the trailer
-is the tamper-evident link SPEC §10 wants the commit to carry.
+**Identity (D30, as amended 2026-08-11).** Commits are authored by
+`cfb-pipeline <cfb-pipeline@cfb-predictor-2026.invalid>` with a `Run: <actions-run-url>` trailer. A
+project machine identity is not AI attribution (D3); the trailer is the tamper-evident link SPEC §10
+wants the commit to carry.
+
+The `.invalid` domain is deliberate and must not be "tidied up" into a real-looking address. RFC 6761
+§6.4 reserves it permanently, so it has no MX record, GitHub can never verify it against an account,
+and the author renders **unlinked** — the honest rendering for a machine. D30's original address
+(`pipeline@users.noreply.github.com`) used GitHub's legacy `<username>@users.noreply.github.com`
+form and resolved to a real, unrelated user, so every machine commit showed a stranger's avatar.
+Pinned by `tests/test_pipeline_commit_identity.py`. **Commits made before 2026-08-11 keep the old
+address** — history is not rewritten (see the D30 as-built amendment).
 
 ---
 
