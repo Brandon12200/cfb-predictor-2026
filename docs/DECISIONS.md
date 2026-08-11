@@ -352,6 +352,48 @@ Removing the +1 collapses 57.0% onto the independent Vegas number — **the enti
 **Decision (owner):** protect `main`, add a ruleset **bypass for the `github-actions` app**, and require the `ci / test` check on pull requests. Owner action; confirmed before the first rehearsal.
 **Rejected — and the reason matters:** having the pipeline open a PR and auto-merge adds latency between "claim computed" and "claim committed", which is corrosive for a pre-registration artifact whose timestamp is the evidence. It also carries a defect produced by a *repo setting* rather than by code: **if the repository enforces squash-merge, the three-commit Sunday taxonomy collapses into one commit carrying results + graded + reports together** — a direct D22/D23 violation. Viable only with merge- or rebase-merge plus a CI check refusing squash, which is more machinery than the bypass.
 
+### As-built amendment 1 (2026-08-08) — the ruleset as configured
+`main-protection` created and Active: nine required status checks (`test`, `verify (0)`/`(1)`/`(2)`/`(4)`/`(4-5)`/`(5)`, `verify-freeze`, `no-rehearsal-merge`), force-pushes and deletions blocked, "Restrict updates" off, **empty bypass list**. The `github-actions` app was not offered in this repository's bypass picker. The reasoning recorded at the time — *"since no rule restricts pushes, the pipeline's direct pushes need no bypass"* — **was wrong**; see amendment 2. Also noted: GitHub does not enforce rulesets on private personal repositories on the free plan, which is one of the two reasons D37 made the repository public.
+
+### As-built amendment 2 (2026-08-08) — the no-bypass design refuted empirically; deploy key adopted
+**What happened.** The first live capture run after the secret-wiring fix failed at the push:
+`"9 of 9 required status checks are expected"`, all three retry attempts declined, the
+stranded-commit diagnostic firing correctly. **D-2's risk from the Phase-5 plan fired verbatim, 17
+days early, during a smoke rather than on 2026-08-25.**
+
+**The mechanism, and the correction to the record.** "Require status checks to pass" gates
+**pushes, not merely merges**. A brand-new commit has no check results, so a direct push is *always*
+refused. The empty bypass list was therefore not a harmless omission and the advisory ruling that
+no bypass was needed is **corrected here on the record**: nothing was being bypassed because the
+rule blocks the push itself. This is the second time an *as-built* configuration belief was
+falsified only by running the thing — recorded because the pattern, not the individual error, is
+the lesson.
+
+**What passed first, which is the other half of the result.** The preflight resolved both secrets
+(the wiring fix's first live proof, and the retag's — `factors/ matches v2026-frozen-2`), the Odds
+fetch succeeded, the observation was appended, the commit was created, the rebase-retry loop ran its
+three attempts, and the failure diagnostics fired. The pipeline did everything right and was refused
+at the last step.
+
+**Decision (owner, 2026-08-08): option (a) — a repository deploy key with write access, added to
+the ruleset's bypass list** ("Deploy keys" *was* offered in the picker). `actions/checkout` in the
+three cadence workflows uses `ssh-key: ${{ secrets.DEPLOY_KEY }}`.
+- **Chosen over a fine-grained PAT** (option b): a PAT is a broader, user-scoped credential that
+  expires mid-season and would make pipeline pushes authenticate as the owner, muddying the
+  machine-vs-human provenance D30 deliberately established. A deploy key is repo-scoped and does
+  not expire.
+- **Chosen over dropping the required-checks rule** (option c): that would make the nine checks
+  advisory on PRs and, worse, reduce `no-rehearsal-merge` to a convention — undoing exactly the
+  structural rehearsal isolation D32 was adopted to guarantee.
+- **Accepted consequence, and it found a real bug.** Deploy-key pushes **do** trigger workflows,
+  unlike `GITHUB_TOKEN` pushes, so every data commit now runs CI on `main` (~7 runs/week, free on a
+  public repo). Tracing that consequence surfaced a latent violation: **the Tuesday job built
+  snapshots but never regenerated `data/ratings/` or `data/projections/`**, while `verify-phase-2`
+  requires a projection file for *every built week* (SPEC §3's derived-artifact invariant). Week 2's
+  snapshot would have turned `main` red. Fixed in the same change and pinned by
+  `tests/test_pipeline_push_and_exports.py`. `verify-phase-3` is unaffected — it reads the pinned
+  vehicle (D29), which the pipeline never touches, which is precisely why pinning it mattered.
+
 ---
 
 ## D32 — Rehearsals run on an unmerged branch, not a separate artifact tree — **RATIFIED (owner, 2026-08-07; reversing an earlier leaning)**
