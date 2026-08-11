@@ -112,7 +112,10 @@ jobs:
           push: ${{ inputs.dry_run != true }}
 
       - uses: ./.github/actions/report-failure
-        if: failure()
+        # A dry run must not open a real issue. `dry_run` previously gated only `skip-secrets`
+        # and `push`, so a failing dry run filed an issue labelled exactly like a live failure —
+        # observed: #38, from a smoke.
+        if: failure() && inputs.dry_run != true
         with:
           stage: capture
           week: ${{ steps.setup.outputs.week_padded }}
@@ -120,7 +123,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: ./.github/actions/clear-failure
-        if: success()
+        # ...and must not CLOSE one either. This is the worse half: a PASSING dry run would have
+        # cleared a real, unresolved failure issue. Only run ordering avoided it when the live
+        # capture proof ran before any dry smoke — sequencing is not a control.
+        if: success() && inputs.dry_run != true
         with:
           stage: capture
           week: ${{ steps.setup.outputs.week_padded }}

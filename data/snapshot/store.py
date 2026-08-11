@@ -84,9 +84,11 @@ def load_frozen_vehicle(path: Path | None = None) -> dict[str, Any]:
     """
     p = path or FROZEN_VEHICLE
     if not p.exists():
+        # Tag name derived, never hardcoded — a retag must move one place (SPEC §3.1).
         raise SnapshotNotFoundError(
             f"Frozen gate vehicle missing at {p}. It is a byte-for-byte copy of the "
-            f"`v2026-frozen` week-1 snapshot and is required by the freeze gates (D29)."
+            f"`{FROZEN_VEHICLE_SOURCE[0]}` week-1 snapshot and is required by the freeze "
+            f"gates (D29)."
         )
     return json.loads(p.read_text())
 
