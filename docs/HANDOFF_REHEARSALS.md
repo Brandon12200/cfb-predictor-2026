@@ -1,7 +1,8 @@
 # HANDOFF → the rehearsal window (temporary — delete when the season runs cleanly)
 
 A briefing for a fresh session with zero conversational context. **Not authoritative over
-`docs/SPEC.md`.** Written 2026-08-10, at the close of the Phase-5 build session.
+`docs/SPEC.md`.** Written 2026-08-10 at the close of the Phase-5 build session; §(a) and §(c)
+criterion 4 amended 2026-08-11 for the corrected pipeline committer identity (D30 as-built).
 
 Read this, then `docs/PIPELINE.md` (the operating manual), then SPEC §10.
 
