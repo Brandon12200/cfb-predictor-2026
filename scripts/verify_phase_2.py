@@ -118,7 +118,9 @@ check("real games log both model spread and Vegas spread + model-vs-market gap (
       mvm_ok, mvm_detail)
 
 # === Derived ratings export + reproducibility (D13) ==========================
-# Ratings are checked for EVERY built week, matching the projections check below. It used to look
+# Ratings are checked for EVERY built week. Note this is now STRICTER than the projections check
+# below, which reproduces only the latest week and does existence-only for the rest — not a defect,
+# but do not read "matching" into it. Ratings used to look
 # only at week 1 — an asymmetry that went operationally live when the Tuesday job began
 # regenerating ratings weekly: a later week's export could have gone stale or missing with nothing
 # noticing, while the identical obligation for projections was enforced.

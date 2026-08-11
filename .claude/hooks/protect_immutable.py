@@ -53,7 +53,7 @@ for prefix in PROTECTED:
 
     if prefix in FROZEN_CODE:
         sys.stderr.write(
-            f"Blocked: {rel} is FROZEN MODEL CODE (tag `v2026-frozen`; SPEC §3, CLAUDE.md "
+            f"Blocked: {rel} is FROZEN MODEL CODE (the freeze tag; SPEC §3, CLAUDE.md "
             f"binding principle 3). Weights, thresholds, factor logic and confidence math are "
             f"immutable for the 2026 season — and this applies to NEW files too, because "
             f"`factors/` is scanned for factor classes at load, so adding one changes the "

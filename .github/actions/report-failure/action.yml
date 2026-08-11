@@ -131,10 +131,25 @@ runs:
         # different diagnosis, silently suppressed because it shared a stage and a week. So the
         # body carries a signature of the failing line, and a CHANGED signature bypasses the
         # cooldown. Repetition is throttled; a new failure mode is never silenced.
-        SIG="$(grep -aoE '(::error::|fatal:|Error:|ABORT:)[^\r\n]{0,120}' \
-                 "${RUNNER_TEMP}/pipeline.log" 2>/dev/null | tail -1 \
-                 | cksum | awk '{print $1}')"
+        # --- sig-begin (executed verbatim by tests/test_failure_signature.py) ---
+        # Every stage is failure-tolerant. The first version was not: `grep` exits 1 on no match,
+        # `pipefail` propagated that through the pipeline, and a bare assignment is not a tested
+        # condition — so `set -e` killed the step before the `:-` fallback could ever apply. That
+        # crashed the ONE branch this signature exists for (an issue already open), meaning a
+        # second, different-cause failure would have produced no notification at all — strictly
+        # worse than the throttled duplicate it replaced. A no-match is normal, not exceptional:
+        # argparse writes lowercase `error:`, and an early failure can leave no log at all.
+        SIG_LINE="$(grep -aoiE '(::error::|fatal:|error:|abort:|traceback)[^\r\n]{0,120}' \
+                      "${RUNNER_TEMP}/pipeline.log" 2>/dev/null | tail -1 || true)"
+        if [ -z "$SIG_LINE" ]; then
+          # No error-shaped line: fall back to the last non-empty log line, which still
+          # distinguishes one failure mode from another.
+          SIG_LINE="$(grep -av '^[[:space:]]*$' "${RUNNER_TEMP}/pipeline.log" 2>/dev/null \
+                        | tail -1 || true)"
+        fi
+        SIG="$(printf '%s' "${SIG_LINE:-nosig}" | cksum | awk '{print $1}' || true)"
         SIG="${SIG:-nosig}"
+        # --- sig-end ---
         BODY="$(printf '%s\n<!-- failure-signature: %s -->\n' "$BODY" "$SIG")"
 
         LAST="$(gh issue view "$EXISTING" --json comments \
