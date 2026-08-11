@@ -30,15 +30,37 @@ runs:
   steps:
     - id: commit
       shell: bash
+      env:
+        IN_PATHS: ${{ inputs.paths }}
+        IN_MESSAGE: ${{ inputs.message }}
+        IN_SUFFIX: ${{ inputs.suffix }}
       run: |
         set -euo pipefail
-        git add -- ${{ inputs.paths }}
+
+        # Stage only the paths that EXIST. `git add` on a pathspec matching nothing exits 128, and
+        # under `set -e` that killed the step: the Tuesday job's first commit stages
+        # `data/results data/graded`, neither of which exists until something has been graded — so
+        # the very first live run would have died before building a snapshot. Found by a dry-run
+        # smoke six days before it would have taken out the Aug 25 week-1 run.
+        #
+        # A path that does not exist yet is "nothing to commit", not an error: these are all
+        # append-only artifact dirs that come into being the first time the pipeline writes them.
+        EXISTING=()
+        for P in $IN_PATHS; do
+          if [ -e "$P" ]; then EXISTING+=("$P"); fi
+        done
+        if [ ${#EXISTING[@]} -eq 0 ]; then
+          echo "::notice::none of '$IN_PATHS' exist yet — nothing to commit"
+          echo "committed=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        git add -- "${EXISTING[@]}"
 
         # Never --allow-empty. record_observation rewrites the lines file every run even when it
         # appends nothing, but writes sorted, indented JSON — so the bytes are identical and this
         # correctly reports "no change" instead of manufacturing an empty commit.
         if git diff --cached --quiet; then
-          echo "::notice::no change under '${{ inputs.paths }}' — skipping commit"
+          echo "::notice::no change under '$IN_PATHS' — skipping commit"
           echo "committed=false" >> "$GITHUB_OUTPUT"
           exit 0
         fi
@@ -50,7 +72,7 @@ runs:
         git -c user.name="cfb-pipeline" \
             -c user.email="pipeline@users.noreply.github.com" \
             commit -q \
-              -m "${{ inputs.message }}${{ inputs.suffix }}" \
+              -m "${IN_MESSAGE}${IN_SUFFIX}" \
               -m "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
         echo "committed=true" >> "$GITHUB_OUTPUT"
         git --no-pager log -1 --format='%h %s'

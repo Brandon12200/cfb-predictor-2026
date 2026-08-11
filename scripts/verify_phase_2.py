@@ -118,15 +118,27 @@ check("real games log both model spread and Vegas spread + model-vs-market gap (
       mvm_ok, mvm_detail)
 
 # === Derived ratings export + reproducibility (D13) ==========================
-ratings_file = ROOT / "data" / "ratings" / "2026_week_01.json"
-if ratings_file.exists() and snap_manifest.exists():
+# Ratings are checked for EVERY built week, matching the projections check below. It used to look
+# only at week 1 — an asymmetry that went operationally live when the Tuesday job began
+# regenerating ratings weekly: a later week's export could have gone stale or missing with nothing
+# noticing, while the identical obligation for projections was enforced.
+from data.snapshot.store import available_weeks as _weeks  # noqa: E402
+
+_built = _weeks(2026)
+_ratings_dir = ROOT / "data" / "ratings"
+_ratings_files = {w for w in _built if (_ratings_dir / f"2026_week_{w:02d}.json").exists()}
+if _built and _ratings_files == set(_built) and snap_manifest.exists():
     from data.snapshot.store import load_snapshot
     from engine.matchup_pricer import build_ratings_export
-    exp = build_ratings_export(load_snapshot(1, 2026))
-    file_json = json.loads(ratings_file.read_text())
-    check("data/ratings export exists and is reproducible from the snapshot (D13)",
-          exp == file_json and file_json["meta"]["snapshot_id"] == man["meta"]["snapshot_id"],
-          f"snapshot {file_json['meta']['snapshot_id']}, {len(file_json['ratings'])} teams")
+    _bad = []
+    for _w in _built:
+        _f = json.loads((_ratings_dir / f"2026_week_{_w:02d}.json").read_text())
+        _snap = load_snapshot(_w, 2026)
+        if build_ratings_export(_snap) != _f or _f["meta"]["snapshot_id"] != _snap["meta"]["snapshot_id"]:
+            _bad.append(_w)
+    check("data/ratings export exists for every built week + reproduces from its snapshot (D13)",
+          not _bad,
+          f"weeks {sorted(_built)}; " + (f"stale: {_bad}" if _bad else "all reproduce"))
 else:
     check("data/ratings export exists and is reproducible from the snapshot (D13)",
           False, "run `python scripts/update_ratings.py --week 1`")

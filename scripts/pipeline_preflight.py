@@ -210,9 +210,13 @@ def main(argv: list[str] | None = None) -> int:
     # reference while reporting success. An absent key must abort instead.
     freeze_tag = (cal.get("pipeline", {}) or {}).get("freeze_tag")
     if not freeze_tag:
-        print("ABORT: season.json has no `pipeline.freeze_tag` — the freeze cannot be asserted "
-              "against an unknown reference.")
-        return EXIT_ABORT
+        # Routed through emit() like every other abort, so it reaches $GITHUB_STEP_SUMMARY. It
+        # previously printed straight to stdout and returned, so this one diagnosis — a missing
+        # freeze reference — was the only abort invisible on the Actions summary page.
+        pf = Preflight()
+        pf.abort("season.json has no `pipeline.freeze_tag` — the freeze cannot be asserted "
+                 "against an unknown reference.")
+        return emit(pf, args.role, args.week)
     now = datetime.now(ZoneInfo(pipeline_timezone(cal)))
 
     pf = Preflight()

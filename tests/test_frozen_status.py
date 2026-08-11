@@ -42,9 +42,16 @@ def test_the_configured_freeze_tag_is_the_current_tag():
     )
 
 
-def test_no_live_code_hardcodes_a_superseded_tag_name():
-    """Literal tag names in *live* code are what a retag has to remember. Prose and history may
-    name old tags freely; assertions and config may not."""
+def test_no_stale_tag_name_in_live_config():
+    """**Scope is `season.json` deliberately, and the name now says so.**
+
+    The previous name promised "no live code" while scanning only this one file — a false sense of
+    coverage that let a stale literal survive in `data/snapshot/store.py`'s error message. Prose,
+    docstrings and history legitimately name superseded tags (they are describing the past), so a
+    repo-wide literal ban is not the right rule. What must never go stale is the CONFIG that
+    assertions read, plus any runtime string that claims to name the current tag — the latter is
+    covered by `test_runtime_messages_derive_the_tag_name` below.
+    """
     import re
     current = frozen_tag()
     if current is None:
@@ -56,6 +63,17 @@ def test_no_live_code_hardcodes_a_superseded_tag_name():
                 if m.group(0) != current:
                     offenders.append(f"{path.name}:{i}: {m.group(0)}")
     assert not offenders, f"stale tag references in live config: {offenders}"
+
+
+def test_runtime_messages_derive_the_tag_name():
+    """A runtime message naming "the frozen tag" must derive it, or it goes stale at the next
+    retag — which is exactly what happened to `load_frozen_vehicle`'s error string."""
+    src = (ROOT / "data" / "snapshot" / "store.py").read_text()
+    body = src.split("def load_frozen_vehicle", 1)[1].split("\ndef ", 1)[0]
+    assert "FROZEN_VEHICLE_SOURCE[0]" in body, (
+        "load_frozen_vehicle's error message must derive the tag name, not hardcode it"
+    )
+    assert '`v2026-frozen`' not in body
 
 
 def test_frozen_tag_returns_the_bare_tag_not_the_build_stamp():
