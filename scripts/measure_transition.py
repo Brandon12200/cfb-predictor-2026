@@ -187,10 +187,16 @@ def mechanism(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
         vals = [recs[k][field] for k in keys if isinstance(recs[k].get(field), (int, float))]
         return round(sum(vals) / len(vals), 4) if vals else float("nan")
 
+    # Report confidence over BOTH populations. Quoting the tier-C subset's mean against the full
+    # mover set is exactly how a delta table acquires a number that will not reproduce — it
+    # happened in this entry's first draft and was caught only by re-running this harness.
+    landed_c = {k for k in moved if rc[k]["confidence_tier"] == "C"}
+
     return {
         "transitions": dict(Counter(
             f"{rb[k]['confidence_tier']}->{rc[k]['confidence_tier']}" for k in rb)),
         "moved": len(moved),
+        "moved_to_tier_c": len(landed_c),
         "moved_firing_pct": round(100.0 * len(moved & firing) / len(moved), 1) if moved else 0.0,
         "unchanged_firing_pct": round(
             100.0 * len((set(rb) - moved) & firing) / len(set(rb) - moved), 1),
@@ -201,8 +207,10 @@ def mechanism(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
             rb[k]["variance_analysis"].get("factors_analyzed") for k in moved)),
         "factors_analyzed_after": dict(Counter(
             rc[k]["variance_analysis"].get("factors_analyzed") for k in moved)),
-        "mean_confidence_moved": [mean(moved, rb, "confidence_score"),
-                                  mean(moved, rc, "confidence_score")],
+        "mean_confidence_all_movers": [mean(moved, rb, "confidence_score"),
+                                       mean(moved, rc, "confidence_score")],
+        "mean_confidence_movers_reaching_tier_c": [mean(landed_c, rb, "confidence_score"),
+                                                   mean(landed_c, rc, "confidence_score")],
         "mean_data_quality_moved": [mean(moved, rb, "data_quality"),
                                     mean(moved, rc, "data_quality")],
     }

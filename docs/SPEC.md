@@ -184,8 +184,11 @@ one. Caught before it shipped on exception 1, and pinned by `tests/test_sp_watch
 > but not sufficient — only 25 of 114 firing games moved. The sufficient condition is that
 > `Sandwich` activating makes the variance analyzer able to run at all: for all 25 movers
 > `factors_analyzed` goes **0 → 3** and `variance_level` goes **`insufficient_data` → `extreme`
-> (21) / `moderate` (3) / `strong` (1)**, dropping mean `confidence_score` **0.7365 → 0.4358**
-> through the tier floors.
+> (21) / `moderate` (3) / `strong` (1)**, dropping mean `confidence_score` **0.7368 → 0.4648
+> across all 25 movers**, and **0.7365 → 0.4358 across the 21 that reached tier C** — the 4 that
+> stopped at tier B sit near 0.64 and lift the 25-game mean. Both figures are reported because
+> quoting one against the other population is how a delta table acquires a number that does not
+> reproduce; `scripts/measure_transition.py` emits both.
 >
 > **Exception 1's explanatory lever is measurably inactive here.** That inversion ran through
 > manifest coverage lifting data-availability-driven confidence (B1). Coverage rose again this time

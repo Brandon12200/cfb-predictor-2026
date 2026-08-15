@@ -1800,7 +1800,11 @@ Reproducible: `python scripts/measure_transition.py --group sp_ratings`.
    fires `Sandwich`; no non-firing game moved. Firing is necessary but **not sufficient** — only 25
    of 114 firing games moved. The sufficient condition: `factors_analyzed` goes **0 → 3** and
    `variance_level` **`insufficient_data` → `extreme`/`moderate`/`strong`**, dropping mean
-   `confidence_score` **0.7365 → 0.4358** through the tier floors.
+   `confidence_score` **0.7368 → 0.4648 across all 25 movers**, and **0.7365 → 0.4358 across the 21
+   that reached tier C** (the 4 stopping at tier B sit near 0.64 and lift the 25-game mean). Both
+   populations are stated because quoting one figure against the other is exactly how an audit-trail
+   entry acquires a number that will not reproduce — caught in review here, and the reason
+   `scripts/measure_transition.py` now emits both.
 
    **Exception 1's lever is measurably inactive.** That inversion (2 → 322) ran through manifest
    coverage lifting data-availability-driven confidence (B1). Coverage rose again here

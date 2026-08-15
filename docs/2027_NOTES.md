@@ -250,7 +250,8 @@ point the failure-injection drill at first.
    data-availability-driven confidence (B1). Exception 2's coverage rose too (63.3% → 75.3%) but
    per-game `data_quality` was **unchanged to four decimals** — the entire shift ran through the
    **variance/disagreement** channel: `Sandwich` activating made `factors_analyzed` go 0 → 3 on 25
-   games, `variance_level` `insufficient_data` → `extreme`, and confidence fell 0.7365 → 0.4358.
+   games, `variance_level` `insufficient_data` → `extreme`, and confidence fell 0.7368 → 0.4648
+   across all 25 movers (0.7365 → 0.4358 across the 21 that reached tier C).
    So the boundaries are fitted to a preseason where **neither** channel resembled a real season:
    coverage was low *and* too few factors were active for disagreement to be detectable at all.
    2027 must recalibrate against a season with both channels live, and should treat

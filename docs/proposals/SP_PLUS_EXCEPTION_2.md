@@ -161,7 +161,19 @@ activating is what makes the variance analyzer able to run at all on those games
 physical factors disagree (`agreement_ratio` 0.667, `coefficient_of_variation` 5.29 on a
 representative mover), producing `implications: ["Extreme disagreement - avoid or minimum bet
 only"]` and `recommendation.confidence: NO_CONFIDENCE`. Mean `confidence_score` on the movers falls
-**0.7365 → 0.4358 (−0.3006)**, crossing the tier floors.
+**0.7368 → 0.4648 across all 25 movers**, and **0.7365 → 0.4358 across the 21 that reached tier C**
+(the 4 stopping at tier B sit near 0.64 and lift the 25-game mean), crossing the tier floors.
+
+**Correction, recorded rather than quietly fixed (code-reviewer, PR #43).** Revision 3 of this file
+stated "0.7365 → 0.4358" for "all 25 movers". That figure is the tier-C subset; the harness printed
+both means and the wrong one was attached to the wrong population. It reached `docs/SPEC.md` and
+`docs/CALIBRATION_LOG.md` — the permanent audit trail — and was caught by the reviewer
+independently re-running `measure_transition.py`, which is the only reason the harness was
+committed. The qualitative finding is unchanged (confidence falls from ~0.74 into the mid-0.4s on
+every mover, crossing the floors either way), but *"a measured number that does not reproduce"* is
+the project's own worst-failure-mode label, and this was one. **`scripts/measure_transition.py` now
+emits both populations** so the ambiguity cannot recur. PR #43's commit message `c89d625` carries
+the imprecise figure and is left as written — supersede, never edit.
 
 **The coverage channel contributes nothing, and this is the decisive negative.** Manifest coverage
 *rose* 63.3% → 75.3%, yet per-game `data_quality` is **unchanged to four decimals (0.8330 → 0.8330)**
@@ -325,8 +337,11 @@ single golden test and nothing else.
 > but not sufficient — only 25 of 114 firing games moved. The sufficient condition is that
 > `Sandwich` activating makes the variance analyzer able to run at all: for all 25 movers
 > `factors_analyzed` goes **0 → 3** and `variance_level` goes **`insufficient_data` → `extreme`
-> (21) / `moderate` (3) / `strong` (1)**, dropping mean `confidence_score` **0.7365 → 0.4358**
-> through the tier floors.
+> (21) / `moderate` (3) / `strong` (1)**, dropping mean `confidence_score` **0.7368 → 0.4648
+> across all 25 movers**, and **0.7365 → 0.4358 across the 21 that reached tier C** — the 4 that
+> stopped at tier B sit near 0.64 and lift the 25-game mean. Both figures are reported because
+> quoting one against the other population is how a delta table acquires a number that does not
+> reproduce; `scripts/measure_transition.py` emits both.
 >
 > **Exception 1's explanatory lever is measurably inactive here.** That inversion ran through
 > manifest coverage lifting data-availability-driven confidence (B1). Coverage rose again this time
