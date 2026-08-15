@@ -130,6 +130,108 @@ one. Caught before it shipped on exception 1, and pinned by `tests/test_sp_watch
 > correction in `utils/normalizer.py` and `data/normalize/`. The fingerprint constant was updated
 > **only** as part of this ratified exception and a new tag — never to make a red gate green.
 
+> #### Exception 2 — 2026-08-14 — CFBD published preseason SP+ ratings; `Sandwich` activates and every preseason prior re-sources
+> **New tag:** `v2026-frozen-3`, superseding `v2026-frozen-2`.
+>
+> **Trigger.** `scripts/sp_watch.py` detected `sp_ratings` moving **0 → 139 rows** (138 teams +
+> CFBD's `nationalAverages` aggregate, which the normalizer correctly drops — 139 is the raw-row
+> count the probe measures, and the difference is not an off-by-one to be "fixed"). D10 activates
+> SP+ with **no code change**, so the frozen model's inputs changed underneath the tag. Exception 1
+> recorded that `Sandwich` would wake "when preseason SP+ *ranks* publish specifically"; they have.
+>
+> **Two independent activations, both D10, both measured:**
+> 1. **`Sandwich` wakes.** `_sandwich_spot` keys on `sp_ratings[opponent]["ranking"]` against a
+>    top-25 threshold and returns `None` when adjacent strength is unknown. `ranking` is served
+>    non-null for all 138 teams (range 1–138; 25 at rank ≤ 25), so the signal resolves and fires on
+>    **114 of 338** tracked games at the ratified ±1.0 coefficient. Measured from activation output,
+>    not inferred from the row count: had CFBD served `ranking: null`, it would have stayed dormant
+>    against a fully-populated table.
+> 2. **Every preseason prior re-sources.** `preseason_prior` prefers SP+ where present, so all
+>    **676 of 676** team-slots move `returning_production` → `sp+`.
+>
+> **Measured delta** (`v2026-frozen-2` vehicle → 2026-08-14 rebuild, frozen engine, tracked slate),
+> with an SP+-removed control isolating this exception from ambient data drift:
+>
+> | | v2026-frozen-2 | control (no SP+) | **v2026-frozen-3** |
+> |---|---|---:|---:|
+> | behavioural fingerprint | `1c5187eb…0434` | `50a114a7…c375` | **`b9c00a94…2532`** |
+> | tracked-slate games | 338 | 338 | 338 |
+> | `sp_ratings` / `returning_production` teams | 0 / 136 | 0 / 136 | **138 / 136** |
+> | manifest coverage | 63.3% (358/566) | *n/a (in-memory control)* | **75.3% (426/566)** |
+> | lean home / away / neutral | 198 / 33 / 107 | 198 / 33 / 107 | **205 / 67 / 66** |
+> | confidence tier A / B / C | 322 / 6 / 10 | 322 / 6 / 10 | **297 / 10 / 31** |
+> | `NO_BET` | 338 of 338 | 338 of 338 | **338 of 338** |
+> | max \|`edge_size`\| (vehicle / real-lined) | 0.3156 / 0.1403 | 0.3156 / 0.1403 | 0.3156 / 0.1403 |
+> | games with non-zero `edge_size` | 231 | 231 | **272** |
+> | Σ \|`edge_size`\| | 20.1633 | 20.1633 | **23.8510** |
+> | Σ `model_vs_market_gap` | 196.34 | 195.74 | **130.08** |
+> | `Sandwich` games firing | 0 | 0 | **114** |
+>
+> Slate membership verified **by identity**: 0 games entered, 0 left — SP+ changes no game. The
+> coverage rise is attributable to SP+ alone: the entire +68 fields is the `sp_rating` group
+> (0 → 68); every other group is unchanged.
+>
+> **On the edge figures.** The maximum is unchanged to four decimals because the single top game is
+> unaffected; the *distribution* moved substantially (113 games' `edge_size` changed, non-zero edges
+> 231 → 272, distinct values 36 → 55). Recording only the maximum would understate the transition —
+> exception 1's measuring error in a new form. Every game remains `NO_BET`: the structural edge
+> ceiling is untouched and this exception changes no recommendation in the preseason state. **The
+> model moves closer to the market**: Σ `model_vs_market_gap` −33.7%, maximum −40%.
+>
+> **The tier shift, and why it is the inverse of exception 1's.** Transitions are `A→A 297`,
+> `A→B 4`, `A→C 21`, `B→B 6`, `C→C 10`: **all movement is downward and all of it leaves tier A.**
+> Every one of the 25 movers fires `Sandwich` (100%); no non-firing game moved. Firing is necessary
+> but not sufficient — only 25 of 114 firing games moved. The sufficient condition is that
+> `Sandwich` activating makes the variance analyzer able to run at all: for all 25 movers
+> `factors_analyzed` goes **0 → 3** and `variance_level` goes **`insufficient_data` → `extreme`
+> (21) / `moderate` (3) / `strong` (1)**, dropping mean `confidence_score` **0.7365 → 0.4358**
+> through the tier floors.
+>
+> **Exception 1's explanatory lever is measurably inactive here.** That inversion ran through
+> manifest coverage lifting data-availability-driven confidence (B1). Coverage rose again this time
+> (63.3% → 75.3%), but per-game `data_quality` is **unchanged to four decimals (0.8330 → 0.8330)**.
+> The entire shift runs through the **variance/disagreement** channel instead: SP+ did not make
+> these games better-informed, it made their factor disagreement *measurable*. Confidence fell
+> because the model can now see a conflict it previously had too few active signals to detect.
+>
+> Combined with exception 1's 2 → 322 move, the Phase-4 calibration tables and D27's stratified
+> reporting now rest on a tier distribution that has shifted twice, in opposite directions, since it
+> was characterised. Carried to `docs/2027_NOTES.md` as a recalibration obligation.
+>
+> **The lean split moved and D27's reporting inherits it**: the structural home:away skew falls
+> ~6.0:1 → ~3.06:1 and the away cell roughly doubles (33 → 67). `_lean_block`'s inline "away cell is
+> thin" caveat was calibrated to the old distribution. Carried to `docs/2027_NOTES.md`;
+> `analytics/` is out of scope for this exception (owner ruling, 2026-08-15).
+>
+> **No gate detects this class of event, by construction.** With the SP+-carrying snapshot on disk,
+> `verify-phase-3` passes in full — vehicle SHA, fingerprint, 3d golden, L4 `NO_BET`, and the whole
+> suite. D29 pinned the gate to a committed vehicle so the pipeline could not move it; the corollary
+> is that an *external* input change is invisible to it. `sp_watch` is the only detector, which is
+> why D33 built it. **Ambient drift alone also moves the fingerprint** (`v2026-frozen-2` → control
+> moved it with every aggregate identical), so **no live bundle will reproduce the figure above** —
+> a live re-run is not a confirmation and its difference is not a fault.
+>
+> **`sp_watch` arming changed as part of this ratification.** `arrivals()` moves from `>` to `!=`,
+> so a source *shrinking* now arms as well as growing — closing the gap recorded in
+> `docs/2027_NOTES.md`. Accepted cost: CFBD revises row counts routinely, so the probe will fire on
+> ordinary revisions. Baseline updated to `{"sp_ratings": 139, "returning_production": 136}`.
+>
+> **Scope.** No change to `factors/`, `engine/`, or any calibration constant. The exception covers
+> the model's *inputs* changing under a ratified auto-activation (D10), plus the freeze-exempt gate
+> re-pinning that follows. The fingerprint constant was updated **only** as part of this ratified
+> exception and a new tag — never to make a red gate green.
+>
+> **Vehicles are retained, never replaced.** `data/archive/frozen/` now holds three:
+> `2026_week_01_snapshot.json` (`v2026-frozen`), `…_v2026-frozen-2.json`, and the new
+> `…_v2026-frozen-3.json`. Each is the input its own tag's fingerprint was computed over, so every
+> exception entry stays reproducible. Recorded in `data/snapshot/store.py::SUPERSEDED_VEHICLES`.
+>
+> **Provenance note.** `tests/test_frozen_vehicle.py` re-derives the vehicle SHA from the tag, but
+> `_git_show` returns `None` when the tag does not yet exist, so those two assertions **skip during
+> the ratification PR** — the tag is cut only after merge. The check is therefore run deliberately
+> immediately after tagging (`pytest tests/test_frozen_vehicle.py -v`, expect 5 passed / 0 skipped).
+> Exception 1 had the identical window, unrecorded.
+
 ## 4. Phase 0 — Repo Hygiene & Audit (do first)
 
 Before any feature work:

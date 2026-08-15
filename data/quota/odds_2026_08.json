@@ -55,6 +55,14 @@
       "run_id": "31748563035",
       "used": 13,
       "week": 1
+    },
+    {
+      "at": "2026-08-14T20:49:06.603620+00:00",
+      "caller": "build_snapshot",
+      "remaining": 486,
+      "run_id": null,
+      "used": 14,
+      "week": 1
     }
   ]
 }

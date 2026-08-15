@@ -1764,3 +1764,64 @@ the number was re-derived rather than trusted.
   would drop a factor, shrink the denominator, **renormalize every remaining weight, and run a
   different model under the same tag**. Deliberately a gate and tests, **not a runtime `assert` in
   the frozen path** — an assertion there would convert a degraded import into a mid-season crash.
+
+---
+
+## SP+ transition — `Sandwich` activates and every preseason prior re-sources  (`measured`)  — **RATIFIED (owner, 2026-08-15)**
+
+SPEC §3.1 **exception 2**, tag **`v2026-frozen-3`** superseding `v2026-frozen-2`. CFBD published
+preseason SP+ on 2026-08-14 (`sp_ratings` 0 → 139 raw rows / 138 teams); `scripts/sp_watch.py`
+detected it and opened issue #42. **No calibration constant changed** — this entry records a
+*measured* input transition under D10 auto-activation, not a retune.
+
+**Method — three vehicles, because a rebuild refreshes all seven fetch groups.** A bare
+before/after would conflate SP+ with ambient data drift, so the delta was measured against a
+control (the rebuilt snapshot with `sp_ratings` emptied). `A → B` is drift; **`B → C` is SP+**.
+Reproducible: `python scripts/measure_transition.py --group sp_ratings`.
+
+| | A `v2026-frozen-2` | B control (no SP+) | C `v2026-frozen-3` |
+|---|---|---:|---:|
+| behavioural fingerprint | `1c5187eb…0434` | `50a114a7…c375` | **`b9c00a94…2532`** |
+| tracked-slate games | 338 | 338 | 338 |
+| manifest coverage | 63.3% (358/566) | *n/a* | **75.3% (426/566)** |
+| lean home / away / neutral | 198 / 33 / 107 | 198 / 33 / 107 | **205 / 67 / 66** |
+| confidence tier A / B / C | 322 / 6 / 10 | 322 / 6 / 10 | **297 / 10 / 31** |
+| `NO_BET` | 338 of 338 | 338 of 338 | **338 of 338** |
+| max \|`edge_size`\| (vehicle / real-lined) | 0.3156 / 0.1403 | 0.3156 / 0.1403 | 0.3156 / 0.1403 |
+| non-zero `edge_size` / Σ \|edge\| / distinct | 231 / 20.1633 / 36 | 231 / 20.1633 / 36 | **272 / 23.8510 / 55** |
+| Σ `model_vs_market_gap` | 196.34 | 195.74 | **130.08** |
+| `Sandwich` games firing | 0 | 0 | **114** |
+| preseason prior source (team-slots) | RP 676 | RP 676 | **sp+ 676** |
+
+**Two calibration-relevant consequences, neither of which changes a bet today.**
+
+1. **The tier distribution shifted again, and through a different channel than exception 1.** All
+   movement is downward out of tier A (`A→A 297`, `A→B 4`, `A→C 21`). Every one of the 25 movers
+   fires `Sandwich`; no non-firing game moved. Firing is necessary but **not sufficient** — only 25
+   of 114 firing games moved. The sufficient condition: `factors_analyzed` goes **0 → 3** and
+   `variance_level` **`insufficient_data` → `extreme`/`moderate`/`strong`**, dropping mean
+   `confidence_score` **0.7365 → 0.4358** through the tier floors.
+
+   **Exception 1's lever is measurably inactive.** That inversion (2 → 322) ran through manifest
+   coverage lifting data-availability-driven confidence (B1). Coverage rose again here
+   (63.3% → 75.3%), yet per-game `data_quality` is **unchanged to four decimals (0.8330 → 0.8330)**.
+   SP+ did not make these games better-informed — **it made their factor disagreement measurable.**
+
+   **Obligation:** the Phase-4 attribution tables and D27's stratified reporting now rest on a tier
+   distribution that has moved twice, in opposite directions, since characterisation. Carried to
+   `docs/2027_NOTES.md` as a recalibration obligation, not retuned mid-season.
+
+2. **The lean split moved.** Away leans 33 → 67 (+103%), neutral 107 → 66, home 198 → 205; the
+   structural home:away skew falls **~6.0:1 → ~3.06:1**. `_lean_block`'s inline "away cell is thin"
+   caveat was calibrated to a ~35-game cell. Carried to 2027; `analytics/` deliberately out of
+   scope (owner ruling, 2026-08-15).
+
+**On the edge figures — the trap this entry avoids.** Max \|`edge_size`\| is *identical to four
+decimals* across all three vehicles, because the single top game is unaffected. Reporting only the
+maximum would have understated the transition: 113 games' `edge_size` moved and distinct values
+rose 36 → 55. Exception 1's first draft published `0.0000` from a silent `.get()` default on a
+non-existent key; this harness reads keys strictly and is committed with the entry it produced, so
+the figures are re-derivable rather than trusted.
+
+**What this entry does NOT do.** No weight, threshold, coefficient or floor was touched. Every game
+remains `NO_BET`; the structural edge ceiling (1.0023 / 0.8269) is unchanged.

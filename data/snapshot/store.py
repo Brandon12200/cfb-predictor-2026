@@ -24,23 +24,29 @@ _SNAPSHOTS_DIR = Path(__file__).resolve().parent.parent / "snapshots"
 # (`data/normalize`, `data/schedule_intel`, the registry) still trips it, because the gate re-runs
 # the engine over this input rather than replaying a stored result. See DECISIONS D29.
 FROZEN_VEHICLE = Path(__file__).resolve().parent.parent / "archive" / "frozen" / \
-    "2026_week_01_snapshot_v2026-frozen-2.json"
+    "2026_week_01_snapshot_v2026-frozen-3.json"
 
-# The v2026-frozen vehicle, kept as the historical record of what the season's FIRST freeze
-# measured. It is not deleted or overwritten — `data/archive/` is append-only, and a superseded
-# tag's vehicle is exactly the kind of thing the audit trail exists to preserve. It is known to
-# contain ~10 fabricated games (SPEC §3 exception 1); that is why it was superseded.
+# Every superseded vehicle is KEPT as the historical record of what that freeze measured. None is
+# deleted or overwritten — `data/archive/` is append-only, and a superseded tag's vehicle is
+# exactly the kind of thing the audit trail exists to preserve. Each entry is the input its own
+# tag's fingerprint was computed over, so an old exception entry stays reproducible.
+#   v2026-frozen   — the season's FIRST freeze. Known to contain ~10 fabricated games
+#                    (SPEC §3.1 exception 1); that is why it was superseded.
+#   v2026-frozen-2 — the returning-production transition (exception 1). Superseded by exception 2
+#                    when preseason SP+ published, waking `Sandwich` and re-sourcing every prior.
 SUPERSEDED_VEHICLES = {
     "v2026-frozen": Path(__file__).resolve().parent.parent / "archive" / "frozen" /
     "2026_week_01_snapshot.json",
+    "v2026-frozen-2": Path(__file__).resolve().parent.parent / "archive" / "frozen" /
+    "2026_week_01_snapshot_v2026-frozen-2.json",
 }
 
 # SHA-256 of the vehicle's bytes, derived from `git show v2026-frozen:<snapshot path>` — NOT from
 # the working tree, which has moved since the tag. `tests/test_frozen_vehicle.py` re-derives this
 # from the tag on every run, so the claim "these are the tag-time bytes" is proven rather than
 # asserted. One definition, imported by the gate and the test (no second copy to drift).
-FROZEN_VEHICLE_SHA256 = "12df953ddf66b75e262419f0cb3f80354911b22117b14c41aec16b697f0590d7"
-FROZEN_VEHICLE_SOURCE = ("v2026-frozen-2", "data/snapshots/2026_week_01/snapshot.json")
+FROZEN_VEHICLE_SHA256 = "b50ba7ecb639add9c51060f331eebad668333cdac620656fd8fa90ef83adb1b1"
+FROZEN_VEHICLE_SOURCE = ("v2026-frozen-3", "data/snapshots/2026_week_01/snapshot.json")
 
 
 class SnapshotNotFoundError(RuntimeError):
