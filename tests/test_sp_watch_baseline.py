@@ -1,4 +1,4 @@
-"""The SP+ watch alerts on the OUTSTANDING transition, and stays quiet about ratified ones.
+"""The SP+ watch alerts on DEVIATION from the ratified baseline, and stays quiet at it.
 
 **Why this file exists.** After returning production arrived and was ratified, `BASELINE` still
 read `returning_production: 0`. Left that way, the probe would have reported the same,
@@ -6,9 +6,16 @@ already-ratified arrival on every daily run forever — and when preseason SP+ f
 `arrivals()` would have returned **both** sources, deduping onto the stale open issue under a title
 naming both, instead of opening a clean "SP+ has arrived".
 
-So the requirement is sharper than "it alerts": the remaining transition must open a **fresh,
+So the requirement is sharper than "it alerts": a transition must open a **fresh,
 correctly-labelled** issue. Silence is one failure; alerting for the wrong reason, or on top of a
 stale alert, is the other. Both are pinned here.
+
+**Both transitions have now landed** — returning production (exception 1, `v2026-frozen-2`) and
+preseason SP+ (exception 2, `v2026-frozen-3`). Nothing is outstanding, so the probe's job changed:
+it now watches for **revisions to either ratified source, in either direction**. The comparison in
+`arrivals()` is `!=`, not `>`; a provider withdrawing rows moves model output just as surely as
+publishing them, and nothing else in the codebase observes either (the fingerprint gate reads a
+pinned committed vehicle, D29). That closes `docs/2027_NOTES.md` §8 item 8.
 
 Updating the baseline is a **step of the exception process** (SPEC §3.1), not an afterthought.
 """
@@ -24,74 +31,98 @@ from scripts.sp_watch import BASELINE, arrivals
 
 ROOT = Path(__file__).resolve().parent.parent
 RATIFIED_RP_ROWS = 136
+RATIFIED_SP_ROWS = 139  # raw API rows; the snapshot carries 138 (see below)
 
 
 def observe(sp: int, rp: int) -> dict[str, int]:
     return {"sp_ratings": sp, "returning_production": rp}
 
 
-# --- the outstanding transition ------------------------------------------------------------------
+# --- both transitions are ratified; the baseline records them ------------------------------------
 
-def test_sp_plus_is_the_one_source_still_being_watched():
-    assert BASELINE["sp_ratings"] == 0, (
-        "SP+ must stay at 0 until it actually publishes — this is the live tripwire"
+def test_the_baseline_records_both_ratified_row_counts():
+    assert BASELINE["returning_production"] == RATIFIED_RP_ROWS
+    assert BASELINE["sp_ratings"] == RATIFIED_SP_ROWS, (
+        "SP+ landed 2026-08-14 and was ratified under SPEC §3.1 exception 2 — leaving this at 0 "
+        "makes the probe re-report a ratified arrival on every run forever"
     )
 
 
-def test_sp_plus_arrival_alerts_and_names_only_itself():
-    """The requirement: a fresh, correctly-labelled alert — not one blended with a ratified source."""
-    assert arrivals(observe(sp=137, rp=RATIFIED_RP_ROWS)) == ["sp_ratings"]
+def test_the_sp_baseline_counts_raw_api_rows_not_snapshot_teams():
+    """139 vs 138 is not an off-by-one and must not be 'fixed'.
+
+    `counts()` measures `len(client.get_sp_ratings(year))` — RAW API rows. The 139th row is CFBD's
+    `nationalAverages` aggregate, which the normalizer correctly drops, so the snapshot carries
+    138 teams. Recorded in SPEC §3.1 exception 2.
+    """
+    assert RATIFIED_SP_ROWS == 139
+    assert arrivals(observe(sp=138, rp=RATIFIED_RP_ROWS)) == ["sp_ratings"], (
+        "138 is the NORMALIZED team count; the probe compares raw rows, so 138 is a deviation"
+    )
 
 
-def test_a_single_sp_plus_row_is_enough():
-    """Partial publication still changes the model's inputs."""
-    assert arrivals(observe(sp=1, rp=RATIFIED_RP_ROWS)) == ["sp_ratings"]
+# --- the ratified state must be quiet ------------------------------------------------------------
 
-
-# --- the ratified transition must be quiet -------------------------------------------------------
-
-def test_the_ratified_returning_production_no_longer_alerts():
+def test_the_ratified_state_no_longer_alerts():
     """The defect this file was written for: a permanent daily false alarm."""
-    assert arrivals(observe(sp=0, rp=RATIFIED_RP_ROWS)) == []
-
-
-def test_the_baseline_records_the_ratified_row_count():
-    assert BASELINE["returning_production"] == RATIFIED_RP_ROWS
+    assert arrivals(observe(sp=RATIFIED_SP_ROWS, rp=RATIFIED_RP_ROWS)) == []
 
 
 def test_a_reverted_baseline_would_be_caught():
-    """Guards the regression directly: resetting RP to 0 makes the probe cry wolf forever."""
+    """Guards the regression directly: resetting a ratified source to 0 makes the probe cry wolf."""
     reverted = {"sp_ratings": 0, "returning_production": 0}
-    assert arrivals(observe(sp=0, rp=RATIFIED_RP_ROWS), reverted) == ["returning_production"]
-    assert arrivals(observe(sp=0, rp=RATIFIED_RP_ROWS), BASELINE) == []
+    assert arrivals(observe(sp=RATIFIED_SP_ROWS, rp=RATIFIED_RP_ROWS), reverted) == [
+        "returning_production", "sp_ratings"]
+    assert arrivals(observe(sp=RATIFIED_SP_ROWS, rp=RATIFIED_RP_ROWS), BASELINE) == []
 
 
 # --- still sensitive to genuine change -----------------------------------------------------------
 
-def test_further_returning_production_growth_still_alerts():
+def test_further_growth_still_alerts():
     """More teams published is more model input — the fingerprint would move, so this must too."""
-    assert arrivals(observe(sp=0, rp=RATIFIED_RP_ROWS + 1)) == ["returning_production"]
+    assert arrivals(observe(sp=RATIFIED_SP_ROWS, rp=RATIFIED_RP_ROWS + 1)) == [
+        "returning_production"]
+
+
+def test_a_revision_names_only_the_source_that_moved():
+    """A fresh, correctly-labelled alert — not one blended with a source sitting at its baseline."""
+    assert arrivals(observe(sp=RATIFIED_SP_ROWS + 2, rp=RATIFIED_RP_ROWS)) == ["sp_ratings"]
 
 
 def test_both_sources_moving_reports_both():
-    assert arrivals(observe(sp=137, rp=RATIFIED_RP_ROWS + 5)) == [
+    assert arrivals(observe(sp=RATIFIED_SP_ROWS + 1, rp=RATIFIED_RP_ROWS + 5)) == [
         "returning_production", "sp_ratings"]
 
 
-def test_a_source_going_backwards_does_not_alert():
-    """A provider withdrawing rows is not an *arrival*, so this probe stays quiet — but note the
-    gap honestly: **nothing else observes it either.**
+def test_a_source_going_backwards_NOW_alerts():
+    """**Inverted under SPEC §3.1 exception 2.** This previously asserted silence on a shrink.
 
-    The fingerprint gate does not cover this. It reads the pinned static vehicle (D29) and never
-    re-queries CFBD, deliberately, so it cannot see live source drift in either direction. That
-    makes `sp_watch`'s `>` comparison the only live observer of CFBD state in the codebase, and a
-    regression (136 → downward) therefore has **no observer at all**.
+    That was the old `>` comparison encoded as the contract, and it was a real gap: the fingerprint
+    gate reads the pinned static vehicle (D29) and never re-queries CFBD, so a provider withdrawing
+    rows had **no observer at all**. A shrink moves model output just as surely as growth — the
+    affected teams fall back to D10's flat-prior path, which is a documented state, but the model
+    is then no longer the one the tag was measured against, and that is what an exception exists
+    to record.
 
-    Accepted rather than fixed here: a shrinking count degrades safely — affected teams fall back
-    to D10's already-tested flat-baseline / high-uncertainty prior, which is a documented state and
-    not fabrication. Recorded in `docs/2027_NOTES.md` instead of building an observer now.
+    The accepted cost, stated in `scripts/sp_watch.py` and in the exception entry: CFBD revises row
+    counts routinely, so this fires on ordinary revisions. Alarm volume is paid deliberately.
+    Closes `docs/2027_NOTES.md` §8 item 8.
     """
-    assert arrivals(observe(sp=0, rp=RATIFIED_RP_ROWS - 10)) == []
+    assert arrivals(observe(sp=RATIFIED_SP_ROWS, rp=RATIFIED_RP_ROWS - 10)) == [
+        "returning_production"]
+    assert arrivals(observe(sp=RATIFIED_SP_ROWS - 1, rp=RATIFIED_RP_ROWS)) == ["sp_ratings"]
+
+
+def test_the_shrink_assertion_can_actually_fail():
+    """**Proof of discriminating power.** The same observation must be SILENT under the superseded
+    `>` comparison — otherwise this test would pass whether or not the inversion actually shipped,
+    which is the failure mode this project keeps recording."""
+    def old_growth_only(observed, base):
+        return sorted(k for k, n in observed.items() if n > base.get(k, 0))
+
+    shrunk = observe(sp=RATIFIED_SP_ROWS, rp=RATIFIED_RP_ROWS - 10)
+    assert old_growth_only(shrunk, BASELINE) == [], "the control is wrong, not the code"
+    assert arrivals(shrunk, BASELINE) == ["returning_production"]
 
 
 # --- the baseline cannot drift from the ratified record ------------------------------------------
@@ -107,6 +138,18 @@ def test_the_baseline_matches_the_row_count_recorded_in_the_spec_exception():
         f"SPEC §3.1 does not record {RATIFIED_RP_ROWS} returning-production rows"
     )
     assert BASELINE["returning_production"] == RATIFIED_RP_ROWS
+
+
+def test_the_sp_baseline_matches_the_row_count_recorded_in_exception_2():
+    """Same single-source-of-truth rule for the SP+ transition."""
+    spec = (ROOT / "docs" / "SPEC.md").read_text()
+    block = spec.split("Exception 2 —", 1)
+    assert len(block) == 2, "SPEC §3.1 exception 2 not found"
+    entry = block[1][:4000]
+    assert re.search(rf"\b{RATIFIED_SP_ROWS}\b", entry), (
+        f"SPEC §3.1 exception 2 does not record {RATIFIED_SP_ROWS} sp_ratings rows"
+    )
+    assert BASELINE["sp_ratings"] == RATIFIED_SP_ROWS
 
 
 # The specific language the process guarantee lives in. Substring-matching "sp_watch" and

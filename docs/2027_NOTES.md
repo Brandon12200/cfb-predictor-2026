@@ -243,13 +243,37 @@ point the failure-injection drill at first.
    different from what they meant at the freeze. **2027 must recalibrate the tier boundaries
    against a season where coverage is high throughout**, rather than inheriting boundaries fitted
    to a near-empty preseason.
-8. **An external source SHRINKING is unobserved.** `scripts/sp_watch.py` compares strictly `>` against
-   its ratified baseline, so it catches a source growing but not one losing rows. Nothing else covers
-   it: the fingerprint gate reads the pinned static vehicle (D29) and never re-queries CFBD, deliberately,
-   so `sp_watch` is the **only live observer of CFBD state in the codebase**. Accepted for 2026 because
-   it degrades safely — affected teams fall back to D10's tested flat-prior path — but a source silently
-   withdrawing rows mid-season would move model inputs with nothing prompting a review. 2027 should
-   observe both directions.
+
+   **Extended 2026-08-15 by SPEC §3.1 exception 2, and the extension sharpens the obligation.** The
+   SP+ transition moved tiers a *second* time and **in the opposite direction** (A 322 → 297,
+   C 10 → 31), through a **different channel**. Exception 1 ran through coverage lifting
+   data-availability-driven confidence (B1). Exception 2's coverage rose too (63.3% → 75.3%) but
+   per-game `data_quality` was **unchanged to four decimals** — the entire shift ran through the
+   **variance/disagreement** channel: `Sandwich` activating made `factors_analyzed` go 0 → 3 on 25
+   games, `variance_level` `insufficient_data` → `extreme`, and confidence fell 0.7368 → 0.4648
+   across all 25 movers (0.7365 → 0.4358 across the 21 that reached tier C).
+   So the boundaries are fitted to a preseason where **neither** channel resembled a real season:
+   coverage was low *and* too few factors were active for disagreement to be detectable at all.
+   2027 must recalibrate against a season with both channels live, and should treat
+   `insufficient_data` → `extreme` as a *transition* worth its own handling rather than a
+   confidence cliff.
+
+11. **The lean-side split's inline "thin away cell" caveat is calibrated to a distribution that no
+   longer holds.** `analytics/reports.py::_lean_block` says the away cell is thin, written when
+   preseason leans ran 195 home / 35 away (5.57:1). After SPEC §3.1 exception 2 they run
+   **205 / 67 (~3.06:1)** — the away cell roughly doubled. The caveat is not wrong, but it is no
+   longer calibrated, and D27's stratified reporting rests on it. Deliberately **not** fixed in
+   2026: `analytics/` was out of scope for the exception (owner ruling, 2026-08-15) and changing
+   report wording mid-season would break the comparability the reports exist to provide. 2027
+   should derive the thinness caveat from the observed cell size rather than hardcoding it.
+8. ~~**An external source SHRINKING is unobserved.**~~ **CLOSED 2026-08-15, in-season**, as part of
+   SPEC §3.1 exception 2's ratification. `arrivals()` moved from `>` to `!=`, so a source losing
+   rows now arms the probe exactly as growth does. Kept here rather than deleted because the
+   *reasoning* still applies: the fingerprint gate reads the pinned static vehicle (D29) and never
+   re-queries CFBD, so `sp_watch` remains the **only live observer of CFBD state in the codebase**.
+   **The accepted cost carries into 2027:** CFBD revises row counts routinely, so the probe now
+   fires on ordinary revisions and alarm volume rises. If 2027 finds that volume is spending the
+   alarm's credibility, the fix is a tolerance band, **not** a return to growth-only.
 9. **Node 20 runtime deprecation.** The pinned `actions/checkout@v4`, `setup-python@v5`,
    `cache@v4` and `upload-artifact@v4` warn on the runner; they need a major bump when GitHub
    retires Node 20.
