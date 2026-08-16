@@ -190,12 +190,20 @@ if _VEHICLE.exists():
           f"sha256 {_veh[:16]}… (pinned {_FROZEN_VEHICLE_SHA256[:16]}…) — if THIS moved, the "
           "gate's input changed, not the model; restore the vehicle rather than reading on")
 
-    # ⚠ UPDATED ONCE, under SPEC §3 exception 1 (2026-08-08) and a NEW tag — never as a way of
-    # making a red gate green. CFBD published preseason returning production, which D10 activates
-    # with no code change, and the same rebuild corrected a normalizer defect that had been
-    # fabricating games. Both are recorded in SPEC §3 with the measured delta. The superseded
-    # constant was eab7ffdb90df6fb549bbed0f9ebc291e00f710f592bc4e3699e41a3f52a20e2d over 330 games.
-    _FROZEN_SLATE_SHA256 = "1c5187eb9c2a5b7170717cd05aaaf99a93e74e202430b66f10194e7e4f490434"
+    # ⚠ UPDATED TWICE, each time under a SPEC §3.1 exception with a NEW tag — never as a way of
+    # making a red gate green. Both transitions were CFBD publishing an input that D10 activates
+    # with no code change; each is recorded in SPEC §3.1 with a measured delta.
+    #   exception 1 (2026-08-08, v2026-frozen-2): preseason returning production, plus a normalizer
+    #     defect that had been fabricating games. Superseded constant:
+    #     eab7ffdb90df6fb549bbed0f9ebc291e00f710f592bc4e3699e41a3f52a20e2d over 330 games.
+    #   exception 2 (2026-08-14, v2026-frozen-3): preseason SP+ ratings. `Sandwich` woke (114 of
+    #     338 games) and every preseason prior re-sourced returning_production -> sp+ (676/676).
+    #     Superseded constant:
+    #     1c5187eb9c2a5b7170717cd05aaaf99a93e74e202430b66f10194e7e4f490434 over 338 games.
+    # Note this gate CANNOT detect either event: it reads a committed vehicle (D29), so an external
+    # input change is invisible to it — measured under exception 2, where it passed in full with
+    # SP+ already live. `scripts/sp_watch.py` is the detector. See SPEC §3.1.
+    _FROZEN_SLATE_SHA256 = "b9c00a947cd539db62c6c11fd5550613543577159f5828c66de7435589882532"
     _FROZEN_SLATE_GAMES = 338
     _fp = _fingerprint()
     check(f"frozen-model behavioural fingerprint over the {_FROZEN_SLATE_GAMES}-game tracked "
