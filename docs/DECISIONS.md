@@ -544,3 +544,28 @@ The common thread: **a rule asserted is not a rule verified.** Each was a confid
 **After the first predicted event, or the first external reliance on a claim — whichever comes first — claims and history are permanently immutable, with NO override.** Not by owner ruling, not under a SPEC §3 exception, not for a defect. This void is the only one this project will ever perform, and it was legitimate solely because it preceded both conditions.
 
 **Rejected:** keeping the early claim (locks 11 of ~138 games as week 1's pre-registration for the whole season); rewriting history while keeping the claim (changes a byte-immutable claim commit's SHA — the one option that weakens the pre-registration story); a `.mailmap` (does not affect GitHub's contributor graph, which is computed from commit author emails on the default branch).
+
+### 7. What the rewrite did not reach, and how to check it (recorded 2026-08-16)
+
+**The rewrite changed what `main` reaches, not what the repository stores.** Both pre-rewrite
+commits remain retrievable from GitHub by SHA: `d54ac10` still carries
+`pipeline@users.noreply.github.com` and **still renders linked to the unrelated `pipeline`
+account**, and `dcaf4a3` — described above as "pruned" — also still resolves. Pruning removed them
+from the default branch's reachable history; it did not delete the objects.
+
+They survive because GitHub freezes pull-request refs and never garbage-collects them:
+`refs/pull/40/head` and `refs/pull/41/head` were created before the rewrite and still point at
+pre-rewrite commits. **GitHub support rebuilt this repository's contribution data on 2026-08-12 on
+request**, so the contributor graph no longer credits that account — but the graph and the object
+store are different things, and only the former was corrected.
+
+**The operational consequence: an exhaustive identity sweep requires `git clone --mirror`.** A
+normal clone does not fetch `refs/pull/*`, so it will enumerate only the rewritten history and
+report the repository clean when it is not. Any future audit that claims "no commit carries the old
+address" must state which of the two it checked.
+
+**Recorded alongside it, because it is the same class of unverifiable-from-the-repo claim:** PR #35
+(`fix-stale-tag-references`) carries **no durable `code-reviewer` artifact** — no GO in its body, no
+file under `docs/pr-summaries/`. It was reviewed in session, but from the repository alone that is
+unverifiable, and "every PR was reviewed" is exactly the kind of statement a context-free successor
+would otherwise take as established.

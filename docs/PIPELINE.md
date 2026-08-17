@@ -5,7 +5,7 @@ fails, and why several non-obvious choices are the way they are. Written so a se
 conversational context can operate or repair the pipeline.
 
 **Binding refinements live in `docs/PHASE5_NOTES.md`; owner decisions in `docs/DECISIONS.md`
-(D29–D36).** Where SPEC §10's original sketch and `PHASE5_NOTES` differ, `PHASE5_NOTES` wins.
+(D29–D38).** Where SPEC §10's original sketch and `PHASE5_NOTES` differ, `PHASE5_NOTES` wins.
 
 ---
 
@@ -152,8 +152,10 @@ The `.invalid` domain is deliberate and must not be "tidied up" into a real-look
 and the author renders **unlinked** — the honest rendering for a machine. D30's original address
 (`pipeline@users.noreply.github.com`) used GitHub's legacy `<username>@users.noreply.github.com`
 form and resolved to a real, unrelated user, so every machine commit showed a stranger's avatar.
-Pinned by `tests/test_pipeline_commit_identity.py`. **Commits made before 2026-08-11 keep the old
-address** — history is not rewritten (see the D30 as-built amendment).
+Pinned by `tests/test_pipeline_commit_identity.py`. **History WAS rewritten**: the one commit that
+carried the old address, `d54ac10`, was rewritten to `745b1cf` under D38 — superseding the D30
+as-built amendment's "history is not rewritten" ruling, which was reversed hours after it was
+written once the topology proved the rewrite moved no tag. See D38 §3 and §7.
 
 ---
 

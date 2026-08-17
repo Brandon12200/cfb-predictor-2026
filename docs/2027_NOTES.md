@@ -285,3 +285,46 @@ point the failure-injection drill at first.
    unconditionally while the *human* CLI path (`cli/cfb.py::_save_slate`) had refused since 4.5.
    The byte-immutable guarantee therefore held for the interactive path and not for the automated
    one — the reverse of where it matters. Now enforced at the shared seam, scoped to the claim tier.
+
+### Carry-forward from the second `pipeline-adversary` audit (2026-08-16, pre-Rehearsal-0)
+
+Numbering continues the list above; see item 16 on why the sequence is not tidied.
+
+12. **`sp_watch` transition issues never close, and the dedupe signature is static.**
+    `clear-failure` only ever clears `kind: failure` (`.github/actions/clear-failure/action.yml`
+    default, and freeze-integrity passes it explicitly) — correct for a genuine arrival, which a
+    later green run does not "recover". But `arrivals()` now uses `!=`, so an ordinary CFBD row-count
+    revision trips the same path, and the 24h cadence exceeds the 6h comment cooldown. The
+    cooldown's escape hatch does not help: the signature is the log's last non-empty line, and
+    `sp_watch`'s body always ends with the same static paragraph, so two different arrivals collapse
+    to one signature. Net: one permanently-open issue accruing a daily comment.
+    **Owner ruling (2026-08-16): accepted as re-described.** The resolution pattern is
+    measure → rule → baseline-update PR carrying `Closes #NN`; the interim daily comments are the
+    designed nag, not a defect.
+13. **`docs/HANDOFF_REHEARSALS.md` is stale** — it names `v2026-frozen-2` and quotes the `sp_watch`
+    baseline as `{"sp_ratings": 0, "returning_production": 136}`, and frames SP+ as a future risk.
+    All superseded by exception 2. It is the designated onboarding doc, so a context-free successor
+    reading it literally would misjudge pipeline state.
+14. **`docs/PIPELINE.md` §5 describes a superseded quota mechanism as current** — the `actions/cache`
+    restore of `data/odds_quota.json`, replaced by the committed append-only `data/quota/` ledger.
+15. **A timed-out job concludes `cancelled`, not `failure`**, so `if: failure()` never fires and no
+    issue opens — against §4's promise that a failed run always reports. Narrow (20-minute budget,
+    steps complete in seconds) but real.
+16. **Cross-week reschedules freeze a stale close.** Daily capture scopes to the current calendar
+    week's slate, so a game postponed into the next week is never targeted again and its
+    `closing_observation` stays at whatever was captured before the move.
+17. **`docs/PIPELINE.md` §9 carries a superseded skew figure** — `195 home / 35 away — 5.57:1`.
+    Post-exception-2 the measured split is **205 / 67 ≈ 3.06:1**. The structural argument is
+    unaffected; only the numbers are stale.
+18. **The populated-grade Tuesday ordering is structurally unrehearsable.** Rehearsal 0 proved the
+    `snapshot:` → `predictions:` tiers but could not produce a `grading:` commit, because none can
+    exist until a week has been graded — the never-create-empty-commits rule meeting a preseason.
+    First opportunity is **Tuesday 2026-09-01**, conditional on a game finishing after the Sunday
+    grade. Until then the three-commit taxonomy is asserted by tests, not by a live run.
+19. **§8's own numbering is scrambled** (it runs 1–5, 7, 11, 9, 10, 6, then this block).
+    **Do not renumber before the 2027 rebuild.** The exception-2 commit message (`c89d625`) cites
+    an item *by number* — "recorded in 2027_NOTES §8 item 8" — and **a commit message cannot be
+    edited**, so a renumber would strand that citation permanently with no way to correct it.
+    `docs/DECISIONS.md` D38 §4 refers to item 6's *content* in prose but does **not** cite a number,
+    so it is unaffected. Tidy the sequence only at the 2027 rebuild, and only after checking for
+    by-number citations in commit messages as well as documents.

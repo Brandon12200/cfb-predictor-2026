@@ -48,6 +48,7 @@ Hypothetical: TEXAS @ OHIO STATE — priced from 2026 week 1 snapshot (87e472ff1
   Confidence    : LOW
   Caveats:
     - Early season (week 1 ≤ 3): ratings unsettled; rating signal capped at 40%. Treat as low confidence.
+  ...
 ```
 
 The number decomposes: where it came from, how much weight the rating carries, and why. Note what it
@@ -66,6 +67,7 @@ BAYLOR @ AUBURN              -7.2   0.833   NO_BET
 BOSTON COLLEGE @ CINCINNATI  -7.5   0.833   NO_BET
 CLEMSON @ LSU                -9.4   0.833   NO_BET
 COLORADO @ GEORGIA TECH      -6.9   0.833   NO_BET
+...
 ```
 
 Every game says `NO_BET`. The model only picks when the edge clears its threshold, and before any
@@ -82,6 +84,7 @@ coverage: 426/566 present (75.3%), 140 missing
   sp_ratings      source=cfbd   count=139
   advanced_stats  source=cfbd   count=0
   season_stats    source=cfbd   count=0
+  ...
 ```
 
 `advanced_stats` and `season_stats` are `0` because no 2026 games have been played. They read as
