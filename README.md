@@ -1,237 +1,237 @@
-# CFB Contrarian Predictor — 2026
+# CFB Predictor — 2026
 
-A college football spread model built as a research instrument, not a betting product. Each week it makes one falsifiable claim — where the market's number is wrong — writes that claim to git *before* kickoff, and grades itself after the games. The weights are frozen before the season starts and never touched again. The question it exists to answer is a narrow, honest one: can a disciplined, rule-based model beat the closing line without fooling itself?
+A college football spread model that commits each week's predictions to this public repository
+**before kickoff**, then grades itself in the open.
 
-Two things make it more than a list of picks:
+The model is rule-based, and its weights are locked behind a git tag before the season starts.
+Nothing is tuned after the fact. The commit timestamps are the evidence — **the audit trail is the
+product**, not the picks. 2026 is the first season run under this discipline end to end; the first
+claim is committed **2026-08-25**.
 
-- **A frozen, pre-registered model.** Factor weights, activation thresholds, and confidence tiers are calibrated from prior-season evidence and then locked behind a git tag before Week 1. No mid-season tuning, no fitting to results. A wrong assumption gets exposed cleanly instead of quietly patched.
-- **An independent power rating.** Alongside the contrarian factor system, an in-house Elo prices any matchup from current-season games — real or hypothetical — and the gap between that number and the market is a logged diagnostic rather than a hidden knob.
+It's built for three kinds of reader: someone following a public forecasting experiment week to
+week; someone who wants to price a matchup, real or hypothetical, and see the reasoning; and anyone
+curious whether a disciplined rule-based model can beat closing betting lines without fooling
+itself.
 
-## Why it might interest you
+**Status: the pipeline is live; the first claim commits Tuesday 2026-08-25.** The model is frozen at
+`v2026-frozen-3` and the automation runs itself on GitHub Actions, with no human in the loop:
 
-Most "beat the spread" projects are backtests: tune the parameters until the historical curve looks good, then publish the curve. That process manufactures its own evidence. This one inverts it. The model is committed, timestamped, and frozen; the season is the test set; the git history is the receipt. If it is wrong, the record says so.
-
-Measurement is built around **closing line value** — did the model's number beat where the line actually closed — rather than raw win rate, because CLV is the signal that survives small samples and separates skill from variance. Everything else (calibration curves, per-factor attribution, bet-or-skip selectivity) exists to answer "which parts actually worked," so the next version is revised from evidence instead of intuition.
-
-## The 2025 baseline
-
-A predecessor model ran frozen through the 2025 season. Its original scorecard reported **57.0% against the spread and +8.82% ROI** over 300 games — and re-grading that record with this repository's own measurement code is precisely why the numbers below are different, and why the rebuild exists.
-
-The original figure came from a script that asked "did the home team beat the model's *own* number?" and counted 171 of 300. That measures the model's directional bias, not a wager you could place: it always bets the home side, and it grades against the model's own spread rather than the market. Graded as an actual strategy — the side the model favored, against the Vegas line, the way you would really bet — the 2025 model went:
-
-| Metric | 2025 (Weeks 1–14, 294 graded bets) |
+| When | What happens |
 |---|---|
-| Against the spread | 46.6% |
-| ROI at −110 | −11.0% |
+| **Tuesday** | grade anything that finished, rebuild the data snapshot, commit the week's predictions **before kickoff** |
+| **Wed–Fri** | capture betting lines once daily |
+| **Saturday** | four capture waves through the day, ahead of each kickoff window |
+| **Sunday** | fetch finals, grade, regenerate reports |
+| **Daily** | check the frozen code still matches its tag; watch for upstream data changes |
 
-That is below break-even (~52.4% at −110). The 95% interval on 46.6% is roughly **41–52%**; the season does not establish that the model beat the market, and the honest reading is that its apparent edge was largely a measurement artifact. There are **no 2026 performance figures** in this repository, and none will appear until games are played and graded in the open. Nothing here is a profit claim.
+**Following along without cloning anything:** each week's claim appears in
+[`data/predictions/`](data/predictions/) on Tuesday, and the graded report appears in
+[`reports/`](reports/) as `2026_week_NN.md` on Sunday. Neither exists for 2026 yet — **the first
+claim lands Tuesday 2026-08-25, the first graded report Sunday 2026-08-30.** Until then, the only
+rendered report is [`reports/2025_retro.md`](reports/2025_retro.md), the predecessor season regraded
+(see [the record](#the-record)).
 
-The reframe is the point. This is a worse result for the old model and a better one for the project: the measurement was made trustworthy enough to overturn its own headline. The harness that produced the 46.6% lives in `analytics/calibration_evidence.py`, every number here is reproducible (see the guided tour), and the 2026 season is the real test — a recalibrated model, frozen in advance, graded under measurement that cannot flatter it.
+## See it run
 
-## Design principles
+*Outputs below were captured 2026-08-16 and are real, keyless, from the snapshot committed in this
+repo. Snapshots rebuild every Tuesday, so exact numbers will drift — this section is designed to
+age.*
 
-- **Calibrated freeze.** Prior-season data — a 300-game archive of *market-mispricing* outcomes, not team quality — sets weights and thresholds by reasoning and evidence, never by grid-searching a backtest (the overfitting this project exists to avoid). Every constant is recorded in `docs/CALIBRATION_LOG.md` with its supporting evidence, an evidence class (measured from data vs. reasoned from domain knowledge), and the old→new change, and is ratified before the freeze.
-- **Data recency.** Team-quality inputs use current-season data only. Prior seasons are allowed for exactly two things: modeling market behavior, and roster-continuity-aware preseason priors. A team is judged on who it is now, not who it was.
-- **Provenance everywhere.** The engine reads only versioned weekly snapshots. Every field records where it came from and when; missing data is recorded as missing, never quietly replaced with a neutral value, so a real number is always distinguishable from a gap. Two runs over the same snapshot are byte-for-byte identical.
-- **Append-only audit trail.** Predictions, results, ratings, and line observations are write-once historical artifacts, protected by commit-time hooks. The history is the product.
+**Price any matchup**, including one that isn't scheduled:
 
-## What the system does
+```
+$ cfb hypothetical "Texas vs Ohio State" --show-factors
+Hypothetical: TEXAS @ OHIO STATE — priced from 2026 week 1 snapshot (87e472ff1fe3)
+  Model spread : OHIO STATE -6.5
+  Components    : rating +4.0 (weight 40%, uncertainty 1.00) | home field +2.5 | schedule +0.0
+  Ratings       : OHIO STATE 2154 (sp+) | TEXAS 1956 (sp+)
+  Confidence    : LOW
+  Caveats:
+    - Early season (week 1 ≤ 3): ratings unsettled; rating signal capped at 40%. Treat as low confidence.
+```
 
-**The contrarian model.** It starts from the Vegas spread and applies a fixed-weight set of factors — physical and scheduling signals (rest, travel, altitude, short weeks, byes), situational ones (revenge, lookahead, desperation), and coaching and market-structure signals — to produce its own number. The edge is the disagreement. Situational factors, historically the noisiest, must be corroborated by an independent signal before they fire, and a marginal edge resolves to an explicit **NO_BET** rather than a coin-flip wager.
+The number decomposes: where it came from, how much weight the rating carries, and why. Note what it
+refuses to do — with no 2026 games played it caps the rating's influence and calls its own
+confidence LOW, rather than manufacturing a number.
 
-**The power rating.** An independent in-house Elo, built only from current-season results with roster-continuity preseason priors, prices any matchup: `price(home, away, venue, date) → model spread`. One function drives three features — a **model-vs-market diagnostic** on real games, a **hypothetical mode** ("what does the model make of Texas at Oregon in November?"), and **season win-total projections** with week-over-week belief drift. Projections are labeled experimental and never drive a recommendation.
+**The weekly artifact** — the slate, with a recommendation per game:
 
-## How a season runs
+```
+$ cfb slate 1
+Week 1 slate — 11 game(s) with a line
 
-The finished weekly loop is zero-touch, on a schedule, via GitHub Actions:
+MATCHUP                      VEGAS  DATA_Q  REC
+---------------------------  -----  ------  ------
+BAYLOR @ AUBURN              -7.2   0.833   NO_BET
+BOSTON COLLEGE @ CINCINNATI  -7.5   0.833   NO_BET
+CLEMSON @ LSU                -9.4   0.833   NO_BET
+COLORADO @ GEORGIA TECH      -6.9   0.833   NO_BET
+```
 
-- **Tuesday — grade, then predict.** Catch up on any games that finished since the last grade (Sunday/Monday finishers, postponements), then fetch the slate, build the snapshot, run the engine, and commit the week's predictions to git *before* kickoff. The claim is committed on its own, and that commit's timestamp is the tamper-evident record.
-- **Wednesday–Saturday — closing lines.** Capture spreads daily, plus four waves through Saturday ahead of the noon / 3:30 / 7:00 / 10:30 ET kickoff windows. Each game's close is the last observation before *that game's* own kickoff, so a late-night kickoff isn't graded against a stale morning number. Observations are appended; the prediction is never edited.
-- **Sunday — grade.** Fetch final scores, compute ATS outcomes and CLV, regenerate the reports, and commit — results, grades and reports as separate commits, because they are different kinds of artifact.
+Every game says `NO_BET`. The model only picks when the edge clears its threshold, and before any
+games are played it never does — so this is selectivity visible in the output, not a failure.
+[Grading](#how-it-is-graded) explains why the preseason edge cannot clear it.
 
-A failed step opens a GitHub issue with logs and closes it again on recovery; the pipeline is idempotent, and any run can be reproduced from the cached snapshot with zero API calls and identical output. `docs/PIPELINE.md` is the operating manual.
+**Missing data is recorded as missing**, never filled with a neutral guess:
 
-## Measurement
+```
+$ python scripts/inspect_snapshot.py --week 1
+snapshot 87e472ff1fe3adc9  (2026 week 1)
+coverage: 426/566 present (75.3%), 140 missing
+  betting_lines   source=odds   count=111
+  sp_ratings      source=cfbd   count=139
+  advanced_stats  source=cfbd   count=0
+  season_stats    source=cfbd   count=0
+```
 
-- **CLV** is the primary KPI — per bet and aggregate, overall and by confidence tier.
-- **Calibration** — a Brier score and a reliability curve by tier: did 70%-confidence picks win about 70% of the time?
-- **Attribution** — when a given factor fired, what were its ATS% and CLV? This is what keeps the next calibration honest.
-- **Selectivity** — NO_BET games are still graded (what would have happened), so skipping is measured, not assumed.
+`advanced_stats` and `season_stats` are `0` because no 2026 games have been played. They read as
+absent, not zero — so the engine can always tell a real number from a gap.
 
-## Quickstart
+Run `./demo.sh` for a longer guided tour. Everything above works with no API keys.
+
+## The record
+
+**The 2026 record does not exist yet, and that is the design.**
+[`data/predictions/`](data/predictions/) holds no 2026 file, because a prediction cannot be written
+before the claim window opens. **The first one lands Tuesday 2026-08-25** — committed before that
+week's games, timestamped by the commit, and byte-immutable afterwards. From that point the
+guarantee is checkable by anyone: compare the commit date against the kickoff.
+
+One 2026 artifact is already accumulating: **[`data/lines/`](data/lines/)** — append-only betting-line
+observations, captured daily, and the raw material closing-line value is computed from. It fills in
+between each Tuesday claim and the Sunday grade.
+
+**The 2025 files in `data/predictions/` are inherited, not pre-registered here.** They are the
+predecessor model's forward-test record, imported wholesale in a single commit roughly ten months
+after those games were played, so their timestamps in this repository prove nothing and are not
+offered as evidence of anything. They are here because regrading them honestly — it was a losing
+season — is the reason this rebuild exists.
+
+- **[`reports/2025_retro.md`](reports/2025_retro.md)** — that season graded end to end by this
+  repo's own code, split by lean side, CLV recorded as honest-missing because 2025 captured no
+  closing lines.
+- **[`data/archive/2025/`](data/archive/2025/)** — the archived record and its provenance note.
+- **[`data/results/`](data/results/)** — the outcomes those grades were computed from.
+
+**2025 is inherited evidence. 2026 is the experiment.** The verify-it-yourself claim below applies
+to 2026 onward, where this repository's own machinery enforces it.
+
+## How it is graded
+
+Three terms, once. The **closing line** is the final betting spread before kickoff — the market's
+best guess, and the fairest available benchmark. **CLV** (closing line value) is whether the model's
+number beat that line. **ATS** ("against the spread") is whether a pick would have won relative to
+the spread.
+
+- **CLV is the primary measure, not win rate.** It is the signal that survives small samples. A
+  season is ~14 weeks; win rate over that is mostly noise.
+- **Results are split by which side the model leaned — never one blended number.** The model's
+  schedule factors can only ever penalise the visitor, so it leans home far more often than away. A
+  single blended figure over that skew measures the skew, not the model. Every report also grades a
+  naive "always take the home team" baseline over the same games, so the model is measured against
+  something rather than against zero.
+- **Skipped games are still graded.** When the edge is too small the model outputs `NO_BET`, and the
+  report records what would have happened anyway — selectivity is measured, not assumed.
+
+*In the preseason, every game prices to `NO_BET` — by design.* The factors nudge the market's
+number, they don't replace it, and the maximum total adjustment the factor set can produce is
+structurally bounded. Before any games are played the achievable edge sits far below the threshold
+required to make a pick, so the model declines. That bound is measured and documented, not asserted
+— see [`docs/CALIBRATION_LOG.md`](docs/CALIBRATION_LOG.md).
+
+## What is guaranteed
+
+**From 2026 onward, every prediction in this repository is committed before kickoff — and you can
+verify that yourself from the commit history.** That is the whole promise, and the scope is
+deliberate: the imported 2025 files carry no such guarantee (see [the record](#the-record)), so the
+claim is made only where this repository's machinery enforces it. Everything below is how it is
+kept.
+
+- **Missing data is recorded as missing.** Never neutral-filled, so a real value is always
+  distinguishable from a gap.
+- **Selectivity is an output, not an excuse.** `NO_BET` is a first-class result and is graded like
+  any other.
+- **Measurement lives outside the freeze.** `analytics/` can improve; the model it measures cannot.
+- **The record is immutable.** `data/predictions/` is byte-immutable — a claim is never edited,
+  because its timestamp *is* the claim, and no file in it has been modified since it was written.
+  Results and line observations are append-only. Reports are regenerable renderings of them. Commit
+  hooks enforce this, not convention.
+
+**How the freeze is enforced.** When a season tag is cut, `factors/` and `engine/` become fixed:
+commit hooks block edits locally, every automated run re-checks the directory tree hashes against
+the tag, and a behavioural fingerprint hashes what the model actually *produces* over a fixed slate
+of games. Path protection alone is not enough, because a prediction depends on the data the model
+reads as well as its code — so both are checked. Every prediction records the exact build that
+produced it.
+
+**Why there are three tags.** Every prediction records the model version that produced it, and the
+model's inputs changed twice during the preseason — before any game had been predicted. Each change
+was measured, ratified and given a **new tag** rather than quietly absorbed; both are documented
+with their measured deltas in [`docs/SPEC.md`](docs/SPEC.md) §3.1.
+
+Commits authored by `cfb-pipeline` are automated writes from the season pipeline (GitHub Actions) —
+see [`docs/PIPELINE.md`](docs/PIPELINE.md). Solo project otherwise.
+
+## Getting started
+
+Requires **Python 3.11+**. No API keys needed for any of this.
 
 ```bash
 git clone https://github.com/Brandon12200/cfb-predictor-2026.git
 cd cfb-predictor-2026
-make install          # editable install with dev tools
-make test             # full offline test suite
+make install    # editable install, with dev tools
+make test       # full suite — offline, no credentials
 ```
 
-API keys go in `.env` (both have usable free tiers):
+The suite is fully offline — network calls are blocked in tests — so a fresh clone runs green with
+no setup beyond `make install`.
+
+**Keys are only needed to fetch new data.** To rebuild a snapshot or capture live lines, add a
+`.env` (both providers have usable free tiers):
 
 ```
-CFBD_API_KEY=...   # collegefootballdata.com — schedules, stats, ratings, historical lines
-ODDS_API_KEY=...   # the-odds-api.com — prediction-time and closing spreads
+CFBD_API_KEY=...   # collegefootballdata.com — schedules, stats, ratings
+ODDS_API_KEY=...   # the-odds-api.com — betting lines
 ```
 
-Commands that run today:
+Without them, everything that reads committed data works normally; `cfb status` notes the missing
+key and still runs.
 
-```bash
-cfb status                                     # health, freeze state, quota
-cfb slate 1                                    # the week's FBS-vs-FBS games with a line
-cfb predict week 1                             # price the slate (NO_BET games included)
-cfb hypothetical "Texas vs Ohio State" --show-factors
-cfb project --team "Georgia"                   # experimental season projections + drift
-python scripts/build_snapshot.py --week 1      # cache a week's inputs as a snapshot
-make verify-phase-1                            # executable acceptance checks for a phase
-```
+## Commands
 
-`cfb` is the human interface and shipped in Phase 4.5; `main.py` survives as a deprecation shim for
-one release. The **automation calls `scripts/*.py` directly** — those are the canonical entry
-points (`docs/PIPELINE.md`). Run `./demo.sh` for a guided tour, or `cfb --help` for the full set.
+`cfb --help` lists the full set.
 
-## A guided tour
+| Command | Does |
+|---|---|
+| `cfb status` | freeze state, build stamp, data-source health, API quota |
+| `cfb slate 1` | week 1's games with a line, and the call on each |
+| `cfb predict week 1` | price the slate, `NO_BET` games included |
+| `cfb hypothetical "A vs B"` | price any matchup, real or invented |
+| `cfb project --team "Georgia"` | season win-total projections — **experimental; never drives a recommendation** |
+| `python scripts/inspect_snapshot.py --week 1` | what the engine can see, and what is missing |
+| `python scripts/slate_fingerprint.py` | hash of the frozen model's output — the behavioural freeze check |
 
-Everything below runs offline against the committed Week-1 snapshot (`data/snapshots/2026_week_01/`), and every block is real output — pasted from the command, trimmed with `...` where long, never hand-edited. It helps to know *when* that snapshot was taken: early July, before any 2026 game is played and before the providers post preseason ratings. So the model knows almost nothing yet — and says so. That honesty is the demo.
+The automation calls `scripts/*.py` directly rather than the CLI — those entry points and the
+weekly choreography are documented in [`docs/PIPELINE.md`](docs/PIPELINE.md); the verification and
+build targets are in the `Makefile`. (`scripts/build_predictions.py` is claim-gated to a pre-kickoff
+window.)
 
-**What the engine reads.** No API calls at prediction time — one versioned snapshot, every field stamped with its source and time.
+## Documentation
 
-```
-$ python scripts/inspect_snapshot.py --week 1
-snapshot c86311adcba8c096  (2026 week 1, built 2026-07-03T23:37:10...)
-coverage: 220/564 present (39.0%), 344 missing
-
-sources:
-  betting_lines    source=odds  count=78   quota={'remaining': 481, 'used': 19}
-  games            source=cfbd  count=888
-  sp_ratings       source=cfbd  count=0
-  returning_production source=cfbd  count=0
-  ...
-team field-group coverage:
-  sp_rating            {'missing': 68}
-  returning_production {'missing': 68}
-  venue                {'registry': 68}
-  ...
-```
-
-Coverage is 39%, and the gaps are recorded as gaps: preseason SP+ and returning production aren't posted yet (`count=0`, `missing`), so they are absent, not faked. The engine can always tell a real number from a hole.
-
-**Pricing a matchup.** Ask it for a marquee game:
-
-```
-$ cfb hypothetical "Texas vs Ohio State" --show-factors
-Hypothetical: TEXAS @ OHIO STATE — priced from 2026 week 1 snapshot (c86311adcba8)
-  Model spread : OHIO STATE -2.5
-  Model favors : OHIO STATE by 2.5
-  Components    : rating +0.0 (weight 40%, uncertainty 1.00) | home field +2.5 | schedule +0.0
-  Ratings       : OHIO STATE 1500 (flat) | TEXAS 1500 (flat)
-  Confidence    : LOW
-  Caveats:
-    - No preseason prior for one/both teams (SP+ & returning production unposted) — rating starts at baseline.
-    - Early season (week 1 ≤ 3): ratings unsettled (uncertainty 1.00); rating signal capped at 40%. Treat as low confidence.
-  Schedule factors (points, + favors home):
-    (none active)
-  ...
-```
-
-The number is Ohio State −2.5 — and all of it is home field. Both teams sit at the flat baseline (1500), the rating signal is capped because uncertainty is maxed, and the output says so plainly. A model that invented a confident spread here would be lying; this one tells you it has no team-quality signal yet. In October, with real games banked, the same command yields a real rating differential.
-
-**Season projections.** The same pricer, run over every remaining game, rolls up win totals:
-
-```
-$ cfb project
-Season projections — 2026 as of week 1 (EXPERIMENTAL — never drives bets; SPEC §6.5)
-  (only one week of projections so far — drift begins once week 2 exists.)
-  TEAM                  RATING  PROJ W    ΔWK   ΔPRE
-  USC                     1500    6.89      —      —
-  NORTHWESTERN            1500    6.25      —      —
-  NORTH DAKOTA STATE      1500    6.24      —      —
-  MICHIGAN                1500    6.21      —      —
-  ...
-```
-
-Every team projects near .500 because every rating is still flat — the spread you see is schedule shape (how many games, how many at home), not team quality. That is the honest preseason state, not a bug; the feature is the time-lapse, as the `ΔWK`/`ΔPRE` drift columns fill in from Week 2 and teams separate. Drilling into one team shows the per-game reasoning:
-
-```
-$ cfb project --team "Georgia"
-GEORGIA — 2026 projection as of week 1 (EXPERIMENTAL)
-  rating 1500 (uncertainty 1.00) | record 0-0 | remaining 11 | projected 5.69-5.31
-   WK OPP                  SITE      SPREAD   WIN%  RESULT
-    2 WESTERN KENTUCKY     home        -4.5    61%
-    3 ARKANSAS             away        +2.1    45%
-    ...
-    9 FLORIDA              neutral     -0.0    50%
-```
-
-Road games take a home-field penalty, the neutral-site game prices to a coin flip — the mechanics are visible even while the ratings behind them are still empty.
-
-**The evidence the model is calibrated against.** The frozen weights are calibrated against the 300-game 2025 archive where it has evidence, and by documented reasoning where it doesn't (most physical-factor coefficients are the latter — the calibration log labels every constant as measured or reasoned). The harness reports the archive without flattering it:
-
-```
-$ python scripts/build_calibration_evidence.py
-2025 calibration evidence — 294 graded (win/loss) of 300 joined, 6 pushes
-  CLV: unavailable — the 2025 archive has no closing lines
-
-OVERALL
-  all            n=294  ATS=46.6%  [95% 41%–52%]  (137-157-6)
-
-By confidence
-  60-70          n=293  ATS=46.8%  [95% 41%–52%]  (137-156-6)
-  70-80          n=1    ATS=0.0%   [95% 0%–79%]   (0-1-0)
-  ...
-By predicted edge
-  <1             n=155  ATS=46.5%  ...
-  1-2            n=139  ATS=46.8%  ...
-```
-
-This is the 46.6% from the baseline section, shown here in its detail — and every slice is a lesson for the rebuild. The confidence score barely moved (293 of 294 bets fell in one 60–70 bucket), so the tiers didn't separate good bets from bad. The edges were all tiny (nothing above 2 points), so the model was betting marginal disagreements. Both point the same way: be selective enough to skip the marginal bets (`NO_BET`), make confidence tiers that actually mean something, and lean on the physical factors that held up. And note the harness's own instruction — read the intervals, not the point estimates; on 40–60-game cells they are wide.
-
-Every command here is reproducible: rerun any of them and the output is byte-identical, with no API calls.
-
-## Repository map
-
-```
-engine/         power rating (Elo), matchup pricer, prediction engine, confidence
-factors/        fixed-weight factor calculators + registry (the frozen model)
-analytics/      freeze-exempt tooling: season projections, calibration evidence
-data/
-  snapshots/    versioned weekly input bundles — the only thing the engine reads
-  registry/     season team registry (membership, venues, aliases)
-  lines/        append-only "as-of" line observations (closing lines, CLV)
-  ratings/      per-week power ratings (derived)
-  projections/  per-week season win-total projections (experimental)
-  predictions/  +  results/   pre-kickoff predictions and graded outcomes (append-only)
-  archive/2025/ the frozen 2025 forward-test record
-docs/           SPEC (the build plan), DECISIONS, CALIBRATION_LOG, SCHEMA, CODE_AUDIT
-scripts/        snapshot / ratings / projection builders, accuracy tools, verify targets
-```
-
-Key docs: **SPEC.md** is the authoritative build plan; **DECISIONS.md** logs binding choices; **CALIBRATION_LOG.md** records every frozen constant with its evidence; **SCHEMA.md** defines the data contracts; **CODE_AUDIT.md** tracks what each slice changed.
-
-## Status
-
-The system is being built in phases against `docs/SPEC.md`. This table is the honest ledger: the prose above describes the design, and here is what is actually merged to `main`.
-
-| Phase | Scope | State |
-|---|---|---|
-| 0 | Repo hygiene, audit, packaging, week-inference fix | Done |
-| 1 | Snapshot-first data layer, team registry, schedule intelligence, closing-line capture | Done |
-| 1.5 | Injury/availability reports, line-movement history | Planned |
-| 2 | In-house Elo power rating, matchup pricer, hypothetical mode, season projections | Done |
-| 3 | Factor system v2: physical reweight, corroboration, NO_BET, confidence tiers, schema v2 | In progress (foundations merged) |
-| 4 | Measurement: CLV, calibration, per-factor attribution, weekly reports | Planned |
-| 4.5 | `cfb` subcommand CLI | Planned |
-| 5 | Zero-touch GitHub Actions pipeline | Planned |
-| 6 | Stretch: shadow ML model, local LLM advisory layer, static dashboard | Planned |
-
-## 2025 audit trail
-
-The full 2025 record lives in `data/archive/2025/` with a provenance note. The original 2025 repository is private and will not be linked, so the prediction and result JSONs are imported here to keep the audit trail attached to this repo. From 2026 onward the automated pipeline commits predictions before kickoff and results after games, so future audit trails are generated automatically.
+| Doc | What it is |
+|---|---|
+| [`docs/SPEC.md`](docs/SPEC.md) | the contract — what gets built, and what "done" means |
+| [`docs/DECISIONS.md`](docs/DECISIONS.md) | every binding decision with its reasoning, superseded rather than edited |
+| [`docs/PIPELINE.md`](docs/PIPELINE.md) | the operating manual for the automation |
+| [`docs/CALIBRATION_LOG.md`](docs/CALIBRATION_LOG.md) | every frozen constant, with the evidence for it |
 
 ## Non-goals
 
-By design (SPEC §12), this project does **not** place bets or integrate with sportsbooks, change the model in-season after the freeze, optimize weights by fitting to past outcomes, or model player props, totals, or moneylines. It is a research tool. Nothing here is betting advice.
+This project does not place bets or integrate with sportsbooks, does not change the model in-season
+after the freeze, does not optimise weights by fitting to past outcomes, and does not model player
+props, totals, or moneylines. It is a research instrument and a portfolio project — **nothing here
+is betting advice, and there are no profit claims anywhere in this repository.**
 
 ## License
 
-MIT
+MIT — see [`LICENSE`](LICENSE).
