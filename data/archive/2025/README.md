@@ -1,14 +1,16 @@
 # 2025 Season Archive
 
-Frozen copy of the 2025 forward-test prediction and result JSONs — the audit
-trail behind the project's credibility claim (300 games, 57.0% ATS, +8.82% ROI
-at -110; see the root `README.md`).
+Frozen copy of the 2025 forward-test prediction and result JSONs — the
+predecessor model's forward-test record. Its originally claimed result was
+retired as a measurement artifact by the honest regrade recorded in
+`docs/DECISIONS.md` (D17) and `reports/2025_retro.md`.
 
 ## Provenance
 
 - **Source:** produced by the 2025 model, frozen 2025-08-25 and run forward
-  through Week 14 with no algorithmic modifications. Predictions were committed
-  to git before each week's games; results recorded after.
+  through Week 14 with no algorithmic modifications. In that repository,
+  predictions were committed to git before each week's games; results recorded
+  after. Their commit timestamps here are the 2026 import, not the original.
 - **Origin repo:** the original 2025 repository is **private and will not be
   linked** (SPEC §16.5). These JSONs are imported here so the 2026 repo carries
   the audit trail directly (SPEC §4.3 / §16.5).
