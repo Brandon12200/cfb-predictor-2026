@@ -322,6 +322,9 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     First opportunity is **Tuesday 2026-09-01**, conditional on a game finishing after the Sunday
     grade. Until then the three-commit taxonomy is asserted by tests, not by a live run.
 19. **§8's own numbering is scrambled** (it runs 1–5, 7, 11, 9, 10, 6, then this block).
-    **Do not renumber before the 2027 rebuild:** `docs/DECISIONS.md` D38 §4 and the exception-2
-    commit message both cite §8 items *by number*, and renumbering would break citations inside the
-    permanent record. Tidy the sequence only when those citing documents are themselves rewritten.
+    **Do not renumber before the 2027 rebuild.** The exception-2 commit message (`c89d625`) cites
+    an item *by number* — "recorded in 2027_NOTES §8 item 8" — and **a commit message cannot be
+    edited**, so a renumber would strand that citation permanently with no way to correct it.
+    `docs/DECISIONS.md` D38 §4 refers to item 6's *content* in prose but does **not** cite a number,
+    so it is unaffected. Tidy the sequence only at the 2027 rebuild, and only after checking for
+    by-number citations in commit messages as well as documents.
