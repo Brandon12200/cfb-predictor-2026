@@ -8,10 +8,10 @@
     },
     "engine": "power_ratings",
     "experimental": true,
-    "generated_at": "2026-08-14T20:49:06.586901+00:00",
+    "generated_at": "2026-08-18T13:59:17.484025+00:00",
     "margin_sigma": 16.0,
     "schema_version": 1,
-    "snapshot_id": "87e472ff1fe3adc9",
+    "snapshot_id": "fa6e3c163c85c7c3",
     "week": 1,
     "year": 2026
   },
@@ -223,11 +223,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": 6.26,
+          "model_spread": 5.26,
           "neutral_site": false,
           "opponent": "WESTERN MICHIGAN",
           "week": 11,
-          "win_prob": 0.3478,
+          "win_prob": 0.3712,
           "won": null
         },
         {
@@ -252,8 +252,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 6.949,
-      "projected_wins": 4.051,
+      "projected_losses": 6.926,
+      "projected_wins": 4.074,
       "rating": 1042.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -661,11 +661,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -5.5,
+          "model_spread": -6.5,
           "neutral_site": false,
           "opponent": "HAWAII",
           "week": 6,
-          "win_prob": 0.6345,
+          "win_prob": 0.6577,
           "won": null
         },
         {
@@ -740,8 +740,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.857,
-      "projected_wins": 5.143,
+      "projected_losses": 5.834,
+      "projected_wins": 5.166,
       "rating": 1598.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -1331,11 +1331,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 8.82,
+          "model_spread": 7.82,
           "neutral_site": false,
           "opponent": "OHIO",
           "week": 12,
-          "win_prob": 0.2907,
+          "win_prob": 0.3125,
           "won": null
         },
         {
@@ -1350,8 +1350,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 7.097,
-      "projected_wins": 3.903,
+      "projected_losses": 7.075,
+      "projected_wins": 3.925,
       "rating": 998.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -2979,21 +2979,21 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": 2.42,
+          "model_spread": 1.42,
           "neutral_site": false,
           "opponent": "SAN DIEGO STATE",
           "week": 8,
-          "win_prob": 0.4399,
+          "win_prob": 0.4646,
           "won": null
         },
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.98,
+          "model_spread": 3.98,
           "neutral_site": false,
           "opponent": "UTAH STATE",
           "week": 9,
-          "win_prob": 0.3778,
+          "win_prob": 0.4018,
           "won": null
         },
         {
@@ -3028,8 +3028,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.959,
-      "projected_wins": 4.041,
+      "projected_losses": 5.91,
+      "projected_wins": 4.09,
       "rating": 1268.0,
       "rating_uncertainty": 1.0,
       "remaining": 10,
@@ -4647,11 +4647,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -7.86,
+          "model_spread": -8.86,
           "neutral_site": false,
           "opponent": "NEW MEXICO STATE",
           "week": 2,
-          "win_prob": 0.6884,
+          "win_prob": 0.7101,
           "won": null
         },
         {
@@ -4677,11 +4677,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 5.5,
+          "model_spread": 6.5,
           "neutral_site": false,
           "opponent": "ARIZONA STATE",
           "week": 6,
-          "win_prob": 0.3655,
+          "win_prob": 0.3423,
           "won": null
         },
         {
@@ -4746,8 +4746,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.319,
-      "projected_wins": 6.681,
+      "projected_losses": 5.32,
+      "projected_wins": 6.68,
       "rating": 1448.0,
       "rating_uncertainty": 1.0,
       "remaining": 12,
@@ -8977,11 +8977,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.1,
+          "model_spread": -5.1,
           "neutral_site": false,
           "opponent": "SAN JOSE STATE",
           "week": 8,
-          "win_prob": 0.6011,
+          "win_prob": 0.625,
           "won": null
         },
         {
@@ -9036,8 +9036,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.928,
-      "projected_wins": 5.072,
+      "projected_losses": 5.904,
+      "projected_wins": 5.096,
       "rating": 1266.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -9109,11 +9109,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": -3.78,
+          "model_spread": -2.78,
           "neutral_site": false,
           "opponent": "SAN JOSE STATE",
           "week": 9,
-          "win_prob": 0.5934,
+          "win_prob": 0.569,
           "won": null
         },
         {
@@ -9158,8 +9158,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 4.799,
-      "projected_wins": 6.201,
+      "projected_losses": 4.823,
+      "projected_wins": 6.177,
       "rating": 1500.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -9181,11 +9181,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 7.86,
+          "model_spread": 8.86,
           "neutral_site": false,
           "opponent": "HAWAII",
           "week": 2,
-          "win_prob": 0.3116,
+          "win_prob": 0.2899,
           "won": null
         },
         {
@@ -9280,8 +9280,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 6.465,
-      "projected_wins": 4.535,
+      "projected_losses": 6.487,
+      "projected_wins": 4.513,
       "rating": 1130.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -9485,11 +9485,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -8.5,
+          "model_spread": -7.5,
           "neutral_site": false,
           "opponent": "UTEP",
           "week": 9,
-          "win_prob": 0.7024,
+          "win_prob": 0.6804,
           "won": null
         },
         {
@@ -9524,8 +9524,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 4.737,
-      "projected_wins": 6.263,
+      "projected_losses": 4.759,
+      "projected_wins": 6.241,
       "rating": 1464.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -10125,11 +10125,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -8.82,
+          "model_spread": -7.82,
           "neutral_site": false,
           "opponent": "BALL STATE",
           "week": 12,
-          "win_prob": 0.7093,
+          "win_prob": 0.6875,
           "won": null
         },
         {
@@ -10144,8 +10144,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.265,
-      "projected_wins": 5.735,
+      "projected_losses": 5.287,
+      "projected_wins": 5.713,
       "rating": 1264.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -11823,21 +11823,21 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": -2.42,
+          "model_spread": -1.42,
           "neutral_site": false,
           "opponent": "COLORADO STATE",
           "week": 8,
-          "win_prob": 0.5601,
+          "win_prob": 0.5354,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -3.5,
+          "model_spread": -4.5,
           "neutral_site": false,
           "opponent": "WASHINGTON STATE",
           "week": 9,
-          "win_prob": 0.5866,
+          "win_prob": 0.6107,
           "won": null
         },
         {
@@ -11915,11 +11915,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -0.54,
+          "model_spread": 0.46,
           "neutral_site": false,
           "opponent": "WYOMING",
           "week": 6,
-          "win_prob": 0.5135,
+          "win_prob": 0.4885,
           "won": null
         },
         {
@@ -11935,21 +11935,21 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 4.1,
+          "model_spread": 5.1,
           "neutral_site": false,
           "opponent": "NEVADA",
           "week": 8,
-          "win_prob": 0.3989,
+          "win_prob": 0.375,
           "won": null
         },
         {
           "completed": false,
           "is_home": true,
-          "model_spread": 3.78,
+          "model_spread": 2.78,
           "neutral_site": false,
           "opponent": "NEW MEXICO",
           "week": 9,
-          "win_prob": 0.4066,
+          "win_prob": 0.431,
           "won": null
         },
         {
@@ -11994,8 +11994,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 7.106,
-      "projected_wins": 4.894,
+      "projected_losses": 7.131,
+      "projected_wins": 4.869,
       "rating": 1186.0,
       "rating_uncertainty": 1.0,
       "remaining": 12,
@@ -15269,11 +15269,11 @@
         {
           "completed": false,
           "is_home": true,
-          "model_spread": -4.98,
+          "model_spread": -3.98,
           "neutral_site": false,
           "opponent": "COLORADO STATE",
           "week": 9,
-          "win_prob": 0.6222,
+          "win_prob": 0.5982,
           "won": null
         },
         {
@@ -15308,8 +15308,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.761,
-      "projected_wins": 4.239,
+      "projected_losses": 5.785,
+      "projected_wins": 4.215,
       "rating": 1342.0,
       "rating_uncertainty": 1.0,
       "remaining": 10,
@@ -15381,11 +15381,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 8.5,
+          "model_spread": 7.5,
           "neutral_site": false,
           "opponent": "NORTH DAKOTA STATE",
           "week": 9,
-          "win_prob": 0.2976,
+          "win_prob": 0.3196,
           "won": null
         },
         {
@@ -15430,8 +15430,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 7.176,
-      "projected_wins": 3.824,
+      "projected_losses": 7.154,
+      "projected_wins": 3.846,
       "rating": 1114.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -16245,11 +16245,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 3.5,
+          "model_spread": 4.5,
           "neutral_site": false,
           "opponent": "SAN DIEGO STATE",
           "week": 9,
-          "win_prob": 0.4134,
+          "win_prob": 0.3893,
           "won": null
         },
         {
@@ -16274,8 +16274,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.664,
-      "projected_wins": 4.336,
+      "projected_losses": 5.688,
+      "projected_wins": 4.312,
       "rating": 1414.0,
       "rating_uncertainty": 1.0,
       "remaining": 10,
@@ -16611,11 +16611,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": -6.26,
+          "model_spread": -5.26,
           "neutral_site": false,
           "opponent": "AKRON",
           "week": 11,
-          "win_prob": 0.6522,
+          "win_prob": 0.6288,
           "won": null
         },
         {
@@ -16640,8 +16640,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.116,
-      "projected_wins": 5.884,
+      "projected_losses": 5.139,
+      "projected_wins": 5.861,
       "rating": 1380.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,
@@ -16815,11 +16815,11 @@
         {
           "completed": false,
           "is_home": false,
-          "model_spread": 0.54,
+          "model_spread": -0.46,
           "neutral_site": false,
           "opponent": "SAN JOSE STATE",
           "week": 6,
-          "win_prob": 0.4865,
+          "win_prob": 0.5115,
           "won": null
         },
         {
@@ -16884,8 +16884,8 @@
         }
       ],
       "losses_so_far": 0,
-      "projected_losses": 5.867,
-      "projected_wins": 5.133,
+      "projected_losses": 5.842,
+      "projected_wins": 5.158,
       "rating": 1284.0,
       "rating_uncertainty": 1.0,
       "remaining": 11,

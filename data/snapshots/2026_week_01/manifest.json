@@ -731,19 +731,19 @@
     }
   },
   "meta": {
-    "built_at": "2026-08-14T20:49:06.586901+00:00",
-    "snapshot_id": "87e472ff1fe3adc9",
+    "built_at": "2026-08-18T13:59:17.484025+00:00",
+    "snapshot_id": "fa6e3c163c85c7c3",
     "week": 1,
     "year": 2026
   },
   "reconciliation": {
-    "cfbd_rows_fetched": 1638,
+    "cfbd_rows_fetched": 3610,
     "excluded_from_normalization": {
       "by_reason": {
         "fcs_opponent_out_of_scope": 763,
-        "non_fbs_matchup": 114
+        "non_fbs_matchup": 2086
       },
-      "total": 877,
+      "total": 2849,
       "unresolved_team_name": []
     },
     "games_normalized": 761,
@@ -909,29 +909,29 @@
     "advanced_stats": {
       "count": 0,
       "fallback_reason": null,
-      "fetched_at": "2026-08-14T20:49:04.645913+00:00",
+      "fetched_at": "2026-08-18T13:59:14.564191+00:00",
       "source": "cfbd"
     },
     "betting_lines": {
       "count": 111,
       "fallback_reason": null,
-      "fetched_at": "2026-08-14T20:49:06.170038+00:00",
+      "fetched_at": "2026-08-18T13:59:17.032984+00:00",
       "quota": {
-        "remaining": 486,
-        "used": 14
+        "remaining": 477,
+        "used": 23
       },
       "source": "odds"
     },
     "coaching": {
       "count": 138,
       "fallback_reason": null,
-      "fetched_at": "2026-08-14T20:49:05.333602+00:00",
+      "fetched_at": "2026-08-18T13:59:15.885319+00:00",
       "source": "cfbd"
     },
     "games": {
-      "count": 1638,
+      "count": 3610,
       "fallback_reason": null,
-      "fetched_at": "2026-08-14T20:49:02.634504+00:00",
+      "fetched_at": "2026-08-18T13:59:06.971284+00:00",
       "source": "cfbd"
     },
     "registry": {
@@ -941,19 +941,19 @@
     "returning_production": {
       "count": 136,
       "fallback_reason": null,
-      "fetched_at": "2026-08-14T20:49:06.090139+00:00",
+      "fetched_at": "2026-08-18T13:59:16.911071+00:00",
       "source": "cfbd"
     },
     "season_stats": {
       "count": 0,
       "fallback_reason": null,
-      "fetched_at": "2026-08-14T20:49:05.497102+00:00",
+      "fetched_at": "2026-08-18T13:59:16.033495+00:00",
       "source": "cfbd"
     },
     "sp_ratings": {
       "count": 139,
       "fallback_reason": null,
-      "fetched_at": "2026-08-14T20:49:05.992757+00:00",
+      "fetched_at": "2026-08-18T13:59:16.787470+00:00",
       "source": "cfbd"
     }
   },
