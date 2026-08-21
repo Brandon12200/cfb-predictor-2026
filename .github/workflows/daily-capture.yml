@@ -80,7 +80,7 @@ jobs:
       - name: Capture line observation
         id: capture
         env:
-          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          ODDS_API_KEY: "cfb-drill-invalid-key-DRILL-ONLY"   # DRILL INJECTION — reverted before the drill ends
         run: |
           set +e
           ARGS=(--week "${{ steps.setup.outputs.week }}" --year "${{ steps.setup.outputs.year }}")
