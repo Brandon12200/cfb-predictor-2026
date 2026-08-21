@@ -62,12 +62,12 @@ jobs:
           week: ${{ inputs.week }}
           year: ${{ inputs.year || '2026' }}
           skip-secrets: ${{ inputs.dry_run == true }}
-          cfbd-api-key: ${{ secrets.CFBD_API_KEY }}
+          cfbd-api-key: ""   # DRILL INJECTION — reverted before the drill ends
 
       - name: Fetch finals
         id: results
         env:
-          CFBD_API_KEY: "cfb-drill-invalid-cfbd-key-DRILL-ONLY"   # DRILL INJECTION — reverted before the drill ends
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
         run: |
           set +e
           python scripts/fetch_results.py --week "${{ steps.setup.outputs.week }}" \
