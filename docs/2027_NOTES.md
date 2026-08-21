@@ -342,12 +342,12 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
 21. **The grade stage's credential-failure path is unreachable until a claim exists.** Found during
     the drill: an invalid `CFBD_API_KEY` on the grade job's *Fetch finals* step produced a **green**
     run and no issue, because `scripts/fetch_results.py` returns `EXIT_NO_CLAIM` at line 166 —
-    *before* the CFBD client is constructed at line 168. In the preseason the grade stage never
-    makes a CFBD call at all. The drill reached the failure path instead by emptying the key at
-    `cfb-setup`, where `check_secrets` aborts ahead of that short-circuit. **Consequence:** the
-    grade stage's real credential-failure behaviour stays unproven until a week-1 claim exists —
-    first exercisable **2026-09-01**. Not a defect; a testability boundary, and worth knowing before
-    someone designs a drill around it.
+    *before* the CFBD client is even imported (line 168), let alone constructed and called at
+    line 173. In the preseason the grade stage never makes a CFBD call at all. The drill reached
+    the failure path instead by emptying the key at `cfb-setup`, where `check_secrets` aborts ahead
+    of that short-circuit. **Consequence:** the grade stage's real credential-failure behaviour
+    stays unproven until a week-1 claim exists — first exercisable **2026-09-01**. Not a defect; a
+    testability boundary, and worth knowing before someone designs a drill around it.
 22. **Two dedupe behaviours the written drill criteria state imprecisely — both confirmed live.**
     (a) *A repeat inside the cooldown takes TWO runs to suppress, not one.* The cooldown compares
     against the **last comment's** signature, and a freshly-created issue has no comments, so the
