@@ -328,3 +328,32 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     `docs/DECISIONS.md` D38 §4 refers to item 6's *content* in prose but does **not** cite a number,
     so it is unaffected. Tidy the sequence only at the 2027 rebuild, and only after checking for
     by-number citations in commit messages as well as documents.
+
+### Carry-forward from Rehearsal 1 and the failure-injection drill (2026-08-21)
+
+20. **Rehearsal runs spend real Odds credits that `main`'s ledger never records.** The provider's
+    `used` counter is global, but the ledger entry is committed only to the rehearsal branch, so
+    `main`'s sequence has gaps. Measured: R0 spent `used` 20–22, R1 spent 24–26, and the drill spent
+    29 — **seven credits** off-main, which is why `main` reads `…19, 23, 27, 28`. The gaps reconcile
+    exactly against the `rehearsal-0`, `rehearsal-1` and `rehearsal-drill` tags, so nothing is lost
+    — but `main`'s ledger is **not** a complete record of season spend, and any burn-rate alarm
+    reading it alone will under-count. 2027 should either commit rehearsal spend to a shared ledger
+    or teach the burn-rate check to reconcile across rehearsal tags.
+21. **The grade stage's credential-failure path is unreachable until a claim exists.** Found during
+    the drill: an invalid `CFBD_API_KEY` on the grade job's *Fetch finals* step produced a **green**
+    run and no issue, because `scripts/fetch_results.py` returns `EXIT_NO_CLAIM` at line 166 —
+    *before* the CFBD client is constructed at line 168. In the preseason the grade stage never
+    makes a CFBD call at all. The drill reached the failure path instead by emptying the key at
+    `cfb-setup`, where `check_secrets` aborts ahead of that short-circuit. **Consequence:** the
+    grade stage's real credential-failure behaviour stays unproven until a week-1 claim exists —
+    first exercisable **2026-09-01**. Not a defect; a testability boundary, and worth knowing before
+    someone designs a drill around it.
+22. **Two dedupe behaviours the written drill criteria state imprecisely — both confirmed live.**
+    (a) *A repeat inside the cooldown takes TWO runs to suppress, not one.* The cooldown compares
+    against the **last comment's** signature, and a freshly-created issue has no comments, so the
+    first repeat falls through and **comments**; only the second is suppressed. A drill planned
+    around a single repeat will record a false failure. (b) *A different failure "bypasses the
+    cooldown and comments" — it does not open a new issue.* Dedupe is by the **label triple**
+    (`pipeline-failure` + `stage:<x>` + `week:NN`), so a different failure on the same stage and
+    week comments on the same issue with a changed signature; only a different **stage** or **week**
+    opens its own. Both were verified in the 2026-08-21 drill (issues #47 and #48).
