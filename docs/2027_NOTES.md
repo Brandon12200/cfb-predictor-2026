@@ -357,3 +357,7 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     (`pipeline-failure` + `stage:<x>` + `week:NN`), so a different failure on the same stage and
     week comments on the same issue with a changed signature; only a different **stage** or **week**
     opens its own. Both were verified in the 2026-08-21 drill (issues #47 and #48).
+23. **`cfb-setup` declares `et_date`, which no workflow consumes.** Found by the declaration-coverage
+    sweep added under D39 (the reverse direction of the check that matters). Harmless — an unused
+    declaration is inert, unlike an undeclared reference — and left alone in 2026 rather than
+    touched during the pre-kickoff window. Remove it in 2027 if nothing has come to consume it.

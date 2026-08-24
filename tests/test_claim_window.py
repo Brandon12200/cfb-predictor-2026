@@ -100,6 +100,40 @@ def test_the_workflow_gates_both_the_build_and_the_claim_commit_on_it():
     assert "claim_window_open != 'true'" in body, "the not-open notice step is missing"
 
 
+def test_every_referenced_setup_output_is_declared_by_the_composite():
+    """**The gap the two tests above leave open, and the one that actually bit.**
+
+    A composite action exposes ONLY the outputs its `outputs:` block declares. `pipeline_week.py`
+    wrote `claim_window_open` into the `resolve` step's `$GITHUB_OUTPUT` and `weekly-predict.yml`
+    gated on `steps.setup.outputs.claim_window_open` — and both of those were tested. Nothing tested
+    the join between them, so the value the caller actually read was the EMPTY STRING: every
+    `== 'true'` gate was permanently false and every `!= 'true'` gate permanently true, meaning the
+    pipeline could never write a claim. Green all the way through, because the window was genuinely
+    closed until 2026-08-22 and "not due yet" was the correct output. See D39.
+
+    Asserting the strings exist proves the wiring is *named*, not that it is *connected*. This is
+    the connection check, and it is deliberately general: it catches the next missing declaration,
+    not just this one.
+    """
+    import re
+
+    setup = (ROOT / ".github" / "actions" / "cfb-setup" / "action.yml").read_text()
+    block = setup.split("outputs:", 1)[1].split("\nruns:", 1)[0]
+    declared = set(re.findall(r"^\s{2}([a-z_]+):", block, re.M))
+
+    referenced: set[str] = set()
+    for wf in sorted((ROOT / ".github" / "workflows").glob("*.yml")):
+        referenced |= set(re.findall(r"steps\.setup\.outputs\.([a-z_]+)", wf.read_text()))
+
+    assert referenced, "found no steps.setup.outputs.* references — the regex has rotted"
+    missing = sorted(referenced - declared)
+    assert not missing, (
+        f"{missing} referenced in a workflow but NOT declared in cfb-setup's outputs block. "
+        f"A composite exposes only what it declares, so each of these reads as the empty string "
+        f"and every gate depending on it silently inverts."
+    )
+
+
 def test_a_closed_window_is_a_notice_not_a_failure():
     """Every Tuesday before the window opens must leave the job GREEN. Failing instead would file a
     `pipeline-failure` issue weekly and spend the alarm's credibility on a working pipeline."""
