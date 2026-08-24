@@ -8,10 +8,10 @@
     },
     "engine": "power_ratings",
     "experimental": true,
-    "generated_at": "2026-08-18T13:59:17.484025+00:00",
+    "generated_at": "2026-08-24T15:36:40.879680+00:00",
     "margin_sigma": 16.0,
     "schema_version": 1,
-    "snapshot_id": "fa6e3c163c85c7c3",
+    "snapshot_id": "bdc56004c573c0af",
     "week": 1,
     "year": 2026
   },
