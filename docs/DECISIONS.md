@@ -569,3 +569,60 @@ address" must state which of the two it checked.
 file under `docs/pr-summaries/`. It was reviewed in session, but from the repository alone that is
 unverifiable, and "every PR was reviewed" is exactly the kind of statement a context-free successor
 would otherwise take as established.
+
+---
+
+## D39 — D38's claim gate was never wired to the workflow; the composite never declared the output — **RATIFIED (owner, 2026-08-24)**
+**Date:** 2026-08-24
+
+**The defect.** `.github/actions/cfb-setup/action.yml` declared nine outputs and **`claim_window_open`
+was not among them.** A composite action exposes only what its `outputs:` block declares, so
+`steps.setup.outputs.claim_window_open` in `weekly-predict.yml` resolved to the **empty string** on
+every run. All three gates that depend on it inverted permanently:
+
+| `weekly-predict.yml` | condition | evaluated | effect |
+|---|---|---|---|
+| `:144` Build predictions | `claim_window_open == 'true'` | `'' == 'true'` → false | **always skipped** |
+| `:161` Claim window not open yet | `claim_window_open != 'true'` | `'' != 'true'` → true | always fired |
+| `:169` `predictions:` commit | `claim_window_open == 'true'` | false | **always skipped** |
+
+**The pipeline could not write a claim at all.** Left unfound, the live run on 2026-08-25 would have
+built a snapshot, printed "week 01 is not due yet", concluded **green**, and produced no week-1
+claim — and the season's entire pre-registration artifact would simply never have appeared.
+
+**Origin: inside D38's own remedy.** D38 added the gate after the 2026-08-11 early claim, at two
+places — the `write_predictions()` seam and a `weekly-predict.yml` step gate described there as
+"fast-fail". The seam gate was correct and remained correct. The workflow gate was wired to an
+output that was computed, logged, and never declared, so the fast-fail half was inert from the day
+it shipped.
+
+**Why every prior green run was indistinguishable from correct.** `claim_window_open` is false for
+week 1 on every date before **2026-08-22**. From D38's merge through Rehearsals 0 and 1, "not due
+yet" was the *right* answer, produced for the wrong reason. No run, test or gate could tell the two
+apart, because the observable output was identical. **Rehearsal 2 on 2026-08-24 was the first
+execution with the window genuinely open — one day before the live claim.** That is precisely what a
+final dress rehearsal exists for, and it is the argument for rehearsing the state you are about to
+enter rather than the state you are in.
+
+**The failure direction was safe, and not by luck.** The inversion failed **closed**: it could only
+ever *suppress* a claim, never write one early. Throughout the window in which the workflow gate was
+inert, the protection D38 was created to provide was still enforced — by the `write_predictions()`
+seam gate, which review had insisted be placed where the writers converge rather than in the
+automated caller. **D38's most contested design choice is the reason this defect cost nothing.** Had
+the gate lived only in the workflow, the 2026-08-11 incident could have recurred unguarded.
+
+**Fix.** Declare the output (two lines), plus a permanent test asserting that **every**
+`steps.setup.outputs.*` reference across all workflows is declared in the composite's `outputs:`
+block — general by design, so it catches the next missing declaration rather than only this one.
+Verified to discriminate: the test fails with the declaration removed and passes with it restored.
+The sweep found no other undeclared reference; `et_date` is declared but unused, recorded in
+`docs/2027_NOTES.md` rather than changed.
+
+**The lesson, which generalises past this repository.** A composite action's `outputs:` block is a
+**declaration surface**, not documentation: an undeclared output is not a warning, it is an empty
+string, and an empty string in a conditional is a silently inverted gate. And the tests that existed
+were the specific shape this project has already recorded as insufficient — `tests/test_claim_window.py`
+asserted the script *emits* the flag and that the workflow *contains* the gate strings, which proves
+the wiring is **named**, not that it is **connected**. HANDOFF §(g).1 states it exactly: *"String-presence
+-in-YAML is not behaviour… if you write a test that greps a workflow file, ask what would happen if
+the code inside it never ran."* Here the code inside it ran perfectly and the value never arrived.

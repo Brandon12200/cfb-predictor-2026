@@ -47,6 +47,12 @@ outputs:
     value: ${{ steps.resolve.outputs.et_date }}
   prediction_exists:
     value: ${{ steps.resolve.outputs.prediction_exists }}
+  # Declared because a composite action exposes ONLY what it declares. `pipeline_week.py` writes
+  # this into the `resolve` step's $GITHUB_OUTPUT, but without this block the caller reads the
+  # EMPTY STRING — which silently inverted every claim gate in weekly-predict.yml until R2 caught
+  # it on 2026-08-24. See D39.
+  claim_window_open:
+    value: ${{ steps.resolve.outputs.claim_window_open }}
   grade_weeks:
     value: ${{ steps.resolve.outputs.grade_weeks }}
   mode:
