@@ -8,7 +8,7 @@
         "kickoff": "2026-09-05T19:30:00Z",
         "observation": {
           "consensus_spread": -7.1,
-          "fetched_at": "2026-08-24T17:21:21.895339+00:00",
+          "fetched_at": "2026-08-24T17:22:51.914967+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -65,7 +65,7 @@
         "kickoff": "2026-09-05T19:30:00Z",
         "observation": {
           "consensus_spread": -7.5,
-          "fetched_at": "2026-08-24T17:21:21.895339+00:00",
+          "fetched_at": "2026-08-24T17:22:51.914967+00:00",
           "lines": [
             {
               "provider": "draftkings",
@@ -117,7 +117,7 @@
         "kickoff": "2026-09-05T23:30:00Z",
         "observation": {
           "consensus_spread": -10.4,
-          "fetched_at": "2026-08-24T17:21:21.895339+00:00",
+          "fetched_at": "2026-08-24T17:22:51.914967+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -164,7 +164,7 @@
         "kickoff": "2026-09-04T00:00:00Z",
         "observation": {
           "consensus_spread": -6.5,
-          "fetched_at": "2026-08-24T17:21:21.895339+00:00",
+          "fetched_at": "2026-08-24T17:22:51.914967+00:00",
           "lines": [
             {
               "provider": "draftkings",
@@ -221,7 +221,7 @@
         "kickoff": "2026-09-06T23:30:00Z",
         "observation": {
           "consensus_spread": -6.5,
-          "fetched_at": "2026-08-24T17:21:21.895339+00:00",
+          "fetched_at": "2026-08-24T17:22:51.914967+00:00",
           "lines": [
             {
               "provider": "betrivers",
@@ -263,7 +263,7 @@
         "kickoff": "2026-09-05T01:00:00Z",
         "observation": {
           "consensus_spread": 24.4,
-          "fetched_at": "2026-08-24T17:21:21.895339+00:00",
+          "fetched_at": "2026-08-24T17:22:51.914967+00:00",
           "lines": [
             {
               "provider": "draftkings",
@@ -315,7 +315,7 @@
         "kickoff": "2026-08-29T19:30:00Z",
         "observation": {
           "consensus_spread": -5.5,
-          "fetched_at": "2026-08-24T17:21:21.895339+00:00",
+          "fetched_at": "2026-08-24T17:22:51.914967+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -372,7 +372,7 @@
         "kickoff": "2026-08-29T16:00:00Z",
         "observation": {
           "consensus_spread": -7.8,
-          "fetched_at": "2026-08-24T17:21:21.895339+00:00",
+          "fetched_at": "2026-08-24T17:22:51.914967+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -429,7 +429,7 @@
         "kickoff": "2026-09-07T23:30:00Z",
         "observation": {
           "consensus_spread": 2.2,
-          "fetched_at": "2026-08-24T17:21:21.895339+00:00",
+          "fetched_at": "2026-08-24T17:22:51.914967+00:00",
           "lines": [
             {
               "provider": "mybookieag",
@@ -471,7 +471,7 @@
         "kickoff": "2026-09-06T02:30:00Z",
         "observation": {
           "consensus_spread": 1.4,
-          "fetched_at": "2026-08-24T17:21:21.895339+00:00",
+          "fetched_at": "2026-08-24T17:22:51.914967+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -518,7 +518,7 @@
         "kickoff": "2026-09-06T23:30:00Z",
         "observation": {
           "consensus_spread": -20.5,
-          "fetched_at": "2026-08-24T17:21:21.895339+00:00",
+          "fetched_at": "2026-08-24T17:22:51.914967+00:00",
           "lines": [
             {
               "provider": "fanduel",
@@ -688,6 +688,16 @@
       },
       {
         "away_points": null,
+        "away_team": "TOLEDO",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MICHIGAN STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-05T00:00:00.000Z",
+        "week": 1
+      },
+      {
+        "away_points": null,
         "away_team": "UTEP",
         "completed": false,
         "home_points": null,
@@ -698,12 +708,12 @@
       },
       {
         "away_points": null,
-        "away_team": "TOLEDO",
+        "away_team": "FRESNO STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "MICHIGAN STATE",
+        "home_team": "USC",
         "neutral_site": false,
-        "start_date": "2026-09-05T00:00:00.000Z",
+        "start_date": "2026-09-05T01:00:00.000Z",
         "week": 1
       },
       {
@@ -718,12 +728,12 @@
       },
       {
         "away_points": null,
-        "away_team": "FRESNO STATE",
+        "away_team": "EAST CAROLINA",
         "completed": false,
         "home_points": null,
-        "home_team": "USC",
+        "home_team": "ALABAMA",
         "neutral_site": false,
-        "start_date": "2026-09-05T01:00:00.000Z",
+        "start_date": "2026-09-05T16:00:00.000Z",
         "week": 1
       },
       {
@@ -758,16 +768,6 @@
       },
       {
         "away_points": null,
-        "away_team": "OREGON STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "HOUSTON",
-        "neutral_site": false,
-        "start_date": "2026-09-05T16:00:00.000Z",
-        "week": 1
-      },
-      {
-        "away_points": null,
         "away_team": "NORTH TEXAS",
         "completed": false,
         "home_points": null,
@@ -778,22 +778,12 @@
       },
       {
         "away_points": null,
-        "away_team": "EAST CAROLINA",
+        "away_team": "OREGON STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "ALABAMA",
+        "home_team": "HOUSTON",
         "neutral_site": false,
         "start_date": "2026-09-05T16:00:00.000Z",
-        "week": 1
-      },
-      {
-        "away_points": null,
-        "away_team": "BALL STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OHIO STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-05T16:30:00.000Z",
         "week": 1
       },
       {
@@ -802,6 +792,16 @@
         "completed": false,
         "home_points": null,
         "home_team": "PITTSBURGH",
+        "neutral_site": false,
+        "start_date": "2026-09-05T16:30:00.000Z",
+        "week": 1
+      },
+      {
+        "away_points": null,
+        "away_team": "BALL STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OHIO STATE",
         "neutral_site": false,
         "start_date": "2026-09-05T16:30:00.000Z",
         "week": 1
@@ -818,10 +818,20 @@
       },
       {
         "away_points": null,
-        "away_team": "MARSHALL",
+        "away_team": "BOISE STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "PENN STATE",
+        "home_team": "OREGON",
+        "neutral_site": false,
+        "start_date": "2026-09-05T19:30:00.000Z",
+        "week": 1
+      },
+      {
+        "away_points": null,
+        "away_team": "BOSTON COLLEGE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CINCINNATI",
         "neutral_site": false,
         "start_date": "2026-09-05T19:30:00.000Z",
         "week": 1
@@ -848,31 +858,21 @@
       },
       {
         "away_points": null,
+        "away_team": "MARSHALL",
+        "completed": false,
+        "home_points": null,
+        "home_team": "PENN STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-05T19:30:00.000Z",
+        "week": 1
+      },
+      {
+        "away_points": null,
         "away_team": "BAYLOR",
         "completed": false,
         "home_points": null,
         "home_team": "AUBURN",
         "neutral_site": true,
-        "start_date": "2026-09-05T19:30:00.000Z",
-        "week": 1
-      },
-      {
-        "away_points": null,
-        "away_team": "BOSTON COLLEGE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CINCINNATI",
-        "neutral_site": false,
-        "start_date": "2026-09-05T19:30:00.000Z",
-        "week": 1
-      },
-      {
-        "away_points": null,
-        "away_team": "BOISE STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OREGON",
-        "neutral_site": false,
         "start_date": "2026-09-05T19:30:00.000Z",
         "week": 1
       },
@@ -908,30 +908,10 @@
       },
       {
         "away_points": null,
-        "away_team": "MISSOURI STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEXAS A&M",
-        "neutral_site": false,
-        "start_date": "2026-09-05T23:00:00.000Z",
-        "week": 1
-      },
-      {
-        "away_points": null,
         "away_team": "ARKANSAS STATE",
         "completed": false,
         "home_points": null,
         "home_team": "MEMPHIS",
-        "neutral_site": false,
-        "start_date": "2026-09-05T23:00:00.000Z",
-        "week": 1
-      },
-      {
-        "away_points": null,
-        "away_team": "FLORIDA INTERNATIONAL",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SOUTH FLORIDA",
         "neutral_site": false,
         "start_date": "2026-09-05T23:00:00.000Z",
         "week": 1
@@ -948,12 +928,22 @@
       },
       {
         "away_points": null,
-        "away_team": "WESTERN MICHIGAN",
+        "away_team": "MISSOURI STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "MICHIGAN",
+        "home_team": "TEXAS A&M",
         "neutral_site": false,
-        "start_date": "2026-09-05T23:30:00.000Z",
+        "start_date": "2026-09-05T23:00:00.000Z",
+        "week": 1
+      },
+      {
+        "away_points": null,
+        "away_team": "FLORIDA INTERNATIONAL",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SOUTH FLORIDA",
+        "neutral_site": false,
+        "start_date": "2026-09-05T23:00:00.000Z",
         "week": 1
       },
       {
@@ -978,22 +968,22 @@
       },
       {
         "away_points": null,
+        "away_team": "WESTERN MICHIGAN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MICHIGAN",
+        "neutral_site": false,
+        "start_date": "2026-09-05T23:30:00.000Z",
+        "week": 1
+      },
+      {
+        "away_points": null,
         "away_team": "FAU",
         "completed": false,
         "home_points": null,
         "home_team": "FLORIDA",
         "neutral_site": false,
         "start_date": "2026-09-05T23:45:00.000Z",
-        "week": 1
-      },
-      {
-        "away_points": null,
-        "away_team": "CENTRAL MICHIGAN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NEW MEXICO",
-        "neutral_site": false,
-        "start_date": "2026-09-06T02:00:00.000Z",
         "week": 1
       },
       {
@@ -1008,12 +998,12 @@
       },
       {
         "away_points": null,
-        "away_team": "WESTERN KENTUCKY",
+        "away_team": "CENTRAL MICHIGAN",
         "completed": false,
         "home_points": null,
-        "home_team": "NEVADA",
+        "home_team": "NEW MEXICO",
         "neutral_site": false,
-        "start_date": "2026-09-06T02:30:00.000Z",
+        "start_date": "2026-09-06T02:00:00.000Z",
         "week": 1
       },
       {
@@ -1022,6 +1012,16 @@
         "completed": false,
         "home_points": null,
         "home_team": "CAL",
+        "neutral_site": false,
+        "start_date": "2026-09-06T02:30:00.000Z",
+        "week": 1
+      },
+      {
+        "away_points": null,
+        "away_team": "WESTERN KENTUCKY",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NEVADA",
         "neutral_site": false,
         "start_date": "2026-09-06T02:30:00.000Z",
         "week": 1
@@ -1038,20 +1038,20 @@
       },
       {
         "away_points": null,
-        "away_team": "WISCONSIN",
+        "away_team": "LOUISVILLE",
         "completed": false,
         "home_points": null,
-        "home_team": "NOTRE DAME",
+        "home_team": "MISSISSIPPI",
         "neutral_site": true,
         "start_date": "2026-09-06T23:30:00.000Z",
         "week": 1
       },
       {
         "away_points": null,
-        "away_team": "LOUISVILLE",
+        "away_team": "WISCONSIN",
         "completed": false,
         "home_points": null,
-        "home_team": "MISSISSIPPI",
+        "home_team": "NOTRE DAME",
         "neutral_site": true,
         "start_date": "2026-09-06T23:30:00.000Z",
         "week": 1
@@ -1088,16 +1088,6 @@
       },
       {
         "away_points": null,
-        "away_team": "APPALACHIAN STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "EAST CAROLINA",
-        "neutral_site": false,
-        "start_date": "2026-09-12T16:00:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
         "away_team": "OKLAHOMA",
         "completed": false,
         "home_points": null,
@@ -1108,60 +1098,10 @@
       },
       {
         "away_points": null,
-        "away_team": "ARIZONA STATE",
+        "away_team": "APPALACHIAN STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "TEXAS A&M",
-        "neutral_site": false,
-        "start_date": "2026-09-12T16:00:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "WASHINGTON STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "KANSAS STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-12T16:00:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "OREGON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OKLAHOMA STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-12T16:00:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "OLD DOMINION",
-        "completed": false,
-        "home_points": null,
-        "home_team": "VIRGINIA TECH",
-        "neutral_site": false,
-        "start_date": "2026-09-12T16:00:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "WAKE FOREST",
-        "completed": false,
-        "home_points": null,
-        "home_team": "PURDUE",
-        "neutral_site": false,
-        "start_date": "2026-09-12T16:00:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "PENN STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEMPLE",
+        "home_team": "EAST CAROLINA",
         "neutral_site": false,
         "start_date": "2026-09-12T16:00:00.000Z",
         "week": 2
@@ -1178,6 +1118,66 @@
       },
       {
         "away_points": null,
+        "away_team": "ARIZONA STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TEXAS A&M",
+        "neutral_site": false,
+        "start_date": "2026-09-12T16:00:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "OLD DOMINION",
+        "completed": false,
+        "home_points": null,
+        "home_team": "VIRGINIA TECH",
+        "neutral_site": false,
+        "start_date": "2026-09-12T16:00:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "OREGON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OKLAHOMA STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-12T16:00:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "WAKE FOREST",
+        "completed": false,
+        "home_points": null,
+        "home_team": "PURDUE",
+        "neutral_site": false,
+        "start_date": "2026-09-12T16:00:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "WASHINGTON STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "KANSAS STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-12T16:00:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "PENN STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TEMPLE",
+        "neutral_site": false,
+        "start_date": "2026-09-12T16:00:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
         "away_team": "WESTERN KENTUCKY",
         "completed": false,
         "home_points": null,
@@ -1188,70 +1188,20 @@
       },
       {
         "away_points": null,
+        "away_team": "UCF",
+        "completed": false,
+        "home_points": null,
+        "home_team": "PITTSBURGH",
+        "neutral_site": false,
+        "start_date": "2026-09-12T19:30:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
         "away_team": "ALABAMA",
         "completed": false,
         "home_points": null,
         "home_team": "KENTUCKY",
-        "neutral_site": false,
-        "start_date": "2026-09-12T19:30:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "UTAH STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WASHINGTON",
-        "neutral_site": false,
-        "start_date": "2026-09-12T19:30:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "MARYLAND",
-        "completed": false,
-        "home_points": null,
-        "home_team": "UCONN",
-        "neutral_site": false,
-        "start_date": "2026-09-12T19:30:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "MISSISSIPPI STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MINNESOTA",
-        "neutral_site": false,
-        "start_date": "2026-09-12T19:30:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "UTSA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEXAS STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-12T19:30:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "CAL",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SYRACUSE",
-        "neutral_site": false,
-        "start_date": "2026-09-12T19:30:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "DUKE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "ILLINOIS",
         "neutral_site": false,
         "start_date": "2026-09-12T19:30:00.000Z",
         "week": 2
@@ -1268,6 +1218,36 @@
       },
       {
         "away_points": null,
+        "away_team": "UTSA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TEXAS STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-12T19:30:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "DUKE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "ILLINOIS",
+        "neutral_site": false,
+        "start_date": "2026-09-12T19:30:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "CAL",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SYRACUSE",
+        "neutral_site": false,
+        "start_date": "2026-09-12T19:30:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
         "away_team": "ARIZONA",
         "completed": false,
         "home_points": null,
@@ -1278,10 +1258,30 @@
       },
       {
         "away_points": null,
-        "away_team": "UCF",
+        "away_team": "MISSISSIPPI STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "PITTSBURGH",
+        "home_team": "MINNESOTA",
+        "neutral_site": false,
+        "start_date": "2026-09-12T19:30:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "MARYLAND",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UCONN",
+        "neutral_site": false,
+        "start_date": "2026-09-12T19:30:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "RICE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NOTRE DAME",
         "neutral_site": false,
         "start_date": "2026-09-12T19:30:00.000Z",
         "week": 2
@@ -1298,10 +1298,10 @@
       },
       {
         "away_points": null,
-        "away_team": "RICE",
+        "away_team": "UTAH STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "NOTRE DAME",
+        "home_team": "WASHINGTON",
         "neutral_site": false,
         "start_date": "2026-09-12T19:30:00.000Z",
         "week": 2
@@ -1338,6 +1338,16 @@
       },
       {
         "away_points": null,
+        "away_team": "BUFFALO",
+        "completed": false,
+        "home_points": null,
+        "home_team": "FLORIDA INTERNATIONAL",
+        "neutral_site": false,
+        "start_date": "2026-09-12T22:00:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
         "away_team": "JACKSONVILLE STATE",
         "completed": false,
         "home_points": null,
@@ -1348,12 +1358,22 @@
       },
       {
         "away_points": null,
-        "away_team": "BUFFALO",
+        "away_team": "TULSA",
         "completed": false,
         "home_points": null,
-        "home_team": "FLORIDA INTERNATIONAL",
+        "home_team": "SAM HOUSTON",
         "neutral_site": false,
-        "start_date": "2026-09-12T22:00:00.000Z",
+        "start_date": "2026-09-12T23:00:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "SOUTH ALABAMA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TULANE",
+        "neutral_site": false,
+        "start_date": "2026-09-12T23:00:00.000Z",
         "week": 2
       },
       {
@@ -1378,10 +1398,10 @@
       },
       {
         "away_points": null,
-        "away_team": "SOUTH ALABAMA",
+        "away_team": "TENNESSEE",
         "completed": false,
         "home_points": null,
-        "home_team": "TULANE",
+        "home_team": "GEORGIA TECH",
         "neutral_site": false,
         "start_date": "2026-09-12T23:00:00.000Z",
         "week": 2
@@ -1398,26 +1418,6 @@
       },
       {
         "away_points": null,
-        "away_team": "TENNESSEE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "GEORGIA TECH",
-        "neutral_site": false,
-        "start_date": "2026-09-12T23:00:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "TULSA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SAM HOUSTON",
-        "neutral_site": false,
-        "start_date": "2026-09-12T23:00:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
         "away_team": "SAN DIEGO STATE",
         "completed": false,
         "home_points": null,
@@ -1428,50 +1428,10 @@
       },
       {
         "away_points": null,
-        "away_team": "LOUISIANA TECH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "LSU",
-        "neutral_site": false,
-        "start_date": "2026-09-12T23:30:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
         "away_team": "GEORGIA SOUTHERN",
         "completed": false,
         "home_points": null,
         "home_team": "CLEMSON",
-        "neutral_site": false,
-        "start_date": "2026-09-12T23:30:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "IOWA STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "IOWA",
-        "neutral_site": false,
-        "start_date": "2026-09-12T23:30:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "TEXAS TECH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OREGON STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-12T23:30:00.000Z",
-        "week": 2
-      },
-      {
-        "away_points": null,
-        "away_team": "OHIO STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEXAS",
         "neutral_site": false,
         "start_date": "2026-09-12T23:30:00.000Z",
         "week": 2
@@ -1488,10 +1448,50 @@
       },
       {
         "away_points": null,
+        "away_team": "LOUISIANA TECH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "LSU",
+        "neutral_site": false,
+        "start_date": "2026-09-12T23:30:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "TEXAS TECH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OREGON STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-12T23:30:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "IOWA STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "IOWA",
+        "neutral_site": false,
+        "start_date": "2026-09-12T23:30:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
         "away_team": "NAVY",
         "completed": false,
         "home_points": null,
         "home_team": "FAU",
+        "neutral_site": false,
+        "start_date": "2026-09-12T23:30:00.000Z",
+        "week": 2
+      },
+      {
+        "away_points": null,
+        "away_team": "OHIO STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TEXAS",
         "neutral_site": false,
         "start_date": "2026-09-12T23:30:00.000Z",
         "week": 2
@@ -1598,70 +1598,10 @@
       },
       {
         "away_points": null,
-        "away_team": "TULANE",
+        "away_team": "BUFFALO",
         "completed": false,
         "home_points": null,
-        "home_team": "KANSAS STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-19T16:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "ARIZONA STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "KANSAS",
-        "neutral_site": true,
-        "start_date": "2026-09-19T16:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "NORTH CAROLINA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CLEMSON",
-        "neutral_site": false,
-        "start_date": "2026-09-19T16:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "GEORGIA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "ARKANSAS",
-        "neutral_site": false,
-        "start_date": "2026-09-19T16:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "BOWLING GREEN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "IOWA STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-19T16:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "NORTH TEXAS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEXAS STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-19T16:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "AKRON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MINNESOTA",
+        "home_team": "PENN STATE",
         "neutral_site": false,
         "start_date": "2026-09-19T16:00:00.000Z",
         "week": 3
@@ -1678,11 +1618,71 @@
       },
       {
         "away_points": null,
-        "away_team": "BUFFALO",
+        "away_team": "NORTH TEXAS",
         "completed": false,
         "home_points": null,
-        "home_team": "PENN STATE",
+        "home_team": "TEXAS STATE",
         "neutral_site": false,
+        "start_date": "2026-09-19T16:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "GEORGIA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "ARKANSAS",
+        "neutral_site": false,
+        "start_date": "2026-09-19T16:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "TULANE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "KANSAS STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-19T16:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "BOWLING GREEN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "IOWA STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-19T16:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "NORTH CAROLINA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CLEMSON",
+        "neutral_site": false,
+        "start_date": "2026-09-19T16:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "AKRON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MINNESOTA",
+        "neutral_site": false,
+        "start_date": "2026-09-19T16:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "ARIZONA STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "KANSAS",
+        "neutral_site": true,
         "start_date": "2026-09-19T16:00:00.000Z",
         "week": 3
       },
@@ -1738,10 +1738,40 @@
       },
       {
         "away_points": null,
+        "away_team": "MIAMI (OH)",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CINCINNATI",
+        "neutral_site": false,
+        "start_date": "2026-09-19T19:30:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "KENTUCKY",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TEXAS A&M",
+        "neutral_site": false,
+        "start_date": "2026-09-19T19:30:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
         "away_team": "FLORIDA STATE",
         "completed": false,
         "home_points": null,
         "home_team": "ALABAMA",
+        "neutral_site": false,
+        "start_date": "2026-09-19T19:30:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "SMU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "LOUISVILLE",
         "neutral_site": false,
         "start_date": "2026-09-19T19:30:00.000Z",
         "week": 3
@@ -1768,16 +1798,6 @@
       },
       {
         "away_points": null,
-        "away_team": "SMU",
-        "completed": false,
-        "home_points": null,
-        "home_team": "LOUISVILLE",
-        "neutral_site": false,
-        "start_date": "2026-09-19T19:30:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
         "away_team": "UTAH STATE",
         "completed": false,
         "home_points": null,
@@ -1788,50 +1808,10 @@
       },
       {
         "away_points": null,
-        "away_team": "MIAMI (OH)",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CINCINNATI",
-        "neutral_site": false,
-        "start_date": "2026-09-19T19:30:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "KENTUCKY",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEXAS A&M",
-        "neutral_site": false,
-        "start_date": "2026-09-19T19:30:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "LOUISIANA TECH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BAYLOR",
-        "neutral_site": false,
-        "start_date": "2026-09-19T20:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
         "away_team": "BALL STATE",
         "completed": false,
         "home_points": null,
         "home_team": "LIBERTY",
-        "neutral_site": false,
-        "start_date": "2026-09-19T20:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "STANFORD",
-        "completed": false,
-        "home_points": null,
-        "home_team": "DUKE",
         "neutral_site": false,
         "start_date": "2026-09-19T20:00:00.000Z",
         "week": 3
@@ -1848,12 +1828,42 @@
       },
       {
         "away_points": null,
+        "away_team": "STANFORD",
+        "completed": false,
+        "home_points": null,
+        "home_team": "DUKE",
+        "neutral_site": false,
+        "start_date": "2026-09-19T20:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "LOUISIANA TECH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BAYLOR",
+        "neutral_site": false,
+        "start_date": "2026-09-19T20:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
         "away_team": "MISSISSIPPI STATE",
         "completed": false,
         "home_points": null,
         "home_team": "SOUTH CAROLINA",
         "neutral_site": false,
         "start_date": "2026-09-19T20:15:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "FLORIDA INTERNATIONAL",
+        "completed": false,
+        "home_points": null,
+        "home_team": "FAU",
+        "neutral_site": false,
+        "start_date": "2026-09-19T22:00:00.000Z",
         "week": 3
       },
       {
@@ -1878,62 +1888,12 @@
       },
       {
         "away_points": null,
-        "away_team": "FLORIDA INTERNATIONAL",
-        "completed": false,
-        "home_points": null,
-        "home_team": "FAU",
-        "neutral_site": false,
-        "start_date": "2026-09-19T22:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
         "away_team": "MARSHALL",
         "completed": false,
         "home_points": null,
         "home_team": "MISSOURI STATE",
         "neutral_site": false,
         "start_date": "2026-09-19T22:30:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "GEORGIA SOUTHERN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "JACKSONVILLE STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-19T23:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "UCONN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SOUTHERN MISS",
-        "neutral_site": false,
-        "start_date": "2026-09-19T23:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "WESTERN MICHIGAN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "RICE",
-        "neutral_site": false,
-        "start_date": "2026-09-19T23:00:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "OHIO",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SOUTH ALABAMA",
-        "neutral_site": false,
-        "start_date": "2026-09-19T23:00:00.000Z",
         "week": 3
       },
       {
@@ -1968,6 +1928,46 @@
       },
       {
         "away_points": null,
+        "away_team": "OHIO",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SOUTH ALABAMA",
+        "neutral_site": false,
+        "start_date": "2026-09-19T23:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "UCONN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SOUTHERN MISS",
+        "neutral_site": false,
+        "start_date": "2026-09-19T23:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "WESTERN MICHIGAN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "RICE",
+        "neutral_site": false,
+        "start_date": "2026-09-19T23:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "GEORGIA SOUTHERN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "JACKSONVILLE STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-19T23:00:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
         "away_team": "MICHIGAN STATE",
         "completed": false,
         "home_points": null,
@@ -1978,10 +1978,30 @@
       },
       {
         "away_points": null,
+        "away_team": "BYU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "COLORADO STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-19T23:30:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
         "away_team": "COLORADO",
         "completed": false,
         "home_points": null,
         "home_team": "NORTHWESTERN",
+        "neutral_site": false,
+        "start_date": "2026-09-19T23:30:00.000Z",
+        "week": 3
+      },
+      {
+        "away_points": null,
+        "away_team": "NEW MEXICO",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OKLAHOMA",
         "neutral_site": false,
         "start_date": "2026-09-19T23:30:00.000Z",
         "week": 3
@@ -2002,26 +2022,6 @@
         "completed": false,
         "home_points": null,
         "home_team": "MARYLAND",
-        "neutral_site": false,
-        "start_date": "2026-09-19T23:30:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "BYU",
-        "completed": false,
-        "home_points": null,
-        "home_team": "COLORADO STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-19T23:30:00.000Z",
-        "week": 3
-      },
-      {
-        "away_points": null,
-        "away_team": "NEW MEXICO",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OKLAHOMA",
         "neutral_site": false,
         "start_date": "2026-09-19T23:30:00.000Z",
         "week": 3
@@ -2058,20 +2058,20 @@
       },
       {
         "away_points": null,
-        "away_team": "UAB",
+        "away_team": "ARKANSAS STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "LOUISIANA",
+        "home_team": "TCU",
         "neutral_site": false,
         "start_date": "2026-09-20T00:00:00.000Z",
         "week": 3
       },
       {
         "away_points": null,
-        "away_team": "ARKANSAS STATE",
+        "away_team": "UAB",
         "completed": false,
         "home_points": null,
-        "home_team": "TCU",
+        "home_team": "LOUISIANA",
         "neutral_site": false,
         "start_date": "2026-09-20T00:00:00.000Z",
         "week": 3
@@ -2108,20 +2108,20 @@
       },
       {
         "away_points": null,
-        "away_team": "FRESNO STATE",
+        "away_team": "PURDUE",
         "completed": false,
         "home_points": null,
-        "home_team": "SAN JOSE STATE",
+        "home_team": "UCLA",
         "neutral_site": false,
         "start_date": "2026-09-20T03:00:00.000Z",
         "week": 3
       },
       {
         "away_points": null,
-        "away_team": "PURDUE",
+        "away_team": "FRESNO STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "UCLA",
+        "home_team": "SAN JOSE STATE",
         "neutral_site": false,
         "start_date": "2026-09-20T03:00:00.000Z",
         "week": 3
@@ -2178,30 +2178,30 @@
       },
       {
         "away_points": null,
-        "away_team": "FAU",
+        "away_team": "UCLA",
         "completed": false,
         "home_points": null,
-        "home_team": "LOUISIANA MONROE",
+        "home_team": "MARYLAND",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
       },
       {
         "away_points": null,
-        "away_team": "SOUTH CAROLINA",
+        "away_team": "JAMES MADISON",
         "completed": false,
         "home_points": null,
-        "home_team": "ALABAMA",
+        "home_team": "OLD DOMINION",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
       },
       {
         "away_points": null,
-        "away_team": "NEBRASKA",
+        "away_team": "UMASS",
         "completed": false,
         "home_points": null,
-        "home_team": "MICHIGAN STATE",
+        "home_team": "SACRAMENTO STATE",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
@@ -2218,20 +2218,140 @@
       },
       {
         "away_points": null,
-        "away_team": "IOWA",
+        "away_team": "COLORADO STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "MICHIGAN",
+        "home_team": "UTSA",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
       },
       {
         "away_points": null,
-        "away_team": "UCLA",
+        "away_team": "SOUTH FLORIDA",
         "completed": false,
         "home_points": null,
-        "home_team": "MARYLAND",
+        "home_team": "BOWLING GREEN",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "SOUTHERN MISS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TULANE",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "FAU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "LOUISIANA MONROE",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "LOUISIANA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CHARLOTTE",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "BOISE STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "WESTERN MICHIGAN",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "SAN DIEGO STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TOLEDO",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "MINNESOTA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "WASHINGTON",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "OREGON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "USC",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "NOTRE DAME",
+        "completed": false,
+        "home_points": null,
+        "home_team": "PURDUE",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "WISCONSIN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "PENN STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "ILLINOIS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OHIO STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "NEBRASKA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MICHIGAN STATE",
+        "neutral_site": false,
+        "start_date": "2026-09-26T04:00:00.000Z",
+        "week": 4
+      },
+      {
+        "away_points": null,
+        "away_team": "IOWA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MICHIGAN",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
@@ -2328,16 +2448,6 @@
       },
       {
         "away_points": null,
-        "away_team": "UMASS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SACRAMENTO STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
         "away_team": "HOUSTON",
         "completed": false,
         "home_points": null,
@@ -2348,50 +2458,10 @@
       },
       {
         "away_points": null,
-        "away_team": "BALL STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "KENT STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
         "away_team": "SAM HOUSTON",
         "completed": false,
         "home_points": null,
         "home_team": "TEXAS TECH",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
-        "away_team": "APPALACHIAN STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NC STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
-        "away_team": "NORTHERN ILLINOIS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "GEORGIA STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
-        "away_team": "AIR FORCE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NEVADA",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
@@ -2448,110 +2518,50 @@
       },
       {
         "away_points": null,
-        "away_team": "SOUTHERN MISS",
+        "away_team": "SOUTH CAROLINA",
         "completed": false,
         "home_points": null,
-        "home_team": "TULANE",
+        "home_team": "ALABAMA",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
       },
       {
         "away_points": null,
-        "away_team": "SOUTH FLORIDA",
+        "away_team": "BALL STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "BOWLING GREEN",
+        "home_team": "KENT STATE",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
       },
       {
         "away_points": null,
-        "away_team": "COLORADO STATE",
+        "away_team": "APPALACHIAN STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "UTSA",
+        "home_team": "NC STATE",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
       },
       {
         "away_points": null,
-        "away_team": "LOUISIANA",
+        "away_team": "NORTHERN ILLINOIS",
         "completed": false,
         "home_points": null,
-        "home_team": "CHARLOTTE",
+        "home_team": "GEORGIA STATE",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
       },
       {
         "away_points": null,
-        "away_team": "BOISE STATE",
+        "away_team": "AIR FORCE",
         "completed": false,
         "home_points": null,
-        "home_team": "WESTERN MICHIGAN",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
-        "away_team": "SAN DIEGO STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TOLEDO",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
-        "away_team": "MINNESOTA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WASHINGTON",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
-        "away_team": "OREGON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "USC",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
-        "away_team": "NOTRE DAME",
-        "completed": false,
-        "home_points": null,
-        "home_team": "PURDUE",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
-        "away_team": "WISCONSIN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "PENN STATE",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
-        "away_team": "ILLINOIS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OHIO STATE",
+        "home_team": "NEVADA",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
@@ -2562,16 +2572,6 @@
         "completed": false,
         "home_points": null,
         "home_team": "AKRON",
-        "neutral_site": false,
-        "start_date": "2026-09-26T04:00:00.000Z",
-        "week": 4
-      },
-      {
-        "away_points": null,
-        "away_team": "JAMES MADISON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OLD DOMINION",
         "neutral_site": false,
         "start_date": "2026-09-26T04:00:00.000Z",
         "week": 4
@@ -2628,20 +2628,20 @@
       },
       {
         "away_points": null,
-        "away_team": "KENNESAW STATE",
+        "away_team": "MIDDLE TENNESSEE",
         "completed": false,
         "home_points": null,
-        "home_team": "ARKANSAS STATE",
+        "home_team": "JACKSONVILLE STATE",
         "neutral_site": false,
         "start_date": "2026-09-26T23:00:00.000Z",
         "week": 4
       },
       {
         "away_points": null,
-        "away_team": "MIDDLE TENNESSEE",
+        "away_team": "KENNESAW STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "JACKSONVILLE STATE",
+        "home_team": "ARKANSAS STATE",
         "neutral_site": false,
         "start_date": "2026-09-26T23:00:00.000Z",
         "week": 4
@@ -2728,20 +2728,20 @@
       },
       {
         "away_points": null,
-        "away_team": "PITTSBURGH",
+        "away_team": "LIBERTY",
         "completed": false,
         "home_points": null,
-        "home_team": "VIRGINIA TECH",
+        "home_team": "DELAWARE",
         "neutral_site": false,
         "start_date": "2026-10-02T23:00:00.000Z",
         "week": 5
       },
       {
         "away_points": null,
-        "away_team": "LIBERTY",
+        "away_team": "PITTSBURGH",
         "completed": false,
         "home_points": null,
-        "home_team": "DELAWARE",
+        "home_team": "VIRGINIA TECH",
         "neutral_site": false,
         "start_date": "2026-10-02T23:00:00.000Z",
         "week": 5
@@ -2758,60 +2758,10 @@
       },
       {
         "away_points": null,
-        "away_team": "UTSA",
+        "away_team": "MICHIGAN STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "RICE",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
-        "away_team": "OHIO",
-        "completed": false,
-        "home_points": null,
-        "home_team": "KENT STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
-        "away_team": "EASTERN MICHIGAN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "UMASS",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
-        "away_team": "WESTERN MICHIGAN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BUFFALO",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
-        "away_team": "TOLEDO",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BALL STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
-        "away_team": "AKRON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CENTRAL MICHIGAN",
+        "home_team": "WISCONSIN",
         "neutral_site": false,
         "start_date": "2026-10-03T04:00:00.000Z",
         "week": 5
@@ -2828,10 +2778,130 @@
       },
       {
         "away_points": null,
+        "away_team": "AKRON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CENTRAL MICHIGAN",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
+        "away_team": "TOLEDO",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BALL STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
+        "away_team": "WESTERN MICHIGAN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BUFFALO",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
+        "away_team": "EASTERN MICHIGAN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UMASS",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
+        "away_team": "OHIO",
+        "completed": false,
+        "home_points": null,
+        "home_team": "KENT STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
+        "away_team": "LOUISIANA MONROE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SOUTH ALABAMA",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
+        "away_team": "MARSHALL",
+        "completed": false,
+        "home_points": null,
+        "home_team": "JAMES MADISON",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
+        "away_team": "OLD DOMINION",
+        "completed": false,
+        "home_points": null,
+        "home_team": "GEORGIA STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
+        "away_team": "ARMY",
+        "completed": false,
+        "home_points": null,
+        "home_team": "LOUISIANA TECH",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
+        "away_team": "BOWLING GREEN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MIAMI (OH)",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
+        "away_team": "TEMPLE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SOUTH FLORIDA",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
         "away_team": "VANDERBILT",
         "completed": false,
         "home_points": null,
         "home_team": "GEORGIA",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
+        "away_team": "UTSA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "RICE",
         "neutral_site": false,
         "start_date": "2026-10-03T04:00:00.000Z",
         "week": 5
@@ -2968,6 +3038,16 @@
       },
       {
         "away_points": null,
+        "away_team": "MEMPHIS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CHARLOTTE",
+        "neutral_site": false,
+        "start_date": "2026-10-03T04:00:00.000Z",
+        "week": 5
+      },
+      {
+        "away_points": null,
         "away_team": "LOUISVILLE",
         "completed": false,
         "home_points": null,
@@ -3068,36 +3148,6 @@
       },
       {
         "away_points": null,
-        "away_team": "MICHIGAN STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WISCONSIN",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
-        "away_team": "MEMPHIS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CHARLOTTE",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
-        "away_team": "TEMPLE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SOUTH FLORIDA",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
         "away_team": "ARKANSAS STATE",
         "completed": false,
         "home_points": null,
@@ -3108,60 +3158,10 @@
       },
       {
         "away_points": null,
-        "away_team": "ARMY",
-        "completed": false,
-        "home_points": null,
-        "home_team": "LOUISIANA TECH",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
-        "away_team": "BOWLING GREEN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MIAMI (OH)",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
         "away_team": "GEORGIA SOUTHERN",
         "completed": false,
         "home_points": null,
         "home_team": "COASTAL CAROLINA",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
-        "away_team": "LOUISIANA MONROE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SOUTH ALABAMA",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
-        "away_team": "OLD DOMINION",
-        "completed": false,
-        "home_points": null,
-        "home_team": "GEORGIA STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-03T04:00:00.000Z",
-        "week": 5
-      },
-      {
-        "away_points": null,
-        "away_team": "MARSHALL",
-        "completed": false,
-        "home_points": null,
-        "home_team": "JAMES MADISON",
         "neutral_site": false,
         "start_date": "2026-10-03T04:00:00.000Z",
         "week": 5
@@ -3318,20 +3318,20 @@
       },
       {
         "away_points": null,
-        "away_team": "SOUTH ALABAMA",
+        "away_team": "SOUTH FLORIDA",
         "completed": false,
         "home_points": null,
-        "home_team": "ARKANSAS STATE",
+        "home_team": "UTSA",
         "neutral_site": false,
         "start_date": "2026-10-08T23:30:00.000Z",
         "week": 6
       },
       {
         "away_points": null,
-        "away_team": "SOUTH FLORIDA",
+        "away_team": "SOUTH ALABAMA",
         "completed": false,
         "home_points": null,
-        "home_team": "UTSA",
+        "home_team": "ARKANSAS STATE",
         "neutral_site": false,
         "start_date": "2026-10-08T23:30:00.000Z",
         "week": 6
@@ -3358,20 +3358,20 @@
       },
       {
         "away_points": null,
-        "away_team": "WASHINGTON STATE",
+        "away_team": "IOWA",
         "completed": false,
         "home_points": null,
-        "home_team": "UTAH STATE",
+        "home_team": "WASHINGTON",
         "neutral_site": false,
         "start_date": "2026-10-10T01:00:00.000Z",
         "week": 6
       },
       {
         "away_points": null,
-        "away_team": "IOWA",
+        "away_team": "WASHINGTON STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "WASHINGTON",
+        "home_team": "UTAH STATE",
         "neutral_site": false,
         "start_date": "2026-10-10T01:00:00.000Z",
         "week": 6
@@ -3388,156 +3388,6 @@
       },
       {
         "away_points": null,
-        "away_team": "TEXAS A&M",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MISSOURI",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "MISSISSIPPI",
-        "completed": false,
-        "home_points": null,
-        "home_team": "VANDERBILT",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "HAWAII",
-        "completed": false,
-        "home_points": null,
-        "home_team": "ARIZONA STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "ARIZONA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WEST VIRGINIA",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "UCF",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OKLAHOMA STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "HOUSTON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "KANSAS STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "KANSAS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "UTAH",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "DUKE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "GEORGIA TECH",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "NORTH CAROLINA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "PITTSBURGH",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "SYRACUSE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "VIRGINIA",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "VIRGINIA TECH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CAL",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "WAKE FOREST",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NC STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "ILLINOIS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MICHIGAN STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "INDIANA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NEBRASKA",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "BALL STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NORTHWESTERN",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
         "away_team": "MARYLAND",
         "completed": false,
         "home_points": null,
@@ -3548,80 +3398,30 @@
       },
       {
         "away_points": null,
-        "away_team": "UCLA",
+        "away_team": "JAMES MADISON",
         "completed": false,
         "home_points": null,
-        "home_team": "OREGON",
+        "home_team": "GEORGIA SOUTHERN",
         "neutral_site": false,
         "start_date": "2026-10-10T04:00:00.000Z",
         "week": 6
       },
       {
         "away_points": null,
-        "away_team": "USC",
+        "away_team": "COASTAL CAROLINA",
         "completed": false,
         "home_points": null,
-        "home_team": "PENN STATE",
+        "home_team": "MARSHALL",
         "neutral_site": false,
         "start_date": "2026-10-10T04:00:00.000Z",
         "week": 6
       },
       {
         "away_points": null,
-        "away_team": "MINNESOTA",
+        "away_team": "OLD DOMINION",
         "completed": false,
         "home_points": null,
-        "home_team": "PURDUE",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "UCONN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEMPLE",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "CHARLOTTE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NORTH TEXAS",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "RICE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "EAST CAROLINA",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "UAB",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MEMPHIS",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "LSU",
-        "completed": false,
-        "home_points": null,
-        "home_team": "KENTUCKY",
+        "home_team": "APPALACHIAN STATE",
         "neutral_site": false,
         "start_date": "2026-10-10T04:00:00.000Z",
         "week": 6
@@ -3688,20 +3488,230 @@
       },
       {
         "away_points": null,
-        "away_team": "GEORGIA",
+        "away_team": "UAB",
         "completed": false,
         "home_points": null,
-        "home_team": "ALABAMA",
+        "home_team": "MEMPHIS",
         "neutral_site": false,
         "start_date": "2026-10-10T04:00:00.000Z",
         "week": 6
       },
       {
         "away_points": null,
-        "away_team": "TENNESSEE",
+        "away_team": "RICE",
         "completed": false,
         "home_points": null,
-        "home_team": "ARKANSAS",
+        "home_team": "EAST CAROLINA",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "CHARLOTTE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NORTH TEXAS",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "UCONN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TEMPLE",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "MINNESOTA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "PURDUE",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "USC",
+        "completed": false,
+        "home_points": null,
+        "home_team": "PENN STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "UCLA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OREGON",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "BALL STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NORTHWESTERN",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "INDIANA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NEBRASKA",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "ILLINOIS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MICHIGAN STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "WAKE FOREST",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NC STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "VIRGINIA TECH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CAL",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "SYRACUSE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "VIRGINIA",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "NORTH CAROLINA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "PITTSBURGH",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "DUKE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "GEORGIA TECH",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "KANSAS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UTAH",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "HOUSTON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "KANSAS STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "UCF",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OKLAHOMA STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "ARIZONA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "WEST VIRGINIA",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "HAWAII",
+        "completed": false,
+        "home_points": null,
+        "home_team": "ARIZONA STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "MISSISSIPPI",
+        "completed": false,
+        "home_points": null,
+        "home_team": "VANDERBILT",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "TEXAS A&M",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MISSOURI",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "LSU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "KENTUCKY",
         "neutral_site": false,
         "start_date": "2026-10-10T04:00:00.000Z",
         "week": 6
@@ -3718,10 +3728,20 @@
       },
       {
         "away_points": null,
-        "away_team": "OLD DOMINION",
+        "away_team": "TENNESSEE",
         "completed": false,
         "home_points": null,
-        "home_team": "APPALACHIAN STATE",
+        "home_team": "ARKANSAS",
+        "neutral_site": false,
+        "start_date": "2026-10-10T04:00:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "GEORGIA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "ALABAMA",
         "neutral_site": false,
         "start_date": "2026-10-10T04:00:00.000Z",
         "week": 6
@@ -3738,26 +3758,6 @@
       },
       {
         "away_points": null,
-        "away_team": "JAMES MADISON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "GEORGIA SOUTHERN",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "COASTAL CAROLINA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MARSHALL",
-        "neutral_site": false,
-        "start_date": "2026-10-10T04:00:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
         "away_team": "TULANE",
         "completed": false,
         "home_points": null,
@@ -3768,10 +3768,20 @@
       },
       {
         "away_points": null,
-        "away_team": "EASTERN MICHIGAN",
+        "away_team": "TEXAS",
         "completed": false,
         "home_points": null,
-        "home_team": "AKRON",
+        "home_team": "OKLAHOMA",
+        "neutral_site": true,
+        "start_date": "2026-10-10T19:30:00.000Z",
+        "week": 6
+      },
+      {
+        "away_points": null,
+        "away_team": "TULSA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NAVY",
         "neutral_site": false,
         "start_date": "2026-10-10T19:30:00.000Z",
         "week": 6
@@ -3788,21 +3798,11 @@
       },
       {
         "away_points": null,
-        "away_team": "TULSA",
+        "away_team": "EASTERN MICHIGAN",
         "completed": false,
         "home_points": null,
-        "home_team": "NAVY",
+        "home_team": "AKRON",
         "neutral_site": false,
-        "start_date": "2026-10-10T19:30:00.000Z",
-        "week": 6
-      },
-      {
-        "away_points": null,
-        "away_team": "TEXAS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OKLAHOMA",
-        "neutral_site": true,
         "start_date": "2026-10-10T19:30:00.000Z",
         "week": 6
       },
@@ -3928,16 +3928,6 @@
       },
       {
         "away_points": null,
-        "away_team": "WASHINGTON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "PURDUE",
-        "neutral_site": false,
-        "start_date": "2026-10-17T00:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
         "away_team": "APPALACHIAN STATE",
         "completed": false,
         "home_points": null,
@@ -3948,112 +3938,12 @@
       },
       {
         "away_points": null,
-        "away_team": "TCU",
+        "away_team": "WASHINGTON",
         "completed": false,
         "home_points": null,
-        "home_team": "BAYLOR",
+        "home_team": "PURDUE",
         "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "OKLAHOMA STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "HOUSTON",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "VIRGINIA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SMU",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "WAKE FOREST",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CAL",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "CHARLOTTE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEMPLE",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "NAVY",
-        "completed": false,
-        "home_points": null,
-        "home_team": "UTSA",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "OHIO STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "INDIANA",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "AKRON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MIAMI (OH)",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "LOUISIANA TECH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "LOUISIANA MONROE",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "TROY",
-        "completed": false,
-        "home_points": null,
-        "home_team": "LOUISIANA",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "GEORGIA STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "JAMES MADISON",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
+        "start_date": "2026-10-17T00:00:00.000Z",
         "week": 7
       },
       {
@@ -4062,256 +3952,6 @@
         "completed": false,
         "home_points": null,
         "home_team": "SOUTHERN MISS",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "TULSA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "RICE",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "BALL STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BOWLING GREEN",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "UMASS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BUFFALO",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "WESTERN MICHIGAN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CENTRAL MICHIGAN",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "TOLEDO",
-        "completed": false,
-        "home_points": null,
-        "home_team": "EASTERN MICHIGAN",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "NEBRASKA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OREGON",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "KANSAS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "KANSAS STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "PITTSBURGH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BOSTON COLLEGE",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "PENN STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MICHIGAN",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "RUTGERS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MARYLAND",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "NORTHWESTERN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MICHIGAN STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "NORTH CAROLINA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "DUKE",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "LOUISVILLE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SYRACUSE",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "GEORGIA TECH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "VIRGINIA TECH",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "FLORIDA STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MIAMI",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "UTAH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "COLORADO",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "WISCONSIN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "UCLA",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "CINCINNATI",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WEST VIRGINIA",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "ARIZONA STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEXAS TECH",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "NOTRE DAME",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BYU",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "ARKANSAS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "VANDERBILT",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "FLORIDA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEXAS",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "ALABAMA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TENNESSEE",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "KENTUCKY",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OKLAHOMA",
-        "neutral_site": false,
-        "start_date": "2026-10-17T04:00:00.000Z",
-        "week": 7
-      },
-      {
-        "away_points": null,
-        "away_team": "MISSOURI",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MISSISSIPPI",
         "neutral_site": false,
         "start_date": "2026-10-17T04:00:00.000Z",
         "week": 7
@@ -4338,10 +3978,290 @@
       },
       {
         "away_points": null,
-        "away_team": "NEW MEXICO",
+        "away_team": "MISSOURI",
         "completed": false,
         "home_points": null,
-        "home_team": "HAWAII",
+        "home_team": "MISSISSIPPI",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "KENTUCKY",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OKLAHOMA",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "ALABAMA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TENNESSEE",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "FLORIDA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TEXAS",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "ARKANSAS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "VANDERBILT",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "NOTRE DAME",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BYU",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "ARIZONA STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TEXAS TECH",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "CINCINNATI",
+        "completed": false,
+        "home_points": null,
+        "home_team": "WEST VIRGINIA",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "KANSAS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "KANSAS STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "OKLAHOMA STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "HOUSTON",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "TCU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BAYLOR",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "UTAH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "COLORADO",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "FLORIDA STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MIAMI",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "GEORGIA TECH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "VIRGINIA TECH",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "LOUISVILLE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SYRACUSE",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "NORTH CAROLINA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "DUKE",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "PITTSBURGH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BOSTON COLLEGE",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "VIRGINIA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SMU",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "WAKE FOREST",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CAL",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "KENT STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SOUTH FLORIDA",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "OHIO STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "INDIANA",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "NAVY",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UTSA",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "TULSA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "RICE",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "CHARLOTTE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TEMPLE",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "RUTGERS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MARYLAND",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "PENN STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MICHIGAN",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "WISCONSIN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UCLA",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "NEBRASKA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OREGON",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "NORTHWESTERN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MICHIGAN STATE",
         "neutral_site": false,
         "start_date": "2026-10-17T04:00:00.000Z",
         "week": 7
@@ -4358,10 +4278,90 @@
       },
       {
         "away_points": null,
-        "away_team": "KENT STATE",
+        "away_team": "TOLEDO",
         "completed": false,
         "home_points": null,
-        "home_team": "SOUTH FLORIDA",
+        "home_team": "EASTERN MICHIGAN",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "WESTERN MICHIGAN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CENTRAL MICHIGAN",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "UMASS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BUFFALO",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "BALL STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BOWLING GREEN",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "NEW MEXICO",
+        "completed": false,
+        "home_points": null,
+        "home_team": "HAWAII",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "TROY",
+        "completed": false,
+        "home_points": null,
+        "home_team": "LOUISIANA",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "AKRON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MIAMI (OH)",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "GEORGIA STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "JAMES MADISON",
+        "neutral_site": false,
+        "start_date": "2026-10-17T04:00:00.000Z",
+        "week": 7
+      },
+      {
+        "away_points": null,
+        "away_team": "LOUISIANA TECH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "LOUISIANA MONROE",
         "neutral_site": false,
         "start_date": "2026-10-17T04:00:00.000Z",
         "week": 7
@@ -4558,120 +4558,10 @@
       },
       {
         "away_points": null,
-        "away_team": "PITTSBURGH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MIAMI",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
-        "away_team": "SYRACUSE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NORTH CAROLINA",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
-        "away_team": "VIRGINIA TECH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CLEMSON",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
-        "away_team": "OREGON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "ILLINOIS",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
-        "away_team": "INDIANA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MICHIGAN",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
-        "away_team": "RICE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "FAU",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
-        "away_team": "MIAMI (OH)",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CENTRAL MICHIGAN",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
-        "away_team": "WESTERN MICHIGAN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TOLEDO",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
-        "away_team": "BOWLING GREEN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BUFFALO",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
-        "away_team": "SACRAMENTO STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BALL STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
         "away_team": "HAWAII",
         "completed": false,
         "home_points": null,
         "home_team": "NORTHERN ILLINOIS",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
-        "away_team": "EASTERN MICHIGAN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OHIO",
         "neutral_site": false,
         "start_date": "2026-10-24T04:00:00.000Z",
         "week": 8
@@ -4828,60 +4718,50 @@
       },
       {
         "away_points": null,
-        "away_team": "AKRON",
+        "away_team": "PITTSBURGH",
         "completed": false,
         "home_points": null,
-        "home_team": "KENT STATE",
+        "home_team": "MIAMI",
         "neutral_site": false,
         "start_date": "2026-10-24T04:00:00.000Z",
         "week": 8
       },
       {
         "away_points": null,
-        "away_team": "OLD DOMINION",
+        "away_team": "SYRACUSE",
         "completed": false,
         "home_points": null,
-        "home_team": "LOUISIANA TECH",
+        "home_team": "NORTH CAROLINA",
         "neutral_site": false,
         "start_date": "2026-10-24T04:00:00.000Z",
         "week": 8
       },
       {
         "away_points": null,
-        "away_team": "LOUISIANA",
+        "away_team": "VIRGINIA TECH",
         "completed": false,
         "home_points": null,
-        "home_team": "SOUTHERN MISS",
+        "home_team": "CLEMSON",
         "neutral_site": false,
         "start_date": "2026-10-24T04:00:00.000Z",
         "week": 8
       },
       {
         "away_points": null,
-        "away_team": "USC",
+        "away_team": "OREGON",
         "completed": false,
         "home_points": null,
-        "home_team": "WISCONSIN",
+        "home_team": "ILLINOIS",
         "neutral_site": false,
         "start_date": "2026-10-24T04:00:00.000Z",
         "week": 8
       },
       {
         "away_points": null,
-        "away_team": "MICHIGAN STATE",
+        "away_team": "INDIANA",
         "completed": false,
         "home_points": null,
-        "home_team": "UCLA",
-        "neutral_site": false,
-        "start_date": "2026-10-24T04:00:00.000Z",
-        "week": 8
-      },
-      {
-        "away_points": null,
-        "away_team": "RUTGERS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NORTHWESTERN",
+        "home_team": "MICHIGAN",
         "neutral_site": false,
         "start_date": "2026-10-24T04:00:00.000Z",
         "week": 8
@@ -4898,6 +4778,46 @@
       },
       {
         "away_points": null,
+        "away_team": "RUTGERS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NORTHWESTERN",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
+        "away_team": "MICHIGAN STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UCLA",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
+        "away_team": "USC",
+        "completed": false,
+        "home_points": null,
+        "home_team": "WISCONSIN",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
+        "away_team": "RICE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "FAU",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
         "away_team": "UTSA",
         "completed": false,
         "home_points": null,
@@ -4908,10 +4828,90 @@
       },
       {
         "away_points": null,
+        "away_team": "AKRON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "KENT STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
+        "away_team": "SACRAMENTO STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BALL STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
+        "away_team": "BOWLING GREEN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BUFFALO",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
+        "away_team": "WESTERN MICHIGAN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TOLEDO",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
+        "away_team": "MIAMI (OH)",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CENTRAL MICHIGAN",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
+        "away_team": "EASTERN MICHIGAN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OHIO",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
+        "away_team": "OLD DOMINION",
+        "completed": false,
+        "home_points": null,
+        "home_team": "LOUISIANA TECH",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
         "away_team": "LOUISIANA MONROE",
         "completed": false,
         "home_points": null,
         "home_team": "TROY",
+        "neutral_site": false,
+        "start_date": "2026-10-24T04:00:00.000Z",
+        "week": 8
+      },
+      {
+        "away_points": null,
+        "away_team": "LOUISIANA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SOUTHERN MISS",
         "neutral_site": false,
         "start_date": "2026-10-24T04:00:00.000Z",
         "week": 8
@@ -5088,200 +5088,10 @@
       },
       {
         "away_points": null,
-        "away_team": "OREGON STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "FRESNO STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "VIRGINIA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WAKE FOREST",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "STANFORD",
-        "completed": false,
-        "home_points": null,
-        "home_team": "LOUISVILLE",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "KANSAS STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "COLORADO",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "KANSAS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TCU",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
         "away_team": "ARIZONA",
         "completed": false,
         "home_points": null,
         "home_team": "TEXAS TECH",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "NEW MEXICO",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SAN JOSE STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "MARSHALL",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OLD DOMINION",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "MINNESOTA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "INDIANA",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "WISCONSIN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "IOWA",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "NEVADA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "UCLA",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "OHIO STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "USC",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "TEMPLE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "EAST CAROLINA",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "CAL",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NC STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "SMU",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SYRACUSE",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "MISSOURI",
-        "completed": false,
-        "home_points": null,
-        "home_team": "ARKANSAS",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "AUBURN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MISSISSIPPI",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "SOUTH CAROLINA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OKLAHOMA",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "MISSISSIPPI STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEXAS",
-        "neutral_site": false,
-        "start_date": "2026-10-31T04:00:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
-        "away_team": "ARIZONA STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BYU",
         "neutral_site": false,
         "start_date": "2026-10-31T04:00:00.000Z",
         "week": 9
@@ -5348,6 +5158,46 @@
       },
       {
         "away_points": null,
+        "away_team": "STANFORD",
+        "completed": false,
+        "home_points": null,
+        "home_team": "LOUISVILLE",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "VIRGINIA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "WAKE FOREST",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "MINNESOTA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "INDIANA",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "WISCONSIN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "IOWA",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
         "away_team": "ILLINOIS",
         "completed": false,
         "home_points": null,
@@ -5358,10 +5208,10 @@
       },
       {
         "away_points": null,
-        "away_team": "WASHINGTON",
+        "away_team": "CAL",
         "completed": false,
         "home_points": null,
-        "home_team": "NEBRASKA",
+        "home_team": "NC STATE",
         "neutral_site": false,
         "start_date": "2026-10-31T04:00:00.000Z",
         "week": 9
@@ -5378,6 +5228,26 @@
       },
       {
         "away_points": null,
+        "away_team": "MARSHALL",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OLD DOMINION",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "OHIO STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "USC",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
         "away_team": "PURDUE",
         "completed": false,
         "home_points": null,
@@ -5388,20 +5258,20 @@
       },
       {
         "away_points": null,
-        "away_team": "MICHIGAN",
+        "away_team": "ARMY",
         "completed": false,
         "home_points": null,
-        "home_team": "RUTGERS",
+        "home_team": "MEMPHIS",
         "neutral_site": false,
         "start_date": "2026-10-31T04:00:00.000Z",
         "week": 9
       },
       {
         "away_points": null,
-        "away_team": "ARMY",
+        "away_team": "NEW MEXICO",
         "completed": false,
         "home_points": null,
-        "home_team": "MEMPHIS",
+        "home_team": "SAN JOSE STATE",
         "neutral_site": false,
         "start_date": "2026-10-31T04:00:00.000Z",
         "week": 9
@@ -5432,6 +5302,136 @@
         "completed": false,
         "home_points": null,
         "home_team": "GEORGIA STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "TEMPLE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "EAST CAROLINA",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "MICHIGAN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "RUTGERS",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "NEVADA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UCLA",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "WASHINGTON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NEBRASKA",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "SMU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SYRACUSE",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "OREGON STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "FRESNO STATE",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "MISSOURI",
+        "completed": false,
+        "home_points": null,
+        "home_team": "ARKANSAS",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "AUBURN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MISSISSIPPI",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "SOUTH CAROLINA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OKLAHOMA",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "MISSISSIPPI STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TEXAS",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "ARIZONA STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BYU",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "KANSAS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TCU",
+        "neutral_site": false,
+        "start_date": "2026-10-31T04:00:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "KANSAS STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "COLORADO",
         "neutral_site": false,
         "start_date": "2026-10-31T04:00:00.000Z",
         "week": 9
@@ -5488,16 +5488,6 @@
       },
       {
         "away_points": null,
-        "away_team": "UTEP",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NORTH DAKOTA STATE",
-        "neutral_site": false,
-        "start_date": "2026-10-31T19:30:00.000Z",
-        "week": 9
-      },
-      {
-        "away_points": null,
         "away_team": "FLORIDA INTERNATIONAL",
         "completed": false,
         "home_points": null,
@@ -5513,6 +5503,16 @@
         "home_points": null,
         "home_team": "GEORGIA",
         "neutral_site": true,
+        "start_date": "2026-10-31T19:30:00.000Z",
+        "week": 9
+      },
+      {
+        "away_points": null,
+        "away_team": "UTEP",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NORTH DAKOTA STATE",
+        "neutral_site": false,
         "start_date": "2026-10-31T19:30:00.000Z",
         "week": 9
       },
@@ -5608,20 +5608,20 @@
       },
       {
         "away_points": null,
-        "away_team": "UTSA",
+        "away_team": "JAMES MADISON",
         "completed": false,
         "home_points": null,
-        "home_team": "FAU",
+        "home_team": "SOUTHERN MISS",
         "neutral_site": false,
         "start_date": "2026-11-06T01:00:00.000Z",
         "week": 10
       },
       {
         "away_points": null,
-        "away_team": "JAMES MADISON",
+        "away_team": "UTSA",
         "completed": false,
         "home_points": null,
-        "home_team": "SOUTHERN MISS",
+        "home_team": "FAU",
         "neutral_site": false,
         "start_date": "2026-11-06T01:00:00.000Z",
         "week": 10
@@ -5678,50 +5678,30 @@
       },
       {
         "away_points": null,
-        "away_team": "COLORADO",
+        "away_team": "NORTHERN ILLINOIS",
         "completed": false,
         "home_points": null,
-        "home_team": "ARIZONA STATE",
+        "home_team": "SAN JOSE STATE",
         "neutral_site": false,
         "start_date": "2026-11-07T05:00:00.000Z",
         "week": 10
       },
       {
         "away_points": null,
-        "away_team": "IOWA STATE",
+        "away_team": "CHARLOTTE",
         "completed": false,
         "home_points": null,
-        "home_team": "BAYLOR",
+        "home_team": "UAB",
         "neutral_site": false,
         "start_date": "2026-11-07T05:00:00.000Z",
         "week": 10
       },
       {
         "away_points": null,
-        "away_team": "SOUTH ALABAMA",
+        "away_team": "LOUISIANA TECH",
         "completed": false,
         "home_points": null,
-        "home_team": "LOUISIANA",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
-        "away_team": "MARSHALL",
-        "completed": false,
-        "home_points": null,
-        "home_team": "GEORGIA SOUTHERN",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
-        "away_team": "OLD DOMINION",
-        "completed": false,
-        "home_points": null,
-        "home_team": "COASTAL CAROLINA",
+        "home_team": "TROY",
         "neutral_site": false,
         "start_date": "2026-11-07T05:00:00.000Z",
         "week": 10
@@ -5748,10 +5728,100 @@
       },
       {
         "away_points": null,
-        "away_team": "NORTHERN ILLINOIS",
+        "away_team": "TULSA",
         "completed": false,
         "home_points": null,
-        "home_team": "SAN JOSE STATE",
+        "home_team": "TULANE",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "RICE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NORTH TEXAS",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "RUTGERS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "WISCONSIN",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "PENN STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "WASHINGTON",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "MARYLAND",
+        "completed": false,
+        "home_points": null,
+        "home_team": "PURDUE",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "OREGON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OHIO STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "IOWA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NORTHWESTERN",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "UCLA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MINNESOTA",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "MICHIGAN STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MICHIGAN",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "FLORIDA STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BOSTON COLLEGE",
         "neutral_site": false,
         "start_date": "2026-11-07T05:00:00.000Z",
         "week": 10
@@ -5778,20 +5848,50 @@
       },
       {
         "away_points": null,
-        "away_team": "MICHIGAN STATE",
+        "away_team": "IOWA STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "MICHIGAN",
+        "home_team": "BAYLOR",
         "neutral_site": false,
         "start_date": "2026-11-07T05:00:00.000Z",
         "week": 10
       },
       {
         "away_points": null,
-        "away_team": "UCLA",
+        "away_team": "COLORADO",
         "completed": false,
         "home_points": null,
-        "home_team": "MINNESOTA",
+        "home_team": "ARIZONA STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "CINCINNATI",
+        "completed": false,
+        "home_points": null,
+        "home_team": "HOUSTON",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "UCF",
+        "completed": false,
+        "home_points": null,
+        "home_team": "KANSAS",
+        "neutral_site": false,
+        "start_date": "2026-11-07T05:00:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "BYU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UTAH",
         "neutral_site": false,
         "start_date": "2026-11-07T05:00:00.000Z",
         "week": 10
@@ -5802,16 +5902,6 @@
         "completed": false,
         "home_points": null,
         "home_team": "TENNESSEE",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
-        "away_team": "LOUISIANA TECH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TROY",
         "neutral_site": false,
         "start_date": "2026-11-07T05:00:00.000Z",
         "week": 10
@@ -5842,26 +5932,6 @@
         "completed": false,
         "home_points": null,
         "home_team": "MISSISSIPPI STATE",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
-        "away_team": "UCF",
-        "completed": false,
-        "home_points": null,
-        "home_team": "KANSAS",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
-        "away_team": "BYU",
-        "completed": false,
-        "home_points": null,
-        "home_team": "UTAH",
         "neutral_site": false,
         "start_date": "2026-11-07T05:00:00.000Z",
         "week": 10
@@ -5918,16 +5988,6 @@
       },
       {
         "away_points": null,
-        "away_team": "CHARLOTTE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "UAB",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
         "away_team": "DUKE",
         "completed": false,
         "home_points": null,
@@ -5948,90 +6008,30 @@
       },
       {
         "away_points": null,
-        "away_team": "OREGON",
+        "away_team": "OLD DOMINION",
         "completed": false,
         "home_points": null,
-        "home_team": "OHIO STATE",
+        "home_team": "COASTAL CAROLINA",
         "neutral_site": false,
         "start_date": "2026-11-07T05:00:00.000Z",
         "week": 10
       },
       {
         "away_points": null,
-        "away_team": "IOWA",
+        "away_team": "MARSHALL",
         "completed": false,
         "home_points": null,
-        "home_team": "NORTHWESTERN",
+        "home_team": "GEORGIA SOUTHERN",
         "neutral_site": false,
         "start_date": "2026-11-07T05:00:00.000Z",
         "week": 10
       },
       {
         "away_points": null,
-        "away_team": "MARYLAND",
+        "away_team": "SOUTH ALABAMA",
         "completed": false,
         "home_points": null,
-        "home_team": "PURDUE",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
-        "away_team": "PENN STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WASHINGTON",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
-        "away_team": "RUTGERS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WISCONSIN",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
-        "away_team": "RICE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NORTH TEXAS",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
-        "away_team": "TULSA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TULANE",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
-        "away_team": "FLORIDA STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BOSTON COLLEGE",
-        "neutral_site": false,
-        "start_date": "2026-11-07T05:00:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
-        "away_team": "CINCINNATI",
-        "completed": false,
-        "home_points": null,
-        "home_team": "HOUSTON",
+        "home_team": "LOUISIANA",
         "neutral_site": false,
         "start_date": "2026-11-07T05:00:00.000Z",
         "week": 10
@@ -6048,20 +6048,20 @@
       },
       {
         "away_points": null,
-        "away_team": "DELAWARE",
+        "away_team": "LOUISIANA MONROE",
         "completed": false,
         "home_points": null,
-        "home_team": "KENNESAW STATE",
+        "home_team": "ARKANSAS STATE",
         "neutral_site": false,
         "start_date": "2026-11-07T20:00:00.000Z",
         "week": 10
       },
       {
         "away_points": null,
-        "away_team": "LOUISIANA MONROE",
+        "away_team": "DELAWARE",
         "completed": false,
         "home_points": null,
-        "home_team": "ARKANSAS STATE",
+        "home_team": "KENNESAW STATE",
         "neutral_site": false,
         "start_date": "2026-11-07T20:00:00.000Z",
         "week": 10
@@ -6128,20 +6128,20 @@
       },
       {
         "away_points": null,
-        "away_team": "AIR FORCE",
+        "away_team": "MIAMI",
         "completed": false,
         "home_points": null,
-        "home_team": "ARMY",
+        "home_team": "NOTRE DAME",
         "neutral_site": false,
         "start_date": "2026-11-08T00:30:00.000Z",
         "week": 10
       },
       {
         "away_points": null,
-        "away_team": "MIAMI",
+        "away_team": "AIR FORCE",
         "completed": false,
         "home_points": null,
-        "home_team": "NOTRE DAME",
+        "home_team": "ARMY",
         "neutral_site": false,
         "start_date": "2026-11-08T00:30:00.000Z",
         "week": 10
@@ -6158,16 +6158,6 @@
       },
       {
         "away_points": null,
-        "away_team": "TEXAS STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OREGON STATE",
-        "neutral_site": false,
-        "start_date": "2026-11-08T03:30:00.000Z",
-        "week": 10
-      },
-      {
-        "away_points": null,
         "away_team": "WYOMING",
         "completed": false,
         "home_points": null,
@@ -6178,10 +6168,20 @@
       },
       {
         "away_points": null,
-        "away_team": "OHIO",
+        "away_team": "TEXAS STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "MIAMI (OH)",
+        "home_team": "OREGON STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-08T03:30:00.000Z",
+        "week": 10
+      },
+      {
+        "away_points": null,
+        "away_team": "KENT STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BOWLING GREEN",
         "neutral_site": false,
         "start_date": "2026-11-11T00:00:00.000Z",
         "week": 11
@@ -6198,22 +6198,12 @@
       },
       {
         "away_points": null,
-        "away_team": "KENT STATE",
+        "away_team": "OHIO",
         "completed": false,
         "home_points": null,
-        "home_team": "BOWLING GREEN",
+        "home_team": "MIAMI (OH)",
         "neutral_site": false,
         "start_date": "2026-11-11T00:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "SACRAMENTO STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CENTRAL MICHIGAN",
-        "neutral_site": false,
-        "start_date": "2026-11-11T05:00:00.000Z",
         "week": 11
       },
       {
@@ -6222,6 +6212,16 @@
         "completed": false,
         "home_points": null,
         "home_team": "TOLEDO",
+        "neutral_site": false,
+        "start_date": "2026-11-11T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "SACRAMENTO STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CENTRAL MICHIGAN",
         "neutral_site": false,
         "start_date": "2026-11-11T05:00:00.000Z",
         "week": 11
@@ -6288,40 +6288,30 @@
       },
       {
         "away_points": null,
-        "away_team": "ARKANSAS STATE",
+        "away_team": "MISSISSIPPI",
         "completed": false,
         "home_points": null,
-        "home_team": "COASTAL CAROLINA",
+        "home_team": "OKLAHOMA",
         "neutral_site": false,
         "start_date": "2026-11-14T05:00:00.000Z",
         "week": 11
       },
       {
         "away_points": null,
-        "away_team": "APPALACHIAN STATE",
+        "away_team": "ALABAMA",
         "completed": false,
         "home_points": null,
-        "home_team": "MARSHALL",
+        "home_team": "VANDERBILT",
         "neutral_site": false,
         "start_date": "2026-11-14T05:00:00.000Z",
         "week": 11
       },
       {
         "away_points": null,
-        "away_team": "NORTH TEXAS",
+        "away_team": "WAKE FOREST",
         "completed": false,
         "home_points": null,
-        "home_team": "UTSA",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "WISCONSIN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MARYLAND",
+        "home_team": "SMU",
         "neutral_site": false,
         "start_date": "2026-11-14T05:00:00.000Z",
         "week": 11
@@ -6348,10 +6338,70 @@
       },
       {
         "away_points": null,
+        "away_team": "EAST CAROLINA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CHARLOTTE",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "FAU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TULSA",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "TULANE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "RICE",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
         "away_team": "WYOMING",
         "completed": false,
         "home_points": null,
         "home_team": "UTEP",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "APPALACHIAN STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MARSHALL",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "ARKANSAS STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "COASTAL CAROLINA",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "GEORGIA SOUTHERN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "GEORGIA STATE",
         "neutral_site": false,
         "start_date": "2026-11-14T05:00:00.000Z",
         "week": 11
@@ -6368,10 +6418,10 @@
       },
       {
         "away_points": null,
-        "away_team": "BAYLOR",
+        "away_team": "USC",
         "completed": false,
         "home_points": null,
-        "home_team": "BYU",
+        "home_team": "INDIANA",
         "neutral_site": false,
         "start_date": "2026-11-14T05:00:00.000Z",
         "week": 11
@@ -6398,10 +6448,80 @@
       },
       {
         "away_points": null,
-        "away_team": "GEORGIA SOUTHERN",
+        "away_team": "PURDUE",
         "completed": false,
         "home_points": null,
-        "home_team": "GEORGIA STATE",
+        "home_team": "IOWA",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "WISCONSIN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MARYLAND",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "WASHINGTON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MICHIGAN STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "NORTHWESTERN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OHIO STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "CINCINNATI",
+        "completed": false,
+        "home_points": null,
+        "home_team": "IOWA STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "KANSAS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "WEST VIRGINIA",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "KANSAS STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TCU",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "TEXAS TECH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OKLAHOMA STATE",
         "neutral_site": false,
         "start_date": "2026-11-14T05:00:00.000Z",
         "week": 11
@@ -6412,6 +6532,16 @@
         "completed": false,
         "home_points": null,
         "home_team": "ARIZONA",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "NORTH TEXAS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UTSA",
         "neutral_site": false,
         "start_date": "2026-11-14T05:00:00.000Z",
         "week": 11
@@ -6448,10 +6578,60 @@
       },
       {
         "away_points": null,
-        "away_team": "ALABAMA",
+        "away_team": "TEXAS",
         "completed": false,
         "home_points": null,
-        "home_team": "VANDERBILT",
+        "home_team": "LSU",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "AUBURN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MISSISSIPPI STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "TENNESSEE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TEXAS A&M",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "ARIZONA STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UCF",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "BAYLOR",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BYU",
+        "neutral_site": false,
+        "start_date": "2026-11-14T05:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
+        "away_team": "NEVADA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NORTHERN ILLINOIS",
         "neutral_site": false,
         "start_date": "2026-11-14T05:00:00.000Z",
         "week": 11
@@ -6508,106 +6688,6 @@
       },
       {
         "away_points": null,
-        "away_team": "PURDUE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "IOWA",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "CINCINNATI",
-        "completed": false,
-        "home_points": null,
-        "home_team": "IOWA STATE",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "MICHIGAN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OREGON",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "EAST CAROLINA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CHARLOTTE",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "FAU",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TULSA",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "TULANE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "RICE",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "TEXAS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "LSU",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "AUBURN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MISSISSIPPI STATE",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "MISSISSIPPI",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OKLAHOMA",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "TENNESSEE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TEXAS A&M",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
         "away_team": "SYRACUSE",
         "completed": false,
         "home_points": null,
@@ -6618,90 +6698,10 @@
       },
       {
         "away_points": null,
-        "away_team": "WAKE FOREST",
+        "away_team": "MICHIGAN",
         "completed": false,
         "home_points": null,
-        "home_team": "SMU",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "USC",
-        "completed": false,
-        "home_points": null,
-        "home_team": "INDIANA",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "WASHINGTON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MICHIGAN STATE",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "NORTHWESTERN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OHIO STATE",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "ARIZONA STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "UCF",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "KANSAS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WEST VIRGINIA",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "KANSAS STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TCU",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "TEXAS TECH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OKLAHOMA STATE",
-        "neutral_site": false,
-        "start_date": "2026-11-14T05:00:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "NEVADA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NORTHERN ILLINOIS",
+        "home_team": "OREGON",
         "neutral_site": false,
         "start_date": "2026-11-14T05:00:00.000Z",
         "week": 11
@@ -6728,6 +6728,16 @@
       },
       {
         "away_points": null,
+        "away_team": "FLORIDA INTERNATIONAL",
+        "completed": false,
+        "home_points": null,
+        "home_team": "DELAWARE",
+        "neutral_site": false,
+        "start_date": "2026-11-14T20:00:00.000Z",
+        "week": 11
+      },
+      {
+        "away_points": null,
         "away_team": "NEW MEXICO STATE",
         "completed": false,
         "home_points": null,
@@ -6738,12 +6748,12 @@
       },
       {
         "away_points": null,
-        "away_team": "FLORIDA INTERNATIONAL",
+        "away_team": "MIDDLE TENNESSEE",
         "completed": false,
         "home_points": null,
-        "home_team": "DELAWARE",
+        "home_team": "LIBERTY",
         "neutral_site": false,
-        "start_date": "2026-11-14T20:00:00.000Z",
+        "start_date": "2026-11-14T20:30:00.000Z",
         "week": 11
       },
       {
@@ -6762,16 +6772,6 @@
         "completed": false,
         "home_points": null,
         "home_team": "WESTERN KENTUCKY",
-        "neutral_site": false,
-        "start_date": "2026-11-14T20:30:00.000Z",
-        "week": 11
-      },
-      {
-        "away_points": null,
-        "away_team": "MIDDLE TENNESSEE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "LIBERTY",
         "neutral_site": false,
         "start_date": "2026-11-14T20:30:00.000Z",
         "week": 11
@@ -6858,16 +6858,6 @@
       },
       {
         "away_points": null,
-        "away_team": "MIAMI (OH)",
-        "completed": false,
-        "home_points": null,
-        "home_team": "KENT STATE",
-        "neutral_site": false,
-        "start_date": "2026-11-18T00:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
         "away_team": "EASTERN MICHIGAN",
         "completed": false,
         "home_points": null,
@@ -6878,12 +6868,12 @@
       },
       {
         "away_points": null,
-        "away_team": "AKRON",
+        "away_team": "MIAMI (OH)",
         "completed": false,
         "home_points": null,
-        "home_team": "UMASS",
+        "home_team": "KENT STATE",
         "neutral_site": false,
-        "start_date": "2026-11-18T05:00:00.000Z",
+        "start_date": "2026-11-18T00:00:00.000Z",
         "week": 12
       },
       {
@@ -6892,6 +6882,16 @@
         "completed": false,
         "home_points": null,
         "home_team": "BUFFALO",
+        "neutral_site": false,
+        "start_date": "2026-11-18T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "AKRON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UMASS",
         "neutral_site": false,
         "start_date": "2026-11-18T05:00:00.000Z",
         "week": 12
@@ -6938,16 +6938,6 @@
       },
       {
         "away_points": null,
-        "away_team": "OREGON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MICHIGAN STATE",
-        "neutral_site": false,
-        "start_date": "2026-11-21T01:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
         "away_team": "UTEP",
         "completed": false,
         "home_points": null,
@@ -6958,10 +6948,40 @@
       },
       {
         "away_points": null,
-        "away_team": "SYRACUSE",
+        "away_team": "OREGON",
         "completed": false,
         "home_points": null,
-        "home_team": "BOSTON COLLEGE",
+        "home_team": "MICHIGAN STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-21T01:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "LSU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TENNESSEE",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "VIRGINIA TECH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MIAMI",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "VANDERBILT",
+        "completed": false,
+        "home_points": null,
+        "home_team": "FLORIDA",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
@@ -6988,26 +7008,6 @@
       },
       {
         "away_points": null,
-        "away_team": "LOUISIANA MONROE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "APPALACHIAN STATE",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "COASTAL CAROLINA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "LOUISIANA",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
         "away_team": "GEORGIA",
         "completed": false,
         "home_points": null,
@@ -7018,20 +7018,30 @@
       },
       {
         "away_points": null,
-        "away_team": "GEORGIA STATE",
+        "away_team": "ARKANSAS",
         "completed": false,
         "home_points": null,
-        "home_team": "MARSHALL",
+        "home_team": "TEXAS",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
       },
       {
         "away_points": null,
-        "away_team": "GEORGIA SOUTHERN",
+        "away_team": "ARIZONA",
         "completed": false,
         "home_points": null,
-        "home_team": "TROY",
+        "home_team": "KANSAS STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "BYU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "KANSAS",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
@@ -7058,10 +7068,80 @@
       },
       {
         "away_points": null,
-        "away_team": "VIRGINIA TECH",
+        "away_team": "OKLAHOMA STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "MIAMI",
+        "home_team": "ARIZONA STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "TEXAS TECH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BAYLOR",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "UTAH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "TCU",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "NC STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "FLORIDA STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "NORTH CAROLINA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "VIRGINIA",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "PITTSBURGH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "LOUISVILLE",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "STANFORD",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CAL",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "SYRACUSE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BOSTON COLLEGE",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
@@ -7098,130 +7178,10 @@
       },
       {
         "away_points": null,
-        "away_team": "STANFORD",
+        "away_team": "NORTHWESTERN",
         "completed": false,
         "home_points": null,
-        "home_team": "CAL",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "NORTH TEXAS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TULANE",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "ARKANSAS STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "LOUISIANA TECH",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "SOUTH ALABAMA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SOUTHERN MISS",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "BYU",
-        "completed": false,
-        "home_points": null,
-        "home_team": "KANSAS",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "HAWAII",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NEVADA",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "UTSA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "UAB",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "SOUTH FLORIDA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "FAU",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "CHARLOTTE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "TULSA",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "INDIANA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WASHINGTON",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "MARYLAND",
-        "completed": false,
-        "home_points": null,
-        "home_team": "USC",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "WISCONSIN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "PURDUE",
-        "neutral_site": false,
-        "start_date": "2026-11-21T05:00:00.000Z",
-        "week": 12
-      },
-      {
-        "away_points": null,
-        "away_team": "RUTGERS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "PENN STATE",
+        "home_team": "MINNESOTA",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
@@ -7238,110 +7198,150 @@
       },
       {
         "away_points": null,
-        "away_team": "NORTHWESTERN",
+        "away_team": "RUTGERS",
         "completed": false,
         "home_points": null,
-        "home_team": "MINNESOTA",
+        "home_team": "PENN STATE",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
       },
       {
         "away_points": null,
-        "away_team": "PITTSBURGH",
+        "away_team": "WISCONSIN",
         "completed": false,
         "home_points": null,
-        "home_team": "LOUISVILLE",
+        "home_team": "PURDUE",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
       },
       {
         "away_points": null,
-        "away_team": "NORTH CAROLINA",
+        "away_team": "MARYLAND",
         "completed": false,
         "home_points": null,
-        "home_team": "VIRGINIA",
+        "home_team": "USC",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
       },
       {
         "away_points": null,
-        "away_team": "NC STATE",
+        "away_team": "INDIANA",
         "completed": false,
         "home_points": null,
-        "home_team": "FLORIDA STATE",
+        "home_team": "WASHINGTON",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
       },
       {
         "away_points": null,
-        "away_team": "UTAH",
+        "away_team": "CHARLOTTE",
         "completed": false,
         "home_points": null,
-        "home_team": "TCU",
+        "home_team": "TULSA",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
       },
       {
         "away_points": null,
-        "away_team": "TEXAS TECH",
+        "away_team": "SOUTH FLORIDA",
         "completed": false,
         "home_points": null,
-        "home_team": "BAYLOR",
+        "home_team": "FAU",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
       },
       {
         "away_points": null,
-        "away_team": "OKLAHOMA STATE",
+        "away_team": "NORTH TEXAS",
         "completed": false,
         "home_points": null,
-        "home_team": "ARIZONA STATE",
+        "home_team": "TULANE",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
       },
       {
         "away_points": null,
-        "away_team": "ARIZONA",
+        "away_team": "HAWAII",
         "completed": false,
         "home_points": null,
-        "home_team": "KANSAS STATE",
+        "home_team": "NEVADA",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
       },
       {
         "away_points": null,
-        "away_team": "ARKANSAS",
+        "away_team": "ARKANSAS STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "TEXAS",
+        "home_team": "LOUISIANA TECH",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
       },
       {
         "away_points": null,
-        "away_team": "LSU",
+        "away_team": "GEORGIA SOUTHERN",
         "completed": false,
         "home_points": null,
-        "home_team": "TENNESSEE",
+        "home_team": "TROY",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
       },
       {
         "away_points": null,
-        "away_team": "VANDERBILT",
+        "away_team": "GEORGIA STATE",
         "completed": false,
         "home_points": null,
-        "home_team": "FLORIDA",
+        "home_team": "MARSHALL",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "SOUTH ALABAMA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SOUTHERN MISS",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "COASTAL CAROLINA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "LOUISIANA",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "UTSA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UAB",
+        "neutral_site": false,
+        "start_date": "2026-11-21T05:00:00.000Z",
+        "week": 12
+      },
+      {
+        "away_points": null,
+        "away_team": "LOUISIANA MONROE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "APPALACHIAN STATE",
         "neutral_site": false,
         "start_date": "2026-11-21T05:00:00.000Z",
         "week": 12
@@ -7538,16 +7538,6 @@
       },
       {
         "away_points": null,
-        "away_team": "TEMPLE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MEMPHIS",
-        "neutral_site": false,
-        "start_date": "2026-11-27T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
         "away_team": "FAU",
         "completed": false,
         "home_points": null,
@@ -7564,6 +7554,26 @@
         "home_team": "SOUTH FLORIDA",
         "neutral_site": false,
         "start_date": "2026-11-27T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "TEMPLE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MEMPHIS",
+        "neutral_site": false,
+        "start_date": "2026-11-27T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "MISSISSIPPI STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MISSISSIPPI",
+        "neutral_site": false,
+        "start_date": "2026-11-27T17:00:00.000Z",
         "week": 13
       },
       {
@@ -7592,16 +7602,6 @@
         "completed": false,
         "home_points": null,
         "home_team": "IOWA",
-        "neutral_site": false,
-        "start_date": "2026-11-27T17:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "MISSISSIPPI STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MISSISSIPPI",
         "neutral_site": false,
         "start_date": "2026-11-27T17:00:00.000Z",
         "week": 13
@@ -7638,20 +7638,20 @@
       },
       {
         "away_points": null,
-        "away_team": "MINNESOTA",
+        "away_team": "TEXAS",
         "completed": false,
         "home_points": null,
-        "home_team": "WISCONSIN",
+        "home_team": "TEXAS A&M",
         "neutral_site": false,
         "start_date": "2026-11-28T00:30:00.000Z",
         "week": 13
       },
       {
         "away_points": null,
-        "away_team": "TEXAS",
+        "away_team": "MINNESOTA",
         "completed": false,
         "home_points": null,
-        "home_team": "TEXAS A&M",
+        "home_team": "WISCONSIN",
         "neutral_site": false,
         "start_date": "2026-11-28T00:30:00.000Z",
         "week": 13
@@ -7668,20 +7668,130 @@
       },
       {
         "away_points": null,
-        "away_team": "LOUISVILLE",
+        "away_team": "MARSHALL",
         "completed": false,
         "home_points": null,
-        "home_team": "KENTUCKY",
+        "home_team": "LOUISIANA MONROE",
         "neutral_site": false,
         "start_date": "2026-11-28T05:00:00.000Z",
         "week": 13
       },
       {
         "away_points": null,
-        "away_team": "KANSAS STATE",
+        "away_team": "UCONN",
         "completed": false,
         "home_points": null,
-        "home_team": "IOWA STATE",
+        "home_team": "WYOMING",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "USC",
+        "completed": false,
+        "home_points": null,
+        "home_team": "UCLA",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "MICHIGAN STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "RUTGERS",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "WASHINGTON",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OREGON",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "PENN STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MARYLAND",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "PURDUE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "INDIANA",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "VIRGINIA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "VIRGINIA TECH",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "SMU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "STANFORD",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "PITTSBURGH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CAL",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "NOTRE DAME",
+        "completed": false,
+        "home_points": null,
+        "home_team": "SYRACUSE",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "NC STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "NORTH CAROLINA",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "DUKE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "WAKE FOREST",
         "neutral_site": false,
         "start_date": "2026-11-28T05:00:00.000Z",
         "week": 13
@@ -7698,10 +7808,160 @@
       },
       {
         "away_points": null,
-        "away_team": "PITTSBURGH",
+        "away_team": "UTEP",
         "completed": false,
         "home_points": null,
-        "home_team": "CAL",
+        "home_team": "NORTHERN ILLINOIS",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "KANSAS STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "IOWA STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "KANSAS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OKLAHOMA STATE",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "CINCINNATI",
+        "completed": false,
+        "home_points": null,
+        "home_team": "BYU",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "UCF",
+        "completed": false,
+        "home_points": null,
+        "home_team": "COLORADO",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "BAYLOR",
+        "completed": false,
+        "home_points": null,
+        "home_team": "HOUSTON",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "ARIZONA STATE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "ARIZONA",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "TENNESSEE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "VANDERBILT",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "SOUTH CAROLINA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "CLEMSON",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "OKLAHOMA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MISSOURI",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "LOUISVILLE",
+        "completed": false,
+        "home_points": null,
+        "home_team": "KENTUCKY",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "GEORGIA TECH",
+        "completed": false,
+        "home_points": null,
+        "home_team": "GEORGIA",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "LSU",
+        "completed": false,
+        "home_points": null,
+        "home_team": "ARKANSAS",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "AUBURN",
+        "completed": false,
+        "home_points": null,
+        "home_team": "ALABAMA",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "COASTAL CAROLINA",
+        "completed": false,
+        "home_points": null,
+        "home_team": "JAMES MADISON",
+        "neutral_site": false,
+        "start_date": "2026-11-28T05:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "SOUTHERN MISS",
+        "completed": false,
+        "home_points": null,
+        "home_team": "OLD DOMINION",
         "neutral_site": false,
         "start_date": "2026-11-28T05:00:00.000Z",
         "week": 13
@@ -7738,150 +7998,10 @@
       },
       {
         "away_points": null,
-        "away_team": "ILLINOIS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NORTHWESTERN",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
         "away_team": "ARMY",
         "completed": false,
         "home_points": null,
         "home_team": "RICE",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "SMU",
-        "completed": false,
-        "home_points": null,
-        "home_team": "STANFORD",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "UCONN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WYOMING",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "MARSHALL",
-        "completed": false,
-        "home_points": null,
-        "home_team": "LOUISIANA MONROE",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "AUBURN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "ALABAMA",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "LSU",
-        "completed": false,
-        "home_points": null,
-        "home_team": "ARKANSAS",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "GEORGIA TECH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "GEORGIA",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "PURDUE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "INDIANA",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "PENN STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MARYLAND",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "WASHINGTON",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OREGON",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "MICHIGAN STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "RUTGERS",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "USC",
-        "completed": false,
-        "home_points": null,
-        "home_team": "UCLA",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "COASTAL CAROLINA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "JAMES MADISON",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "LOUISIANA TECH",
-        "completed": false,
-        "home_points": null,
-        "home_team": "GEORGIA SOUTHERN",
         "neutral_site": false,
         "start_date": "2026-11-28T05:00:00.000Z",
         "week": 13
@@ -7898,150 +8018,30 @@
       },
       {
         "away_points": null,
-        "away_team": "VIRGINIA",
+        "away_team": "LOUISIANA TECH",
         "completed": false,
         "home_points": null,
-        "home_team": "VIRGINIA TECH",
+        "home_team": "GEORGIA SOUTHERN",
         "neutral_site": false,
         "start_date": "2026-11-28T05:00:00.000Z",
         "week": 13
       },
       {
         "away_points": null,
-        "away_team": "KANSAS",
+        "away_team": "ILLINOIS",
         "completed": false,
         "home_points": null,
-        "home_team": "OKLAHOMA STATE",
+        "home_team": "NORTHWESTERN",
         "neutral_site": false,
         "start_date": "2026-11-28T05:00:00.000Z",
         "week": 13
       },
       {
         "away_points": null,
-        "away_team": "BAYLOR",
+        "away_team": "MICHIGAN",
         "completed": false,
         "home_points": null,
-        "home_team": "HOUSTON",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "DUKE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "WAKE FOREST",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "NC STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NORTH CAROLINA",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "NOTRE DAME",
-        "completed": false,
-        "home_points": null,
-        "home_team": "SYRACUSE",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "SOUTHERN MISS",
-        "completed": false,
-        "home_points": null,
-        "home_team": "OLD DOMINION",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "ARIZONA STATE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "ARIZONA",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "OKLAHOMA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MISSOURI",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "TENNESSEE",
-        "completed": false,
-        "home_points": null,
-        "home_team": "VANDERBILT",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "UCF",
-        "completed": false,
-        "home_points": null,
-        "home_team": "COLORADO",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "SOUTH CAROLINA",
-        "completed": false,
-        "home_points": null,
-        "home_team": "CLEMSON",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "CINCINNATI",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BYU",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "UTEP",
-        "completed": false,
-        "home_points": null,
-        "home_team": "NORTHERN ILLINOIS",
-        "neutral_site": false,
-        "start_date": "2026-11-28T05:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "CENTRAL MICHIGAN",
-        "completed": false,
-        "home_points": null,
-        "home_team": "BALL STATE",
+        "home_team": "OHIO STATE",
         "neutral_site": false,
         "start_date": "2026-11-28T17:00:00.000Z",
         "week": 13
@@ -8058,10 +8058,10 @@
       },
       {
         "away_points": null,
-        "away_team": "MICHIGAN",
+        "away_team": "CENTRAL MICHIGAN",
         "completed": false,
         "home_points": null,
-        "home_team": "OHIO STATE",
+        "home_team": "BALL STATE",
         "neutral_site": false,
         "start_date": "2026-11-28T17:00:00.000Z",
         "week": 13
@@ -8074,16 +8074,6 @@
         "home_team": "WESTERN KENTUCKY",
         "neutral_site": false,
         "start_date": "2026-11-28T18:00:00.000Z",
-        "week": 13
-      },
-      {
-        "away_points": null,
-        "away_team": "LIBERTY",
-        "completed": false,
-        "home_points": null,
-        "home_team": "MISSOURI STATE",
-        "neutral_site": false,
-        "start_date": "2026-11-28T19:00:00.000Z",
         "week": 13
       },
       {
@@ -8102,6 +8092,16 @@
         "completed": false,
         "home_points": null,
         "home_team": "FLORIDA INTERNATIONAL",
+        "neutral_site": false,
+        "start_date": "2026-11-28T19:00:00.000Z",
+        "week": 13
+      },
+      {
+        "away_points": null,
+        "away_team": "LIBERTY",
+        "completed": false,
+        "home_points": null,
+        "home_team": "MISSOURI STATE",
         "neutral_site": false,
         "start_date": "2026-11-28T19:00:00.000Z",
         "week": 13
@@ -18407,8 +18407,8 @@
     }
   },
   "meta": {
-    "built_at": "2026-08-24T17:21:22.182800+00:00",
-    "snapshot_id": "ad618b00adb5d1ad",
+    "built_at": "2026-08-24T17:22:52.192277+00:00",
+    "snapshot_id": "24732e2cc08bf4a9",
     "week": 1,
     "year": 2026
   }
