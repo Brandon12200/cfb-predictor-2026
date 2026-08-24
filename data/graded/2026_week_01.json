@@ -1,0 +1,29 @@
+{
+  "graded": [],
+  "meta": {
+    "coverage": {
+      "graded": 0,
+      "no_closing_line": [],
+      "predicted": 11,
+      "ungraded": [
+        "baylor-vs-auburn-week1",
+        "boston-college-vs-cincinnati-week1",
+        "clemson-vs-lsu-week1",
+        "colorado-vs-georgia-tech-week1",
+        "louisville-vs-mississippi-week1",
+        "miami-vs-stanford-week1",
+        "nc-state-vs-virginia-week1",
+        "north-carolina-vs-tcu-week1",
+        "smu-vs-florida-state-week1",
+        "ucla-vs-cal-week1",
+        "wisconsin-vs-notre-dame-week1"
+      ]
+    },
+    "engine": "grading_v1",
+    "generated_at": "2026-08-24T17:22:42.141861+00:00",
+    "graded_count": 0,
+    "schema_version": 1,
+    "week": 1,
+    "year": 2026
+  }
+}
