@@ -731,8 +731,8 @@
     }
   },
   "meta": {
-    "built_at": "2026-08-18T13:59:17.484025+00:00",
-    "snapshot_id": "fa6e3c163c85c7c3",
+    "built_at": "2026-08-25T14:07:58.274529+00:00",
+    "snapshot_id": "b195fcc1e0eb8b9a",
     "week": 1,
     "year": 2026
   },
@@ -909,29 +909,29 @@
     "advanced_stats": {
       "count": 0,
       "fallback_reason": null,
-      "fetched_at": "2026-08-18T13:59:14.564191+00:00",
+      "fetched_at": "2026-08-25T14:07:54.418053+00:00",
       "source": "cfbd"
     },
     "betting_lines": {
       "count": 111,
       "fallback_reason": null,
-      "fetched_at": "2026-08-18T13:59:17.032984+00:00",
+      "fetched_at": "2026-08-25T14:07:58.006962+00:00",
       "quota": {
-        "remaining": 477,
-        "used": 23
+        "remaining": 462,
+        "used": 38
       },
       "source": "odds"
     },
     "coaching": {
       "count": 138,
       "fallback_reason": null,
-      "fetched_at": "2026-08-18T13:59:15.885319+00:00",
+      "fetched_at": "2026-08-25T14:07:56.230888+00:00",
       "source": "cfbd"
     },
     "games": {
       "count": 3610,
       "fallback_reason": null,
-      "fetched_at": "2026-08-18T13:59:06.971284+00:00",
+      "fetched_at": "2026-08-25T14:07:47.671732+00:00",
       "source": "cfbd"
     },
     "registry": {
@@ -941,19 +941,19 @@
     "returning_production": {
       "count": 136,
       "fallback_reason": null,
-      "fetched_at": "2026-08-18T13:59:16.911071+00:00",
+      "fetched_at": "2026-08-25T14:07:57.956021+00:00",
       "source": "cfbd"
     },
     "season_stats": {
       "count": 0,
       "fallback_reason": null,
-      "fetched_at": "2026-08-18T13:59:16.033495+00:00",
+      "fetched_at": "2026-08-25T14:07:56.330890+00:00",
       "source": "cfbd"
     },
     "sp_ratings": {
       "count": 139,
       "fallback_reason": null,
-      "fetched_at": "2026-08-18T13:59:16.787470+00:00",
+      "fetched_at": "2026-08-25T14:07:57.887697+00:00",
       "source": "cfbd"
     }
   },
