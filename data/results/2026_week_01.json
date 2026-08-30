@@ -1,0 +1,50 @@
+{
+  "coverage": {
+    "completed": 2,
+    "pending": [
+      "BAYLOR@AUBURN",
+      "BOSTON COLLEGE@CINCINNATI",
+      "CLEMSON@LSU",
+      "COLORADO@GEORGIA TECH",
+      "LOUISVILLE@MISSISSIPPI",
+      "MIAMI@STANFORD",
+      "SMU@FLORIDA STATE",
+      "UCLA@CAL",
+      "WISCONSIN@NOTRE DAME"
+    ],
+    "postponed": [],
+    "predicted": 11,
+    "unmatched": []
+  },
+  "recorded_date": "2026-08-30",
+  "results": [
+    {
+      "away_score": 8,
+      "away_team": "NC STATE",
+      "completed_in_week": 1,
+      "fetched_at": "2026-08-30T19:28:49.670447+00:00",
+      "game_id": "nc-state-vs-virginia-week1",
+      "home_score": 34,
+      "home_team": "VIRGINIA",
+      "neutral_site": false,
+      "source": "cfbd_v2",
+      "start_date": "2026-08-29T19:30:00.000Z",
+      "week": 1
+    },
+    {
+      "away_score": 15,
+      "away_team": "NORTH CAROLINA",
+      "completed_in_week": 1,
+      "fetched_at": "2026-08-30T19:28:49.670447+00:00",
+      "game_id": "north-carolina-vs-tcu-week1",
+      "home_score": 10,
+      "home_team": "TCU",
+      "neutral_site": true,
+      "source": "cfbd_v2",
+      "start_date": "2026-08-29T16:00:00.000Z",
+      "week": 1
+    }
+  ],
+  "season": 2026,
+  "week": 1
+}
