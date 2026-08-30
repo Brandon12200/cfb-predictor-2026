@@ -1,0 +1,67 @@
+# 2026 Season Report — to date
+
+_2/11 games graded across 1 week(s)._
+
+### Games of interest, by lean side (D27 — read this before the blended numbers)
+
+_4 of 11 games carry a gradable lean (4 home / 0 away, —)._
+
+| lean | games | W-L-P | ATS win% | Wilson 95% | avg CLV |
+|---|---|---|---|---|---|
+| home | 4 | 0-0-0 | — | — | — no closing lines captured yet (honest-missing) |
+| away | 0 | 0-0-0 | — | — | — (no games on this side) |
+| _naive: always lean home_ | 0 | 0-0-0 | — | — | — (no games on this side) |
+
+_No graded bets yet, so the model cannot be differenced against the naive always-lean-home baseline. That comparison — not the raw win% — is what makes the number evidence about the model (D27)._
+
+_7 neutral games: no side taken — CLV is defined from the bet side's perspective, so it is null rather than 0.0 (D22 f3). Their own selectivity bucket, never win-rated._
+
+_Leans are structurally home-skewed: TravelBurden/ConsecutiveRoad only penalise the visitor and Altitude only advantages the host (D27). Read the away cell's Wilson interval before drawing anything from it._
+
+### Placeable strategy — blended (secondary; see the lean split above)
+
+_Blended across both lean sides. Per D27 this is **not** the headline: with a structurally home-skewed lean, a single number here is dominated by how home teams did against the spread._
+
+| metric | value |
+|---|---|
+| ATS record | 0-0-0 |
+| ATS win% | —  — |
+| ROI @ -110 | — ($0.00 on 0 bets) |
+| Sharpe | — |
+| max drawdown | 0.0 units |
+| longest losing streak | 0 |
+| avg CLV | — (no placed bets) |
+
+_No bets placed — the model declined the slate. Selectivity working as designed (dormancy-as-design, 3c.9), not breakage._
+
+### Calibration by tier
+
+Brier score: **—** (n=0; lower is better, 0.25 = no-skill).
+
+| tier | n | ATS win% | mean conf | Wilson 95% |
+|---|---|---|---|---|
+| A | 0 | — | — | — |
+| B | 0 | — | — | — |
+| C | 0 | — | — | — |
+
+_No graded bets in these tiers yet — tier separation unmeasured. An empty breakdown here is the honest state (e.g. an all-NO_BET slate), not a bug._
+
+### Selectivity (was the skip right?)
+
+| bucket | games | ATS win% |
+|---|---|---|
+| placed bets | 9 | — |
+| NO_BET (hypothetical lean) | 0 | — |
+| NO_BET (neutral, no lean) | 2 | — (no side) |
+
+_Mixed slate — placed bets alongside NO_BET skips (the skip is graded hypothetically)._
+
+### Per-factor attribution (converts `reasoned` → `measured` for 2027)
+
+| factor | fired | ATS (W-L) | ATS win% | avg CLV |
+|---|---|---|---|---|
+| Sandwich | 1 | 0-0 | — | — |
+| TravelBurden | 4 | 0-0 | — | — |
+
+_read the Wilson intervals — first-season per-factor cells are small_
+
