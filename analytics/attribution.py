@@ -17,6 +17,7 @@ from typing import Any
 
 from analytics.calibration_evidence import ats_outcome, wilson_interval
 from utils.prediction_schema import clv as clv_from_close
+from utils.prediction_schema import is_no_bet
 
 
 def _rate_and_clv(records: list[dict], *, clv_key: str = "clv") -> dict[str, Any]:
@@ -32,7 +33,11 @@ def _rate_and_clv(records: list[dict], *, clv_key: str = "clv") -> dict[str, Any
     # Placed vs hypothetical, on the same convention as kpis/calibration/selectivity. Preseason
     # every game is NO_BET, so a lean-split cell can be 100% "what would have happened" — and an
     # unlabeled measurement being read as a track record is the D17 failure in miniature.
-    hypothetical = sum(1 for r in records if r.get("is_hypothetical"))
+    # From the CLAIM, not from `is_hypothetical`. Counting hypotheticals truthily is safe, but
+    # deriving `n_placed` by SUBTRACTION reintroduced absence-as-affirmative: an ungraded row has
+    # no `is_hypothetical` key, so it fell out of `hypothetical` and silently became "placed"
+    # (D40, second instance — latent until a side had both graded and ungraded rows).
+    hypothetical = sum(1 for r in records if is_no_bet(r))
     return {
         "n_games": len(records), "n_graded": n, "wins": wins, "losses": losses, "pushes": pushes,
         "n_placed": len(records) - hypothetical, "n_hypothetical": hypothetical,

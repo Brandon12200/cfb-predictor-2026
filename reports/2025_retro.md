@@ -10,9 +10,9 @@ _300 of 300 games carry a gradable lean (120 home / 180 away, 0.67:1)._
 
 | lean | games | W-L-P | ATS win% | Wilson 95% | avg CLV |
 |---|---|---|---|---|---|
-| home | 120 | 60-57-3 | 51.3% | [42%–60%] | — no closing lines captured yet (honest-missing) |
-| away | 180 | 77-100-3 | 43.5% | [36%–51%] | — no closing lines captured yet (honest-missing) |
-| _naive: always lean home_ | 300 | 160-134-6 | 54.4% | [49%–60%] | — no closing lines captured yet (honest-missing) |
+| home | 120 | 60-57-3 | 51.3% | [42%–60%] | — graded, but no closing line captured (honest-missing) |
+| away | 180 | 77-100-3 | 43.5% | [36%–51%] | — graded, but no closing line captured (honest-missing) |
+| _naive: always lean home_ | 300 | 160-134-6 | 54.4% | [49%–60%] | — graded, but no closing line captured (honest-missing) |
 
 _Model 46.6% vs naive baseline 54.4% on the same games: **-7.8%** — **at or below** always taking the home team._
 

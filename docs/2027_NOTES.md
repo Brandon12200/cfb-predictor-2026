@@ -321,6 +321,16 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     exist until a week has been graded — the never-create-empty-commits rule meeting a preseason.
     First opportunity is **Tuesday 2026-09-01**, conditional on a game finishing after the Sunday
     grade. Until then the three-commit taxonomy is asserted by tests, not by a live run.
+
+    **AMENDED with the actual (2026-08-30).** The estimate was wrong in two ways, both worth
+    keeping. First, a `grading:` commit does *not* require a graded game — it requires a **claim**:
+    Rehearsal 2's re-dispatch produced one on 2026-08-24 carrying an empty envelope (0 entries), so
+    "none can exist until a week has been graded" was already false. Second, the first **populated**
+    grade landed on **Sunday 2026-08-30**, not Tuesday 2026-09-01 — week 1 spans Aug 29–Sep 7 and
+    two games (UNC@TCU, NC State@Virginia) kicked off Aug 29, so the Sunday grade had real results
+    two days before the estimate. The live three-commit Sunday ordering
+    (`results:` → `grading:` → `report:`) is therefore now proven by `220e227`/`1479dfe`/`964fe6a`.
+    The Tuesday `grading:` → `snapshot:` → `predictions:` ordering remains unproven live.
 19. **§8's own numbering is scrambled** (it runs 1–5, 7, 11, 9, 10, 6, then this block).
     **Do not renumber before the 2027 rebuild.** The exception-2 commit message (`c89d625`) cites
     an item *by number* — "recorded in 2027_NOTES §8 item 8" — and **a commit message cannot be
@@ -361,3 +371,32 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     sweep added under D39 (the reverse direction of the check that matters). Harmless — an unused
     declaration is inert, unlike an undeclared reference — and left alone in 2026 rather than
     touched during the pre-kickoff window. Remove it in 2027 if nothing has come to consume it.
+24. **The tracked slate is a team-membership filter, and it misses games the owner considers in
+    scope.** `tracked_slate` (`scripts/slate_fingerprint.py:77-83`) selects games where both teams
+    are among the 68 tracked (P4 + Notre Dame), over a snapshot fetched `season_type="regular"`
+    (`data/clients/cfbd_v2.py:86-91`). Measured on the 2026 week-1 snapshot: 338 games across
+    **weeks 1–13 only** — 328 P4-vs-P4 plus 10 ND — with **conference championship games absent**
+    (participants TBD at snapshot time) and all postseason excluded by construction. Separately, a
+    tracked game whose line posts *after* its Tuesday snapshot can never be claimed: slate
+    membership is frozen at build time (`data/snapshot/builder.py:135`) and later weeks enumerate
+    only their own week. **Owner requirement for the 2027 rebuild: every P4-vs-P4 game, every week —
+    including conference championships — must be in the tracked slate and claimable**, which needs
+    (a) a late-scheduling refresh so CCGs enter once participants are known, and (b) a claim path
+    for a game whose line posts after its week's snapshot was built. Note also that `season.json`'s
+    `slate_filter: "fbs_vs_fbs"` is documentation only — no code reads it (`docs/PIPELINE.md:285`
+    says the dropped-game detector *will* consume it), and the operative filter is narrower.
+25. **A multi-commit push cancels its own intermediate CI runs.** `ci.yml:14-16` sets
+    `concurrency: group: ci-${{ github.ref }}, cancel-in-progress: true`, so when the pipeline
+    pushes its commit taxonomy in sequence, each push supersedes the last and only the **final**
+    commit's CI runs to completion. Observed live: the Sunday 2026-08-30 grade pushed
+    `results:`/`grading:`/`report:` and CI was **cancelled** on the first two (`220e227`, `1479dfe`),
+    succeeding only on `964fe6a`. Benign in itself — the final tree is the one that matters and it
+    is verified — but it means **intermediate commits are never CI-verified**, and per item 15 a
+    `cancelled` conclusion does not fire `if: failure()`, so nothing reports it either.
+26. **The Tuesday cancelled run was the `snapshot:` commit, and the claim's CI passed only by
+    ordering.** On 2026-08-25 the live predict pushed `snapshot:` then `predictions:`; CI was
+    cancelled on `7485244` (the snapshot) and succeeded on `2a331e6` (**the week-1 claim**). The
+    pre-registration artifact's own commit was therefore verified — but only because the claim
+    happens to be committed **last** in the Tuesday taxonomy. Reorder the taxonomy and the claim
+    commit's CI would be the one cancelled. 2027 should either exempt pipeline pushes from
+    `cancel-in-progress`, or assert that the claim commit is always terminal in its push sequence.

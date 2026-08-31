@@ -135,6 +135,23 @@ GRADED_SCHEMA_VERSION = 1
 
 # Canonical per-record key inventory for the graded artifact (the parity test pins the live writer +
 # the graded golden example to this exact set, mirroring V2_RECORD_KEYS).
+def is_no_bet(pred: dict) -> bool:
+    """Was this prediction a NO_BET? Derived from the CLAIM, which is the only source that exists
+    for every row.
+
+    **Never infer this from `is_hypothetical`.** That field is written onto GRADED records only
+    (`_GRADED_FIELDS`, `analytics/join.py`), so an ungraded row simply has no such key — and
+    `not r.get("is_hypothetical")` then reads absence as an affirmative "this was a placed bet".
+    That produced the 2026 week-1 report's "placed bets: 9" on an 11/11 NO_BET slate (D40).
+    """
+    if "no_bet" in pred or "prediction_type" in pred:
+        return bool(pred.get("no_bet", False)) or pred.get("prediction_type") == "NO_BET"
+    # A caller holding GRADED-only records (no claim fields) still has the derived flag. Falling
+    # back to it is safe *because it is present*; what is never safe is reading its ABSENCE as
+    # "placed", which is the inversion this helper exists to prevent.
+    return bool(pred.get("is_hypothetical", False))
+
+
 GRADED_RECORD_KEYS: tuple[str, ...] = (
     "game_id", "home_team", "away_team", "week",
     "closing_spread", "close_as_of", "clv", "ats_result", "is_hypothetical",
@@ -165,7 +182,7 @@ def build_graded_record(pred: dict, result: dict, *, closing_spread: Any, close_
         "close_as_of": close_as_of,
         "clv": clv_points,
         "ats_result": ats_result,
-        "is_hypothetical": bool(pred.get("no_bet", False)) or pred.get("prediction_type") == "NO_BET",
+        "is_hypothetical": is_no_bet(pred),
         "home_score": result.get("home_score"),
         "away_score": result.get("away_score"),
         "graded_at": graded_at,

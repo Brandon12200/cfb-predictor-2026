@@ -626,3 +626,89 @@ asserted the script *emits* the flag and that the workflow *contains* the gate s
 the wiring is **named**, not that it is **connected**. HANDOFF §(g).1 states it exactly: *"String-presence
 -in-YAML is not behaviour… if you write a test that greps a workflow file, ask what would happen if
 the code inside it never ran."* Here the code inside it ran perfectly and the value never arrived.
+
+---
+
+## D40 — The selectivity buckets read a graded-only field's absence as "placed bet" — **RATIFIED (owner, 2026-08-30)**
+**Date:** 2026-08-30
+
+**The defect, on the public record.** `reports/2026_week_01.md` — the season's first Sunday report —
+stated **"placed bets: 9"** over a slate whose byte-immutable claim is **11/11 NO_BET**, and
+contradicted itself two tables higher ("$0.00 on 0 bets — the model declined the slate"). True
+buckets: **0 placed / 4 NO_BET-with-lean / 7 NO_BET-neutral**.
+
+**Root cause.** `analytics/selectivity.py:35` **as it stood at `964fe6a`** (the defect commit;
+the line is `:41` at head, now fixed) read
+`placed = [r for r in joined if not r.get("is_hypothetical")]`. `is_hypothetical` is written onto
+**graded records only** (`analytics/join.py:12`, copied at `:24-27`); an ungraded row takes the
+`else` branch at `:28-29` and has no such key. The v2 prediction schema does not define it. So
+`.get()` returned `None`, `not None` was `True`, and **absence became an affirmative "this was a
+real wager."** The rendered 9/0/2 was an ungraded/graded split wearing the placed/skipped label —
+reproduced exactly from the committed artifacts before any fix.
+
+**A second consequence, easily missed.** `selectivity.py:48` at `964fe6a` (`:57` at head) computes
+`all_no_bet = len(placed) == 0 and len(no_bet) > 0`. With nine phantom placed bets this was `False`,
+so the report **suppressed** the "Entire slate NO_BET — selectivity working as designed" note and
+printed "Mixed slate" instead. The bug both fabricated bets and silenced the sentence explaining
+there were none — a declined slate reading as a broken one, which is precisely the misreading
+dormancy-as-design (3c.9) exists to prevent.
+
+**A latent second instance, found by the mandated sweep.** `analytics/attribution.py`'s
+`_rate_and_clv` counted hypotheticals truthily (safe) but then derived
+`"n_placed": len(records) - hypothetical` — inferring "placed" by **subtraction**, which
+reintroduces the same inversion on a set that includes ungraded rows. Fixed under the same ruling.
+
+> **Correction, from review of this entry's own PR.** An earlier draft said this "would have
+> surfaced the following Sunday" via `analytics/reports.py`'s Mixed-slate branch. **That
+> attribution was wrong.** That branch (`reports.py:85-86`) reads `lean["meta"]["n_placed"]`, which
+> is computed at `attribution.py:104` from the `matched` set built at `:79` — graded-only, so every
+> row carries the key — and is therefore already safe. The field actually fixed,
+> `sides[...]["n_placed"]` from `_rate_and_clv`, is **read nowhere in the codebase today**;
+> reverting that one line still leaves the suite green. So it is a real inversion in a currently
+> **dormant** field, not one that was about to render. The fix stands; the mechanism claimed for it
+> did not, and is corrected here rather than left as a plausible-sounding story in the record.
+
+**Sweep result (2027_NOTES §3 discipline).** Every consumer of `is_hypothetical` was checked. All
+others are safe, and for a consistent reason: they are either conjoined with a gradedness guard
+(`kpis.py:33`, `calibration.py:19` require `ats_result in (...)`), operate on a list already filtered
+to graded rows (`kpis.py:91-92`, filtered at `reports.py:34`; `verify_phase_4.py:139` on
+`build_graded(...)["graded"]`), or test the flag **positively** so absence is simply not counted
+(`attribution.py:96`, whose `matched` is graded-only). `attribution.py:104` subtracts like the
+defect but is likewise safe, for the same reason: `matched` (built at `:79`) contains graded rows
+only.
+`reports.py` passes the **full join** to `selectivity_report` (`:39`) but a **pre-filtered** list to
+`kpi_pack` (`:36`, filtered at `:34`) — that asymmetry is why exactly one place was live-wrong.
+
+**Why it survived to production.** This was the **first partially-graded render in the project's
+history**: rehearsals graded nothing, so `placed` had never been non-empty-by-accident. The seam was
+also *filed in advance* — the pre-Rehearsal-0 `pipeline-adversary` audit recorded that nothing
+asserts on the rendered report file and that the golden `render_week` test is `pytest.skip`-guarded,
+dispositioned to the drawer because the pipeline's written acceptance criteria were met. **The
+defect appeared exactly where the audit said the cover ended.**
+
+**Fix.** A single shared predicate, `utils.prediction_schema.is_no_bet`, deriving the answer from the
+**claim** (`no_bet` / `prediction_type`) — the only fields present on every joined row, because the
+join starts from the prediction. It falls back to `is_hypothetical` **only when present**, for
+callers holding graded-only records; what it never does is read absence as "placed". Lean-vs-neutral
+now splits on `edge_direction` rather than `ats_result`, which had conflated "no side taken" with
+"not played yet". Buckets partition the slate by construction.
+
+**Also corrected: a message that blamed the wrong subsystem.** The lean CLV cell said "no closing
+lines captured yet" whenever a side had games but no CLV. Both graded records carried a **real**
+closing line (`-4.1`, `-8.5`) with a `close_as_of` — Saturday's waves captured and the join found
+them. The cell was empty because both graded games were `edge_direction: neutral`, so no CLV is
+defined (f3). It now distinguishes "no games graded on this side yet" from the genuine
+honest-missing case, so a future reader does not hunt a capture failure that never happened.
+
+**Containment was total, and by design.** The claim (`data/predictions/`) is byte-immutable and
+untouched; `data/graded/` is a separate artifact and untouched; the defect lived entirely in a
+**rendering**. D23 reclassified `reports/` out of the immutability tier precisely so a renderer bug
+could be fixed and the artifact regenerated without editing the record — which is exactly the remedy
+applied here, to both `2026_week_01.md` and `2026_season.md` (which carried the identical 9/0/2).
+
+**The lesson.** A field that exists only after an event has occurred cannot be used to classify rows
+that predate it, and `dict.get()` makes that mistake silent: **absence and negation are not the same
+proposition.** Where a fact is knowable from the claim, derive it from the claim — the claim exists
+for every row, at every stage, forever. The assertion the adversary said was missing now exists:
+`tests/test_lean_attribution.py` renders a partially-graded week and pins the buckets against the
+claim, verified to fail with `assert 9 == 0` against the original code.

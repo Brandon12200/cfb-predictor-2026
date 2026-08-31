@@ -240,7 +240,13 @@ def test_an_ungraded_slate_states_its_reason_rather_than_showing_a_dash():
 
     text = "\n".join(_lean_block(report_context(games)))
     assert "No graded bets yet" in text
-    assert "honest-missing" in text
+    # Was `assert "honest-missing" in text`, which pinned wording that blamed line CAPTURE for an
+    # empty cell. These games simply have not kicked off. The 2026 week-1 report proved the
+    # distinction matters: every graded record carried a real closing line, yet the cell read
+    # "no closing lines captured yet" (D40). Honest-missing is now reserved for its real case —
+    # graded, but no closing line.
+    assert "no games graded on this side yet" in text
+    assert "no closing lines captured" not in text
 
 
 def test_an_empty_slate_does_not_crash():
@@ -313,3 +319,90 @@ def test_the_lean_block_precedes_the_blended_kpis_in_a_rendered_report():
     ]}
     text = render_season([(preds, None)], title="T")
     assert text.index("by lean side") < text.index("Placeable strategy")
+
+
+# --- the partial-week seam: buckets must come from the CLAIM, not from gradedness ----------------
+
+def _partial_week_join():
+    """A slate where SOME games are graded and some are not — the shape that broke.
+
+    Built from the committed 2026 week-1 artifacts when present (the real thing), else synthesised.
+    """
+    import json
+    from pathlib import Path
+
+    from analytics.join import join
+
+    _REPO_ROOT = Path(__file__).resolve().parent.parent
+    pred_p = _REPO_ROOT / "data" / "predictions" / "2026_week_01.json"
+    grad_p = _REPO_ROOT / "data" / "graded" / "2026_week_01.json"
+    if pred_p.exists() and grad_p.exists():
+        return join(json.loads(pred_p.read_text()), json.loads(grad_p.read_text()))
+
+    preds = {"predictions": [
+        {"game_id": f"g{i}-week1", "week": 1, "no_bet": True, "prediction_type": "NO_BET",
+         "edge_direction": "home" if i < 4 else "neutral", "confidence_tier": "A",
+         "predicted_edge": 0.0, "vegas_spread": -3.0, "clv": None, "closing_spread": None,
+         "ats_result": None, "graded_at": None}
+        for i in range(11)]}
+    graded = {"graded": [
+        {"game_id": "g9-week1", "is_hypothetical": True, "ats_result": None, "clv": None,
+         "closing_spread": -4.1, "close_as_of": "t", "home_score": 34, "away_score": 8,
+         "graded_at": "t"},
+        {"game_id": "g10-week1", "is_hypothetical": True, "ats_result": None, "clv": None,
+         "closing_spread": -8.5, "close_as_of": "t", "home_score": 10, "away_score": 15,
+         "graded_at": "t"}]}
+    return join(preds, graded)
+
+
+def test_partial_week_buckets_come_from_the_claim_not_from_gradedness():
+    """**The assertion the pre-R0 adversary said was missing, and the defect it would have caught.**
+
+    `is_hypothetical` is written onto GRADED records only, so on an ungraded row
+    `not r.get("is_hypothetical")` reads absence as an affirmative "this was a placed bet". The
+    first partially-graded render in the project's history (2026 week 1, 2 of 11 graded) therefore
+    reported **"placed bets: 9"** over a slate whose byte-immutable claim is 11/11 NO_BET — and
+    suppressed the dormancy note, because `all_no_bet` requires `placed == 0`.
+
+    Buckets are a property of the CLAIM. Gradedness is tracked separately. This pins both.
+    """
+    from analytics.selectivity import selectivity_report
+    from utils.prediction_schema import is_no_bet
+
+    joined = _partial_week_join()
+    graded_rows = [r for r in joined if r.get("graded")]
+    assert 0 < len(graded_rows) < len(joined), (
+        "this test is meaningless unless the week is PARTIALLY graded — some rows graded, some not"
+    )
+
+    s = selectivity_report(joined)
+    placed = s["placed"]["n_games"]
+    lean = s["no_bet_hypothetical"]["n_games"]
+    neutral = s["no_lean"]["n_games"]
+
+    assert placed == sum(1 for r in joined if not is_no_bet(r)), (
+        "`placed` must equal the count of non-NO_BET predictions in the claim. Any other number "
+        "means the bucketing is reading gradedness (or the absence of a graded-only field) as a bet."
+    )
+    assert placed + lean + neutral == len(joined), (
+        f"buckets must partition the slate by construction: {placed}+{lean}+{neutral} != {len(joined)}"
+    )
+    if placed == 0:
+        assert s["all_no_bet_slate"] is True
+        assert "selectivity working as designed" in s["note"], (
+            "an all-NO_BET slate must carry the dormancy note; suppressing it is how a declined "
+            "slate reads as a broken one"
+        )
+
+
+def test_an_ungraded_no_bet_is_never_counted_as_a_placed_bet():
+    """The specific inversion, isolated: one NO_BET game, not yet graded."""
+    from analytics.join import join
+    from analytics.selectivity import selectivity_report
+
+    joined = join({"predictions": [{"game_id": "x-week1", "week": 1, "no_bet": True,
+                                    "prediction_type": "NO_BET", "edge_direction": "home"}]}, None)
+    assert "is_hypothetical" not in joined[0], "precondition: the ungraded row has no such key"
+    s = selectivity_report(joined)
+    assert s["placed"]["n_games"] == 0, "an ungraded NO_BET was counted as a placed bet"
+    assert s["no_bet_hypothetical"]["n_games"] == 1
