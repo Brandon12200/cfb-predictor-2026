@@ -637,7 +637,8 @@ stated **"placed bets: 9"** over a slate whose byte-immutable claim is **11/11 N
 contradicted itself two tables higher ("$0.00 on 0 bets — the model declined the slate"). True
 buckets: **0 placed / 4 NO_BET-with-lean / 7 NO_BET-neutral**.
 
-**Root cause.** `analytics/selectivity.py:35` read
+**Root cause.** `analytics/selectivity.py:35` **as it stood at `964fe6a`** (the defect commit;
+the line is `:41` at head, now fixed) read
 `placed = [r for r in joined if not r.get("is_hypothetical")]`. `is_hypothetical` is written onto
 **graded records only** (`analytics/join.py:12`, copied at `:24-27`); an ungraded row takes the
 `else` branch at `:28-29` and has no such key. The v2 prediction schema does not define it. So
@@ -645,7 +646,7 @@ buckets: **0 placed / 4 NO_BET-with-lean / 7 NO_BET-neutral**.
 real wager."** The rendered 9/0/2 was an ungraded/graded split wearing the placed/skipped label —
 reproduced exactly from the committed artifacts before any fix.
 
-**A second consequence, easily missed.** `selectivity.py:48` computes
+**A second consequence, easily missed.** `selectivity.py:48` at `964fe6a` (`:57` at head) computes
 `all_no_bet = len(placed) == 0 and len(no_bet) > 0`. With nine phantom placed bets this was `False`,
 so the report **suppressed** the "Entire slate NO_BET — selectivity working as designed" note and
 printed "Mixed slate" instead. The bug both fabricated bets and silenced the sentence explaining
@@ -660,8 +661,8 @@ reintroduces the same inversion on a set that includes ungraded rows. Fixed unde
 > **Correction, from review of this entry's own PR.** An earlier draft said this "would have
 > surfaced the following Sunday" via `analytics/reports.py`'s Mixed-slate branch. **That
 > attribution was wrong.** That branch (`reports.py:85-86`) reads `lean["meta"]["n_placed"]`, which
-> is computed at `attribution.py:103` from `matched` — a graded-only set (`:74`) where every row
-> carries the key — and is therefore already safe. The field actually fixed,
+> is computed at `attribution.py:104` from the `matched` set built at `:79` — graded-only, so every
+> row carries the key — and is therefore already safe. The field actually fixed,
 > `sides[...]["n_placed"]` from `_rate_and_clv`, is **read nowhere in the codebase today**;
 > reverting that one line still leaves the suite green. So it is a real inversion in a currently
 > **dormant** field, not one that was about to render. The fix stands; the mechanism claimed for it
@@ -672,8 +673,9 @@ others are safe, and for a consistent reason: they are either conjoined with a g
 (`kpis.py:33`, `calibration.py:19` require `ats_result in (...)`), operate on a list already filtered
 to graded rows (`kpis.py:91-92`, filtered at `reports.py:34`; `verify_phase_4.py:139` on
 `build_graded(...)["graded"]`), or test the flag **positively** so absence is simply not counted
-(`attribution.py:91`, whose `matched` is graded-only). `attribution.py:103` subtracts like the
-defect but is likewise safe, for the same reason: `matched` contains graded rows only.
+(`attribution.py:96`, whose `matched` is graded-only). `attribution.py:104` subtracts like the
+defect but is likewise safe, for the same reason: `matched` (built at `:79`) contains graded rows
+only.
 `reports.py` passes the **full join** to `selectivity_report` (`:39`) but a **pre-filtered** list to
 `kpi_pack` (`:36`, filtered at `:34`) — that asymmetry is why exactly one place was live-wrong.
 
