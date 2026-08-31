@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import Any
 
 from analytics.calibration_evidence import wilson_interval
+from utils.prediction_schema import is_no_bet
 
 
 def _rate(records: list[dict]) -> dict[str, Any]:
@@ -32,10 +33,18 @@ def _rate(records: list[dict]) -> dict[str, Any]:
 
 
 def selectivity_report(joined: list[dict]) -> dict[str, Any]:
-    placed = [r for r in joined if not r.get("is_hypothetical")]
-    no_bet = [r for r in joined if r.get("is_hypothetical")]
-    no_bet_lean = [r for r in no_bet if r.get("ats_result") in ("win", "loss", "push")]
-    no_lean = [r for r in no_bet if r.get("ats_result") is None]
+    # Bucket from the CLAIM, never from a graded-only field. `is_hypothetical` is written onto
+    # graded records only, so on an ungraded row `not r.get("is_hypothetical")` reads absence as
+    # "this was a placed bet" — which rendered "placed bets: 9" over an 11/11 NO_BET slate in the
+    # 2026 week-1 report (D40). `no_bet` / `prediction_type` exist on every joined row because the
+    # join starts from the prediction, so these buckets partition the slate by construction.
+    placed = [r for r in joined if not is_no_bet(r)]
+    no_bet = [r for r in joined if is_no_bet(r)]
+    # Lean vs neutral is a property of the CLAIM (`edge_direction`), not of whether the game has
+    # been graded yet. Splitting on `ats_result` conflated "no side taken" with "not played yet",
+    # so a NO_BET game with a real lean vanished from its bucket until kickoff.
+    no_bet_lean = [r for r in no_bet if r.get("edge_direction") in ("home", "away")]
+    no_lean = [r for r in no_bet if r.get("edge_direction") not in ("home", "away")]
 
     placed_rate = _rate(placed)
     lean_rate = _rate(no_bet_lean)

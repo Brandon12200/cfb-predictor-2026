@@ -8,7 +8,7 @@ _4 of 11 games carry a gradable lean (4 home / 0 away, —)._
 
 | lean | games | W-L-P | ATS win% | Wilson 95% | avg CLV |
 |---|---|---|---|---|---|
-| home | 4 | 0-0-0 | — | — | — no closing lines captured yet (honest-missing) |
+| home | 4 | 0-0-0 | — | — | — no games graded on this side yet |
 | away | 0 | 0-0-0 | — | — | — (no games on this side) |
 | _naive: always lean home_ | 0 | 0-0-0 | — | — | — (no games on this side) |
 
@@ -50,11 +50,11 @@ _No graded bets in these tiers yet — tier separation unmeasured. An empty brea
 
 | bucket | games | ATS win% |
 |---|---|---|
-| placed bets | 9 | — |
-| NO_BET (hypothetical lean) | 0 | — |
-| NO_BET (neutral, no lean) | 2 | — (no side) |
+| placed bets | 0 | — |
+| NO_BET (hypothetical lean) | 4 | — |
+| NO_BET (neutral, no lean) | 7 | — (no side) |
 
-_Mixed slate — placed bets alongside NO_BET skips (the skip is graded hypothetically)._
+_Entire slate NO_BET — selectivity working as designed (dormancy-as-design, 3c.9), not breakage._
 
 ### Per-factor attribution (converts `reasoned` → `measured` for 2027)
 

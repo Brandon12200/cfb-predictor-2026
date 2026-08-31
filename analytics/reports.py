@@ -47,8 +47,14 @@ def _lean_cell(s: dict) -> str:
     """One side's CLV cell, stating its reason inline when empty (September readers see cells)."""
     if s["n_clv"]:
         return f"{_num(s['avg_clv'])} pts (beat close {_pct(s['clv_positive_pct'])}, n={s['n_clv']})"
+    # State the TRUE reason. This previously said "no closing lines captured yet" whenever a side
+    # had games but no CLV — which blamed capture for what is usually just "these games have not
+    # kicked off yet". In the 2026 week-1 report every graded record carried a real closing line;
+    # the cell was empty because no LEAN-side game had been graded (D40).
+    if s["n_games"] and not s["n_graded"]:
+        return "— no games graded on this side yet"
     if s["n_games"]:
-        return "— no closing lines captured yet (honest-missing)"
+        return "— graded, but no closing line captured (honest-missing)"
     return "— (no games on this side)"
 
 
