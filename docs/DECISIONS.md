@@ -652,20 +652,30 @@ printed "Mixed slate" instead. The bug both fabricated bets and silenced the sen
 there were none — a declined slate reading as a broken one, which is precisely the misreading
 dormancy-as-design (3c.9) exists to prevent.
 
-**A latent second instance, found by the mandated sweep.** `analytics/attribution.py` counted
-hypotheticals truthily (safe) but then derived `"n_placed": len(records) - hypothetical` — inferring
-"placed" by **subtraction**, which reintroduces the same inversion. It had not rendered only because
-its branch (`analytics/reports.py:79-80`) requires a graded hypothetical on a side, which week 1 did
-not have; it would have surfaced the following Sunday. Fixed under the same ruling.
+**A latent second instance, found by the mandated sweep.** `analytics/attribution.py`'s
+`_rate_and_clv` counted hypotheticals truthily (safe) but then derived
+`"n_placed": len(records) - hypothetical` — inferring "placed" by **subtraction**, which
+reintroduces the same inversion on a set that includes ungraded rows. Fixed under the same ruling.
+
+> **Correction, from review of this entry's own PR.** An earlier draft said this "would have
+> surfaced the following Sunday" via `analytics/reports.py`'s Mixed-slate branch. **That
+> attribution was wrong.** That branch (`reports.py:85-86`) reads `lean["meta"]["n_placed"]`, which
+> is computed at `attribution.py:103` from `matched` — a graded-only set (`:74`) where every row
+> carries the key — and is therefore already safe. The field actually fixed,
+> `sides[...]["n_placed"]` from `_rate_and_clv`, is **read nowhere in the codebase today**;
+> reverting that one line still leaves the suite green. So it is a real inversion in a currently
+> **dormant** field, not one that was about to render. The fix stands; the mechanism claimed for it
+> did not, and is corrected here rather than left as a plausible-sounding story in the record.
 
 **Sweep result (2027_NOTES §3 discipline).** Every consumer of `is_hypothetical` was checked. All
 others are safe, and for a consistent reason: they are either conjoined with a gradedness guard
 (`kpis.py:33`, `calibration.py:19` require `ats_result in (...)`), operate on a list already filtered
 to graded rows (`kpis.py:91-92`, filtered at `reports.py:34`; `verify_phase_4.py:139` on
 `build_graded(...)["graded"]`), or test the flag **positively** so absence is simply not counted
-(`attribution.py:91`, whose `matched` is graded-only). `reports.py` passes the **full join** to
-`selectivity_report` (`:38`) but a **pre-filtered** list to `kpi_pack` (`:34`) — that asymmetry is
-why exactly one place was live-wrong.
+(`attribution.py:91`, whose `matched` is graded-only). `attribution.py:103` subtracts like the
+defect but is likewise safe, for the same reason: `matched` contains graded rows only.
+`reports.py` passes the **full join** to `selectivity_report` (`:39`) but a **pre-filtered** list to
+`kpi_pack` (`:36`, filtered at `:34`) — that asymmetry is why exactly one place was live-wrong.
 
 **Why it survived to production.** This was the **first partially-graded render in the project's
 history**: rehearsals graded nothing, so `placed` had never been non-empty-by-accident. The seam was
