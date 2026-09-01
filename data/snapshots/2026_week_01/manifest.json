@@ -27,11 +27,11 @@
         "schedule_intel": "derived"
       },
       "NC STATE@VIRGINIA": {
-        "betting_lines": "odds",
+        "betting_lines": "missing",
         "schedule_intel": "derived"
       },
       "NORTH CAROLINA@TCU": {
-        "betting_lines": "odds",
+        "betting_lines": "missing",
         "schedule_intel": "missing"
       },
       "SMU@FLORIDA STATE": {
@@ -189,13 +189,13 @@
         "venue": "registry"
       },
       "FLORIDA STATE": {
-        "advanced_stats": "missing",
+        "advanced_stats": "cfbd",
         "coaching": "cfbd",
         "info": "cfbd",
         "returning_production": "cfbd",
         "schedule": "cfbd",
         "sp_rating": "cfbd",
-        "stats": "missing",
+        "stats": "cfbd",
         "venue": "registry"
       },
       "GEORGIA": {
@@ -399,13 +399,13 @@
         "venue": "registry"
       },
       "NC STATE": {
-        "advanced_stats": "missing",
+        "advanced_stats": "cfbd",
         "coaching": "cfbd",
         "info": "cfbd",
         "returning_production": "cfbd",
         "schedule": "cfbd",
         "sp_rating": "cfbd",
-        "stats": "missing",
+        "stats": "cfbd",
         "venue": "registry"
       },
       "NEBRASKA": {
@@ -419,13 +419,13 @@
         "venue": "registry"
       },
       "NORTH CAROLINA": {
-        "advanced_stats": "missing",
+        "advanced_stats": "cfbd",
         "coaching": "cfbd",
         "info": "cfbd",
         "returning_production": "cfbd",
         "schedule": "cfbd",
         "sp_rating": "cfbd",
-        "stats": "missing",
+        "stats": "cfbd",
         "venue": "registry"
       },
       "NORTHWESTERN": {
@@ -549,13 +549,13 @@
         "venue": "registry"
       },
       "STANFORD": {
-        "advanced_stats": "missing",
+        "advanced_stats": "cfbd",
         "coaching": "cfbd",
         "info": "cfbd",
         "returning_production": "cfbd",
         "schedule": "cfbd",
         "sp_rating": "cfbd",
-        "stats": "missing",
+        "stats": "cfbd",
         "venue": "registry"
       },
       "SYRACUSE": {
@@ -569,13 +569,13 @@
         "venue": "registry"
       },
       "TCU": {
-        "advanced_stats": "missing",
+        "advanced_stats": "cfbd",
         "coaching": "cfbd",
         "info": "cfbd",
         "returning_production": "cfbd",
         "schedule": "cfbd",
         "sp_rating": "cfbd",
-        "stats": "missing",
+        "stats": "cfbd",
         "venue": "registry"
       },
       "TENNESSEE": {
@@ -639,13 +639,13 @@
         "venue": "registry"
       },
       "USC": {
-        "advanced_stats": "missing",
+        "advanced_stats": "cfbd",
         "coaching": "cfbd",
         "info": "cfbd",
         "returning_production": "cfbd",
         "schedule": "cfbd",
         "sp_rating": "cfbd",
-        "stats": "missing",
+        "stats": "cfbd",
         "venue": "registry"
       },
       "UTAH": {
@@ -669,13 +669,13 @@
         "venue": "registry"
       },
       "VIRGINIA": {
-        "advanced_stats": "missing",
+        "advanced_stats": "cfbd",
         "coaching": "cfbd",
         "info": "cfbd",
         "returning_production": "cfbd",
         "schedule": "cfbd",
         "sp_rating": "cfbd",
-        "stats": "missing",
+        "stats": "cfbd",
         "venue": "registry"
       },
       "VIRGINIA TECH": {
@@ -731,71 +731,112 @@
     }
   },
   "meta": {
-    "built_at": "2026-08-25T14:07:58.274529+00:00",
-    "snapshot_id": "b195fcc1e0eb8b9a",
+    "built_at": "2026-09-01T17:21:22.887789+00:00",
+    "snapshot_id": "39529bc906783378",
     "week": 1,
     "year": 2026
   },
   "reconciliation": {
-    "cfbd_rows_fetched": 3610,
+    "cfbd_rows_fetched": 3679,
     "excluded_from_normalization": {
       "by_reason": {
-        "fcs_opponent_out_of_scope": 763,
-        "non_fbs_matchup": 2086
+        "fcs_opponent_out_of_scope": 762,
+        "non_fbs_matchup": 2156
       },
-      "total": 2849,
+      "total": 2918,
       "unresolved_team_name": []
     },
     "games_normalized": 761,
     "odds_cross_reference": {
-      "events_normalized": 56,
-      "excluded_events": 55,
-      "matched_to_slate": 11,
-      "slate_games_without_a_line": [],
+      "events_normalized": 92,
+      "excluded_events": 54,
+      "matched_to_slate": 9,
+      "slate_games_without_a_line": [
+        "NC STATE@VIRGINIA",
+        "NORTH CAROLINA@TCU"
+      ],
       "unmatched_odds_events": [
         "AKRON@WAKE FOREST",
+        "ALABAMA@LSU",
+        "ALABAMA@TENNESSEE",
+        "ARIZONA STATE@ARIZONA",
+        "ARIZONA STATE@TEXAS A&M",
         "ARKANSAS@UTAH",
+        "ARMY@NAVY",
+        "AUBURN@ALABAMA",
+        "AUBURN@GEORGIA",
         "BALL STATE@OHIO STATE",
         "BOISE STATE@OREGON",
+        "BYU@UTAH",
         "CENTRAL MICHIGAN@NEW MEXICO",
         "COASTAL CAROLINA@WEST VIRGINIA",
+        "DUKE@MIAMI",
         "EAST CAROLINA@ALABAMA",
         "FAU@FLORIDA",
         "FLORIDA INTERNATIONAL@SOUTH FLORIDA",
+        "FLORIDA@AUBURN",
+        "FLORIDA@GEORGIA",
         "FRESNO STATE@USC",
         "GEORGIA@ALABAMA",
         "GEORGIA@ARKANSAS",
-        "HAWAII@STANFORD",
+        "GEORGIA@MISSISSIPPI",
+        "HOUSTON@TEXAS TECH",
+        "HOUSTON@UTAH",
+        "ILLINOIS@NORTHWESTERN",
+        "INDIANA@MICHIGAN",
         "IOWA STATE@IOWA",
+        "KANSAS@KANSAS STATE",
         "KENT STATE@SOUTH CAROLINA",
         "LIBERTY@JAMES MADISON",
         "LSU@MISSISSIPPI",
+        "LSU@TENNESSEE",
         "MARSHALL@PENN STATE",
-        "MEMPHIS@UNLV",
         "MIAMI (OH)@PITTSBURGH",
+        "MIAMI@CLEMSON",
         "MIAMI@NOTRE DAME",
+        "MICHIGAN STATE@MICHIGAN",
         "MICHIGAN@OHIO STATE",
+        "MICHIGAN@OREGON",
+        "MISSISSIPPI STATE@MISSISSIPPI",
+        "MISSISSIPPI@OKLAHOMA",
+        "MISSISSIPPI@TEXAS",
         "MISSOURI STATE@TEXAS A&M",
         "MISSOURI@KANSAS",
-        "NEW MEXICO STATE@FLORIDA STATE",
+        "NEBRASKA@OREGON",
         "NORTHERN ILLINOIS@IOWA",
+        "NOTRE DAME@BYU",
         "OHIO STATE@INDIANA",
         "OHIO STATE@TEXAS",
         "OHIO@NEBRASKA",
+        "OKLAHOMA@GEORGIA",
         "OKLAHOMA@MICHIGAN",
         "OREGON STATE@HOUSTON",
+        "OREGON@OHIO STATE",
         "OREGON@OKLAHOMA STATE",
+        "PENN STATE@MICHIGAN",
         "SAM HOUSTON@TROY",
         "SAN JOSE STATE@EASTERN MICHIGAN",
-        "SAN JOSE STATE@USC",
+        "SMU@LOUISVILLE",
+        "SMU@NOTRE DAME",
+        "SOUTH CAROLINA@CLEMSON",
+        "TENNESSEE@TEXAS A&M",
+        "TENNESSEE@VANDERBILT",
+        "TEXAS A&M@ALABAMA",
+        "TEXAS A&M@LSU",
+        "TEXAS A&M@OKLAHOMA",
         "TEXAS STATE@TEXAS",
+        "TEXAS TECH@OKLAHOMA STATE",
+        "TEXAS@LSU",
         "TEXAS@OKLAHOMA",
+        "TEXAS@TENNESSEE",
+        "TEXAS@TEXAS A&M",
         "TOLEDO@MICHIGAN STATE",
         "TULANE@DUKE",
-        "UMASS@RUTGERS",
         "UNLV@HAWAII",
         "UTEP@OKLAHOMA",
+        "VIRGINIA TECH@MIAMI",
         "WASHINGTON STATE@WASHINGTON",
+        "WASHINGTON@OREGON",
         "WESTERN KENTUCKY@NEVADA",
         "WESTERN MICHIGAN@MICHIGAN"
       ],
@@ -815,11 +856,11 @@
         "Eastern Kentucky Colonels@Jacksonville State Gamecocks",
         "Fordham Rams@North Dakota State Bison",
         "Furman Paladins@Tennessee Volunteers",
+        "Hampton Pirates@Maryland Terrapins",
         "Houston Baptist Huskies@Rice Owls",
         "Idaho State Bengals@Utah State Aggies",
         "Idaho Vandals@Utah Utes",
         "Indiana State Sycamores@Purdue Boilermakers",
-        "Jacksonville State Gamecocks@North Dakota State Bison",
         "LIU Sharks@Kansas Jayhawks",
         "Lafayette Leopards@UConn Huskies",
         "Lamar Cardinals@Louisiana Ragin Cajuns",
@@ -840,7 +881,6 @@
         "Oklahoma State Cowboys@Tulsa Golden Hurricane",
         "Portland State Vikings@San Diego State Aztecs",
         "Rhode Island Rams@Temple Owls",
-        "Sacramento State Hornets@Eastern Michigan Eagles",
         "South Dakota State Jackrabbits@Northwestern Wildcats",
         "Southeast Missouri State Redhawks@Iowa State Cyclones",
         "Southeastern Louisiana Lions@South Alabama Jaguars",
@@ -907,31 +947,31 @@
   },
   "sources": {
     "advanced_stats": {
-      "count": 0,
+      "count": 16,
       "fallback_reason": null,
-      "fetched_at": "2026-08-25T14:07:54.418053+00:00",
+      "fetched_at": "2026-09-01T17:20:51.936455+00:00",
       "source": "cfbd"
     },
     "betting_lines": {
-      "count": 111,
+      "count": 146,
       "fallback_reason": null,
-      "fetched_at": "2026-08-25T14:07:58.006962+00:00",
+      "fetched_at": "2026-09-01T17:21:22.535983+00:00",
       "quota": {
-        "remaining": 462,
-        "used": 38
+        "remaining": 499,
+        "used": 1
       },
       "source": "odds"
     },
     "coaching": {
       "count": 138,
       "fallback_reason": null,
-      "fetched_at": "2026-08-25T14:07:56.230888+00:00",
+      "fetched_at": "2026-09-01T17:21:01.282081+00:00",
       "source": "cfbd"
     },
     "games": {
-      "count": 3610,
+      "count": 3679,
       "fallback_reason": null,
-      "fetched_at": "2026-08-25T14:07:47.671732+00:00",
+      "fetched_at": "2026-09-01T17:20:43.450305+00:00",
       "source": "cfbd"
     },
     "registry": {
@@ -941,26 +981,26 @@
     "returning_production": {
       "count": 136,
       "fallback_reason": null,
-      "fetched_at": "2026-08-25T14:07:57.956021+00:00",
+      "fetched_at": "2026-09-01T17:21:20.113994+00:00",
       "source": "cfbd"
     },
     "season_stats": {
-      "count": 0,
+      "count": 892,
       "fallback_reason": null,
-      "fetched_at": "2026-08-25T14:07:56.330890+00:00",
+      "fetched_at": "2026-09-01T17:21:02.890693+00:00",
       "source": "cfbd"
     },
     "sp_ratings": {
       "count": 139,
       "fallback_reason": null,
-      "fetched_at": "2026-08-25T14:07:57.887697+00:00",
+      "fetched_at": "2026-09-01T17:21:11.615240+00:00",
       "source": "cfbd"
     }
   },
   "summary": {
-    "coverage_pct": 75.3,
-    "fields_missing": 140,
-    "fields_present": 426,
+    "coverage_pct": 77.4,
+    "fields_missing": 128,
+    "fields_present": 438,
     "fields_total": 566,
     "slate_games": 11,
     "teams": 68

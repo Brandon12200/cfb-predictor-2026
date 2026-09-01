@@ -1,0 +1,12 @@
+{
+  "entries": [
+    {
+      "at": "2026-09-01T17:21:22.927549+00:00",
+      "caller": "build_snapshot",
+      "remaining": 499,
+      "run_id": "33537173666",
+      "used": 1,
+      "week": 1
+    }
+  ]
+}
