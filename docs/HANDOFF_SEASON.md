@@ -6,14 +6,17 @@ Rehearsal-0 boundary through the live claim and the first graded Sunday.
 
 Read this, then `docs/PIPELINE.md`, then the reading list in §6.
 
-**§2's task is DONE — see the banner there. Start at §1.** Four errors found in this document after
-it was written are corrected in place and recorded in **§9**.
+**§2's task is DONE — see the banner there. Start at §1.** Eight errors found in this document after
+it was written are corrected in place and recorded in **§9**, which also explains why the first pass
+that looked for them found only half.
 
 ---
 
 ## 1. Season state — as of 2026-09-01 13:37 ET
 
-The model is frozen at **`v2026-frozen-3`**. `main` is at **`8f7a5ff`**, today's scheduled snapshot
+The model is frozen at **`v2026-frozen-3`**. `main` **was** at **`8f7a5ff`** at the timestamp above —
+it has moved since (PR #53 `8ee3874`, then this document's own merge); **read `git log origin/main`,
+not this line** (C5). `8f7a5ff` was that day's scheduled snapshot
 commit. Tags: `v2026-frozen`, `-2`, `-3`, plus `rehearsal-0`, `rehearsal-1`, `rehearsal-2`,
 `rehearsal-drill` (all unmerged acceptance evidence — leave them).
 
@@ -62,8 +65,8 @@ Tuesday 08-25: `snapshot:` cancelled, **the claim's CI green only because the cl
 last**. Recorded as `2027_NOTES` §8 items 25–26. A `cancelled` conclusion does **not** fire
 `if: failure()`, so nothing reports it (item 15).
 
-**Zero open issues.** Six PRs merged in this tenure: #45 (README), #46 (record), #49 (drawer),
-#50 (D39), #51 (D40).
+**Zero open issues.** **Five** PRs merged in this tenure (C6): #45 (README), #46 (record),
+#49 (drawer), #50 (D39), #51 (D40).
 
 ---
 
@@ -93,7 +96,9 @@ last**. Recorded as `2027_NOTES` §8 items 25–26. A `cancelled` conclusion doe
 >    `2027_NOTES` §8 item 28.
 
 **Run `33537284634`, push of `8f7a5ff`, conclusion `failure`.** Every job fails (`test`,
-`verify (0)`–`(5)`, `verify-freeze`) because they all run the suite. **Four tests, one cause:**
+`verify (0)`, `(1)`, `(2)`, `(4)`, `(4-5)`, `(5)`, `verify-freeze`) because they all run the suite —
+that is the whole `ci.yml:52` matrix; there is no `verify (3)`, phase 3 being `verify-freeze`'s job
+(C7). **Four tests, one cause:**
 
 Line numbers below are **as at `8f7a5ff`** — the fix moved them (C2, C3):
 
@@ -305,6 +310,29 @@ line number in this document means **as at `8f7a5ff`** unless it says otherwise.
 **Also changed, and flagged as beyond the four:** §2's heading and the pointer at the top of this
 document, which told a context-free reader their first task was a red `main`. That was true when
 written and false by the time this merged. The diagnosis in §2 is untouched.
+
+### Second round — C5–C8, found by review *after* this document had already merged
+
+The C1–C4 pass above missed things, and an independent `code-reviewer` audit commissioned over
+**every** claim in the document caught them. That audit returned **after** PR #52 merged (merge
+`e067744`, 18:32 UTC; the audit finished later), so for a short window `main` carried a successor's
+entry-point document with two known errors in it. Recorded plainly because the sequencing is the
+lesson: **a review that lands after the merge protects nothing.** These landed as a follow-up.
+
+| # | Where | Was | Is | Why it was wrong |
+|---|---|---|---|---|
+| **C5** | §1, opening | "`main` is at **`8f7a5ff`**" | "`main` **was** at `8f7a5ff` at the timestamp above … read `git log origin/main`, not this line" | Exactly the defect C1–C4's pass had just rewritten §2's heading to fix — *true when written, false by merge* — left standing in §1, the section the top-of-document pointer sends the reader to **first**. `main` had already moved to `8ee3874`, and the RESOLVED banner two paragraphs below **cites that very SHA**. The fact was in hand and was not propagated. |
+| **C6** | §1, closing | "**Six** PRs merged in this tenure" followed by **five** entries | "**Five**" | A count contradicting its own enumeration one clause later. `gh pr list` confirms five merged in the tenure window (#45, #46, #49, #50, #51); #47/#48 do not exist, #52 was open, #53 merged after the stated timestamp. Not a locator error — a claim nobody counted. |
+| **C7** | §2 | "`verify (0)`–`(5)`" | the six matrix jobs named individually | Range notation implying a contiguous `verify (0)`…`(5)`. The `ci.yml:52` matrix is `["0","1","2","4","4-5","5"]`: there is no `verify (3)` (phase 3 is `verify-freeze`'s job) and `verify (4-5)` is a distinct job, not an endpoint. Substance was right — all matrix jobs did fail. |
+| **C8** | `docs/pr-summaries/cli_tests_live_snapshot_pr_summary.md` | "Status: open, awaiting owner merge" | merged, with both reviewer verdicts and the merge commit | Cross-document staleness in a file this document points readers at. |
+
+**What the two rounds together actually teach.** Round one resolved every `file:line` mechanically
+and found four errors; round two found four more that the first pass **could not** have caught,
+because none of C5–C8 is a `file:line` — they are a stale SHA, a miscount, a loose range, and a
+status header. §7's prescription is necessary and it is not sufficient: *"resolve every locator"*
+catches pointer rot, and misses **every claim that has no pointer to resolve**. Before publishing,
+run both passes — resolve the locators, then re-derive the bare assertions: counts, dates, SHAs,
+statuses, and anything phrased in the present tense about a moving reference.
 
 **The lesson stands and is now doubly paid for.** §7 was written *because* five locator errors got
 through this tenure; four more were in the document making the point. The durable fix is not

@@ -4,7 +4,10 @@
 > `docs/pr-summaries/` sits outside the proposal lifecycle (owner ruling, 2026-07-25). The
 > authoritative records remain `docs/2027_NOTES.md` §8 (items 27–30, added here) and `docs/SPEC.md`.
 >
-> **Status:** open, awaiting owner merge. **Branch:** `fix-cli-tests-live-snapshot` (base `8f7a5ff`).
+> **Status:** **MERGED** 2026-09-01 as PR #53 — branch head `5cef42c`, merge commit `8ee3874`
+> (base `8f7a5ff`). `code-reviewer`: NO-GO on the first pass at `f2b9efa` (one blocker, a D3
+> attribution trailer in the commit message), **GO** on the second at `5cef42c` after it was
+> cleared. CI green on the reviewed head, all 9 jobs.
 
 ---
 
