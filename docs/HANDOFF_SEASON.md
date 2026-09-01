@@ -66,7 +66,8 @@ last**. Recorded as `2027_NOTES` §8 items 25–26. A `cancelled` conclusion doe
 `if: failure()`, so nothing reports it (item 15).
 
 **Zero open issues.** **Five** PRs merged in this tenure (C6): #45 (README), #46 (record),
-#49 (drawer), #50 (D39), #51 (D40).
+#49 (drawer), #50 (D39), #51 (D40). Like every count in §1 this is **as of the timestamp above** —
+#52 (this document) and #53 (the §2 fix) merged later the same day and are not counted.
 
 ---
 
@@ -321,7 +322,7 @@ lesson: **a review that lands after the merge protects nothing.** These landed a
 
 | # | Where | Was | Is | Why it was wrong |
 |---|---|---|---|---|
-| **C5** | §1, opening | "`main` is at **`8f7a5ff`**" | "`main` **was** at `8f7a5ff` at the timestamp above … read `git log origin/main`, not this line" | Exactly the defect C1–C4's pass had just rewritten §2's heading to fix — *true when written, false by merge* — left standing in §1, the section the top-of-document pointer sends the reader to **first**. `main` had already moved to `8ee3874`, and the RESOLVED banner two paragraphs below **cites that very SHA**. The fact was in hand and was not propagated. |
+| **C5** | §1, opening | "`main` is at **`8f7a5ff`**" | "`main` **was** at `8f7a5ff` at the timestamp above … read `git log origin/main`, not this line" | Exactly the defect C1–C4's pass had just rewritten §2's heading to fix — *true when written, false by merge* — left standing in §1, the section the top-of-document pointer sends the reader to **first**. `main` had already moved to `8ee3874`, and §2's RESOLVED banner — added in the same pass — **cites that very SHA**. The fact was in hand and was not propagated. |
 | **C6** | §1, closing | "**Six** PRs merged in this tenure" followed by **five** entries | "**Five**" | A count contradicting its own enumeration one clause later. `gh pr list` confirms five merged in the tenure window (#45, #46, #49, #50, #51); #47/#48 do not exist, #52 was open, #53 merged after the stated timestamp. Not a locator error — a claim nobody counted. |
 | **C7** | §2 | "`verify (0)`–`(5)`" | the six matrix jobs named individually | Range notation implying a contiguous `verify (0)`…`(5)`. The `ci.yml:52` matrix is `["0","1","2","4","4-5","5"]`: there is no `verify (3)` (phase 3 is `verify-freeze`'s job) and `verify (4-5)` is a distinct job, not an endpoint. Substance was right — all matrix jobs did fail. |
 | **C8** | `docs/pr-summaries/cli_tests_live_snapshot_pr_summary.md` | "Status: open, awaiting owner merge" | merged, with both reviewer verdicts and the merge commit | Cross-document staleness in a file this document points readers at. |
