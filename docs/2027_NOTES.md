@@ -400,3 +400,60 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     happens to be committed **last** in the Tuesday taxonomy. Reorder the taxonomy and the claim
     commit's CI would be the one cancelled. 2027 should either exempt pipeline pushes from
     `cancel-in-progress`, or assert that the claim commit is always terminal in its push sequence.
+27. **A red CI on `main` files nothing — and the one thing it does say was wrong.** Run
+    `33537284634` (push of `8f7a5ff`, the 2026-09-01 snapshot) failed 8 of 9 jobs and `main` stayed
+    red with **zero open issues**. The four cadence workflows (`weekly-predict`, `daily-capture`,
+    `weekly-grade`, `freeze-integrity`) each report a failure as a GitHub issue; `ci.yml` does not.
+    Alarm coverage is therefore inverted from where the risk sits: a pipeline job that fails files
+    an issue, while a **data commit that breaks the build** — pushed by the machine, with no human
+    in the loop by design — is visible only to someone who opens the Actions tab.
+
+    The sharper half is what the single failure surface reported. `ci.yml`'s only `if: failure()`
+    step (`ci.yml:83-97`, at `8f7a5ff`) belongs to the `verify-freeze` job and writes
+    **"verify-phase-3 failed — model output moved … Do NOT update the fingerprint constant"** to
+    `$GITHUB_STEP_SUMMARY`. In this run that diagnosis was **false**: every freeze check passed,
+    including the behavioural fingerprint (`sha256 b9c00a947cd539db…`, matching the frozen constant
+    exactly) and the tag-time vehicle SHA. `verify-freeze` went red only because
+    `scripts/verify_phase_3.py` *also* runs the full suite, and the suite held four stale CLI tests.
+    So the one message a reader would find told them the frozen model had moved on a day the freeze
+    was provably intact — the worst possible false positive for this project, since D38/§3 make
+    "model output moved" the trigger for an exception process and a retag. **2027: the step summary
+    must distinguish "the fingerprint mismatched" from "something else under verify-phase-3
+    failed", and should not assert a cause it has not checked.** (Noted in passing: that message
+    also says "330-game tracked slate" while the gate now reports 338.)
+28. **Tests that read live repo data assert properties the calendar can break.** The whole of
+    2026-09-01's red `main` was this one class: four `tests/test_cfb_cli.py` cases and two
+    `scripts/verify_phase_4_5.py` checks read `data/snapshots/2026_week_01/` — which the pipeline
+    **rebuilds every week-1 run** — and asserted `EXIT_OK`, a property that holds only while every
+    game still has a line. A sweep at the time found three further instances of the same shape, two
+    of them dated: the `CLEMSON @ LSU` slate-membership assertions (that game kicked off
+    2026-09-05, so the next rebuild would have dropped it) and
+    `test_partial_week_buckets_come_from_the_claim_not_from_gradedness`, whose `0 < graded < total`
+    guard would have inverted the moment week 1 finished grading on 2026-09-13 — on the very test
+    that pins the D40 defect. **The generalisable rule: a test may read a byte-immutable or
+    append-only artifact, but the moment it reads a REGENERATED one it is asserting about the
+    calendar.** The remedy used was to pin each test to a bundle on which its own premise is
+    permanently true, and to make that premise a self-checking assertion rather than an assumption.
+29. **`EXIT_DEGRADED` conflates "no line was ever posted" with "the book de-listed a game that has
+    been played."** SPEC §9 requirement 5 (`docs/SPEC.md:371`) defines exit 2 as "degraded data" and
+    says nothing about which conditions qualify; `analytics/predictions.py:49-50` routes both into
+    `meta.coverage.skipped`, and `cli/cfb.py::_slate_degraded` maps any non-empty `skipped` to exit
+    2. The two are not the same event. A line that never posted is missing information; a game that
+    has been played and de-listed is **completed** information — the slate has not degraded, it has
+    moved on — and after the first kickoff every whole-slate command reports degraded for the rest
+    of the week. **Owner ruling 2026-09-01: the contract stands as written and the tests were the
+    defect; this is a 2027 design note, not a 2026 change.** The discriminator already sits in the
+    snapshot (each game's `completed` / `home_points` fields), so a 2027 taxonomy could split
+    `skipped` into `skipped_no_line` and `skipped_completed` and degrade only on the former.
+30. **The week-1 `min_edge` floor is not a single number — it is three, chosen per game.** Carried
+    because the season handoff described the slate as sitting under "a `min_edge` threshold of
+    1.50", which is true of only 7 of the 11 games. `engine/prediction_engine.py:271-276` (at
+    `8f7a5ff`) selects the floor dynamically from factor activation: **0.75** when
+    `primary_signals >= 2 and avg_confidence >= 0.7`, **1.00** when `primary_signals >= 1 or
+    avg_confidence >= 0.6`, else **1.50**. The claim's own `no_bet_reason` strings record which
+    applied to each game — 1.50 seven times, 1.00 three times, 0.75 once — and the slate's
+    **maximum** edge (0.1403, `MIAMI@STANFORD`) was measured against **1.00**, not 1.50. The floor
+    is driven by confidence and signal count, **not** by lean: the 4 lean games all drew a lower
+    floor because an activated factor produces both the lean and the confidence that lowers the
+    threshold, so the two correlate through a shared cause rather than one setting the other. Any
+    2027 write-up of 2026 selectivity must quote the distribution, never one representative number.
