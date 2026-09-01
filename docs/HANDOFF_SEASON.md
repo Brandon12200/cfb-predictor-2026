@@ -6,7 +6,8 @@ Rehearsal-0 boundary through the live claim and the first graded Sunday.
 
 Read this, then `docs/PIPELINE.md`, then the reading list in §6.
 
-**Your first task is in §2. It is a red `main`. Do it before anything else.**
+**§2's task is DONE — see the banner there. Start at §1.** Four errors found in this document after
+it was written are corrected in place and recorded in **§9**.
 
 ---
 
@@ -25,7 +26,7 @@ on 2026-08-25, `data/predictions/2026_week_01.json`:
 | prediction_type | **NO_BET 11 of 11** |
 | tiers | A 11 |
 | lean | neutral 7 / home 4 |
-| max \|edge\| | **0.1403**, against a `min_edge` threshold of **1.50** |
+| max \|edge\| | **0.1403** (`MIAMI@STANFORD`), against **that game's** `min_edge` floor of **1.00** — see C1 |
 | `model_version` | `v2026-frozen-3-23-g7485244` — describe form, not a bare SHA, not `-dirty` |
 
 All 11 are `NO_BET` because the achievable edge sits far below the floor — selectivity working, not
@@ -66,19 +67,45 @@ last**. Recorded as `2027_NOTES` §8 items 25–26. A `cancelled` conclusion doe
 
 ---
 
-## 2. YOUR FIRST TASK — `main` is red
+## 2. ~~YOUR FIRST TASK~~ — `main` was red; RESOLVED 2026-09-01
+
+> **RESOLVED.** Owner ruling 2026-09-01: **`docs/SPEC.md:371` (SPEC §9 requirement 5) is the
+> contract — exit 2 *is* "degraded data", so the CLI was correct and the TESTS were the defect**
+> (candidate shape 1 below). Candidate 2 — distinguishing a de-listed *played* game from a line that
+> never posted — was ruled a 2027 design note, not a 2026 change; it is `docs/2027_NOTES.md` §8
+> item 29. Fixed in **PR #53** (`5cef42c`, merged `8ee3874`): the affected tests are re-premised
+> onto the append-only pre-kickoff vehicle rather than the regenerated live bundle, and a new test
+> pins the mid-week degraded state. Write-up:
+> `docs/pr-summaries/cli_tests_live_snapshot_pr_summary.md`.
+>
+> **The diagnosis below is left as written** — it is the record of how the defect was read, and its
+> two candidate shapes are what the ruling chose between. Two things it did not know:
+>
+> 1. There are **two** independent snapshot reads — `cli.cfb` enumerates via
+>    `data.snapshot.store.load_snapshot`, the frozen engine prices via
+>    `data.data_manager.load_snapshot` (`data/data_manager.py:70`, bound at import so a store-level
+>    patch never reaches it). Pinning one gives a **split read** that looks correct;
+>    `scripts/slate_fingerprint.py::engine_reads` exists to prevent exactly that.
+> 2. The same defect class held **three more** instances, two of them dated: the `CLEMSON @ LSU`
+>    slate-membership assertions (would break after its 2026-09-05 kickoff) and
+>    `_partial_week_join`'s `0 < graded < total` guard (would invert on 2026-09-13 when week 1
+>    finished grading). All fixed in the same PR; the sweep is in the write-up and the class is
+>    `2027_NOTES` §8 item 28.
 
 **Run `33537284634`, push of `8f7a5ff`, conclusion `failure`.** Every job fails (`test`,
 `verify (0)`–`(5)`, `verify-freeze`) because they all run the suite. **Four tests, one cause:**
 
-```
-tests/test_cfb_cli.py::test_slate_returns_ok_when_all_games_have_lines
-tests/test_cfb_cli.py::test_omitted_week_equals_explicit_week
-tests/test_cfb_cli.py::test_offline_rerun_identical_to_predict_week
-tests/test_cfb_cli.py::test_predict_week_save_refuses_overwrite_d
+Line numbers below are **as at `8f7a5ff`** — the fix moved them (C2, C3):
 
-E  AssertionError: assert 2 == 0
-E   +  where 2 = cfb.main(['slate', '1', '--format', 'json'])
+```
+tests/test_cfb_cli.py:111  test_slate_returns_ok_when_all_games_have_lines
+      E  assert 2 == 0   +  where 2 = cfb.main(['slate', '1', '--format', 'json'])
+tests/test_cfb_cli.py:47   test_omitted_week_equals_explicit_week
+      E  assert 2 == 0   +  where 2 = cfb.main(['predict', 'week', '--format', 'json'])
+tests/test_cfb_cli.py:69   test_offline_rerun_identical_to_predict_week
+      E  assert 2 == 0   +  where 2 = cfb.main(['predict', 'week', '1', '--format', 'json'])
+tests/test_cfb_cli.py:137  test_predict_week_save_refuses_overwrite_d22
+      E  assert 2 == 0   +  where 2 = cfb.main(['predict', 'week', '1', '--save', '--format', 'json'])
 ```
 
 **Diagnosis state — measured, not assumed.** Today's rebuild is the **first post-kickoff snapshot**.
@@ -97,9 +124,11 @@ So **exit 2 is the CLI behaving as written**: a degraded-but-honest slate, not a
 assert exit 0 and were authored pre-season, when every game had a line.
 
 **The un-ruled question — owner decision, do not decide it yourself.** Is exit 2 the *contracted*
-degraded exit for this case, meaning the tests are what should change? `cli/cfb.py:10` and `:103`
+degraded exit for this case, meaning the tests are what should change? `cli/cfb.py:6` and `:103`
 document the intent, but **find and cite the SPEC / CLI-docs statement of the exit-code contract
-before proposing either fix.** The two candidate shapes:
+before proposing either fix.** (C4: this originally cited `cli/cfb.py:10`, which is the *week
+inference* exit 2, a different condition. The contract itself turned out to be `docs/SPEC.md:371`,
+SPEC §9 requirement 5.) The two candidate shapes:
 
 1. **Tests are stale** — assert `in (EXIT_OK, EXIT_DEGRADED)` for a post-kickoff slate, or build
    their fixture from a pre-kickoff snapshot so they test the property they meant to.
@@ -251,5 +280,37 @@ Recorded plainly, because the record is the product:
   `not r.get("is_hypothetical")` read a graded-only field's *absence* as an affirmative placed bet.
   Caught within hours of rendering by the owner reading his own report. The claim, the graded data
   and every immutable tier were untouched; D23 had pre-authorised regeneration in July.
+
+---
+
+## 9. Corrections to this document (added 2026-09-01, after §8 was written)
+
+§7 prescribes resolving every `file:line` mechanically against the file it names before publishing.
+That check was run against **this document** before it merged, and found four errors it had missed —
+all four of the same shape §7 describes: **a specific locator or figure asserted inside a sentence
+that reads perfectly well.** Careful reading found none of them; a script that resolved each token
+in isolation found all four in about a minute. Each is corrected in place above and recorded here
+with what it replaced, per D40's supersede-don't-silently-edit convention.
+
+**Frames are pinned** because PR #53 moved the very line numbers §2 cites: a `tests/test_cfb_cli.py`
+line number in this document means **as at `8f7a5ff`** unless it says otherwise.
+
+| # | Where | Was | Is | Why it was wrong |
+|---|---|---|---|---|
+| **C1** | §1 slate table | "max \|edge\| **0.1403**, against a `min_edge` threshold of **1.50**" | "**0.1403** (`MIAMI@STANFORD`), against **that game's** floor of **1.00**" | The floor is not one number. `engine/prediction_engine.py:271-276` (at `8f7a5ff`) picks it per game from factor activation — **0.75** when `primary_signals >= 2 and avg_confidence >= 0.7`, **1.00** when `primary_signals >= 1 or avg_confidence >= 0.6`, else **1.50**. The claim's own `no_bet_reason` strings record the split: **1.50 ×7, 1.00 ×3, 0.75 ×1**. The slate's *maximum* edge was measured against **1.00**, so the one figure and the one threshold quoted together never applied to the same game. Carried forward as `2027_NOTES` §8 item 30. |
+| **C2** | §2 test list | `test_predict_week_save_refuses_overwrite_d` | `test_predict_week_save_refuses_overwrite_d22` | Truncated name — would not match a `pytest -k` or a grep. |
+| **C3** | §2 code block | one `AssertionError` block printed under all four test names, showing `2 = cfb.main(['slate', '1', ...])` | each test shown with **its own** failing call and line | That call belongs only to `test_slate_returns_ok_when_all_games_have_lines` (`:111`). The other three fail on `predict week` variants at `:47`, `:69`, `:137`. One cause, four call sites — the block implied one. |
+| **C4** | §2, the un-ruled question | "`cli/cfb.py:10` and `:103` document the intent" | "`cli/cfb.py:6` and `:103`" | `:10` is *"out-of-season → exit 2, never a guess"* — the **week-inference** exit 2 (SPEC §9.1), a different condition. The degraded-data intent is `:6`, *"returns a meaningful exit code (0 ok / 1 error / 2 degraded data)"*. Both lines are identical at `8f7a5ff` and at merge. This mattered more than the others: it was the citation offered as evidence *of the exit-code contract*, in the sentence demanding that contract be cited. The actual contract is **`docs/SPEC.md:371`**. |
+
+**Also changed, and flagged as beyond the four:** §2's heading and the pointer at the top of this
+document, which told a context-free reader their first task was a red `main`. That was true when
+written and false by the time this merged. The diagnosis in §2 is untouched.
+
+**The lesson stands and is now doubly paid for.** §7 was written *because* five locator errors got
+through this tenure; four more were in the document making the point. The durable fix is not
+attitudinal, it is a script — extract every `file:line`, print what is actually there, in the frame
+named. Run it on anything with citations before it merges, including a document about running it.
+
+---
 
 **When the season has run cleanly, delete this file.**
