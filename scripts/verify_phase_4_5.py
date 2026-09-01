@@ -12,6 +12,7 @@ Offline. Run via ``make verify-phase-4-5``. Exits non-zero only on real FAILs.
 
 from __future__ import annotations
 
+import contextlib
 import io
 import json
 import subprocess
@@ -24,6 +25,26 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 import cli.cfb as cfb  # noqa: E402
+import data.snapshot.store as _store  # noqa: E402
+from data.snapshot.store import load_frozen_vehicle  # noqa: E402
+from scripts.slate_fingerprint import engine_reads  # noqa: E402
+
+# === the pinned slate ============================================================================
+# These are acceptance gates on the CLI, not on today's calendar. `data/snapshots/2026_week_01/` is
+# LIVE — the pipeline rebuilds it on every week-1 run, and books de-list a game once it has been
+# played. From the first post-kickoff rebuild (2026-09-01) the live bundle is therefore a DEGRADED
+# slate, and every `== 0` below became `== 2`: SPEC §9 requirement 5 ("2 degraded data") working
+# exactly as written, failing an acceptance script that had only ever seen a complete slate.
+#
+# So pin the pre-kickoff vehicle, which lives under the append-only `data/archive/frozen/` and
+# cannot rot. BOTH read paths need pinning: `cli.cfb` enumerates the slate through the store, while
+# the frozen engine prices each game through `data.data_manager` (`analytics/predictions.py` says
+# so). Pinning one gives the split read `engine_reads` exists to prevent — which looks correct.
+# The stack is process-lifetime by design; this script is one-shot.
+_VEHICLE = load_frozen_vehicle()
+_store.load_snapshot = lambda week, year=2026, base=None: _VEHICLE  # noqa: ARG005
+_PIN = contextlib.ExitStack()
+_PIN.enter_context(engine_reads(_VEHICLE))
 
 results: list[tuple[bool, str]] = []
 
@@ -52,6 +73,14 @@ _cal = json.loads((ROOT / "data" / "season_calendar_2026.json").read_text())
 check("season.json is the config home; weeks folded from the CFBD-corroborated calendar (D8/D24)",
       _season["weeks"] == _cal["weeks"] and _season["season"] == _cal["season"]
       and "cli_defaults" in _season)
+
+# === the pinned slate is complete ================================================================
+# Asserted, not assumed: if a retag ever re-points the vehicle at a post-kickoff snapshot, the
+# checks below must fail saying THAT, not fail as an unexplained `exit 2`.
+_no_line = sorted(k for k, v in _VEHICLE["data"]["betting_lines"].items()
+                  if v.get("vegas_spread") is None)
+check("the pinned pre-kickoff vehicle is a COMPLETE slate (every game bettable)",
+      not _no_line, f"no line for {_no_line}" if _no_line else "")
 
 # === §9.1 week inference: omitted == explicit (bit-identical) ====================================
 _orig_dt = cfb.datetime

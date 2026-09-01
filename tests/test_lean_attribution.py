@@ -327,6 +327,13 @@ def _partial_week_join():
     """A slate where SOME games are graded and some are not — the shape that broke.
 
     Built from the committed 2026 week-1 artifacts when present (the real thing), else synthesised.
+
+    **Partiality is guaranteed by construction, not by the calendar.** `data/predictions/` is
+    byte-immutable, but `data/graded/` accumulates every Sunday: joining against all of it was
+    partial only while the week was mid-grade, and would have stopped being partial once week 1
+    finished grading (2026-09-13) — failing the caller's own `0 < graded < total` guard for a
+    scheduling reason, on the very test that pins the D40 defect. Truncating to a strict subset
+    keeps the records real and the premise permanently true.
     """
     import json
     from pathlib import Path
@@ -337,7 +344,11 @@ def _partial_week_join():
     pred_p = _REPO_ROOT / "data" / "predictions" / "2026_week_01.json"
     grad_p = _REPO_ROOT / "data" / "graded" / "2026_week_01.json"
     if pred_p.exists() and grad_p.exists():
-        return join(json.loads(pred_p.read_text()), json.loads(grad_p.read_text()))
+        preds = json.loads(pred_p.read_text())
+        rows = json.loads(grad_p.read_text()).get("graded", [])
+        keep = min(len(rows), max(len(preds.get("predictions", [])) - 1, 0))
+        if keep:
+            return join(preds, {"graded": rows[:keep]})
 
     preds = {"predictions": [
         {"game_id": f"g{i}-week1", "week": 1, "no_bet": True, "prediction_type": "NO_BET",
