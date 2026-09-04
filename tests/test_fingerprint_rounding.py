@@ -109,7 +109,10 @@ def test_rounding_leaves_non_floats_alone():
     assert out["i"] == 3 and isinstance(out["i"], int) and not isinstance(out["i"], bool)
     assert out["b"] is True and out["s"] == "x" and out["n"] is None
     assert out["lst"][0] == 1 and out["lst"][2] is False
-    assert isinstance(out["f"], float)
+    # Values, not just types: a rounding that preserved `float`-ness while altering the number
+    # would satisfy an isinstance-only check and still change the hash.
+    assert out["f"] == 1.0 and isinstance(out["f"], float)
+    assert out["lst"][1] == 2.5
 
 
 def test_the_real_fingerprint_reports_both_hashes():

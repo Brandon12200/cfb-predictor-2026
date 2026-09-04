@@ -768,12 +768,17 @@ The gate now asserts the **10 decimal-place rounded** hash
 | advisory Linux | 3.11.15 | *(distinct)* | `c5def3f1…` |
 | advisory Linux | 3.12.3 | *(distinct)* | `c5def3f1…` |
 
-**This is a change of method, not a relaxation of the freeze.** 10 dp sits roughly eight orders of
-magnitude below anything the model can express — spreads move in hundredths of a point — and about
-six above double-precision noise. `tests/test_fingerprint_rounding.py` pins both bounds: the rounded
-hash is invariant under a 1e-15 perturbation and changes under 1e-4. The rule that a constant is
-never edited to make a red gate green is **unchanged**; a genuine move still requires a SPEC §3.1
-exception and a new tag.
+**This is a change of method, not a relaxation of the freeze.** Measured on the pinned vehicle, the
+payload's 14,818 non-zero floats span **9.740e-04** (the smallest `edge_size`) to **2.154e+03** (a
+`home_rating`), with **nothing below 1e-8** — so the rounding floor sits about **seven** orders of
+magnitude beneath the smallest quantity the model actually produces, and about six above the
+relative noise of a double. (An earlier draft of this entry said "eight orders… spreads move in
+hundredths of a point"; the payload's own smallest field is thousandths, and the figure is corrected
+here rather than left to be re-derived.) The stronger evidence for the choice is not that
+arithmetic but the table above: five environments, four distinct exact hashes, one rounded hash.
+`tests/test_fingerprint_rounding.py` pins both bounds — invariant under a 1e-15 perturbation,
+changed under 1e-4. The rule that a constant is never edited to make a red gate green is
+**unchanged**; a genuine move still requires a SPEC §3.1 exception and a new tag.
 
 The exact hash `b9c00a94…` **stays in the file, relabelled** as an environment-specific record
 rather than a cross-platform invariant — which is exactly why it stopped being the gate — and is

@@ -36,7 +36,18 @@ _CAPTURE_PS = re.compile(r"""rc=\$\{PIPESTATUS\[0\]\}""")
 
 
 def _run_blocks(lines: list[str]) -> list[tuple[int, int]]:
-    """(start, end) line indices of every `run:` block, delimited by indentation."""
+    """(start, end) line indices of every `run:` block, delimited by indentation.
+
+    A line indented no further than the `run:` key ends the block — **including a comment line.**
+    A YAML block scalar's content must be indented deeper than its key, so a `#` at or below that
+    indent is a sibling comment, not part of the script.
+
+    This once excluded comments, and that was a real hole rather than a harmless one: a comment
+    belonging to the *next* step extended the previous step's block, so an unguarded `| tee` could
+    be classified safe on the strength of a `pipefail` or `PIPESTATUS` mention in prose that was
+    never going to run. This repository comments heavily and quotes those very tokens when
+    explaining them — the fix for this defect does it twice — so the shape is not hypothetical here.
+    """
     out: list[tuple[int, int]] = []
     for i, ln in enumerate(lines):
         m = re.match(r"^(\s*)run:\s*(\|.*)?$", ln.rstrip())
@@ -46,7 +57,7 @@ def _run_blocks(lines: list[str]) -> list[tuple[int, int]]:
         j = i + 1
         while j < len(lines):
             s = lines[j]
-            if s.strip() and (len(s) - len(s.lstrip())) <= indent and not s.lstrip().startswith("#"):
+            if s.strip() and (len(s) - len(s.lstrip())) <= indent:
                 break
             j += 1
         out.append((i, j))
@@ -126,6 +137,44 @@ def test_every_captured_rc_has_a_step_that_acts_on_it():
                 "then dropped, which masks it just as thoroughly as not capturing it."
             )
     assert checked >= 3, f"expected the known designed-exit-code steps, classified {checked}"
+
+
+def test_a_following_comment_does_not_extend_the_previous_block(tmp_path):
+    """Regression: a comment belonging to the NEXT step must not vouch for the previous one.
+
+    The parser once treated comment lines as non-terminating, so the prose introducing step B
+    landed inside step A's block. Because this repository explains a fix by quoting the very
+    tokens that defuse it, an unguarded step sitting above such a comment was classified safe on
+    the strength of words that never execute. Reproduced here as the minimal shape.
+    """
+    doc = (
+        "jobs:\n"
+        "  j:\n"
+        "    steps:\n"
+        "      - name: A\n"
+        "        run: |\n"
+        "          python foo.py 2>&1 | tee -a \"$RUNNER_TEMP/pipeline.log\"\n"
+        "\n"
+        "      # Prose for the NEXT step that happens to mention set -euo pipefail\n"
+        "      # and exit \"${PIPESTATUS[0]}\" while explaining them.\n"
+        "      - name: B\n"
+        "        run: |\n"
+        "          set -euo pipefail\n"
+        "          python bar.py 2>&1 | tee -a \"$RUNNER_TEMP/pipeline.log\"\n"
+    )
+    f = tmp_path / "wf.yml"
+    f.write_text(doc)
+    lines = doc.splitlines()
+    blocks = _run_blocks(lines)
+
+    a_start = next(i for i, ln in enumerate(lines) if ln.strip() == "python foo.py 2>&1 | tee -a \"$RUNNER_TEMP/pipeline.log\"")
+    a_block = next((s, e) for s, e in blocks if s <= a_start < e)
+    a_text = "\n".join(lines[a_block[0]:a_block[1]])
+
+    assert "set -euo pipefail" not in a_text and "PIPESTATUS" not in a_text, (
+        "step A's block absorbed step B's comment — an unguarded `| tee` would be reported safe "
+        f"on the strength of prose. Block captured:\n{a_text}"
+    )
 
 
 def test_the_fingerprint_step_is_guarded():

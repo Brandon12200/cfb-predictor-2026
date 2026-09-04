@@ -182,8 +182,8 @@ from data.snapshot.store import FROZEN_VEHICLE_SHA256 as _FROZEN_VEHICLE_SHA256 
 from data.snapshot.store import frozen_vehicle_sha256 as _vehicle_sha  # noqa: E402
 
 if _VEHICLE.exists():
-    from scripts.slate_fingerprint import fingerprint as _fingerprint  # noqa: E402
     from scripts.slate_fingerprint import ROUNDING_DP as _ROUNDING_DP  # noqa: E402
+    from scripts.slate_fingerprint import fingerprint as _fingerprint  # noqa: E402
 
     _veh = _vehicle_sha()
     check("frozen gate vehicle is the tag-time wk1 snapshot, byte-for-byte (D29)",

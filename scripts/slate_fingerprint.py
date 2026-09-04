@@ -59,9 +59,12 @@ def _scrub(obj):
 # so it also measures the platform's libm: `engine/power_ratings.py` calls math.exp/log/erf, and
 # glibc is free to differ by an ULP between builds without any correctly-rounded guarantee. That is
 # what moved the gate on 2026-09-02 when the runner image rolled, with the repository byte-identical.
-# 10 dp is far below any spread the model can express (hundredths of a point) and far above the
-# ~1e-16 relative noise of a double, so the rounded hash is blind to the platform and still sensitive
-# to any change a human would call a model change.
+# Why 10 dp, measured on the pinned vehicle rather than asserted: the payload's 14,818 non-zero
+# floats span 9.740e-04 (the smallest `edge_size`) to 2.154e+03 (a `home_rating`), and NOTHING sits
+# below 1e-8. So the rounding floor is ~7 orders of magnitude under the smallest quantity the model
+# actually produces, while still being ~6 above the relative noise of a double. The real evidence
+# for the choice is not that arithmetic, though — it is that five environments with four distinct
+# exact hashes agree on one rounded hash (D41).
 ROUNDING_DP = 10
 
 
