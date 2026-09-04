@@ -712,3 +712,107 @@ proposition.** Where a fact is knowable from the claim, derive it from the claim
 for every row, at every stage, forever. The assertion the adversary said was missing now exists:
 `tests/test_lean_attribution.py` renders a partially-graded week and pins the buckets against the
 claim, verified to fail with `assert 9 == 0` against the original code.
+
+---
+
+## D41 — The fingerprint gate asserts the 10dp-ROUNDED hash; the exact hash is retained as an environment-specific record — **RATIFIED (owner, 2026-09-04)**
+**Date:** 2026-09-04
+
+**The defect, and it was two.** On 2026-09-02 and 2026-09-03 the daily `freeze-integrity` job
+printed `[FAIL] frozen-model behavioural fingerprint`, logged `1 CHECK(S) FAILED`, exited non-zero
+from `make` — and **reported `success` both days**. The freeze's own alarm was the one check in that
+workflow that could not ring. Separately, the check it was failing was wrong to fail.
+
+### 1. The masked step
+
+`freeze-integrity.yml`'s "Behavioural fingerprint" step ran `make verify-phase-3 2>&1 | tee -a …`
+with no `exit` on the pipeline's first status. A GitHub `run:` block executes under `bash -e`; in
+`cmd | tee f` the pipeline's status is **tee's**, and tee always succeeds, so `-e` never fires. The
+preflight step immediately above it had the guard; this one did not.
+
+Swept every `| tee` in every workflow and composite action rather than fixing the one that fired:
+**17 sites, 3 masking.** The other two were both `build_reports.py` calls in `weekly-grade.yml`'s
+"Regenerate reports" step, where a renderer crash would have left the step green and the commit that
+follows — gated only on `results.outputs.rc` — would have committed whatever was on disk. Given that
+D40 was a renderer defect and the first partially-graded render was days away, that was not an
+academic exposure. `tests/test_workflow_tee_masking.py` now classifies **every** site and
+additionally asserts that each captured return code has a consumer.
+
+### 2. The gate was measuring the platform, not the model
+
+`engine/power_ratings.py` calls `math.exp`, `math.log` and `math.erf`. CPython delegates all three to
+the platform's libm, and glibc guarantees correct rounding for **none** of them — a build difference
+of one ULP is enough to move a sha256 taken over 37,375 floats. Runner image `20260831.293` produces
+`496da01251cd89da…` where `20260823.283` produces `b9c00a947cd539db…`, from a byte-identical
+repository, the same pinned vehicle (D29) and the same Python 3.11.16. Nothing in `factors/`,
+`engine/`, `data/archive/frozen/` or the fingerprint script changed between the last PASS and the
+first FAIL.
+
+**It flapped rather than failed, which is worse.** Both images were in rotation simultaneously: a
+rerun of the identical commit `472529f` drew the older image and went green. A gate whose verdict
+depends on which machine picks up the job cannot be read as evidence either way — a red is not proof
+the model moved, and a green is not proof it did not.
+
+### 3. The method change (this ruling)
+
+The gate now asserts the **10 decimal-place rounded** hash
+`c5def3f10ef604c253096560242c6868bd87ad7c73efe7d701a471c23a3a6d0e`.
+
+**Five environments, four distinct exact hashes, one rounded hash:**
+
+| Environment | Python | exact | rounded 10dp |
+|---|---|---|---|
+| Mac arm64 | 3.11.2 | `b9c00a94…` | `c5def3f1…` |
+| runner image `20260823.283` | 3.11.16 | `b9c00a94…` | `c5def3f1…` |
+| runner image `20260831.293` | 3.11.16 | `496da012…` | `c5def3f1…` |
+| advisory Linux | 3.11.15 | *(distinct)* | `c5def3f1…` |
+| advisory Linux | 3.12.3 | *(distinct)* | `c5def3f1…` |
+
+**This is a change of method, not a relaxation of the freeze.** 10 dp sits roughly eight orders of
+magnitude below anything the model can express — spreads move in hundredths of a point — and about
+six above double-precision noise. `tests/test_fingerprint_rounding.py` pins both bounds: the rounded
+hash is invariant under a 1e-15 perturbation and changes under 1e-4. The rule that a constant is
+never edited to make a red gate green is **unchanged**; a genuine move still requires a SPEC §3.1
+exception and a new tag.
+
+The exact hash `b9c00a94…` **stays in the file, relabelled** as an environment-specific record
+rather than a cross-platform invariant — which is exactly why it stopped being the gate — and is
+still computed and printed on every run. It is the more sensitive of the two, and a change in it
+*while the rounded hash holds* is the signature of a platform roll: worth seeing, not worth failing
+on.
+
+### 4. Negative-zero normalisation, and why plain rounding was not enough
+
+`round()` alone does not deliver platform independence for this payload. `json.dumps` renders
+negative zero and positive zero differently while IEEE-754 says they are equal, and the pinned
+vehicle carries **exactly one** negative zero — the `power_rating_spread` of the week-12
+INDIANA-at-WASHINGTON record, 1 of 37,375 floats. The sign of a computed zero depends on the
+arithmetic path that produced it, so a platform reaching positive zero there would move the rounded
+hash with the model unchanged, defeating the entire purpose. `_round_floats` therefore normalises it.
+Measured on this vehicle: plain `round()` yields `baf516aa…`; normalised yields the ratified
+`c5def3f1…`.
+
+### 5. The boundary caveat — how a boundary event would present
+
+Rounding has an edge, and it is honest to name it. A value sitting within ~1e-10 of a `.5` boundary
+at the tenth decimal place can round to different neighbours on two platforms whose raw values
+differ by an ULP. Such an event would present as: **the rounded hash differs across environments
+while the model is unchanged** — the symptom this ruling removed, returning in a much rarer form. It
+is not silent and it cannot produce a false PASS: two payloads that round identically differ by less
+than 1e-10 by construction, so the only spurious verdict available to it is **red**. The response is
+the response to any red — reproduce on a second environment before concluding anything, and use the
+printed exact hash to classify. Raising the precision would shrink the noise margin, not the boundary
+risk; this is inherent to any rounding and is accepted.
+
+### 6. What was NOT done
+
+No calibration constant, weight or threshold changed. `factors/`, `engine/` and `data/` are
+untouched — the frozen trees remain byte-identical to `v2026-frozen-3`. No artifact was written or
+edited, and the pinned vehicle's own SHA gate (D29) is unchanged and still asserted separately, so
+"the gate's input changed" still reports differently from "model output moved".
+
+**The lesson.** A gate over floating-point output measures the whole stack, not the code under test,
+and the parts of that stack nobody pinned will move on their own schedule. Pin the quantity you
+actually mean to hold constant, at the precision you actually mean, and keep the sharper measurement
+visible beside it — the difference between the two is itself the diagnostic. The masked step is the
+sharper lesson: for two days the system knew and could not say.
