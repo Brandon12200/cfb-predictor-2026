@@ -183,6 +183,7 @@ from data.snapshot.store import frozen_vehicle_sha256 as _vehicle_sha  # noqa: E
 
 if _VEHICLE.exists():
     from scripts.slate_fingerprint import fingerprint as _fingerprint  # noqa: E402
+    from scripts.slate_fingerprint import ROUNDING_DP as _ROUNDING_DP  # noqa: E402
 
     _veh = _vehicle_sha()
     check("frozen gate vehicle is the tag-time wk1 snapshot, byte-for-byte (D29)",
@@ -211,7 +212,14 @@ if _VEHICLE.exists():
           _fp["sha256"] == _FROZEN_SLATE_SHA256 and _fp["n_games"] == _FROZEN_SLATE_GAMES,
           f"{_fp['n_games']} games, sha256 {_fp['sha256'][:16]}… "
           f"(frozen {_FROZEN_SLATE_SHA256[:16]}…) — a mismatch means model output moved; "
-          "that needs a SPEC §3 exception and a new tag, not a constant update")
+          "that needs a SPEC §3 exception and a new tag, not a constant update"
+          # Both hashes, always — a bare exact-hash mismatch cannot distinguish "the model moved"
+          # from "the platform's libm moved", and on 2026-09-02 it reported the first when the
+          # truth was the second. The rounded hash settles it on sight: if it is unchanged, the
+          # difference is below 1e-10 and no model output moved. This is REPORTING only; the gate
+          # still asserts the exact constant.
+          f" | rounded {_ROUNDING_DP}dp {_fp['sha256_rounded'][:16]}… — if the exact hash differs "
+          "but this one does not, the platform moved, not the model")
 else:
     check("frozen-model behavioural fingerprint", False,
           f"no pinned gate vehicle at {_VEHICLE}")
