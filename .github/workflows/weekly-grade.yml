@@ -115,9 +115,16 @@ jobs:
           suffix: ${{ steps.setup.outputs.commit_suffix }}
           push: ${{ inputs.dry_run != true }}
 
+      # `set -euo pipefail` rather than a trailing `exit "${PIPESTATUS[0]}"`: there are TWO commands
+      # here, and an `exit` after the first would skip the season report entirely. Without it both
+      # `| tee` pipelines returned tee's status and a renderer crash left this step green — the
+      # commit below is gated only on `results.outputs.rc`, so a failed render would have been
+      # committed as whatever was on disk. Same masking class as the fingerprint step; found by
+      # sweeping every `| tee` in every workflow rather than only fixing the one that fired.
       - name: Regenerate reports
         if: steps.results.outputs.rc == '0'
         run: |
+          set -euo pipefail
           python scripts/build_reports.py --week "${{ steps.setup.outputs.week }}" \
             --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
           python scripts/build_reports.py --season \

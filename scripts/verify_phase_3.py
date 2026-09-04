@@ -182,6 +182,7 @@ from data.snapshot.store import FROZEN_VEHICLE_SHA256 as _FROZEN_VEHICLE_SHA256 
 from data.snapshot.store import frozen_vehicle_sha256 as _vehicle_sha  # noqa: E402
 
 if _VEHICLE.exists():
+    from scripts.slate_fingerprint import ROUNDING_DP as _ROUNDING_DP  # noqa: E402
     from scripts.slate_fingerprint import fingerprint as _fingerprint  # noqa: E402
 
     _veh = _vehicle_sha()
@@ -203,15 +204,48 @@ if _VEHICLE.exists():
     # Note this gate CANNOT detect either event: it reads a committed vehicle (D29), so an external
     # input change is invisible to it — measured under exception 2, where it passed in full with
     # SP+ already live. `scripts/sp_watch.py` is the detector. See SPEC §3.1.
-    _FROZEN_SLATE_SHA256 = "b9c00a947cd539db62c6c11fd5550613543577159f5828c66de7435589882532"
+    # ── D41 (2026-09-04): the ASSERTED constant is the 10dp-rounded hash ─────────────────────────
+    # The exact hash is a function of every bit of every float, so it measured the platform's libm
+    # as much as the model. `engine/power_ratings.py` calls math.exp/log/erf and glibc promises
+    # correct rounding for none of them, so an image with a different libm build moves the hash with
+    # the model untouched. That is not hypothetical: runner image 20260831.293 produces
+    # 496da01251cd89da… where 20260823.283 produces b9c00a94…, from a byte-identical repository, the
+    # same pinned vehicle and the same Python 3.11.16. Both images were in rotation at once, so the
+    # exact gate did not fail — it FLAPPED, red or green by luck of draw, which is worse.
+    #
+    # Five environments, four distinct exact hashes, ONE rounded hash (SPEC §3 / D41):
+    #   Mac arm64          Python 3.11.2   exact b9c00a94…   rounded c5def3f1…
+    #   runner 20260823.283 Python 3.11.16  exact b9c00a94…   rounded c5def3f1…
+    #   runner 20260831.293 Python 3.11.16  exact 496da012…   rounded c5def3f1…
+    #   advisory Linux      Python 3.11.15  exact (distinct)  rounded c5def3f1…
+    #   advisory Linux      Python 3.12.3   exact (distinct)  rounded c5def3f1…
+    #
+    # This is a change of METHOD, not a relaxation of the freeze: 10 dp is ~8 orders of magnitude
+    # below anything the model can express (spreads move in hundredths of a point) and ~6 above
+    # double-precision noise, and `tests/test_fingerprint_rounding.py` pins both bounds — invariant
+    # at 1e-15, sensitive at 1e-4. The constant below is still never updated to make a red gate
+    # green; a genuine move needs a SPEC §3 exception and a new tag exactly as before.
+    _FROZEN_SLATE_SHA256_ROUNDED = \
+        "c5def3f10ef604c253096560242c6868bd87ad7c73efe7d701a471c23a3a6d0e"
+    # RETAINED, NOT ASSERTED. The exact hash as it reproduced on Mac arm64 and on runner images
+    # through 20260823.283 — an environment-specific record, not a cross-platform invariant, which
+    # is precisely why it stopped being the gate. Still computed and printed on every run: it is the
+    # more sensitive of the two, and a change in it while the rounded hash holds is the signature of
+    # a platform roll, worth seeing rather than hiding.
+    _EXACT_SHA256_ON_MAC_AND_IMAGES_THROUGH_20260823 = \
+        "b9c00a947cd539db62c6c11fd5550613543577159f5828c66de7435589882532"
     _FROZEN_SLATE_GAMES = 338
     _fp = _fingerprint()
+    _exact_note = ("as recorded" if _fp["sha256"] == _EXACT_SHA256_ON_MAC_AND_IMAGES_THROUGH_20260823
+                   else "differs from the recorded value — expected on a newer libm; not a failure")
     check(f"frozen-model behavioural fingerprint over the {_FROZEN_SLATE_GAMES}-game tracked "
-          f"slate ({_CONFIGURED_TAG})",
-          _fp["sha256"] == _FROZEN_SLATE_SHA256 and _fp["n_games"] == _FROZEN_SLATE_GAMES,
-          f"{_fp['n_games']} games, sha256 {_fp['sha256'][:16]}… "
-          f"(frozen {_FROZEN_SLATE_SHA256[:16]}…) — a mismatch means model output moved; "
-          "that needs a SPEC §3 exception and a new tag, not a constant update")
+          f"slate ({_CONFIGURED_TAG}), {_ROUNDING_DP}dp",
+          _fp["sha256_rounded"] == _FROZEN_SLATE_SHA256_ROUNDED
+          and _fp["n_games"] == _FROZEN_SLATE_GAMES,
+          f"{_fp['n_games']} games, rounded {_ROUNDING_DP}dp {_fp['sha256_rounded'][:16]}… "
+          f"(frozen {_FROZEN_SLATE_SHA256_ROUNDED[:16]}…) — a mismatch means model output moved by "
+          "more than 1e-10; that needs a SPEC §3 exception and a new tag, not a constant update"
+          f" | exact {_fp['sha256'][:16]}… ({_exact_note})")
 else:
     check("frozen-model behavioural fingerprint", False,
           f"no pinned gate vehicle at {_VEHICLE}")

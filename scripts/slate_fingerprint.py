@@ -55,6 +55,57 @@ def _scrub(obj):
     return obj
 
 
+# Decimal places for the companion hash. The exact hash is a function of every bit of every float,
+# so it also measures the platform's libm: `engine/power_ratings.py` calls math.exp/log/erf, and
+# glibc is free to differ by an ULP between builds without any correctly-rounded guarantee. That is
+# what moved the gate on 2026-09-02 when the runner image rolled, with the repository byte-identical.
+# Why 10 dp, measured on the pinned vehicle rather than asserted: the payload's 14,818 non-zero
+# floats span 9.740e-04 (the smallest `edge_size`) to 2.154e+03 (a `home_rating`), and NOTHING sits
+# below 1e-8. So the rounding floor is ~7 orders of magnitude under the smallest quantity the model
+# actually produces, while still being ~6 above the relative noise of a double. The real evidence
+# for the choice is not that arithmetic, though — it is that five environments with four distinct
+# exact hashes agree on one rounded hash (D41).
+ROUNDING_DP = 10
+
+
+def _round_floats(obj, dp: int = ROUNDING_DP):
+    """Recursively round every float to `dp` places, leaving everything else untouched.
+
+    `bool` is checked before `int`/`float` only for clarity — bools are ints, not floats, so they
+    would pass through anyway.
+
+    **`-0.0` is normalised to `0.0`, and that is load-bearing rather than tidy.** `json.dumps`
+    renders the two differently (`-0.0` vs `0.0`) while IEEE-754 says they are equal, so a payload
+    carrying one hashes differently from the identical payload carrying the other — the exact class
+    of platform-dependent difference this function exists to erase. It is not hypothetical here:
+    the pinned vehicle's payload holds **exactly one** negative zero, at
+    `games["12|INDIANA@WASHINGTON"]["power_rating_spread"]` (measured 2026-09-03, 1 of 37,375
+    floats), and the sign of a computed zero depends on the arithmetic path that produced it.
+    Rounding alone leaves that one value free to flip the hash on a platform that reaches `+0.0`
+    instead, which would defeat the whole point. Measured on this vehicle: plain `round()` gives
+    `baf516aa…`, normalised gives `c5def3f1…`.
+    """
+    if isinstance(obj, bool):
+        return obj
+    if isinstance(obj, float):
+        r = round(obj, dp)
+        return 0.0 if r == 0 else r
+    if isinstance(obj, dict):
+        return {k: _round_floats(v, dp) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_round_floats(v, dp) for v in obj]
+    if isinstance(obj, tuple):
+        return tuple(_round_floats(v, dp) for v in obj)
+    return obj
+
+
+def _sha256_of(payload) -> str:
+    """The one place a payload becomes a hash — both hashes below go through it, so they cannot
+    drift onto different serialisation settings."""
+    blob = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode()
+    return hashlib.sha256(blob).hexdigest()
+
+
 @contextlib.contextmanager
 def engine_reads(bundle: dict) -> Iterator[dict]:
     """Point the frozen engine's snapshot reader at `bundle` for the duration.
@@ -84,7 +135,14 @@ def tracked_slate(snapshot: dict) -> list[dict]:
 
 
 def fingerprint(snapshot: dict | None = None) -> dict:
-    """`{"n_games", "sha256"}` over the full engine output for the tracked slate.
+    """`{"n_games", "sha256", "sha256_rounded"}` over the full engine output for the tracked slate.
+
+    Two hashes over the **same** payload. `sha256` is exact — every bit of every float — and is the
+    historical constant the gate has always asserted. `sha256_rounded` is the same payload with
+    every float put through `round(x, 10)` first, which makes it independent of the platform's libm
+    while staying sensitive to any change large enough to matter. Both are reported so a mismatch
+    can be classified rather than guessed at: exact differs and rounded matches means the platform
+    moved, both differ means model output moved.
 
     Defaults to the **pinned** tag-time vehicle (`data/archive/frozen/`, D29), never the live
     `data/snapshots/2026_week_01/` bundle — the Phase-5 pipeline rebuilds that one every week-1
@@ -112,8 +170,9 @@ def fingerprint(snapshot: dict | None = None) -> dict:
     payload = {"volatile_excluded": list(VOLATILE),
                "placeholder_spread": PLACEHOLDER_SPREAD,
                "games": _scrub(records)}
-    blob = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode()
-    return {"n_games": len(records), "sha256": hashlib.sha256(blob).hexdigest()}
+    return {"n_games": len(records),
+            "sha256": _sha256_of(payload),
+            "sha256_rounded": _sha256_of(_round_floats(payload))}
 
 
 def main() -> int:
@@ -128,9 +187,13 @@ def main() -> int:
     else:
         print(f"tracked-slate games : {fp['n_games']}")
         print(f"behavioural sha256  : {fp['sha256']}")
+        print(f"  ... rounded {ROUNDING_DP}dp : {fp['sha256_rounded']}")
         print("\nIf this moved and you did not intend it, something changed model output — "
               "including via the freeze-exempt data/ seam. That needs a documented SPEC §3 "
               "exception, not a gate update.")
+        print(f"If the EXACT hash moved but the {ROUNDING_DP}dp one did not, the difference is "
+              "below 1e-10 and the model did not move — that is the platform (libm differs by an "
+              "ULP between builds; the engine calls math.exp/log/erf). Report both.")
     return 0
 
 

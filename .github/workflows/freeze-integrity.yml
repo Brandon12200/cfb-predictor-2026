@@ -49,8 +49,15 @@ jobs:
           python scripts/pipeline_preflight.py --role freeze 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
           exit "${PIPESTATUS[0]}"
 
+      # `cmd | tee f` exits with TEE's status, which is always 0 — so under `bash -e` a failing
+      # `cmd` leaves the step green. This step had no `exit "${PIPESTATUS[0]}"` and swallowed a real
+      # `[FAIL]` on 2026-09-02 and 2026-09-03: the fingerprint gate reported a mismatch, the log
+      # said `1 CHECK(S) FAILED`, and the job reported success both days. The freeze's own alarm was
+      # the one check in this workflow that could not ring.
       - name: Behavioural fingerprint
-        run: make verify-phase-3 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+        run: |
+          make verify-phase-3 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          exit "${PIPESTATUS[0]}"
 
       # 2 CFBD calls, ZERO Odds credits. Exit 2 = the data arrived.
       - name: SP+ / returning-production watch
