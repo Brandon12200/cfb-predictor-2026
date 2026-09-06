@@ -2,6 +2,76 @@
   "graded": [
     {
       "ats_result": null,
+      "away_score": 16,
+      "away_team": "BAYLOR",
+      "close_as_of": "2026-09-05T16:51:39.669973+00:00",
+      "closing_spread": -7.1,
+      "clv": null,
+      "game_id": "baylor-vs-auburn-week1",
+      "graded_at": "2026-09-06T18:39:49.977851+00:00",
+      "home_score": 17,
+      "home_team": "AUBURN",
+      "is_hypothetical": true,
+      "week": 1
+    },
+    {
+      "ats_result": null,
+      "away_score": 15,
+      "away_team": "BOSTON COLLEGE",
+      "close_as_of": "2026-09-05T16:51:39.669973+00:00",
+      "closing_spread": -7.1,
+      "clv": null,
+      "game_id": "boston-college-vs-cincinnati-week1",
+      "graded_at": "2026-09-06T18:39:49.977851+00:00",
+      "home_score": 34,
+      "home_team": "CINCINNATI",
+      "is_hypothetical": true,
+      "week": 1
+    },
+    {
+      "ats_result": "win",
+      "away_score": 10,
+      "away_team": "CLEMSON",
+      "close_as_of": "2026-09-05T23:00:24.293731+00:00",
+      "closing_spread": -10.1,
+      "clv": -0.5,
+      "game_id": "clemson-vs-lsu-week1",
+      "graded_at": "2026-09-06T18:39:49.977851+00:00",
+      "home_score": 51,
+      "home_team": "LSU",
+      "is_hypothetical": true,
+      "week": 1
+    },
+    {
+      "ats_result": "loss",
+      "away_score": 14,
+      "away_team": "COLORADO",
+      "close_as_of": "2026-09-03T23:19:33.036453+00:00",
+      "closing_spread": -6.5,
+      "clv": 0.0,
+      "game_id": "colorado-vs-georgia-tech-week1",
+      "graded_at": "2026-09-06T18:39:49.977851+00:00",
+      "home_score": 13,
+      "home_team": "GEORGIA TECH",
+      "is_hypothetical": true,
+      "week": 1
+    },
+    {
+      "ats_result": "loss",
+      "away_score": 45,
+      "away_team": "MIAMI",
+      "close_as_of": "2026-09-04T23:04:48.070856+00:00",
+      "closing_spread": 24.5,
+      "clv": -0.1,
+      "game_id": "miami-vs-stanford-week1",
+      "graded_at": "2026-09-06T18:39:49.977851+00:00",
+      "home_score": 6,
+      "home_team": "STANFORD",
+      "is_hypothetical": true,
+      "week": 1
+    },
+    {
+      "ats_result": null,
       "away_score": 8,
       "away_team": "NC STATE",
       "close_as_of": "2026-08-29T17:44:54.955599+00:00",
@@ -27,28 +97,36 @@
       "home_team": "TCU",
       "is_hypothetical": true,
       "week": 1
+    },
+    {
+      "ats_result": null,
+      "away_score": 45,
+      "away_team": "UCLA",
+      "close_as_of": "2026-09-05T23:00:24.293731+00:00",
+      "closing_spread": 2.5,
+      "clv": null,
+      "game_id": "ucla-vs-cal-week1",
+      "graded_at": "2026-09-06T18:39:49.977851+00:00",
+      "home_score": 24,
+      "home_team": "CAL",
+      "is_hypothetical": true,
+      "week": 1
     }
   ],
   "meta": {
     "coverage": {
-      "graded": 2,
+      "graded": 8,
       "no_closing_line": [],
       "predicted": 11,
       "ungraded": [
-        "baylor-vs-auburn-week1",
-        "boston-college-vs-cincinnati-week1",
-        "clemson-vs-lsu-week1",
-        "colorado-vs-georgia-tech-week1",
         "louisville-vs-mississippi-week1",
-        "miami-vs-stanford-week1",
         "smu-vs-florida-state-week1",
-        "ucla-vs-cal-week1",
         "wisconsin-vs-notre-dame-week1"
       ]
     },
     "engine": "grading_v1",
-    "generated_at": "2026-08-30T19:28:58.894183+00:00",
-    "graded_count": 2,
+    "generated_at": "2026-09-06T18:39:49.977851+00:00",
+    "graded_count": 8,
     "schema_version": 1,
     "week": 1,
     "year": 2026
