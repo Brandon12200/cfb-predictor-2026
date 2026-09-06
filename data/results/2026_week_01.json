@@ -1,23 +1,83 @@
 {
   "coverage": {
-    "completed": 2,
+    "completed": 8,
     "pending": [
-      "BAYLOR@AUBURN",
-      "BOSTON COLLEGE@CINCINNATI",
-      "CLEMSON@LSU",
-      "COLORADO@GEORGIA TECH",
       "LOUISVILLE@MISSISSIPPI",
-      "MIAMI@STANFORD",
       "SMU@FLORIDA STATE",
-      "UCLA@CAL",
       "WISCONSIN@NOTRE DAME"
     ],
     "postponed": [],
     "predicted": 11,
     "unmatched": []
   },
+  "last_fetch": "2026-09-06",
   "recorded_date": "2026-08-30",
   "results": [
+    {
+      "away_score": 16,
+      "away_team": "BAYLOR",
+      "completed_in_week": 1,
+      "fetched_at": "2026-09-06T18:39:41.541871+00:00",
+      "game_id": "baylor-vs-auburn-week1",
+      "home_score": 17,
+      "home_team": "AUBURN",
+      "neutral_site": true,
+      "source": "cfbd_v2",
+      "start_date": "2026-09-05T19:30:00.000Z",
+      "week": 1
+    },
+    {
+      "away_score": 15,
+      "away_team": "BOSTON COLLEGE",
+      "completed_in_week": 1,
+      "fetched_at": "2026-09-06T18:39:41.541871+00:00",
+      "game_id": "boston-college-vs-cincinnati-week1",
+      "home_score": 34,
+      "home_team": "CINCINNATI",
+      "neutral_site": false,
+      "source": "cfbd_v2",
+      "start_date": "2026-09-05T19:30:00.000Z",
+      "week": 1
+    },
+    {
+      "away_score": 10,
+      "away_team": "CLEMSON",
+      "completed_in_week": 1,
+      "fetched_at": "2026-09-06T18:39:41.541871+00:00",
+      "game_id": "clemson-vs-lsu-week1",
+      "home_score": 51,
+      "home_team": "LSU",
+      "neutral_site": false,
+      "source": "cfbd_v2",
+      "start_date": "2026-09-05T23:30:00.000Z",
+      "week": 1
+    },
+    {
+      "away_score": 14,
+      "away_team": "COLORADO",
+      "completed_in_week": 1,
+      "fetched_at": "2026-09-06T18:39:41.541871+00:00",
+      "game_id": "colorado-vs-georgia-tech-week1",
+      "home_score": 13,
+      "home_team": "GEORGIA TECH",
+      "neutral_site": false,
+      "source": "cfbd_v2",
+      "start_date": "2026-09-04T00:00:00.000Z",
+      "week": 1
+    },
+    {
+      "away_score": 45,
+      "away_team": "MIAMI",
+      "completed_in_week": 1,
+      "fetched_at": "2026-09-06T18:39:41.541871+00:00",
+      "game_id": "miami-vs-stanford-week1",
+      "home_score": 6,
+      "home_team": "STANFORD",
+      "neutral_site": false,
+      "source": "cfbd_v2",
+      "start_date": "2026-09-05T01:00:00.000Z",
+      "week": 1
+    },
     {
       "away_score": 8,
       "away_team": "NC STATE",
@@ -42,6 +102,19 @@
       "neutral_site": true,
       "source": "cfbd_v2",
       "start_date": "2026-08-29T16:00:00.000Z",
+      "week": 1
+    },
+    {
+      "away_score": 45,
+      "away_team": "UCLA",
+      "completed_in_week": 1,
+      "fetched_at": "2026-09-06T18:39:41.541871+00:00",
+      "game_id": "ucla-vs-cal-week1",
+      "home_score": 24,
+      "home_team": "CAL",
+      "neutral_site": false,
+      "source": "cfbd_v2",
+      "start_date": "2026-09-06T02:30:00.000Z",
       "week": 1
     }
   ],
