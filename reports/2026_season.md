@@ -1,18 +1,22 @@
 # 2026 Season Report — to date
 
-_2/11 games graded across 1 week(s)._
+_8/11 games graded across 1 week(s)._
 
 ### Games of interest, by lean side (D27 — read this before the blended numbers)
 
 _4 of 11 games carry a gradable lean (4 home / 0 away, —)._
 
+_**These are hypothetical leans, not placed bets.** All 3 graded games were NO_BET — this is what the model would have done had it bet, which is how selectivity gets measured (3c.5). No wager was recommended._
+
 | lean | games | W-L-P | ATS win% | Wilson 95% | avg CLV |
 |---|---|---|---|---|---|
-| home | 4 | 0-0-0 | — | — | — no games graded on this side yet |
+| home | 4 | 1-2-0 | 33.3% | [6%–79%] | -0.20 pts (beat close 0.0%, n=3) |
 | away | 0 | 0-0-0 | — | — | — (no games on this side) |
-| _naive: always lean home_ | 0 | 0-0-0 | — | — | — (no games on this side) |
+| _naive: always lean home_ | 3 | 1-2-0 | 33.3% | [6%–79%] | -0.20 pts (beat close 0.0%, n=3) |
 
-_No graded bets yet, so the model cannot be differenced against the naive always-lean-home baseline. That comparison — not the raw win% — is what makes the number evidence about the model (D27)._
+_Model 33.3% vs naive baseline 33.3% on the same games: **+0.0%** — **at or below** always taking the home team._
+
+_The model's side-selection has not beaten 'always take the home team' on this sample. That is the comparison D17 existed to force, so it is reported at the top rather than buried._
 
 _7 neutral games: no side taken — CLV is defined from the bet side's perspective, so it is null rather than 0.0 (D22 f3). Their own selectivity bucket, never win-rated._
 
@@ -51,7 +55,7 @@ _No graded bets in these tiers yet — tier separation unmeasured. An empty brea
 | bucket | games | ATS win% |
 |---|---|---|
 | placed bets | 0 | — |
-| NO_BET (hypothetical lean) | 4 | — |
+| NO_BET (hypothetical lean) | 4 | 33.3% |
 | NO_BET (neutral, no lean) | 7 | — (no side) |
 
 _Entire slate NO_BET — selectivity working as designed (dormancy-as-design, 3c.9), not breakage._
@@ -60,8 +64,8 @@ _Entire slate NO_BET — selectivity working as designed (dormancy-as-design, 3c
 
 | factor | fired | ATS (W-L) | ATS win% | avg CLV |
 |---|---|---|---|---|
-| Sandwich | 1 | 0-0 | — | — |
-| TravelBurden | 4 | 0-0 | — | — |
+| Sandwich | 1 | 0-1 | 0.0% | +0.00 |
+| TravelBurden | 4 | 1-2 | 33.3% | -0.20 |
 
 _read the Wilson intervals — first-season per-factor cells are small_
 
