@@ -22,12 +22,14 @@ it is. Each was found by review, each is deliberately left open, and none has an
 tree today — the pins below cover the idioms that *do* exist here:
 
 * **Only one hop of indirection resolves.** A test calling a helper that calls another helper is
-  invisible. One hop covers `test_inspection.py`'s `_committed()` pattern, which is the only such
-  idiom present.
+  invisible; no test does that today. One hop is load-bearing for at least two real cases —
+  `test_inspection.py`'s `_committed()` and `test_lean_attribution.py`'s `_partial_week_join()`,
+  both of which drop to "does not reach live data" if the helper is not resolved. Treat that as
+  two known dependants rather than an inventory: this list is not maintained against the suite.
 * **The multi-arg `Path` constructor is not recognised** as a path build — only the `/` operator
-  chain and `os.path.join`, which are the forms actually in use. No test in the suite builds a
-  live-data path that way (checked 2026-09-08; the only occurrences of the pattern anywhere under
-  `tests/` are in this paragraph describing it).
+  chain and `os.path.join`, which are the forms actually in use. Checked 2026-09-08 by AST-walking
+  every `Path(...)` call under `tests/`: no test constructs a path from multiple string arguments
+  at all, for any purpose.
 * **The pre-filter reads raw source, so a docstring or comment that merely mentions a live reader's
   name can flag its test.** Pre-existing rather than introduced by the indirection work — it
   reproduces on a single function with no helper. It fails in the safe direction (a spurious flag,
