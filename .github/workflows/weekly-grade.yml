@@ -132,8 +132,11 @@ jobs:
       # remembered. `grade_weeks` comes from `cfb-setup` via `gradable_weeks()`: every week with a
       # claim on disk, which is exactly the set that can have a graded file to fall behind.
       #
-      # GRADE_WEEKS goes through `env:` rather than `${{ }}` inline, per the same rule ci.yml
-      # applies to `HEAD_REF`: workflow expressions are never interpolated into a shell script.
+      # GRADE_WEEKS goes through `env:` as hygiene, not because it is untrusted: `pipeline_week.py`
+      # builds it from `gradable_weeks()`, so it is digits and single spaces and nothing else. That
+      # is a weaker case than ci.yml's `HEAD_REF`, which uses `env:` because a fork controls the
+      # value. Note `--year` below is still inline `${{ }}` — this step is not claiming a blanket
+      # no-interpolation rule, only routing the one value that is iterated as a list.
       # The expansion is deliberately unquoted — it is a space-separated list and word-splitting
       # is the point; an empty value simply iterates zero times.
       - name: Regenerate reports
