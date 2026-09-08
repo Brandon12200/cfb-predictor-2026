@@ -57,6 +57,20 @@
       "week": 1
     },
     {
+      "ats_result": null,
+      "away_score": 38,
+      "away_team": "LOUISVILLE",
+      "close_as_of": "2026-09-06T04:49:56.324517+00:00",
+      "closing_spread": -6.7,
+      "clv": null,
+      "game_id": "louisville-vs-mississippi-week1",
+      "graded_at": "2026-09-08T17:16:53.455543+00:00",
+      "home_score": 41,
+      "home_team": "MISSISSIPPI",
+      "is_hypothetical": true,
+      "week": 1
+    },
+    {
       "ats_result": "loss",
       "away_score": 45,
       "away_team": "MIAMI",
@@ -99,6 +113,20 @@
       "week": 1
     },
     {
+      "ats_result": "loss",
+      "away_score": 27,
+      "away_team": "SMU",
+      "close_as_of": "2026-09-06T04:49:56.324517+00:00",
+      "closing_spread": 2.9,
+      "clv": -0.7,
+      "game_id": "smu-vs-florida-state-week1",
+      "graded_at": "2026-09-08T17:16:53.455543+00:00",
+      "home_score": 24,
+      "home_team": "FLORIDA STATE",
+      "is_hypothetical": true,
+      "week": 1
+    },
+    {
       "ats_result": null,
       "away_score": 45,
       "away_team": "UCLA",
@@ -111,22 +139,32 @@
       "home_team": "CAL",
       "is_hypothetical": true,
       "week": 1
+    },
+    {
+      "ats_result": null,
+      "away_score": 13,
+      "away_team": "WISCONSIN",
+      "close_as_of": "2026-09-06T04:49:56.324517+00:00",
+      "closing_spread": -20.6,
+      "clv": null,
+      "game_id": "wisconsin-vs-notre-dame-week1",
+      "graded_at": "2026-09-08T17:16:53.455543+00:00",
+      "home_score": 41,
+      "home_team": "NOTRE DAME",
+      "is_hypothetical": true,
+      "week": 1
     }
   ],
   "meta": {
     "coverage": {
-      "graded": 8,
+      "graded": 11,
       "no_closing_line": [],
       "predicted": 11,
-      "ungraded": [
-        "louisville-vs-mississippi-week1",
-        "smu-vs-florida-state-week1",
-        "wisconsin-vs-notre-dame-week1"
-      ]
+      "ungraded": []
     },
     "engine": "grading_v1",
-    "generated_at": "2026-09-06T18:39:49.977851+00:00",
-    "graded_count": 8,
+    "generated_at": "2026-09-08T17:16:53.455543+00:00",
+    "graded_count": 11,
     "schema_version": 1,
     "week": 1,
     "year": 2026
