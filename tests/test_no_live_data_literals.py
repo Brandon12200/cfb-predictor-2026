@@ -16,6 +16,26 @@ Scope is deliberately narrow — the two shapes that actually bit (`remaining N`
 bare `W-L` strings — rather than every integer literal in the suite. A broad "no magic numbers" rule
 would flag hundreds of legitimate pins (exit codes, schema versions, ratified constants) and be
 switched off within a week. A test nobody trusts is not a guard.
+
+**Known limits**, recorded because a guard whose blind spots are undocumented reads as stronger than
+it is. Each was found by review, each is deliberately left open, and none has an instance in this
+tree today — the pins below cover the idioms that *do* exist here:
+
+* **Only one hop of indirection resolves.** A test calling a helper that calls another helper is
+  invisible. One hop covers `test_inspection.py`'s `_committed()` pattern, which is the only such
+  idiom present.
+* **The multi-arg `Path` constructor is not recognised** as a path build — only the `/` operator
+  chain and `os.path.join`, which are the forms actually in use. No test in the suite builds a
+  live-data path that way (checked 2026-09-08; the only occurrences of the pattern anywhere under
+  `tests/` are in this paragraph describing it).
+* **The pre-filter reads raw source, so a docstring or comment that merely mentions a live reader's
+  name can flag its test.** Pre-existing rather than introduced by the indirection work — it
+  reproduces on a single function with no helper. It fails in the safe direction (a spurious flag,
+  never a missed literal), which is why it is tolerated: the failure mode of over-tightening here is
+  a guard that gets switched off, and that is the worse outcome.
+
+Extending any of these is worth doing when an instance appears, not before — hardening against
+patterns the codebase does not use is how a narrow, trusted guard turns into a broad, ignored one.
 """
 from __future__ import annotations
 
