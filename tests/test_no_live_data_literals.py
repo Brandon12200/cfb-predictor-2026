@@ -81,29 +81,76 @@ def _code_strings(fn: ast.FunctionDef) -> list[str]:
     return out
 
 
-def _reaches_live_data(fn: ast.FunctionDef, seg: str) -> bool:
-    """Does this test read the committed tree — by joined path, by call, or segment by segment?"""
+def _builds_live_path(nodes: list[ast.AST]) -> bool:
+    """A `data`-rooted path built a segment at a time: `ROOT / "data" / "projections" / …`.
+
+    Keyed on the path CONSTRUCTION rather than on the two strings appearing anywhere in the
+    function. Bare co-occurrence produced a real false positive — `test_api_clients.py`'s
+    hand-built snapshot dict has `"data"` and `"lines"` as ordinary keys and touches no file — and
+    a guard that cries wolf on synthetic fixtures is one that gets switched off.
+    """
+    for root in nodes:
+        for node in ast.walk(root):
+            segs: set[str] = set()
+            if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+                for part in ast.walk(node):
+                    if isinstance(part, ast.Constant) and isinstance(part.value, str):
+                        segs.add(part.value)
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) \
+                    and node.func.attr == "join":
+                for arg in node.args:
+                    if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                        segs.add(arg.value)
+            if "data" in segs and segs & set(_LIVE_TIERS):
+                return True
+    return False
+
+
+def _reaches_live_data(nodes: list[ast.AST], seg: str) -> bool:
+    """Does this test read the committed tree — by joined path, by call name, or segment by
+    segment? `nodes` is the test plus any same-file helper it calls (see `_scan_source`)."""
     if any(c in seg for c in _LIVE_CALLS) or any(d in seg for d in _LIVE_DIRS):
         return True
-    strings = set(_code_strings(fn))
-    return "data" in strings and bool(strings & set(_LIVE_TIERS))
+    return _builds_live_path(nodes)
+
+
+def _called_names(fn: ast.FunctionDef) -> set[str]:
+    return {n.func.id for n in ast.walk(fn)
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
 
 
 def _scan_source(src: str, label: str) -> list[tuple[str, int, str, list[str]]]:
     """Scan one module's source. Factored out so the discrimination tests below can feed it
     synthetic modules — a guard whose evasions are only ever checked by hand, once, is a guard
-    whose next regression is silent."""
+    whose next regression is silent.
+
+    **One hop of local indirection is resolved.** `tests/test_inspection.py` wraps its reads in a
+    module-local `_committed()` helper, so five of its six tests never name `load_manifest`,
+    `load_snapshot` or any `data/` path in their own bodies — structurally invisible to a scan that
+    only reads the test function. That is the same family as the decorator gap (a marker sitting one
+    level out from where the scan looks), so a same-file helper the test calls is unioned into both
+    the live-detection input and the shape scan. Deeper chains are still invisible; one hop covers
+    the idiom that exists here, and the pins below would catch a regression on it.
+    """
+    tree = ast.parse(src)
+    helpers = {n.name: n for n in tree.body
+               if isinstance(n, ast.FunctionDef) and not n.name.startswith("test_")}
     out: list[tuple[str, int, str, list[str]]] = []
-    for node in ast.walk(ast.parse(src)):
+    for node in ast.walk(tree):
         if not isinstance(node, ast.FunctionDef) or not node.name.startswith("test_"):
             continue
-        seg = ast.get_source_segment(src, node) or ""
-        deco = "\n".join(ast.get_source_segment(src, d) or "" for d in node.decorator_list)
+        nodes: list[ast.AST] = [node]
+        nodes += [helpers[n] for n in sorted(_called_names(node)) if n in helpers]
+        seg = "\n".join(
+            (ast.get_source_segment(src, n) or "")
+            + "\n" + "\n".join(ast.get_source_segment(src, d) or ""
+                               for d in getattr(n, "decorator_list", []))
+            for n in nodes)
         if _REDIRECT.search(seg):
             continue
-        if not _reaches_live_data(node, seg + "\n" + deco):
+        if not _reaches_live_data(nodes, seg):
             continue
-        strings = _code_strings(node)
+        strings = [s for n in nodes for s in _code_strings(n)]
         found = sorted({name for name, pat in _SHAPES.items()
                         for s in strings if pat.search(s)})
         if found:
@@ -166,6 +213,39 @@ def test_actually_redirects_the_reader(tmp_path, monkeypatch):
     out = run_project(["--team", "Cal", "--quiet"])
     assert "remaining 11" in out
 '''
+
+
+_EVASION_HELPER_INDIRECTION = '''
+def _committed():
+    return load_manifest(1, 2026), load_snapshot(1, 2026)
+
+
+def test_reads_through_a_local_helper():
+    manifest, snapshot = _committed()
+    out = render(manifest, snapshot)
+    assert "remaining 11" in out
+'''
+
+_SYNTHETIC_DICT_NOT_A_PATH = '''
+def test_builds_a_snapshot_dict_in_memory():
+    snap = {"data": {"betting_lines": {"A@B": {"lines": []}}}}
+    assert snap["data"]["betting_lines"]
+'''
+
+
+def test_the_guard_catches_a_read_through_a_local_helper():
+    """`tests/test_inspection.py` wraps its reads in `_committed()`, so five of its six tests never
+    name a live reader in their own body. Same family as the decorator gap — the marker sits one
+    level out from where the scan looks."""
+    assert _scan_source(_EVASION_HELPER_INDIRECTION, "<helper>"), \
+        "a read through a same-file helper evades the guard"
+
+
+def test_a_synthetic_dict_is_not_mistaken_for_a_path():
+    """`"data"` and `"lines"` as dict keys are not a path. Matching their bare co-occurrence
+    flagged `test_api_clients.py`'s hand-built snapshot, which touches no file at all."""
+    assert not _scan_source(_SYNTHETIC_DICT_NOT_A_PATH + '\n    assert "remaining 11"\n',
+                            "<dict>"), "an in-memory dict was mistaken for a live read"
 
 
 def test_the_guard_catches_a_split_path_read():
