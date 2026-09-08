@@ -87,18 +87,48 @@ def test_project_team_tolerates_older_schema(tmp_path, monkeypatch, capsys):
 
 
 def test_cal_now_has_a_schedule(capsys):
-    """**This test previously pinned a defect.**
+    """**This test has pinned the wrong thing twice, in opposite directions.**
 
-    It asserted Cal shows "No schedule data" — true at the time, but only because the normalizer
-    could not resolve CFBD's "California" and dropped all ten of Cal's games. The test was
-    therefore enforcing the broken contract: had someone fixed the normalizer, this would have
-    failed and looked like the fix was wrong. It now asserts the corrected state (SPEC §3
-    exception 1).
+    First it asserted Cal shows "No schedule data" — true at the time, but only because the
+    normalizer could not resolve CFBD's "California" and dropped all ten of Cal's games. It was
+    enforcing the broken contract: had someone fixed the normalizer, this would have failed and
+    looked like the fix was wrong. That was corrected to the fixed state (SPEC §3 exception 1).
+
+    The correction then pinned a **moment** instead of a defect: `"remaining 11"`, a preseason count
+    read off live derived exports. Cal played in week 1, the week-2 rebuild rendered
+    `record 0-1 | remaining 10`, and `main` went red on the week-2 claim push for a calendar reason
+    (run 34256174509). The number was never the contract — the *schedule existing* is.
+
+    So this now asserts the invariant, `remaining == scheduled − played`, derived from the same
+    record the CLI renders, plus a floor on schedule length that only the original defect could
+    breach. A team's `games` list holds completed and remaining alike, so its length is constant
+    across the season while the split inside it moves — which is exactly the difference between a
+    contract and a snapshot of one.
     """
     assert run_project(["--team", "Cal", "--quiet"]) == 0
     out = capsys.readouterr().out
-    assert "No schedule data" not in out
-    assert "CAL" in out and "remaining 11" in out
+    assert "No schedule data" not in out and "CAL" in out
+
+    # The same file, at the same week, the CLI just chose for itself.
+    weeks = cli.app._projection_weeks(2026)
+    rec = cli.app._load_projection(2026, weeks[-1])["teams"]["CAL"]
+    games = rec["games"]
+    played = rec["wins_so_far"] + rec["losses_so_far"]
+
+    # 1. The ORIGINAL defect, still guarded: the normalizer dropped all ten of Cal's games, so a
+    #    regression takes this to zero. A floor, not a count — `games` never shrinks as the season
+    #    runs, so this cannot rot the way "remaining 11" did.
+    assert not rec.get("schedule_missing"), "Cal's schedule was dropped from the snapshot again"
+    assert len(games) >= 10, f"Cal's schedule collapsed to {len(games)} games"
+
+    # 2. The invariant.
+    assert rec["remaining"] == len(games) - played
+    assert sum(1 for g in games if g.get("completed")) == played
+
+    # 3. The render shows those numbers rather than different ones — the reason this test reads the
+    #    CLI at all instead of only the artifact.
+    assert f"record {rec['wins_so_far']}-{rec['losses_so_far']}" in out
+    assert f"remaining {rec['remaining']}" in out
 
 
 def test_project_json_includes_every_fbs_team(capsys):
