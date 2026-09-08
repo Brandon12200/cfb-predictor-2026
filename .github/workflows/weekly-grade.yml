@@ -121,12 +121,31 @@ jobs:
       # commit below is gated only on `results.outputs.rc`, so a failed render would have been
       # committed as whatever was on disk. Same masking class as the fingerprint step; found by
       # sweeping every `| tee` in every workflow rather than only fixing the one that fired.
+      # Renders EVERY gradable week, not just `pipeline_week`. Grading and rendering happen in
+      # different jobs: the Tuesday predict job's catch-up loop grades earlier weeks (that is how
+      # week 1 closed at 11/11 on 2026-09-08), and nothing re-rendered them, so
+      # `reports/2026_week_01.md` sat at "8/11 games graded" while its graded file said otherwise.
+      # A report is a pure function of (claim, graded), so re-rendering a week that did not change
+      # is a no-op: identical bytes, `git diff --cached --quiet` in cfb-commit, nothing committed.
+      # That makes this self-healing — any week whose rendering has fallen behind its data is
+      # corrected on the next Sunday that grades anything — rather than a fix that has to be
+      # remembered. `grade_weeks` comes from `cfb-setup` via `gradable_weeks()`: every week with a
+      # claim on disk, which is exactly the set that can have a graded file to fall behind.
+      #
+      # GRADE_WEEKS goes through `env:` rather than `${{ }}` inline, per the same rule ci.yml
+      # applies to `HEAD_REF`: workflow expressions are never interpolated into a shell script.
+      # The expansion is deliberately unquoted — it is a space-separated list and word-splitting
+      # is the point; an empty value simply iterates zero times.
       - name: Regenerate reports
         if: steps.results.outputs.rc == '0'
+        env:
+          GRADE_WEEKS: ${{ steps.setup.outputs.grade_weeks }}
         run: |
           set -euo pipefail
-          python scripts/build_reports.py --week "${{ steps.setup.outputs.week }}" \
-            --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          for W in $GRADE_WEEKS; do
+            python scripts/build_reports.py --week "$W" \
+              --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          done
           python scripts/build_reports.py --season \
             --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
 
