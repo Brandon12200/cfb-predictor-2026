@@ -134,15 +134,15 @@ def tracked_slate(snapshot: dict) -> list[dict]:
     )
 
 
-def fingerprint(snapshot: dict | None = None) -> dict:
-    """`{"n_games", "sha256", "sha256_rounded"}` over the full engine output for the tracked slate.
+def build_payload(snapshot: dict | None = None) -> dict:
+    """The exact structure `fingerprint` hashes — the full engine output over the tracked slate.
 
-    Two hashes over the **same** payload. `sha256` is exact — every bit of every float — and is the
-    historical constant the gate has always asserted. `sha256_rounded` is the same payload with
-    every float put through `round(x, 10)` first, which makes it independent of the platform's libm
-    while staying sensitive to any change large enough to matter. Both are reported so a mismatch
-    can be classified rather than guessed at: exact differs and rounded matches means the platform
-    moved, both differ means model output moved.
+    Factored out of `fingerprint` so the payload's own properties can be asserted, not only its
+    hash. D41's rounded gate rests on two assumptions about this structure that were true when
+    measured but enforced by nothing: that it holds no NaN or infinity, and that no number reaches
+    `json.dumps` as a string. A float arriving as a string bypasses `_round_floats` and puts platform
+    bits back into the hash; a NaN would round to NaN on every platform and silently hide a change.
+    `tests/test_fingerprint_payload_tripwires.py` now fails if either ever becomes false.
 
     Defaults to the **pinned** tag-time vehicle (`data/archive/frozen/`, D29), never the live
     `data/snapshots/2026_week_01/` bundle — the Phase-5 pipeline rebuilds that one every week-1
@@ -167,10 +167,23 @@ def fingerprint(snapshot: dict | None = None) -> dict:
             for g in games
         }
 
-    payload = {"volatile_excluded": list(VOLATILE),
-               "placeholder_spread": PLACEHOLDER_SPREAD,
-               "games": _scrub(records)}
-    return {"n_games": len(records),
+    return {"volatile_excluded": list(VOLATILE),
+            "placeholder_spread": PLACEHOLDER_SPREAD,
+            "games": _scrub(records)}
+
+
+def fingerprint(snapshot: dict | None = None) -> dict:
+    """`{"n_games", "sha256", "sha256_rounded"}` over the full engine output for the tracked slate.
+
+    Two hashes over the **same** payload (`build_payload`). `sha256` is exact — every bit of every
+    float — and is retained as an environment-specific record. `sha256_rounded` is the same payload
+    with every float put through `round(x, 10)` first, which makes it independent of the platform's
+    libm while staying sensitive to any change large enough to matter; it is the constant the gate
+    asserts (D41). Both are reported so a mismatch can be classified rather than guessed at: exact
+    differs and rounded matches means the platform moved, both differ means model output moved.
+    """
+    payload = build_payload(snapshot)
+    return {"n_games": len(payload["games"]),
             "sha256": _sha256_of(payload),
             "sha256_rounded": _sha256_of(_round_floats(payload))}
 

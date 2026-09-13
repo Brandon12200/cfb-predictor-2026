@@ -67,7 +67,19 @@ def _lean_block(ctx: dict) -> list[str]:
     def row(label: str, s: dict) -> str:
         w = s["wilson_95"]
         wil = f"[{w[0]:.0%}–{w[1]:.0%}]" if w else "—"
-        return (f"| {label} | {s['n_games']} | {s['wins']}-{s['losses']}-{s['pushes']} | "
+        # `leans` and `graded` are separate columns because they are separate numbers mid-week, and
+        # one "games" column read as a contradiction: the week-1 report as rendered 2026-09-06
+        # (`75c69d4`) showed `home | 4 | 1-2-0` — four leans, a record summing to three — with
+        # nothing on the row saying one had not been graded yet.
+        #
+        # `graded` is wins + losses + PUSHES, deliberately NOT `s["n_graded"]`. Despite its name,
+        # `n_graded` is `wins + losses` — the ATS win% denominator, which excludes pushes. Rendering
+        # it here would have traded one contradiction for another: the 2025 retro's home row would
+        # have read `120 | 117 | 60-57-3`, a record summing to 120 beside a "graded" count of 117.
+        # A push is a graded game. This way W-L-P sums to `graded` by construction.
+        graded = s["wins"] + s["losses"] + s["pushes"]
+        return (f"| {label} | {s['n_games']} | {graded} | "
+                f"{s['wins']}-{s['losses']}-{s['pushes']} | "
                 f"{_pct(s['ats_win_pct'])} | {wil} | {_lean_cell(s)} |")
 
     ratio = f"{m['home_away_ratio']}:1" if m["home_away_ratio"] is not None else "—"
@@ -87,8 +99,8 @@ def _lean_block(ctx: dict) -> list[str]:
                   f"NO_BET lean(s), graded together here. The blended block below covers the "
                   f"placed bets alone; `Selectivity` separates the two._", ""]
     lines += [
-        "| lean | games | W-L-P | ATS win% | Wilson 95% | avg CLV |",
-        "|---|---|---|---|---|---|",
+        "| lean | leans | graded | W-L-P | ATS win% | Wilson 95% | avg CLV |",
+        "|---|---|---|---|---|---|---|",
         row("home", sides["home"]),
         row("away", sides["away"]),
         row("_naive: always lean home_", base),

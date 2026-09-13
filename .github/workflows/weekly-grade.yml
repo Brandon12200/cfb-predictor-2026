@@ -107,6 +107,20 @@ jobs:
             --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
           exit "${PIPESTATUS[0]}"
 
+      # Owner ruling 2026-09-13: the CLV sign check moves INTO the pipeline, here, before the grades
+      # are committed. It was a human step run against the Sunday report — but this job commits the
+      # grades about thirty seconds after producing them, so a disagreement was always going to be
+      # on `main` before anyone could look, and `data/graded/` is append-only. Two independent
+      # checks per graded lean (formula, and the sign implied by which way the line moved) — see
+      # `scripts/check_clv.py`. A failure here fails the run, skips the commit below, and files the
+      # pipeline-failure issue.
+      - name: Validate CLV signs before committing grades
+        if: steps.results.outputs.rc == '0'
+        run: |
+          python scripts/check_clv.py --week "${{ steps.setup.outputs.week }}" \
+            --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          exit "${PIPESTATUS[0]}"
+
       - uses: ./.github/actions/cfb-commit
         if: steps.results.outputs.rc == '0'
         with:
@@ -152,6 +166,21 @@ jobs:
           python scripts/build_reports.py --season \
             --year "${{ steps.setup.outputs.year }}" 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
 
+      # The commit message names the report files this run actually changed. Since #58 the step
+      # above renders every gradable week, but the message still named only `pipeline_week`, so
+      # `535d2b9` was titled "week 02" while also rewriting week 01. See
+      # `scripts/changed_report_weeks.py`.
+      #
+      # Two lines, deliberately: `echo "label=$(cmd)"` would take echo's exit status and swallow a
+      # failing script — the same masking class as an unguarded `| tee`. A bare assignment carries
+      # the command substitution's status, so `bash -e` stops on it.
+      - name: Name the reports that changed
+        id: reportweeks
+        if: steps.results.outputs.rc == '0'
+        run: |
+          label=$(python scripts/changed_report_weeks.py --year "${{ steps.setup.outputs.year }}")
+          echo "label=$label" >> "$GITHUB_OUTPUT"
+
       # The D36 gate that withheld this commit is REMOVED: `analytics/attribution.py` now carries
       # D27's lean-side split and the naive always-lean-home baseline, and the report leads with
       # them rather than with a blended headline. The gate existed so an unsplit season number
@@ -161,7 +190,7 @@ jobs:
         if: steps.results.outputs.rc == '0'
         with:
           paths: reports
-          message: "report: ${{ steps.setup.outputs.year }} week ${{ steps.setup.outputs.week_padded }} + season to date"
+          message: "report: ${{ steps.setup.outputs.year }} ${{ steps.reportweeks.outputs.label }}"
           suffix: ${{ steps.setup.outputs.commit_suffix }}
           push: ${{ inputs.dry_run != true }}
 
