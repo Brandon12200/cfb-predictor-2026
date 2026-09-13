@@ -821,3 +821,110 @@ and the parts of that stack nobody pinned will move on their own schedule. Pin t
 actually mean to hold constant, at the precision you actually mean, and keep the sharper measurement
 visible beside it — the difference between the two is itself the diagnostic. The masked step is the
 sharper lesson: for two days the system knew and could not say.
+
+---
+
+## D42 — Four process rulings; the season shutdown date; the D17 tautology; prose claims are re-derived — **RATIFIED (owner, 2026-09-13)**
+**Date:** 2026-09-13 (rulings (a) of 2026-09-01 and (b) of 2026-09-04, recorded together here)
+
+**Why one entry holds four things.** Each was ruled in conversation and none reached the repository.
+The shutdown ruling is the proof that this was a defect rather than a filing delay: for nine days
+`docs/HANDOFF_SEASON.md` and `docs/2027_NOTES.md` §8 item 3 both still called the question
+**unruled**, so any session reading the handoff would have concluded a decided matter was open and
+acted on that. A ruling that lives only in conversation is invisible to the record and to every later
+session. D41 was already taken by the fingerprint gate when these were written down; they take D42.
+
+### (a) Four process rulings (owner, 2026-09-01)
+
+1. **Orientation versus record.** Orientation sections of a document — headings, "your first task",
+   pointers, status banners — must be **true at merge time** and may be rewritten to stay so. Record
+   sections are welded: **supersede, never edit.** This is what authorised rewriting
+   `HANDOFF_SEASON.md` §2's heading beyond the four ordered corrections in PR #52.
+2. **Never rewrite another author's commit.** When a branch carries someone else's commit, merge
+   `main` into it rather than rebasing. Confirmed for the predecessor session's `590f33d` on PR #52.
+3. **`resolve_locators` is accepted as a make target** (delivered separately), with the finding from
+   `HANDOFF_SEASON.md` §9 attached: it is *half a tool*. It catches `file:line` rot and misses every
+   claim that has no pointer to resolve.
+4. **The PR #52 sequencing failure is a one-time exception, not precedent.** #52 was presented as
+   ready while its `code-reviewer` verdict was still outstanding, was merged, and the verdict then
+   returned NO-GO. **Green CI is not a GO.** A branch is never reported ready while its review is
+   pending.
+
+### (b) The season shutdown (owner, 2026-09-04)
+
+**The three cadence crons — `weekly-predict`, `daily-capture`, `weekly-grade` — stop after the final
+regular-season grade. Regular season only; no postseason.**
+
+The criterion computes to **Sunday 2026-12-13**. `season.json` week 15 runs **2026-12-07 to
+2026-12-12**, and `pipeline_week(2026-12-13)` returns **15**, so that Sunday's grade is the last one
+with regular-season work in it. `pipeline_week` clamps rather than advancing — it still returns 15 on
+2026-12-20 — which is exactly why the tail would otherwise run indefinitely with nothing to do
+(`2027_NOTES` §8 item 3).
+
+**This supersedes "Dec 6–7" everywhere it appeared** — a label taken from the week-14/15 boundary,
+which the ruling's own criterion does not select: 2026-12-06 is the *week-14* grade Sunday. The only
+occurrence in the repository was `docs/HANDOFF_SEASON.md:168` (as at `535d2b9`); `season.json`'s
+week-14 `"end": "2026-12-06"` is a calendar fact, not the label, and is unchanged.
+
+**Open, not ruled:** what `freeze-integrity` (daily) does after 2026-12-13. The ruling covers the
+three cadence crons and says nothing about the integrity check; that is a separate decision the owner
+has not made, and is recorded here as open rather than inferred from the cadence ruling.
+
+No workflow is changed by this entry. The ruling fixes *when*; implementing the stop is a pipeline
+change for its own PR, before 2026-12-13.
+
+### (c) The D17 comparison was a tautology for a week
+
+D17 introduced the naive **"always take the home team"** baseline so the model is measured against
+something rather than against zero, and every report states the model's win rate against it on the
+same games. **For all of week 1 that line compared a thing with itself.** Week 1's four gradable leans
+were all home, so on every leaned game the model and the baseline placed the *same bet* — and the
+regenerated week-1 report (`reports/2026_week_01.md` at `535d2b9`) reads, verbatim,
+`Model 25.0% vs naive baseline 25.0% on the same games: **+0.0%**`: a result that could not have been
+anything else.
+
+**Week 2 is the first week the two diverge, and the divergence is small.** Week 2 carries the
+season's first four away leans. On the eleven home leans the model and baseline still coincide, both
+6-5. The whole reported gap — model 9-6 (60.0%) against naive 7-8 (46.7%), **+13.3%** — is **two
+wins, both from the four away-lean games**, where the model went 3-1 and always-home would have gone
+1-3. The season's **+10.5%** is the same two wins over 19 games.
+
+It is **no evidence in either direction**, and in week 2 CLV argues the same way: the away leans won
+against the spread (3-1) while the market moved *against* them (average CLV −0.15, beat the close 1
+time in 4), and the week-2 home leans were the reverse (average CLV +0.16, beat the close 8 times in
+11). The only positive gap in the season so far is carried by the side where the model held the
+worse number.
+
+**What this changes:** a model-vs-naive figure is only meaningful on games where the two strategies
+differ, and that is the count to read before the percentage. On a structurally home-skewed lean
+(D27) it will usually be small.
+
+### (d) Prose claims are re-derived, not proofread
+
+**A specific figure, count, date, SHA or status asserted in prose is re-derived from its source
+before it is published — not read over.** Proofreading checks that a sentence reads correctly;
+re-derivation checks that it is true. On this project the first has repeatedly passed errors the
+second catches at once, because the defective sentences always read perfectly well.
+
+The record behind the rule, all caught by something independently re-deriving the claim and none by
+re-reading it:
+
+- **`HANDOFF_SEASON.md` §9** — eight errors in the season handoff (C1–C8). The first four were
+  pointer and figure errors — a threshold paired with the wrong game, a truncated test name, one
+  traceback attributed to four tests, and a `file:line` citing the wrong exit code. The second four
+  had **no locator at all** — a stale SHA, a count contradicting its own list, a loose range, a
+  status header — and were invisible to the locator pass that found the first four.
+- **PR #55** — a diagnosis briefly concluded within-image nondeterminism from a grep over a
+  concatenated multi-job log; re-measured per job it was the image. And a precision margin was
+  stated as "~8 orders of magnitude" when the payload's own smallest value gives about seven.
+- **PR #57** — three errors in the prose around a guard written *specifically* against unverified
+  counts: a test total stated as 1054 that was 1052; a grep claim that falsified itself the moment it
+  was written into a file under `tests/`; and "the only such idiom present" where there were two.
+- **The owner's advisory ledger**, which logged the C1 threshold-pairing error as having reached the
+  advisory layer's own record as well (owner, 2026-09-01).
+
+**Two passes, because each misses what the other finds:** resolve every locator against the file and
+frame it names (`resolve_locators`), then separately re-derive every bare assertion — counts, dates,
+SHAs, statuses, and anything in the present tense about something that moves. A claim that is true
+when written can become false by being written down, or by the next scheduled run; both have
+happened here.

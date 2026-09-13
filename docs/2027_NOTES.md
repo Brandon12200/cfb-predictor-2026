@@ -220,6 +220,10 @@ deliberately rather than fixed at the deadline. Ordered by 2027 value.
 3. **No season-end kill switch.** The cadence keeps firing after week 15 (`pipeline_week` clamps
    there by design). The runs are idempotent no-ops, but they are an unbounded silent tail — and
    they compound item 2.
+   *Ruled 2026-09-04, recorded in D42 (b):* the three cadence crons stop after the final
+   regular-season grade, **Sunday 2026-12-13**. The observation above still stands as written — no
+   kill switch exists yet, and the stop is a change to be made; the ruling settles *when*, not *that
+   it is done*. What `freeze-integrity` does after that date is still open.
 4. **A mid-run credential revocation degrades quietly.** `SnapshotBuilder._fetch` correctly records
    each failed source as `missing` with a `fallback_reason` (binding #4, no fabrication), and
    `min_snapshot_coverage_pct` is `warn` by ratified policy — so a key revoked *between* source

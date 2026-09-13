@@ -46,17 +46,37 @@ time.**
 at 17:20 UTC, `success`) found the claim already committed and took `Claim already made` — no second
 claim, no overwrite, claim blob unchanged, a fresh `snapshot:` commit at `8f7a5ff` as designed.
 
-**Cadence** (`season.json` → `pipeline.schedule_et`), with observed jitter:
+**Cadence** (`season.json` → `pipeline.schedule_et`), with **measured** scheduler delay (C9):
 
-| Job | Scheduled ET | Observed |
-|---|---|---|
-| predict | Tue 09:17 | +40–60 min (09:58, 13:20) |
-| capture | Wed–Fri 17:23 | +20–25 min |
-| capture (Sat waves) | 10:23 / 14:23 / 17:23 / 20:23 | similar |
-| grade | Sun 12:47 | +15 min |
-| freeze-integrity | daily 07:43 | +10–25 min |
+| Job | Scheduled ET | Delay since 2026-08-29 | Delay since 2026-08-25 |
+|---|---|---|---|
+| predict | Tue 09:17 | 4.0–4.1 h (n=2) | 0.8–4.1 h (n=3) |
+| capture — Wed–Fri, and Sat waves | 17:23; Sat 10:23 / 14:23 / 17:23 / 20:23 | 1.6–5.8 h (n=19) | 1.6–8.1 h (n=21) |
+| grade | Sun 12:47 | 1.9–2.7 h (n=3) | 1.9–2.7 h (n=3) |
+| freeze-integrity | daily 07:43 | 2.3–6.4 h (n=16) | 0.3–9.8 h (n=20) |
+| **all four** | | **1.6–6.4 h** | **0.3–9.8 h** |
 
-Jitter is normal; `check_timing` is WARN-only by design.
+Delay is each run's `createdAt` minus the most recent cron slot at or before it, matched to the
+nearest preceding slot so capture's Saturday waves pair correctly; crons are UTC, so no DST effect in
+this window. Measured 2026-09-13 from `gh run list --event schedule`. The wider second column is
+driven by two days: **2026-08-25** holds both fastest runs (freeze-integrity +17 min, predict
++51 min), and **2026-08-27/28** holds both slowest (capture +8.1 h, freeze-integrity +9.8 h) — a
+single bad scheduler episode rather than the steady state.
+
+**This is not jitter.** No workflow has run within 1.5 h of its slot since 2026-08-29. For captures
+it is consequential: every week-2 capture fired 1.7–4.6 h after its slot, so each Saturday wave
+landed *after* the kickoff it was meant to precede, and `closing_observation` correctly refused those
+observations. The four noon-ET games (kickoff Sat 12:00) therefore took Friday's 19:19 capture as
+their close — **16.7 h stale**; the 15:30 games took a 2.2 h-stale close and the 22:15 game a 3.2 h one.
+
+**`check_timing` (`scripts/pipeline_preflight.py:128`, as at `535d2b9`) did not catch this, and
+could not.** It measures slack against the *next kickoff window still ahead today*, not against the
+window the run was scheduled to precede. A capture that misses its window therefore always finds a
+later one to count against, and reports healthy slack. Every week-2 Saturday capture logged slack and
+none warned — the 13:15 run that missed noon logged "74 min of slack before the 15:30 ET window", and
+the Sunday 00:58 run logged slack against *Sunday's* 13:00 window. It is not an unread warning; it is
+an affirmative false all-clear. Both the cadence and a fix for the guard are pending as a D43
+candidate for the owner's ruling; nothing here changes the crons.
 
 **The weekly cancelled-CI signature is expected, not a fault.** `ci.yml:14-16` sets
 `cancel-in-progress: true`, so a multi-commit push cancels its own intermediate runs — only the
@@ -165,11 +185,16 @@ time this season a seam has fired on its first post-transition execution. Expect
 
 **Open questions the owner may send:** a feasibility question (raised, not yet asked).
 
-**Dec 6–7 cron shutdown — unruled.** `season.json` week 15 ends **2026-12-12**, and the cadence is
-regular-season only (`get_games(season_type="regular")`, `data/clients/cfbd_v2.py:86-91`).
-`pipeline_week` clamps, so the crons keep firing into the postseason with nothing to do —
-`2027_NOTES` §8 item 3, "no season-end kill switch". The owner must rule *when* the cadence stops.
-Do not switch it off unilaterally.
+**Cron shutdown — RULED 2026-09-04; see D42 (b).** The three cadence crons (`weekly-predict`,
+`daily-capture`, `weekly-grade`) stop after the final regular-season grade — **Sunday 2026-12-13**,
+since `season.json` week 15 runs 2026-12-07 to 2026-12-12 and `pipeline_week(2026-12-13)` is 15.
+Regular season only (`get_games(season_type="regular")`, `data/clients/cfbd_v2.py:86-91`). This
+section previously read "Dec 6–7 … unruled"; that label is superseded, and the date was the week-14
+boundary rather than the ruling's criterion.
+
+`pipeline_week` still clamps, so **nothing stops on its own** — the stop is a pipeline change still to
+be made before 2026-12-13 (`2027_NOTES` §8 item 3). **Still open:** what `freeze-integrity` does after
+that date. Do not switch anything off unilaterally.
 
 ---
 
@@ -339,6 +364,24 @@ statuses, and anything phrased in the present tense about a moving reference.
 through this tenure; four more were in the document making the point. The durable fix is not
 attitudinal, it is a script — extract every `file:line`, print what is actually there, in the frame
 named. Run it on anything with citations before it merges, including a document about running it.
+
+### Third round — C9, and an orientation update (2026-09-13)
+
+| # | Where | Was | Is | Why it was wrong |
+|---|---|---|---|---|
+| **C9** | §1, cadence table | "predict +40–60 min (09:58, 13:20)", "capture +20–25 min", "grade +15 min", "freeze-integrity +10–25 min", Saturday waves "similar" | measured per-workflow delay over two stated windows: **1.6–6.4 h** across all four since 2026-08-29, **0.3–9.8 h** since 2026-08-25 | Off by roughly an order of magnitude, and internally inconsistent: the predict row gave `13:20` as an example of "+40–60 min", when 13:20 ET is 4 h 3 min after a 09:17 slot (that example is the 2026-09-01 predict run, which fired at 17:20Z). No derivation for the original figures is recorded, so they are treated as unmeasured. |
+
+**Not an error — an orientation update, per D42 (a)1.** §3's "Dec 6–7 cron shutdown — unruled" was
+true when written and became false on 2026-09-04, when the owner ruled the shutdown. It now records
+the ruling (**Sunday 2026-12-13**, D42 (b)) and that `freeze-integrity` past that date is still open.
+
+**A premise the measurement overturned.** The cadence correction was ordered on the understanding
+that `check_timing` "warned on every run". Reading its logs, it warned on **none**: it counts slack
+against the next kickoff window still ahead that day, so every Saturday capture that missed its own
+window reported healthy slack against a later one. That finding is in §1 and is carried into the D43
+candidate. It is recorded here because it is the same lesson as C1–C9 from the other direction — a
+claim about what a system does was checked against what it did, and the system had done something
+else.
 
 ---
 
