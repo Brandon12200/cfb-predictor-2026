@@ -172,15 +172,15 @@ time this season a seam has fired on its first post-transition execution. Expect
 
 ## 3. Deferred queue
 
-**Next Sunday (2026-09-06 grade), once more games are graded:**
+**Moved to the 2026-09-13 batch by owner ruling (orientation update, per D42 (a)1):**
 
-- **README graded-week edit** — deferred twice by owner ruling. Replace the preseason `NO_BET`
-  caveat with one real graded-week example in **lean-split format, never a blended headline
-  figure**, and point the follow-along line at `reports/2026_week_01.md` directly. It needs a
-  correct report *and* a meaningfully graded week; 2/11 with both graded games neutral was never
-  the showcase.
-- **`by_lean_side` discriminating test** — the lean table has never rendered with a populated side.
-  When it does, pin it.
+- ~~**README graded-week edit**~~ — **done in the same PR as D42.** One graded week in lean-split
+  form, never a blended headline. The follow-along line points at **`reports/2026_week_02.md`**, not
+  `reports/2026_week_01.md` as this item first specified: week 2's report was complete on its first
+  render, while week 1's first render showed 2/11 graded and reached 11/11 only on a later Sunday.
+- **`by_lean_side` discriminating test** — in the pipeline PR of the same batch (#60). It became
+  possible once a side rendered populated; it was needed because, measured, reverting #51's
+  attribution fix left the entire suite passing.
 - Any drawer lines the week produces.
 
 **Open questions the owner may send:** a feasibility question (raised, not yet asked).

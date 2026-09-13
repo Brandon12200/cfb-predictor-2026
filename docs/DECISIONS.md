@@ -873,11 +873,17 @@ has not made, and is recorded here as open rather than inferred from the cadence
 No workflow is changed by this entry. The ruling fixes *when*; implementing the stop is a pipeline
 change for its own PR, before 2026-12-13.
 
-### (c) The D17 comparison was a tautology for a week
+### (c) The model-vs-naive comparison was a tautology for a week (the "D17 tautology")
 
-D17 introduced the naive **"always take the home team"** baseline so the model is measured against
+**D27** mandated the naive **"always take the home team"** baseline, so the model is measured against
 something rather than against zero, and every report states the model's win rate against it on the
-same games. **For all of week 1 that line compared a thing with itself.** Week 1's four gradable leans
+same games. It is called the D17 tautology because D27 exists as *the D17 lesson, pre-empted*: D17's
+retired 57.0% headline measured a systematic home lean and reported it as skill, and the baseline is
+the guard against repeating that. The baseline is **not** the retired D17 diagnostic itself —
+`analytics/attribution.py` says so, and the reports' own line "the comparison D17 existed to force"
+names the motivation, not the source.
+
+**For all of week 1 that line compared a thing with itself.** Week 1's four gradable leans
 were all home, so on every leaned game the model and the baseline placed the *same bet* — and the
 regenerated week-1 report (`reports/2026_week_01.md` at `535d2b9`) reads, verbatim,
 `Model 25.0% vs naive baseline 25.0% on the same games: **+0.0%**`: a result that could not have been
