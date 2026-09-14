@@ -986,3 +986,31 @@ PR C.
 **Numbering.** Before this entry, the handoffs called the cron-cadence and timing-guard proposal the
 "D43 candidate". That proposal now takes **D44**. The mentions in the §9 correction tables are
 record and stay as written. The orientation lines are updated.
+
+### Appended — three rulings after #63 merged (owner, 2026-09-13, 22:55 ET merge)
+
+These three rulings close questions (a) left open and settle the design choice PR D surfaced. They
+are appended rather than written into (a). Where they conflict with the text above, **these govern**,
+and the "Not ruled" paragraph above is superseded by rulings 2 and 3.
+
+1. **The catch-up CLV gate stays fail-closed.** A disagreement fails the whole Tuesday job, the
+   week's claim included (PR D, #63). **Reason: a delayed claim is visible; a discarded grading
+   failure is not.**
+   **Considered and rejected:** the narrower shape the #63 review named. On a disagreement it would
+   discard the uncommitted `data/graded` and `data/results` changes, then continue to build and
+   commit the week's claim while the failure issue is still filed. It would keep an unrelated week's
+   claim on time. It was rejected because the run would report success on the claim while a grading
+   failure was open, and the failed grades would be thrown away rather than left for someone to read.
+2. **#52 and #61 stay logged as violations** of D42 (a)4 as it stood when each merged. **The carve-out
+   applies from #62 forward, with no relabelling** of either merge or of their record in
+   `docs/HANDOFF_SEASON.md` §9.
+3. **Scope of the carve-out:** `docs/HANDOFF_*.md` and their addenda, written at a session boundary.
+   **Nothing else.** It does not cover `docs/DECISIONS.md`, `docs/SPEC.md`, anything under `data/`, or
+   code. A decision entry, even one written at a boundary, merges only after its GO.
+
+**(b) delivered:** `make resolve-locators DOC=<file> [ARGS='--frame <sha>']`, which runs
+`scripts/resolve_locators.py`. Measured on the season handoff as first written (`590f33d`, framed at
+`8f7a5ff`), it **fails on C2**, the truncated test name, and **prints C4's cited line**
+("out-of-season → exit 2"), which exposes it to the reader without flagging it. It cannot see C1 or C3,
+because neither contains a bad pointer. That is the half-a-tool limit, measured: re-derive every bare
+assertion separately (D42 (d)).
