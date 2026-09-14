@@ -25,11 +25,13 @@ itself.
 | **Daily** | check the frozen code still matches its tag; watch for upstream data changes |
 
 **Following along without cloning anything:** each week's claim appears in
-[`data/predictions/`](data/predictions/) on Tuesday, and the graded report appears in
-[`reports/`](reports/) as `2026_week_NN.md` on Sunday. Neither exists for 2026 yet — **the first
-claim lands Tuesday 2026-08-25, the first graded report Sunday 2026-08-30.** Until then, the only
-rendered report is [`reports/2025_retro.md`](reports/2025_retro.md), the predecessor season regraded
-(see [the record](#the-record)).
+[`data/predictions/`](data/predictions/) on Tuesday, before kickoff, and the graded report appears in
+[`reports/`](reports/) as `2026_week_NN.md` on Sunday. **Start with
+[`reports/2026_week_02.md`](reports/2026_week_02.md)** — the first week whose report was complete the
+first time it rendered, all 16 games graded. A report is re-rendered every Sunday while its grades
+fill in, so it can change after it first appears; the claim it grades never does. The season so far
+is [`reports/2026_season.md`](reports/2026_season.md), and the predecessor season regraded is
+[`reports/2025_retro.md`](reports/2025_retro.md) (see [the record](#the-record)).
 
 ## See it run
 
@@ -136,11 +138,27 @@ the spread.
 - **Skipped games are still graded.** When the edge is too small the model outputs `NO_BET`, and the
   report records what would have happened anyway — selectivity is measured, not assumed.
 
-*In the preseason, every game prices to `NO_BET` — by design.* The factors nudge the market's
-number, they don't replace it, and the maximum total adjustment the factor set can produce is
-structurally bounded. Before any games are played the achievable edge sits far below the threshold
-required to make a pick, so the model declines. That bound is measured and documented, not asserted
-— see [`docs/CALIBRATION_LOG.md`](docs/CALIBRATION_LOG.md).
+**What a graded week looks like** — 2026 week 2, as rendered 2026-09-13
+([`reports/2026_week_02.md`](reports/2026_week_02.md) is the source of truth; these figures are a
+dated copy and will not update):
+
+| the model leaned | games | against the spread | avg CLV | beat the close |
+|---|---|---|---|---|
+| home | 11 | 6-5 | +0.16 pts | 8 of 11 |
+| away | 4 | 3-1 | −0.15 pts | 1 of 4 |
+| *baseline: always take home* | 15 | 7-8 | +0.16 pts | 11 of 15 |
+
+**Read the away row before any percentage.** It is four games. The model's entire margin over the
+always-home baseline that week is two wins, both from those four — and on those same four games the
+market moved *against* the model's number. That is no evidence in either direction, and the report
+says so rather than printing a headline. All 16 games were `NO_BET`: these rows grade what the model
+*would* have done, which is how selectivity is measured.
+
+*Every game graded so far has priced to `NO_BET`.* The factors nudge the market's number rather than
+replace it, and the largest total adjustment the factor set can produce is structurally bounded —
+measured and documented in [`docs/CALIBRATION_LOG.md`](docs/CALIBRATION_LOG.md), not asserted.
+Whether that bound lets the model pick at all this season is an open question under measurement, not
+a settled one.
 
 ## What is guaranteed
 
