@@ -20,7 +20,8 @@ For each locator the tool reports:
 
 Locators recognised: `path:N`, `path:N-M`, `path::symbol`, a backticked `path/with.ext`, a backticked
 basename, a bare `:N` (it inherits the file and frame of the previous line locator), and a
-backticked 7–40-character hex SHA (all-digit tokens are Actions run IDs and are skipped). A locator
+backticked 7–40-character hex SHA (an all-digit token is checked only if it resolves to a commit;
+otherwise it is an Actions run ID and is skipped). A locator
 on a line that names a frame is read from that commit. Any other locator is read from the working
 tree, so a branch is checked as it stands.
 
@@ -122,6 +123,36 @@ def _resolve_path(path: str, frame: str | None, tracked_cache: dict[str | None, 
     return None, ("AMBIGUOUS: " + ", ".join(hits[:4])) if hits else "MISSING"
 
 
+_LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
+_SENTENCE_END = re.compile(r"[.;!?](?=\s)")
+
+
+def _sentence_frames(line: str, default_frame: str | None) -> list[tuple[int, list[str | None]]]:
+    """[(segment end offset, frames named in that segment)] for one line.
+
+    A frame pin ("at `sha`") governs only its own sentence. Applied to the whole line, "As at `a`, X
+    was `f.py:4`. On the branch, `f.py:4` reads differently." pinned the second locator to `a` too,
+    and it reported `ok` with stale content.
+    """
+    ends = [m.end() for m in _SENTENCE_END.finditer(line)] + [len(line)]
+    out, start = [], 0
+    for end in ends:
+        named: list[str | None] = [m.group(1) for m in _FRAME.finditer(line) if start <= m.start() < end]
+        out.append((end, named or [default_frame]))
+        start = end
+    return out
+
+
+def _frames_at(segments: list[tuple[int, list[str | None]]], pos: int) -> list[str | None]:
+    return next(frames for end, frames in segments if pos < end or end == segments[-1][0])
+
+
+def _is_sha_token(tok: str) -> bool:
+    """Hex-shaped, and not an Actions run ID. About 1 in 27 real short SHAs is all digits, so digits alone
+    cannot mean "run ID": skipping them silently dropped those commits from every check."""
+    return bool(_SHA.fullmatch(tok)) and (not tok.isdigit() or _is_commit(tok))
+
+
 def _is_file_like(path: str) -> bool:
     return "/" in path or path.rsplit(".", 1)[-1] in _FILE_EXT
 
@@ -131,14 +162,14 @@ def extract(doc: Path, text: str, default_frame: str | None = None) -> list[Loca
     last_line_loc: Locator | None = None
     prev_row = False
     for n, line in enumerate(text.splitlines(), 1):
-        # A bare `:N` inherits only within its own paragraph, and a table row is its own paragraph.
-        # Inheriting across rows pinned C3's `:111` to C1's file.
-        if not line.strip() or line.lstrip().startswith("|") or (prev_row and not line.lstrip().startswith("|")):
+        # A bare `:N` inherits only within its own paragraph. A table row and a list item are each
+        # their own paragraph: inheriting across rows pinned C3's `:111` to C1's file.
+        is_row = line.lstrip().startswith("|")
+        if not line.strip() or is_row or prev_row or _LIST_ITEM.match(line):
             last_line_loc = None
-        prev_row = line.lstrip().startswith("|")
-        # A line may pin a locator to more than one frame ("at `a`, same line at `b`"): check each.
-        frames: list[str | None] = [m.group(1) for m in _FRAME.finditer(line)] or [default_frame]
-        frame = frames[0]
+        prev_row = is_row
+        # A sentence may pin a locator to more than one frame ("at `a`, same line at `b`"): check each.
+        segments = _sentence_frames(line, default_frame)
         spans: list[tuple[int, int]] = []
 
         for m in _LINE_LOC.finditer(line):
@@ -147,6 +178,7 @@ def extract(doc: Path, text: str, default_frame: str | None = None) -> list[Loca
                     or not _is_file_like(path)):
                 continue
             spans.append(m.span())
+            frames = _frames_at(segments, m.start())
             for fr in frames:
                 if m.group(4):
                     loc = Locator(str(doc), n, m.group(0), "symbol", path=path, symbol=m.group(4), frame=fr)
@@ -154,7 +186,7 @@ def extract(doc: Path, text: str, default_frame: str | None = None) -> list[Loca
                     start = int(m.group(2))
                     loc = Locator(str(doc), n, m.group(0), "line", path=path, start=start,
                                   end=int(m.group(3)) if m.group(3) else start, frame=fr)
-                    if fr == frame:
+                    if fr == frames[0]:
                         last_line_loc = loc
                 found.append(loc)
 
@@ -166,16 +198,16 @@ def extract(doc: Path, text: str, default_frame: str | None = None) -> list[Loca
                 continue
             found.append(Locator(str(doc), n, m.group(0).strip("`"), "line", path=last_line_loc.path,
                                  start=start, end=int(m.group(2)) if m.group(2) else start,
-                                 frame=frame or last_line_loc.frame))
+                                 frame=_frames_at(segments, m.start())[0]))
 
         for m in _BACKTICK.finditer(line):
             tok = m.group(1).strip()
             inside = any(a <= m.start(1) < b or m.start(1) <= a < m.end(1) for a, b in spans)
-            if _SHA.fullmatch(tok) and not tok.isdigit():
+            if _is_sha_token(tok):
                 found.append(Locator(str(doc), n, tok, "sha", sha=tok))
             elif (not inside and re.fullmatch(_PATH, tok) and not _TEMPLATE.search(tok)
                   and _is_file_like(tok) and ("/" in tok or tok.count(".") == 1)):
-                found.append(Locator(str(doc), n, tok, "path", path=tok, frame=frame))
+                found.append(Locator(str(doc), n, tok, "path", path=tok, frame=_frames_at(segments, m.start())[0]))
     return found
 
 
@@ -209,6 +241,9 @@ def resolve(loc: Locator, ref: str, doc_lines: list[str], cache: dict[str | None
 
     if loc.path is None:                      # an unanchored bare `:N` — reported as CHECK, not resolved
         return
+    if loc.path.startswith("/") or ".." in loc.path.split("/"):
+        loc.exists = "OUTSIDE THE REPOSITORY"
+        return
     path, status = _resolve_path(loc.path, loc.frame, cache)
     if path is None:
         loc.exists = status
@@ -228,7 +263,9 @@ def resolve(loc: Locator, ref: str, doc_lines: list[str], cache: dict[str | None
             loc.says.append(f"… {len(cited) - 6} more line(s)")
         loc.hint = _hint(loc, doc_lines[loc.doc_line - 1], cited)
     elif loc.kind == "symbol":
-        pat = re.compile(rf"^\s*(?:async\s+def|def|class)\s+{re.escape(loc.symbol or '')}\b|^{re.escape(loc.symbol or '')}\s*[:=]")
+        sym = re.escape(loc.symbol or "")
+        # Indented assignments count: a class attribute is as citable as a module constant.
+        pat = re.compile(rf"^\s*(?:async\s+def|def|class)\s+{sym}\b|^\s*{sym}\s*(?::|=(?!=))")
         where = [i for i, ln in enumerate(lines, 1) if pat.search(ln)]
         if not where:
             loc.exists = f"NO SUCH SYMBOL in {shown}"

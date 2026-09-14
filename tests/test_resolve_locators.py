@@ -41,15 +41,15 @@ def repo(tmp_path: Path) -> dict[str, str]:
     (r / "ci.yml").write_text("on: push\nconcurrency:\n  cancel-in-progress: true\n")
     _git(r, "add", "-A")
     _git(r, "commit", "-q", "-m", "c1")
-    c1 = _git(r, "rev-parse", "--short=7", "HEAD")
+    c1 = _git(r, "rev-parse", "HEAD")
     (r / "pkg" / "mod.py").write_text("import os\ndef check_timing():\n    pass\nEXIT_DEGRADED = 2\n")
     _git(r, "commit", "-q", "-am", "c2")
-    c2 = _git(r, "rev-parse", "--short=7", "HEAD")
+    c2 = _git(r, "rev-parse", "HEAD")
     _git(r, "checkout", "-q", "-b", "side")
     (r / "side.txt").write_text("x\n")
     _git(r, "add", "-A")
     _git(r, "commit", "-q", "-m", "s1")
-    s1 = _git(r, "rev-parse", "--short=7", "HEAD")
+    s1 = _git(r, "rev-parse", "HEAD")
     _git(r, "checkout", "-q", "main")
     return {"root": str(r), "c1": c1, "c2": c2, "s1": s1}
 
@@ -112,6 +112,14 @@ def test_a_sha_on_main_is_reachable_and_one_off_it_is_not(repo, capsys):
     assert rc == rl.EXIT_FAIL and "UNREACHABLE" in out
 
 
+def test_an_all_digit_token_is_a_sha_only_if_it_is_a_commit(monkeypatch):
+    """Found as a flaky test: the fixture's short SHA was sometimes all digits and silently skipped."""
+    monkeypatch.setattr(rl, "_is_commit", lambda tok: tok == "1234567")
+    assert rl._is_sha_token("1234567") is True
+    assert rl._is_sha_token("34256103940") is False
+    assert rl._is_sha_token("abcdef1") is True
+
+
 def test_an_unknown_sha_fails_and_an_all_digit_run_id_is_not_a_sha(repo, capsys):
     rc, out = _run(repo, "commit `abcdef1`, run `34256103940`\n", capsys)
     assert rc == rl.EXIT_FAIL
@@ -155,6 +163,47 @@ def test_a_bare_line_number_does_not_inherit_across_table_rows(repo, capsys):
     rc, out = _run(repo, table, capsys)
     assert "no file on its line or in its paragraph" in out
     assert "pkg/mod.py:4" not in out
+
+
+def test_a_bare_line_number_does_not_inherit_across_list_items(repo, capsys):
+    """Review of e91c924: a bullet's `:3` silently resolved against the previous bullet's file."""
+    rc, out = _run(repo, "- `pkg/mod.py:2`\n- an unrelated bullet with `:3` in it\n", capsys)
+    assert "no file on its line or in its paragraph" in out
+    assert "pkg/mod.py:3" not in out
+
+
+def test_a_list_item_continuation_line_still_inherits(repo, capsys):
+    rc, out = _run(repo, "- `pkg/mod.py:2` and,\n  on the next line, `:4`\n", capsys)
+    assert "pkg/mod.py:4: EXIT_DEGRADED = 2" in out
+
+
+def test_a_frame_pin_governs_only_its_own_sentence(repo, capsys):
+    """Review of e91c924: the frame bled into the next sentence, which named no frame, and the stale
+    framed content was reported `ok`. At c1 line 1 is `def check_timing`; on the working tree it is
+    `import os`."""
+    text = f"As at `{repo['c1']}`, `pkg/mod.py:1` was the def. On the branch `pkg/mod.py:1` is `import os`.\n"
+    rc, out = _run(repo, text, capsys)
+    assert f"pkg/mod.py:1 @{repo['c1']}" in out
+    assert "pkg/mod.py:1: def check_timing():" in out
+    assert "pkg/mod.py:1: import os" in out, "the unframed sentence must be read from the working tree"
+
+
+@pytest.mark.parametrize("path", ["../outside.txt:1", "pkg/../../outside.txt"])
+def test_a_path_outside_the_repository_fails(repo, capsys, path):
+    """Review of e91c924: `../` resolved against the filesystem, not the repository."""
+    (Path(repo["root"]).parent / "outside.txt").write_text("secret\n")
+    rc, out = _run(repo, f"see `{path}`\n", capsys)
+    assert rc == rl.EXIT_FAIL and "OUTSIDE THE REPOSITORY" in out and "secret" not in out
+
+
+def test_an_indented_assignment_is_a_symbol(repo, capsys):
+    """Review of e91c924: a class attribute was NO SUCH SYMBOL. A comparison is still not a definition."""
+    mod = Path(repo["root"]) / "pkg" / "attrs.py"
+    mod.write_text("class Foo:\n    LIMIT = 5\n    def f(self):\n        OTHER == self.LIMIT\n")
+    rc, out = _run(repo, "`pkg/attrs.py::LIMIT`\n", capsys)
+    assert rc == rl.EXIT_OK and "pkg/attrs.py:2: LIMIT = 5" in out
+    rc, out = _run(repo, "`pkg/attrs.py::OTHER`\n", capsys)
+    assert rc == rl.EXIT_FAIL and "NO SUCH SYMBOL" in out
 
 
 def test_templates_module_names_and_urls_are_not_locators(repo, capsys):
