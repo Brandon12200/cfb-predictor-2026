@@ -6,9 +6,10 @@ Rehearsal-0 boundary through the live claim and the first graded Sunday.
 
 Read this, then `docs/PIPELINE.md`, then the reading list in §6.
 
-**§2's task is DONE — see the banner there. Start at §1.** Eight errors found in this document after
-it was written are corrected in place and recorded in **§9**, which also explains why the first pass
-that looked for them found only half.
+**§2's task is DONE — see the banner there. Start at §1.** Errors found in this document after it was
+written are corrected in place and recorded in **§9**: nine here (C1–C9), and more in the fourth
+round (C10–C14), which also covers `docs/HANDOFF_SEASON_ADDENDUM.md`. §9 also explains why the first
+pass that looked for them found only half. (C10: this sentence said "Eight" after C9 was added.)
 
 ---
 
@@ -382,6 +383,54 @@ window reported healthy slack against a later one. That finding is in §1 and is
 candidate. It is recorded here because it is the same lesson as C1–C9 from the other direction — a
 claim about what a system does was checked against what it did, and the system had done something
 else.
+
+### Fourth round — C10–C14, the addendum audited after it merged (2026-09-13)
+
+**The #52 sequencing failure happened again, as #61.** `docs/HANDOFF_SEASON_ADDENDUM.md` merged as
+PR #61 (merge `bfdd025`, 2026-09-14 01:24:52 UTC) with no review on the PR. Its own body read "**Not
+reviewed yet.** It needs a code-reviewer GO covering the final diff at branch head before merge." It
+was docs-only and written at a session boundary, like #52 (merge `e067744`, 2026-09-01 18:32 UTC). Both
+are recorded here as logged one-time inversions of GO-then-merge. The review that should have come
+first ran afterwards, as a post-merge audit, and it found the items below. Round two's lesson applies
+again: **a review that lands after the merge protects nothing.**
+
+D42 (a)4 calls #52 "a one-time exception, not precedent". With #61, that sentence no longer describes
+the record. D42 is a ratified entry, so any superseding block is the owner's decision. This round
+does not add one.
+
+| # | Where | Was | Is | Why it was wrong |
+|---|---|---|---|---|
+| **C10** | this document, top-of-document pointer | "**Eight** errors found in this document … recorded in §9" | nine in this document (C1–C9), plus this round | #59 added C9 to §9 without updating the count in the pointer that sends readers to §9. The same shape as C6: a count that disagrees with the list it points to. |
+| **C11** | addendum §5, first bullet | "the GO must cover the final diff at branch head and be recorded in the PR body (D42 (a)4)" | D42 (a)4 for green-CI-is-not-a-GO. §4 here and `docs/HANDOFF_REHEARSALS.md:274` for final-diff-at-head. `docs/HANDOFF_REHEARSALS.md:79-85` for recording the verdict and SHA (PR body **or** `docs/pr-summaries/`) | D42 (a)4 contains only the #52 exception, "Green CI is not a GO", and never-report-ready-while-pending. The other two rules are real, but they come from the rehearsal-era handoff. Citing all three to D42 (a)4 gave them a ratified source they do not have. |
+
+**Not errors — orientation updates** (D42 (a)1: true when written, stale by audit):
+
+| # | Where | Was | Is |
+|---|---|---|---|
+| **C12** | addendum §1, ruling 1 | stash "still exists" / "not yet dropped" | dropped. `git stash list` is empty. The unreferenced stash commit `0bcd378` confirms ruling 1's description: it changes only `reports/2025_retro.md`, and its index (`deba924`) and untracked (`0c362a8`) parents add nothing. Who dropped it is not recorded. |
+| **C13** | addendum §3, PR C | "`resolve_locators` as a make target … the `LINT_PATHS` conflict with #60 is cleared" | **no reachable source.** No file with that name exists in any local or remote branch, in any commit's tree, or in the stash. D42 (a)3 says "delivered separately" and names no location. The `LINT_PATHS` conflict refers to work that is not in the repository. PR C is blocked until the owner says where the tool comes from. |
+| **C14** | addendum §3, D43 candidate | "counts slack against the *next* kickoff window still ahead" | "…the first window still ahead **today**", plus the branch that does warn (`scripts/pipeline_preflight.py:144`, past every window today) | A precision nit, not a wrong claim. The loop reads only `now.weekday()`'s windows. That is why the Sunday 00:58 ET run counted against Sunday's 13:00 window, and why "never warns" would overstate it. |
+
+**§7's seam list, superseded rather than edited.** §7 names "first bye week, first postponement,
+first fully-graded week, week 15 → postseason". As at this round: no bye week or postponement has
+happened yet (weeks 1–2 `coverage.postponed` are both `[]`). The first fully-graded week has happened:
+week 2 was complete on its first render. "→ postseason" is replaced by **the week-15 end of schedule,
+last grade Sun 2026-12-13** (D42 (b), regular season only). One seam §7 did not list is the **2026-11-01 EST
+flip**, after which every UTC cron fires an hour earlier in ET (`season.json` `pipeline.dst_note`).
+**Sun 2026-09-20** will be the first scheduled `weekly-grade` since #60, and so the first live CLV gate and the first `leans | graded` render. The current list is in the
+addendum, §5.
+
+**Verified clean, and not repeated above:** the three SHAs (`043be6a`, `9559b0a`, `3704995`, all
+reachable from `main`) and what #59/#60 contain. The 16/16 and 11/11 report headers. **19** graded
+leans (4 + 15), with `scripts/check_clv.py` re-run on both weeks and exiting 0. Week 1's 11/11 came
+from the Tuesday catch-up (`1562ea8`, 2026-09-08, `weekly-predict` run `34256103940`), and that
+catch-up step has no `check_clv.py` call. `scripts/verify_phase_4.py:146-148` writes
+`reports/2025_retro.md`. `check_timing` is at `:128` in both frames. The four week-2 Saturday capture
+logs show `ok:` slack lines and no warning. `_lean_cell` is keyed on `n_graded`, which is wins +
+losses (`analytics/attribution.py:29`). `no_bet_reason` does not appear in `analytics/reports.py`. The
+338-game vehicle and the 90.7% figure match `docs/CALIBRATION_LOG.md:1785` and `:1658`. The 2025 archive is the
+predecessor model's, and there are no 2025 snapshots. The weekdays of 2026-09-15, 09-22 and 12-13 are
+correct.
 
 ---
 
