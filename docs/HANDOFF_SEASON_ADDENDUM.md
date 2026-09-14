@@ -47,13 +47,13 @@ are corrected in place and recorded as **C10–C14 in `docs/HANDOFF_SEASON.md` �
 ## 3. Queue, in order
 
 1. **PR C — `resolve_locators` as a make target** (D42 (a)3). The `LINT_PATHS` conflict with #60 is
-   cleared now that #60 is merged. **Blocked on a source (C13):** there is no `resolve_locators`
-   implementation anywhere in the repository. It is not in any local or remote branch, not in any
-   commit's tree, and not in the stash. D42 (a)3 says only "delivered separately". Before PR C starts,
-   the owner says where the tool comes from. Do not write one from its description.
+   cleared now that #60 is merged. ~~Blocked on a source (C13)~~ — **ruled 2026-09-13 (D43 (b)):** the
+   tool exists nowhere, in the repository or in any scratchpad, so PR C **builds it** from the
+   three-axis specification (exists / says what the document claims / reachable). It comes after PR D.
 2. **PR D — CLV gate in `weekly-predict`'s catch-up** (ruling 2). **Deadline: before 2026-09-22.**
+   **Taken first, ahead of PR C, by owner ruling 2026-09-13**, and it also carries D43.
 3. **Then four proposals for the owner's ruling — proposals, not PRs:**
-   - **D43 candidate — cron cadence**, with an **escalation path for the timing guard.** Measured
+   - **D44 candidate** (was "D43" before D43 was taken, 2026-09-13) **— cron cadence**, with an **escalation path for the timing guard.** Measured
      lateness is in `docs/HANDOFF_SEASON.md` §1. Note the guard is not merely unescalated: `check_timing`
      (`scripts/pipeline_preflight.py:128` at `535d2b9`, same line at `bfdd025`) counts slack against
      the first kickoff window still ahead **today**, not the window a run was scheduled to precede.

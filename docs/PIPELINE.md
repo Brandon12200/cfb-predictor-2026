@@ -13,14 +13,21 @@ conversational context can operate or repair the pipeline.
 
 | Job | Fires | Does |
 |---|---|---|
-| **Weekly predict** | Tue 09:17 ET | **catch-up grade first**, then snapshot → quality gate → predict |
+| **Weekly predict** | Tue 09:17 ET | **catch-up grade first** (CLV sign check per week), then snapshot → quality gate → predict |
 | **Daily capture** | Wed/Thu/Fri 17:23 ET; Sat 10:23 / 14:23 / 17:23 / 20:23 ET | append one line observation per slate game |
-| **Weekly grade** | Sun 12:47 ET | finals → grade → regenerate reports |
+| **Weekly grade** | Sun 12:47 ET | finals → grade → CLV sign check → regenerate reports |
 | **Freeze integrity** | daily 07:43 ET | frozen-tree assertion + fingerprint + SP+ watch |
 | **CI** | push to `main`, every PR | lint, tests, all seven verify targets |
 
 **Tuesday grades before it predicts.** The catch-up covers Sunday/Monday finishers and
 postponements, and running it first means a broken grade is found before an Odds credit is spent.
+
+**Both grading paths check CLV signs before committing grades** (`scripts/check_clv.py`, owner
+ruling 2026-09-13). `data/graded/` is append-only, so a wrong sign must be refused, not corrected
+later. On Sunday a disagreement skips the grading commit and everything after it. On Tuesday the
+check runs inside the catch-up loop, once per graded week, and a disagreement **fails the whole job,
+claim included**. Skipping only the commit would leave modified graded files in the working tree
+and stamp the week's claim `-dirty`. Recovery: fix the code, then re-dispatch (§10).
 
 **Capture is daily, not Saturday-only** — Thursday and Friday games need honest pre-kickoff closes.
 Each game's close is *the last observation before that game's own kickoff*

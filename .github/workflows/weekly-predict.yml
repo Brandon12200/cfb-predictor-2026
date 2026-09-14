@@ -70,6 +70,19 @@ jobs:
           cfbd-api-key: ${{ secrets.CFBD_API_KEY }}
           odds-api-key: ${{ secrets.ODDS_API_KEY }}
 
+      # Owner ruling 2026-09-13 (PR D): the same two-check CLV sign validator `weekly-grade` runs
+      # before its grading commit runs here too, once per week, right after that week is graded.
+      # This loop grades earlier weeks and commits append-only `data/graded` with no human between —
+      # that is how week 1 reached 11/11 on 2026-09-08 — so an unchecked sign would land on `main`
+      # just as it could on Sunday. See `scripts/check_clv.py`.
+      #
+      # A disagreement FAILS THIS STEP, and so skips everything after it, the claim included. That is
+      # deliberate, and the only safe shape. Skipping just the commit below and carrying on would leave
+      # the modified graded files in the working tree, and `model_version` is `git describe --dirty`,
+      # so this week's claim would be stamped `-dirty`. A broken grade.py already fails closed the same
+      # way (PHASE5_NOTES §1). Recovery is the usual one: fix the code, then re-dispatch this workflow
+      # (docs/PIPELINE.md §10). The claim is still written by the pipeline, never by hand. Whether it
+      # lands before the week's first kickoff depends on how fast the fix is.
       - name: Catch-up grade (Sunday/Monday finishers + postponements)
         env:
           CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
@@ -83,6 +96,8 @@ jobs:
               2>&1 | tee -a "$RUNNER_TEMP/pipeline.log" || \
               [ "${PIPESTATUS[0]}" = "3" ]   # 3 = nothing completed yet, not a failure
             python scripts/grade.py --week "$W" --year "${{ steps.setup.outputs.year }}" \
+              2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+            python scripts/check_clv.py --week "$W" --year "${{ steps.setup.outputs.year }}" \
               2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
             echo "::endgroup::"
           done
