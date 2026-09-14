@@ -7,6 +7,7 @@ Rule-based college football spread model. Frozen weights, git audit trail, forwa
 - `make test` — full test suite (must pass before any commit)
 - `make verify-phase-N` — executable acceptance criteria for phase N (Phase 0 creates these targets)
 - `make lint` — ruff + mypy on new code
+- `make resolve-locators DOC=docs/FILE.md` — check every locator in a document for exists / says / reachable before it merges (D43 (b)); half a tool, so re-derive bare claims separately (D42 (d))
 
 ## Binding principles (never violate; full definitions in docs/SPEC.md)
 1. **Data Recency Principle:** team-quality inputs use current-season data only. Prior seasons only for market-behavior calibration and roster-continuity-aware priors (SPEC §2).
