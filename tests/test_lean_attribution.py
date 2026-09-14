@@ -172,6 +172,76 @@ def _slate(n_hyp: int, n_placed: int, graded: bool = True):
     return games
 
 
+def test_an_ungraded_no_bet_on_a_side_is_never_counted_as_placed():
+    """**The #51 attribution fix, pinned — until this test, nothing could fail against its defect.**
+
+    `_rate_and_clv` derives `n_placed` by SUBTRACTION: `len(records) - hypothetical`. Before #51
+    the hypothetical count was `r.get("is_hypothetical")`, a field written onto GRADED records only,
+    so an ungraded NO_BET row fell out of the count and was reported as a placed bet (D40, second
+    instance). #51 switched the count to `is_no_bet(r)`, which reads the claim.
+
+    Measured 2026-09-13: with that fix reverted, the full suite still passed (1063). The reason is
+    the `rec` fixture above. `is_no_bet` reads `no_bet`/`prediction_type` and only falls back to
+    `is_hypothetical` when those are absent — and `rec` carries neither, so on every existing
+    fixture the fixed code degrades to exactly the defective expression. The fixture mirrored the
+    join's graded field but not its claim fields, which is the one thing the fix depends on.
+
+    Real joined rows start from the prediction, so they always carry `prediction_type`. This builds
+    them that way, on one side, with graded and ungraded rows mixed — the shape a Sunday before every
+    game has kicked off produces.
+    """
+    games = []
+    for i, graded in enumerate([True, True, False, False, False]):
+        r = rec(f"g{i}", side="away", vegas=-3.0,
+                home_score=10 if graded else None, away_score=28 if graded else None,
+                graded=graded, is_hypothetical=True)
+        r["prediction_type"] = "NO_BET"          # the claim field every real joined row has
+        r["no_bet"] = True
+        games.append(r)
+
+    away = by_lean_side(games)["sides"]["away"]
+    assert away["n_games"] == 5 and away["n_graded"] == 2
+    assert away["n_placed"] == 0, (
+        f"{away['n_placed']} ungraded NO_BET row(s) were counted as placed bets — `n_placed` is "
+        "being derived from a graded-only field instead of from the claim (D40 / #51)"
+    )
+    assert away["n_hypothetical"] == 5
+
+
+def test_the_lean_table_shows_leans_and_graded_as_separate_columns():
+    """A partially-graded side must not read as a record that does not add up.
+
+    With one "games" column the week-1 report as rendered 2026-09-06 (`75c69d4`) showed
+    `home | 4 | 1-2-0`: four leans beside a record summing to three, and nothing on the row saying a
+    game was still ungraded. This builds that shape — four home leans, three graded — and requires
+    the row to carry both counts, with W-L-P summing to the graded one.
+
+    **It includes a push on purpose.** `by_lean_side`'s `n_graded` is `wins + losses` — the ATS
+    denominator, which excludes pushes — so rendering it as the graded column looks correct on any
+    push-free fixture and is wrong on real data: the 2025 retro's home row would have read
+    `120 | 117 | 60-57-3`. The first version of this test had no push and passed that bug.
+    """
+    games = [rec("w", side="home", vegas=-3.0, home_score=28, away_score=10),
+             rec("l", side="home", vegas=-3.0, home_score=10, away_score=28),
+             rec("p", side="home", vegas=-3.0, home_score=13, away_score=10),   # margin 3 − 3 = push
+             rec("pending", side="home", vegas=-3.0, home_score=None, away_score=None, graded=False)]
+    lines = _lean_block(report_context(games))
+
+    header = next(line for line in lines if line.startswith("| lean |"))
+    cols = [c.strip() for c in header.strip("|").split("|")]
+    assert "leans" in cols and "graded" in cols, f"header lost a count column: {cols}"
+
+    home = next(line for line in lines if line.startswith("| home |"))
+    cells = dict(zip(cols, (c.strip() for c in home.strip("|").split("|")), strict=True))
+    assert cells["W-L-P"] == "1-1-1", f"fixture did not produce the intended push: {cells}"
+    assert (cells["leans"], cells["graded"]) == ("4", "3"), cells
+    w, lo, p = (int(x) for x in cells["W-L-P"].split("-"))
+    assert w + lo + p == int(cells["graded"]), (
+        "W-L-P must sum to the graded count. If `graded` shows 2 here, it is rendering "
+        "`n_graded` (wins + losses), which silently drops pushes"
+    )
+
+
 def test_an_all_no_bet_slate_is_labelled_hypothetical():
     lean = by_lean_side(_slate(n_hyp=6, n_placed=0))
     assert lean["meta"]["all_hypothetical"] is True
