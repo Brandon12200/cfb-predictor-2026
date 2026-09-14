@@ -76,8 +76,8 @@ window the run was scheduled to precede. A capture that misses its window theref
 later one to count against, and reports healthy slack. Every week-2 Saturday capture logged slack and
 none warned — the 13:15 run that missed noon logged "74 min of slack before the 15:30 ET window", and
 the Sunday 00:58 run logged slack against *Sunday's* 13:00 window. It is not an unread warning; it is
-an affirmative false all-clear. Both the cadence and a fix for the guard are pending as a D43
-candidate for the owner's ruling; nothing here changes the crons.
+an affirmative false all-clear. Both the cadence and a fix for the guard are pending as a D44
+candidate (first written as "D43", a number D43 has since taken) for the owner's ruling; nothing here changes the crons.
 
 **The weekly cancelled-CI signature is expected, not a fault.** `ci.yml:14-16` sets
 `cancel-in-progress: true`, so a multi-commit push cancels its own intermediate runs — only the

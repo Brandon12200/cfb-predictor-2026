@@ -934,3 +934,55 @@ frame it names (`resolve_locators`), then separately re-derive every bare assert
 SHAs, statuses, and anything in the present tense about something that moves. A claim that is true
 when written can become false by being written down, or by the next scheduled run; both have
 happened here.
+
+---
+
+## D43 — Handoff documents may merge ahead of review, on a condition; `resolve_locators` never existed — **RATIFIED (owner, 2026-09-13)**
+**Date:** 2026-09-13, ruled after #62 merged (2026-09-14 01:56 UTC, 21:56 ET on the 13th).
+
+**Why one entry holds two things.** Each supersedes part of D42 (a), and both came out of the same
+post-merge audit (`docs/HANDOFF_SEASON.md` §9, fourth round). D42 is ratified, so it is not edited.
+This entry supersedes (a)4 and (a)3, and D42's text stays as written.
+
+### (a) Supersedes D42 (a)4 — a conditional carve-out for session-boundary handoff documents
+
+D42 (a)4 ruled #52's merge-before-review "a one-time exception, not precedent". #61 then did the same
+thing. `docs/HANDOFF_SEASON_ADDENDUM.md` merged as `bfdd025` with a body reading "Not reviewed
+yet". The owner chose a carve-out over reaffirming the rule without exceptions:
+
+**A session-boundary handoff document may merge ahead of its review, on condition that the
+successor's first task is the post-merge audit, with a fix-forward, before anything else.**
+
+- **Everything else is unchanged.** Code, workflows, tests, and every document that is not a
+  session-boundary handoff keep GO-then-merge with no exception. The GO must cover the final diff at
+  branch head. Green CI is still not a GO: a handoff merged ahead of review is merged *unreviewed*,
+  not merged on CI.
+- **The condition moves the review; it does not remove it.** The successor's post-merge audit is the
+  review, and its fix-forward PR is a normal PR, reviewed before it merges.
+- **How it ran the first time:** #61's successor audited it as its first task, before anything else.
+  That audit produced #62 (C10–C14), which was reviewed GO at branch head `e1c8698` before it merged.
+
+**Not ruled, and not decided here:** whether #52 and #61 retrospectively count as uses of this
+carve-out or stay logged as violations of D42 (a)4 as it stood.
+Also not ruled: exactly which documents count as "session-boundary
+handoff docs". The record of both merges in `docs/HANDOFF_SEASON.md` §9 is unchanged.
+
+### (b) Supersedes D42 (a)3 — `resolve_locators` is to be built; there was never a tool to defer
+
+D42 (a)3 recorded `resolve_locators` as "accepted as a make target (delivered separately)". The
+audit found no implementation in any branch, commit tree or stash (C13). The owner confirmed it
+exists nowhere, in the repository or in any scratchpad. **The 2026-09-01 "accepted, deferred"
+ruling is superseded: nothing was ever built, so nothing was deferred.**
+
+**PR C builds it**, from the three-axis specification: for every locator in a document, does it
+**exist**, does it **say what the document claims**, and is it **reachable** from the frame the
+document names. D42 (d)'s "(`resolve_locators`)" and §9's "half a tool" finding describe that
+intended tool, not an existing one. The half-a-tool limit still applies: it cannot re-derive a claim
+that has no locator.
+
+**Order:** PR D (the catch-up CLV gate, landing before 2026-09-22) comes first regardless, then
+PR C.
+
+**Numbering.** Before this entry, the handoffs called the cron-cadence and timing-guard proposal the
+"D43 candidate". That proposal now takes **D44**. The mentions in the §9 correction tables are
+record and stay as written. The orientation lines are updated.
