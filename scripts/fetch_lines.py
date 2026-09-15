@@ -14,7 +14,7 @@ build-time balance) are below `--min-credits` — an honest pre-spend stop, not 
 Usage: python scripts/fetch_lines.py --week N [--year 2026] [--min-credits 20]
 
 Exit codes (Phase 5): 0 appended, 1 error (no snapshot / fetch failed), **3 budget refusal**,
-**4 snapshot not built yet (scheduled Tuesday capture only)**. Budget stops and a Tuesday capture
+**4 snapshot not built yet (a scheduled Tuesday capture slot only)**. Budget stops and a Tuesday capture
 that beats the predict job are designed outcomes, not failures — the scheduled capture job commits
 nothing and stays green on 3 or 4, but alarms on 1. They shared exit 1 until Phase 5, which left the
 workflow string-matching stdout to tell them apart.
@@ -22,7 +22,7 @@ workflow string-matching stdout to tell them apart.
 **Exit 4 (owner ruling 2026-09-15, D44).** The Tuesday 13:50 ET capture resolves the week being
 claimed that day. The predict job builds that week's snapshot, and both share one concurrency group.
 If the scheduler delays predict about 4.5 h more than the capture, the capture runs first and finds
-no snapshot. On a *scheduled* run on a Tuesday in the pipeline timezone that is a designed state:
+no snapshot. On a run fired by the *scheduled Tuesday capture slot* that is a designed state:
 no credit is spent, and a failed predict files its own issue. Any other day, or a manual run, a
 missing snapshot is still exit 1 and alarms.
 """
@@ -35,7 +35,6 @@ import sys
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -43,18 +42,28 @@ from data.normalize import odds as odds_norm  # noqa: E402
 from data.odds_budget import append_ledger, last_remaining, record_quota  # noqa: E402
 from data.snapshot.lines import record_observation  # noqa: E402
 from data.snapshot.store import SnapshotNotFoundError, load_snapshot  # noqa: E402
-from utils.season_calendar import pipeline_timezone  # noqa: E402
+from utils.season_calendar import load_calendar  # noqa: E402
 
 
 EXIT_OK, EXIT_ERROR, EXIT_BUDGET_REFUSAL, EXIT_SNAPSHOT_PENDING = 0, 1, 3, 4
 
 
-def snapshot_pending_is_designed(now: datetime | None = None) -> bool:
-    """True only for a scheduled run on a Tuesday in the pipeline timezone (see exit 4 above)."""
+def snapshot_pending_is_designed(calendar: dict | None = None) -> bool:
+    """True only for a run fired by a scheduled TUESDAY capture slot (see exit 4 above).
+
+    Keyed on the slot (`CFB_EVENT_SCHEDULE`, the cron that fired the run), not on the run's own clock.
+    A Tuesday capture delayed past midnight runs on Wednesday, and a weekday check would turn the
+    designed state into a false failure (D44 audit). No cron, or one that is not a Tuesday capture
+    slot, is never designed: fail loud.
+    """
     if os.environ.get("GITHUB_EVENT_NAME") != "schedule":
         return False
-    when = (now or datetime.now(UTC)).astimezone(ZoneInfo(pipeline_timezone()))
-    return when.weekday() == 1
+    fired = " ".join(os.environ.get("CFB_EVENT_SCHEDULE", "").split())
+    if not fired:
+        return False
+    cal = calendar if calendar is not None else load_calendar()
+    slots = ((cal.get("pipeline") or {}).get("schedule_et") or {}).get("capture", [])
+    return any(" ".join(e["cron_utc"].split()) == fired and e["days"] == ["tue"] for e in slots)
 
 
 def main(argv: list[str] | None = None) -> int:

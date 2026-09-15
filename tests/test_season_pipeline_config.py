@@ -165,6 +165,15 @@ def test_every_window_on_a_capture_day_has_exactly_one_guarantee_slot():
             assert len(g) == 1, f"{day} {window}: {len(g)} guarantee slots"
 
 
+def test_every_capture_cron_pins_exactly_one_weekday():
+    """The guard walks back from `now` to the cron's latest time. A multi-day cron lets a run more
+    than 24 h late match the NEXT day's slot and report on time, so each capture line names one day."""
+    for e in CAPTURE:
+        dow = e["cron_utc"].split()[4]
+        assert dow.isdigit(), f"{e['time']} {e['days']}: cron weekday '{dow}' must be a single day"
+        assert len(e["days"]) == 1
+
+
 def test_cron_strings_are_unique_so_the_triggering_slot_is_identifiable():
     """The guard maps `github.event.schedule` back to its entry, so no two entries may share a cron."""
     crons = [" ".join(e["cron_utc"].split()) for es in PIPELINE["schedule_et"].values() for e in es]

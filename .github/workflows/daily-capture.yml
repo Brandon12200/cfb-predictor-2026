@@ -18,8 +18,15 @@ name: Daily line capture (Tue–Sat)
 on:
   schedule:
     - cron: "50 17 * * 2"      # Tue 13:50 ET — guarantee, before 19:00
-    - cron: "50 17 * * 3,4,5"  # Wed/Thu/Fri 13:50 ET — guarantee, before 19:00
-    - cron: "23 21 * * 3,4,5"  # Wed/Thu/Fri 17:23 ET — best-effort, before 19:00 (serves 19:30+ kickoffs)
+    # One line per weekday, never `3,4,5`: the timing guard finds the slot that fired by matching
+    # `github.event.schedule` and walking back to that cron's latest time. With a shared line, a
+    # Wednesday run more than 24 h late would match THURSDAY's slot and report on-time (D44 audit).
+    - cron: "50 17 * * 3"      # Wed 13:50 ET — guarantee, before 19:00
+    - cron: "23 21 * * 3"      # Wed 17:23 ET — best-effort, before 19:00 (serves 19:30+ kickoffs)
+    - cron: "50 17 * * 4"      # Thu 13:50 ET — guarantee, before 19:00
+    - cron: "23 21 * * 4"      # Thu 17:23 ET — best-effort, before 19:00
+    - cron: "50 17 * * 5"      # Fri 13:50 ET — guarantee, before 19:00
+    - cron: "23 21 * * 5"      # Fri 17:23 ET — best-effort, before 19:00
     - cron: "50 10 * * 6"      # Sat 06:50 ET — guarantee, before 12:00
     - cron: "20 13 * * 6"      # Sat 09:20 ET — best-effort, before 12:00
     - cron: "20 14 * * 6"      # Sat 10:20 ET — guarantee, before 15:30
@@ -94,6 +101,8 @@ jobs:
         id: capture
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          # The slot that fired this run: fetch_lines' exit 4 applies only to the Tuesday slot.
+          CFB_EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
           set +e
           ARGS=(--week "${{ steps.setup.outputs.week }}" --year "${{ steps.setup.outputs.year }}")
@@ -112,8 +121,8 @@ jobs:
 
       # Exit 4: a scheduled Tuesday capture ran before the predict job built this week's snapshot.
       # A designed state by owner ruling (2026-09-15, D44): nothing was fetched and no credit spent,
-      # and a predict that actually failed files its own issue. fetch_lines only returns 4 on a
-      # scheduled run on a Tuesday in ET; any other missing snapshot is still exit 1.
+      # and a predict that actually failed files its own issue. fetch_lines only returns 4 for the
+      # scheduled Tuesday capture slot; any other missing snapshot is still exit 1.
       - name: Snapshot not built yet (not a failure)
         if: steps.capture.outputs.rc == '4'
         run: |

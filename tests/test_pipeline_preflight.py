@@ -196,6 +196,23 @@ def test_a_manual_capture_is_not_judged():
     assert v.status == "manual" and pf.warns == []
 
 
+def test_a_scheduled_run_with_no_cron_warns_instead_of_passing_as_manual():
+    """Empty `github.event.schedule` on a scheduled run is wiring drift (D39 class), and every D44
+    tier would go silent. It must not look like a harmless manual run (D44 audit)."""
+    pf = Preflight()
+    v = _t(pf, datetime(2026, 9, 26, 13, 0, tzinfo=ET), "")
+    assert v.status == "unknown_slot" and len(pf.warns) == 1 and pf.annotations == pf.warns
+    assert "no github.event.schedule" in pf.warns[0]
+
+
+def test_a_run_more_than_a_day_late_is_still_matched_to_its_own_weekday():
+    """Wed-Fri crons are one line per weekday. With a shared `3,4,5` line, a Wednesday slot firing
+    Thursday afternoon would have matched Thursday's slot and reported on time (D44 audit)."""
+    pf = Preflight()
+    v = _t(pf, datetime(2026, 9, 24, 14, 0, tzinfo=ET), "50 17 * * 3")   # Wed slot, fired Thu 14:00
+    assert v.slot_et.strftime("%a %Y-%m-%d") == "Wed 2026-09-23" and v.status == "missed"
+
+
 def test_an_unknown_cron_warns_about_drift():
     pf = Preflight()
     v = _t(pf, datetime(2026, 9, 26, 13, 0, tzinfo=ET), "23 14 * * 6")   # the retired 10:23 slot

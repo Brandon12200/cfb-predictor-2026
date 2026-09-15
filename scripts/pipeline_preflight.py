@@ -204,8 +204,12 @@ def evaluate_timing(cal: dict, role: str, now: datetime, *, event_name: str, sch
     """
     if role != "capture":
         return TimingVerdict("not_time_critical")
-    if event_name != "schedule" or not schedule.strip():
+    if event_name != "schedule":
         return TimingVerdict("manual")
+    if not schedule.strip():
+        # A scheduled run always has `github.event.schedule`. Empty here means the value was not
+        # threaded through (the D39 class), and every D44 tier would go silent for this run.
+        return TimingVerdict("unknown_slot")
     pipeline = cal.get("pipeline", {})
     entry = next((e for e in pipeline.get("schedule_et", {}).get("capture", [])
                   if _norm_cron(e["cron_utc"]) == _norm_cron(schedule)), None)
@@ -240,9 +244,14 @@ def check_timing(pf: Preflight, cal: dict, now: datetime, *, role: str, event_na
     elif v.status == "manual":
         pf.note("timing: manual run, no scheduled slot to judge against")
     elif v.status == "unknown_slot":
-        pf.warn(f"timing: the triggering cron '{schedule}' is not in season.json "
-                f"schedule_et.capture, so this run's window is unknown. The workflow and the "
-                f"config have drifted apart.")
+        msg = (f"timing: the triggering cron '{schedule}' is not in season.json "
+               f"schedule_et.capture, so this run's window is unknown. The workflow and the "
+               f"config have drifted apart." if schedule.strip() else
+               "timing: a SCHEDULED capture arrived with no github.event.schedule, so its slot "
+               "cannot be judged and no D44 tier can fire. CFB_EVENT_SCHEDULE is not reaching the "
+               "preflight (D39 class).")
+        pf.warn(msg)
+        pf.annotate(msg)
     else:
         assert v.slot_et and v.window_et and v.lateness_min is not None and v.margin_min is not None
         where = (f"{v.margin_min} min before the {v.window_et:%H:%M} ET window" if v.margin_min > 0

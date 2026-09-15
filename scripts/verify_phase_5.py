@@ -117,7 +117,7 @@ check("the predict step is skipped when the byte-immutable claim already exists 
 
 _capture = (WORKFLOWS / "daily-capture.yml").read_text()
 check("line capture is daily Tue–Sat, not Saturday-only (PHASE5_NOTES §1, extended to Tuesday by D44)",
-      "3,4,5" in _capture and '* * 2"' in _capture and _capture.count("* * 6") >= 2)
+      all(f'* * {d}"' in _capture for d in ("2", "3", "4", "5")) and _capture.count("* * 6") >= 2)
 check("a Tuesday capture that beats the snapshot (exit 4) is a designed state, not a failure (D44)",
       "rc == '4'" in _capture and "rc != '4'" in _capture)
 check("a budget refusal (exit 3) leaves the capture job green and commits nothing",

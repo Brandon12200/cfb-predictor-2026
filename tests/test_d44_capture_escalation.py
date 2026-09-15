@@ -7,7 +7,6 @@ output that is not declared reads as the empty string, and a gate on it silently
 from __future__ import annotations
 
 import re
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -23,16 +22,20 @@ REPORT = (ROOT / ".github/actions/report-failure/action.yml").read_text()
 
 # --- exit 4: a scheduled Tuesday capture that beat the predict job ------------------------------
 
-@pytest.mark.parametrize("when, event, designed", [
-    (datetime(2026, 10, 6, 18, 0, tzinfo=UTC), "schedule", True),            # Tue 14:00 ET
-    (datetime(2026, 10, 7, 18, 0, tzinfo=UTC), "schedule", False),           # Wednesday
-    (datetime(2026, 10, 6, 18, 0, tzinfo=UTC), "workflow_dispatch", False),  # manual Tuesday
-    (datetime(2026, 10, 7, 2, 0, tzinfo=UTC), "schedule", True),             # Tue 22:00 ET = Wed UTC
-    (datetime(2026, 10, 6, 3, 0, tzinfo=UTC), "schedule", False),            # Mon 23:00 ET = Tue UTC
+@pytest.mark.parametrize("event, cron, designed", [
+    ("schedule", "50 17 * * 2", True),           # the Tuesday capture slot
+    ("schedule", "50  17 * * 2", True),          # whitespace does not matter
+    ("schedule", "50 17 * * 3", False),          # Wednesday's guarantee slot
+    ("schedule", "", False),                     # a scheduled run with no cron: fail loud
+    ("workflow_dispatch", "50 17 * * 2", False), # a manual run
+    ("schedule", "17 13 * * 2", False),          # the Tuesday PREDICT cron is not a capture slot
 ])
-def test_snapshot_pending_is_designed_only_on_a_scheduled_tuesday_in_et(monkeypatch, when, event, designed):
+def test_snapshot_pending_is_designed_only_for_the_scheduled_tuesday_slot(monkeypatch, event, cron, designed):
+    """Keyed on the slot, not the clock. A weekday check turned a Tuesday capture delayed past
+    midnight into a false failure, because it ran on Wednesday (D44 audit)."""
     monkeypatch.setenv("GITHUB_EVENT_NAME", event)
-    assert fl.snapshot_pending_is_designed(when) is designed
+    monkeypatch.setenv("CFB_EVENT_SCHEDULE", cron)
+    assert fl.snapshot_pending_is_designed() is designed
 
 
 @pytest.mark.parametrize("designed, rc", [(True, fl.EXIT_SNAPSHOT_PENDING), (False, fl.EXIT_ERROR)])
@@ -47,6 +50,11 @@ def test_a_missing_snapshot_maps_to_4_or_1_and_spends_nothing(monkeypatch, desig
     monkeypatch.setattr(fl, "snapshot_pending_is_designed", lambda: designed)
     monkeypatch.setattr(fl, "last_remaining", must_not_fetch)
     assert fl.main(["--week", "6"]) == rc
+
+
+def test_the_capture_step_receives_the_slot_that_fired_it():
+    step = CAPTURE[CAPTURE.index("- name: Capture line observation"):CAPTURE.index("scripts/fetch_lines.py")]
+    assert "CFB_EVENT_SCHEDULE: ${{ github.event.schedule }}" in step
 
 
 def test_the_capture_workflow_treats_4_as_a_notice_and_1_as_a_failure():
@@ -80,7 +88,10 @@ def test_the_sunday_grade_closes_the_late_issue_with_the_tally():
     i = GRADE.index("- name: Close the week's late-capture issue with its tally")
     step = GRADE[i:GRADE.index("- uses: ./.github/actions/report-failure", i)]
     assert "if: success() && inputs.dry_run != true" in step
-    assert "--label pipeline-late --label stage:capture" in step and 'week:${IN_WEEK}' in step
+    assert "--label pipeline-late --label stage:capture" in step
+    assert '--label "week:${IN_WEEK}"' not in step, (
+        "the close must sweep every open late issue: one opened after its week's grade has no later "
+        "Sunday that targets it (D44 audit)")
     assert 'test("late-miss")' in step and "gh issue close" in step
     assert "set -euo pipefail" in step
 
