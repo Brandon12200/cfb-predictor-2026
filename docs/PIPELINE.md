@@ -188,6 +188,26 @@ tear a run between an Odds spend and `record_quota`, or between two of the Sunda
 carries `timeout-minutes: 20` so a hung job cannot hold the group. Push races are handled by a
 rebase-retry, safe because every pipeline commit is an *addition* under an append-only tree.
 
+**Known hazard: a pending run can be cancelled silently.** `cancel-in-progress: false` protects
+only a *running* job. GitHub keeps **at most one pending run** per group, and a newer pending run
+cancels the older one. A cancelled run concludes `cancelled`, which never fires `if: failure()`
+(`2027_NOTES` §8 item 15 records the same blind spot for timeouts), so nothing reports it. Two shapes
+matter under D44:
+
+* **A lost predict.** On a Tuesday the predict can be pending behind the running 13:50 capture when
+  a third group run, in practice a manual dispatch, is created. The week then has no claim.
+  **Detected, not prevented:** the claim tripwire in the daily freeze-integrity job
+  (`scripts/claim_tripwire.py`; its own concurrency group, so no cadence run can cancel it). From
+  Wednesday to Saturday it opens a `stage:predict` failure issue if the current week's claim is
+  missing, unreadable, or stamped `-dirty`. Re-dispatching predict for that week closes it.
+* **A lost capture.** On a Saturday under scheduler lateness, two adjacent slots (as close as 60 min
+  apart) can be pending together with a third arriving. The dropped capture never reaches the
+  preflight, so no D44 timing tier fires for it. Nothing detects this yet. A per-slot count of
+  observations is the natural detector for the report PR's timeliness line.
+
+Whether capture should leave the shared group (serialization then resting on `cfb-commit`'s
+rebase-retry) is a **2027 design question, not ruled** (`2027_NOTES` §8 item 33).
+
 **Identity (D30, as amended 2026-08-11).** Commits are authored by
 `cfb-pipeline <cfb-pipeline@cfb-predictor-2026.invalid>` with a `Run: <actions-run-url>` trailer. A
 project machine identity is not AI attribution (D3); the trailer is the tamper-evident link SPEC §10

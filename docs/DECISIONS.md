@@ -1089,9 +1089,25 @@ Whether a claim excludes games that have already kicked off is a separate ruling
    The Tuesday capture and predict share one concurrency group, so a predict delayed about 4.5 h more
    than the capture lets the capture run first. `fetch_lines` exits **4**: green, a notice, nothing
    fetched or committed, no credit spent. A predict that failed files its own issue. Any other day,
-   or a manual run, a missing snapshot stays exit 1 and alarms.
+   or a manual run, a missing snapshot stays exit 1 and alarms. As built, it keys on the **slot**
+   that fired the run (the Tuesday capture cron), not on the run's clock. A Tuesday capture delayed
+   past midnight is still the Tuesday slot.
 3. **Two PRs.**
    - **The workflow PR, merged before 2026-09-23:** cadence, `season.json`, the guard fix, and tiers 0–2.
    - **The report PR, merged before the Sun 2026-09-27 12:47 ET grade,** which is the first render
      with a week-4 grade: close-age buckets, the boundary marking, the unblended season total, and
      tiers 3–4.
+4. **A claim tripwire, detection only, in the workflow PR.** The cadence workflows share one
+   concurrency group, and GitHub keeps one *pending* run per group, silently cancelling the older.
+   A Tuesday predict queued behind the 13:50 capture can therefore be lost when a third run arrives.
+   The daily freeze-integrity job (its own group) checks, from Wednesday to Saturday, that the
+   current week's claim exists and is valid. It opens a `stage:predict` failure issue otherwise, which
+   a successful predict re-dispatch closes. The owner set two conditions:
+   - a test that it fires on a synthetic missing claim and stays silent when the claim exists;
+   - it also fires when the claim's `model_version` carries **`-dirty`**, because a dirty claim is not
+     a claim.
+
+   **The concurrency hazard itself is not ruled.** Whether capture should leave the shared group is
+   recorded as a 2027 design question (`docs/2027_NOTES.md` §8 item 33, `docs/PIPELINE.md`
+   Concurrency). That includes the undetected Saturday variant, where adjacent capture slots bunch
+   and one is dropped.
