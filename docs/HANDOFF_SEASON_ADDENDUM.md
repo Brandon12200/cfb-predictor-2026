@@ -51,12 +51,17 @@ are corrected in place and recorded as **C10–C14 in `docs/HANDOFF_SEASON.md` �
    tool exists nowhere, in the repository or in any scratchpad, so PR C **builds it** from the
    three-axis specification (exists / says what the document claims / reachable). It comes after PR D.
    **Built** as `make resolve-locators DOC=…` (`scripts/resolve_locators.py`). The appended rulings and
-   measured limits are in D43.
+   measured limits are in D43. **Merged as #64 (`0876a6e`).** Its two known limits were ruled on
+   2026-09-14 and are documented in the tool's docstring, with the proper fix as drawer item 32.
 2. **PR D — CLV gate in `weekly-predict`'s catch-up** (ruling 2). **Deadline: before 2026-09-22.**
    **Taken first, ahead of PR C, by owner ruling 2026-09-13**, and it also carries D43. **Merged as #63
    (`5eb8453`).** The fail-closed design stands, with the narrower shape recorded as rejected (D43, appended).
 3. **Then four proposals for the owner's ruling — proposals, not PRs:**
-   - **D44 candidate** (was "D43" before D43 was taken, 2026-09-13) **— cron cadence**, with an **escalation path for the timing guard.** Measured
+   - **D44 candidate** (was "D43" before D43 was taken, 2026-09-13) **— cron cadence**, with an **escalation path for the timing guard.**
+     **Filed as `docs/proposals/D44_CRON_CADENCE.md` (2026-09-14)**, which supersedes the figures in this
+     bullet. The measurement widened the defect: 13 of 21 missed captures logged "ok", including a
+     cross-midnight case, and every Sunday grade warns. It also found two seams: Tuesday games from
+     week 6, and no pre-kickoff filter on the claim path. Measured
      lateness is in `docs/HANDOFF_SEASON.md` §1. Note the guard is not merely unescalated: `check_timing`
      (`scripts/pipeline_preflight.py:128` at `535d2b9`, same line at `bfdd025`) counts slack against
      the first kickoff window still ahead **today**, not the window a run was scheduled to precede.
