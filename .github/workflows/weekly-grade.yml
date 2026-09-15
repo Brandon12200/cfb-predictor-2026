@@ -208,9 +208,14 @@ jobs:
           IN_MODE: ${{ steps.setup.outputs.mode }}
         run: |
           set -euo pipefail
-          ARGS=(--state open --json number --limit 50 --label pipeline-late --label stage:capture)
-          [ "$IN_MODE" = "rehearsal" ] && ARGS+=(--label rehearsal)
-          for N in $(gh issue list "${ARGS[@]}" --jq '.[].number'); do
+          # `--label` is an AND-filter with no negation, so a live run's query also matches
+          # rehearsal issues. Once the sweep stopped filtering by week, that let a live grade close
+          # a rehearsal drill's issue. The jq post-filter keeps the two modes apart in both directions.
+          IS_REHEARSAL=false
+          [ "$IN_MODE" = "rehearsal" ] && IS_REHEARSAL=true
+          ARGS=(--state open --json number,labels --limit 50 --label pipeline-late --label stage:capture)
+          for N in $(gh issue list "${ARGS[@]}" \
+                      --jq ".[] | select(([.labels[].name] | index(\"rehearsal\") != null) == ${IS_REHEARSAL}) | .number"); do
             WEEK="$(gh issue view "$N" --json labels \
                      --jq '[.labels[].name | select(startswith("week:"))][0] // "week:?" | ltrimstr("week:")')"
             MISSES="$(gh issue view "$N" --json body,comments \

@@ -22,7 +22,11 @@ can cancel it. Wednesday's run leaves time to re-dispatch predict before evening
 
 It is silent:
 - outside Wednesday to Saturday in the pipeline timezone;
-- when the current pipeline week's claim window is not open (D38), which covers pre-season.
+- when the claim is not yet **due**. A claim is due once the most recent Tuesday was that week's own
+  predict day: `pipeline_week` resolved to this week and the claim window (D38) was open. The window
+  alone is the wrong gate. It says a claim *may* be written, not that one *should* exist, and it
+  opened on Saturday 2026-08-22, three days before week 1's first predict on 08-25 (review of the
+  tripwire PR).
 
 Exit 0: a valid claim exists, or the check does not apply today.
 Exit 2: the claim is due and missing or invalid. The workflow opens a `stage:predict` issue and stays
@@ -37,7 +41,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -74,13 +78,20 @@ def claim_problem(path: Path, shown: str | None = None) -> str | None:
     return None
 
 
+def claim_due(week: int, today: date, calendar: dict) -> bool:
+    """True once the most recent Tuesday before ``today`` was ``week``'s own predict day."""
+    tuesday = today - timedelta(days=(today.weekday() - 1) % 7 or 7)
+    return (pipeline_week(tuesday, calendar) == week
+            and claim_window_open(week, tuesday, calendar))
+
+
 def evaluate(today: date, calendar: dict, base: Path) -> tuple[int, int | None, str]:
     """(exit code, week or None, reason)."""
     if today.weekday() not in _ACTIVE_WEEKDAYS:
         return EXIT_OK, None, f"{today:%a}: the tripwire only runs Wednesday to Saturday"
     week = pipeline_week(today, calendar)
-    if not claim_window_open(week, today, calendar):
-        return EXIT_OK, week, f"week {week}'s claim window is not open on {today}"
+    if not claim_due(week, today, calendar):
+        return EXIT_OK, week, f"week {week}'s claim is not due yet on {today} (no predict day for it has passed)"
     year = int(calendar["season"])
     rel = f"data/predictions/{year}_week_{week:02d}.json"
     problem = claim_problem(base / rel, rel)

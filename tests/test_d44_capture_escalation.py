@@ -93,6 +93,10 @@ def test_the_sunday_grade_closes_the_late_issue_with_the_tally():
         "the close must sweep every open late issue: one opened after its week's grade has no later "
         "Sunday that targets it (D44 audit)")
     assert 'test("late-miss")' in step and "gh issue close" in step
+    # Live and rehearsal issues never cross: the sweep post-filters on the `rehearsal` label, because
+    # `--label` is AND-only and a live query also matches rehearsal issues (review of this PR).
+    assert 'index(\\"rehearsal\\") != null) == ${IS_REHEARSAL}' in step
+    assert "--label rehearsal" not in step
     assert "set -euo pipefail" in step
 
 

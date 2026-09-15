@@ -69,9 +69,25 @@ def test_fires_every_day_wednesday_to_saturday(tmp_path, day):
     assert evaluate(day, CAL, tmp_path)[0] == EXIT_NO_VALID_CLAIM
 
 
-def test_silent_when_the_claim_window_is_not_open(tmp_path):
-    """Pre-season: 2026-08-19 resolves to week 1, whose window (D38) opens 08-22."""
-    assert evaluate(date(2026, 8, 19), CAL, tmp_path)[0] == EXIT_OK
+@pytest.mark.parametrize("day", [date(2026, 8, 19), date(2026, 8, 22)])
+def test_silent_before_the_weeks_predict_day_has_passed(tmp_path, day):
+    """Week 1's claim window (D38) opened Sat 08-22, but its first predict was Tue 08-25. Gating on the
+    window fired on 08-22 for a claim that was not due yet (review of the tripwire PR)."""
+    assert evaluate(day, CAL, tmp_path)[0] == EXIT_OK
+
+
+def test_fires_the_wednesday_after_week_ones_predict_day(tmp_path):
+    rc, week, _ = evaluate(date(2026, 8, 26), CAL, tmp_path)
+    assert (rc, week) == (EXIT_NO_VALID_CLAIM, 1)
+
+
+@pytest.mark.parametrize("day, week", [(date(2026, 12, 9), 15), (date(2026, 12, 16), 15)])
+def test_week_fifteen_and_after_the_season_check_the_last_claim(tmp_path, day, week):
+    """pipeline_week clamps at 15, so after the season the tripwire keeps checking week 15's claim,
+    which exists and is immutable: silent, not a false alarm."""
+    assert evaluate(day, CAL, tmp_path)[:2] == (EXIT_NO_VALID_CLAIM, week)
+    _claim(tmp_path, week=15)
+    assert evaluate(day, CAL, tmp_path)[0] == EXIT_OK
 
 
 def test_checks_the_week_being_played_not_the_next(tmp_path):
