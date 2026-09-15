@@ -14,7 +14,7 @@ conversational context can operate or repair the pipeline.
 | Job | Fires | Does |
 |---|---|---|
 | **Weekly predict** | Tue 09:17 ET | **catch-up grade first** (CLV sign check per week), then snapshot → quality gate → predict |
-| **Daily capture** | Wed/Thu/Fri 17:23 ET; Sat 10:23 / 14:23 / 17:23 / 20:23 ET | append one line observation per slate game |
+| **Daily capture** | Tue 13:50; Wed–Fri 13:50 and 17:23; Sat 06:50 / 09:20 / 10:20 / 12:50 / 13:50 / 16:20 / 17:20 / 19:50 ET (D44, from week 4) | append one line observation per slate game |
 | **Weekly grade** | Sun 12:47 ET | finals → grade → CLV sign check → regenerate reports |
 | **Freeze integrity** | daily 07:43 ET | frozen-tree assertion + fingerprint + SP+ watch |
 | **CI** | push to `main`, every PR | lint, tests, all seven verify targets |
@@ -32,10 +32,26 @@ and stamp the week's claim `-dirty`. Recovery: fix the code, then re-dispatch (�
 **Capture is daily, not Saturday-only** — Thursday and Friday games need honest pre-kickoff closes.
 Each game's close is *the last observation before that game's own kickoff*
 (`data.normalize.odds.closing_observation`), per-game, so the schedule's only job is to have a
-recent observation standing before each kickoff window. The four Saturday waves exist because a
-single Saturday-morning fetch leaves a 22:30 ET kickoff with a 12-hour-stale "close", and
-`closing_observation` would faithfully report that stale number — CLV noise across the largest part
-of the slate.
+recent observation standing before each kickoff window. A single Saturday-morning fetch would
+leave a 22:30 ET kickoff with a 12-hour-stale "close", and `closing_observation` would faithfully
+report that stale number — CLV noise across the largest part of the slate.
+
+**Two slots per kickoff window (D44, from week 4).** Through week 3 there was one wave per window,
+and GitHub's scheduler fired every in-season capture 97–485 min late, so each wave landed after the
+window it was meant to precede: Saturday noon games took a 16.7 h-stale close. Each capture slot in
+`season.json` now names the window it `precedes` and its `kind`:
+
+* **guarantee**, at window − 5 h 10 min. It lands before the window even at the worst Saturday
+  lateness observed (309 min). A test pins the 310-min lead and exactly one guarantee slot per window.
+* **best_effort**, at about window − 2 h 40 min, timed to the median lateness. It usually lands
+  shortly before kickoff, and is designed to miss about four times in ten. The Wed–Fri 17:23 slot
+  is best-effort too; it serves 19:30+ kickoffs.
+
+The **Tuesday 13:50 slot** exists because Tuesday games start in week 6. Without a capture, a Tuesday
+game's only close would be the claim's own snapshot observation, and its CLV would be zero by
+construction. Cost: 16 credits a week (15 captures plus the snapshot), with
+`odds_budget.expected_weekly_credits` moved to match. The boundary is week 4 (D44). Marking it in the
+reports, and never blending the season across it, is the report PR's work.
 
 ### Why the crons are UTC and anchored to EDT
 
@@ -48,10 +64,29 @@ test re-derives each cron from its ET time — so the DST drift is *auditable* r
 
 Minutes are never `:00`: top-of-hour Actions crons are the most heavily delayed.
 
-**Jitter is expected and is not fatal.** The preflight *warns* on a late run and continues, because
-aborting converts a degraded capture into no capture at all — a late observation is simply not
-selected as the close for a game that already kicked, whereas skipping loses the close for the
-whole slate.
+**Lateness is expected and is not fatal.** The preflight *warns* and continues, because aborting
+converts a degraded capture into no capture at all. A late observation is simply not selected as
+the close for a game that already kicked, whereas skipping loses the close for the whole slate
+(owner ruling 2026-08-07, kept by D44).
+
+**The timing guard (D44).** `pipeline_preflight.check_timing` reads `github.event.schedule`
+(`CFB_EVENT_SCHEDULE`) to find the slot that fired the run. It judges the run against **that slot's
+window on that slot's ET date**. Until week 3 it measured slack against the next window still ahead
+*today*, so a capture that missed its window reported "slack" before a later one (13 of 21 missed
+captures). A Saturday slot firing after midnight was scored against Sunday, and the Sunday grade
+warned every week. Only `capture` is judged; a manual dispatch is labelled `manual`; a cron that is not
+in `season.json` warns as config drift. Escalation:
+
+| tier | when | what |
+|---|---|---|
+| 0 | every capture | a step-summary line: slot, kind, lateness, margin to the window, status |
+| 1 | a **guarantee** slot lands at or after its window | a warning plus a `::warning::` annotation naming the window and its games |
+| 2 | a guarantee miss | opens or comments on one `pipeline-late` issue per week (`report-failure`, `kind: late`, cooldown 0); the Sunday grade closes it with the week's tally |
+| 3 | every Sunday render | capture timeliness line in the report (the report PR) |
+| 4 | a guarantee slot misses in 2 or more weeks of any 3 | escalation to the owner (the report PR) |
+
+A best-effort miss stays at tier 0: it is expected by design (owner ruling 2026-09-15). Every run
+stays green.
 
 ---
 
@@ -69,8 +104,10 @@ game window, so the game-window resolver raises there and the entire first live 
 before doing anything. Wed–Fri captures on Aug 26–28 fail the same way.
 
 Dates come from `pipeline_today`, which reads the **pipeline timezone**, never the runner's clock.
-Actions runners are UTC, and a Saturday 20:23 ET capture is already Sunday in UTC — that cron is
-literally `23 0 * * 0`. A UTC-derived date would file the observation under the following week.
+Actions runners are UTC, and a late-evening ET capture can already be Sunday in UTC: the week-1–3
+Saturday 20:23 ET slot was literally `23 0 * * 0`. Under D44 the last Saturday slot is 19:50 ET,
+which is 23:50 UTC under EDT but a late run still crosses midnight. A UTC-derived date would file the
+observation under the following week.
 
 **Known consequence:** `pipeline_week` returns 1 for every date through 2026-09-07, so the Tuesday
 job runs "week 1" twice. The byte-immutable claim already existing is the skip condition, and
@@ -91,7 +128,7 @@ One push per run; **one commit per artifact tier**. The tiers are D22/D23:
 | Job | Commits, in order |
 |---|---|
 | Tuesday | `grading: … catch-up` → `snapshot: …` (+`data/lines`, `data/quota`, **`data/ratings`, `data/projections`**) → **`predictions: … (pre-kickoff)`** |
-| Wed–Sat | `lines: … observation HH:MM ET` |
+| Tue–Sat | `lines: … observation HH:MM ET` (Tuesday's from the 13:50 capture, after the claim; D44) |
 | Sunday | `results: …` → `grading: …` → `report: …` |
 
 Three things here are load-bearing:
@@ -133,7 +170,9 @@ exist: `git add` on a pathspec matching nothing exits 128, and under `set -e` th
 been graded.
 
 **Designed states are not failures.** Distinct exit codes keep the alarm meaningful:
-`fetch_lines` **3** = budget refusal; `fetch_results` **3** = no completed games yet, **4** = no
+`fetch_lines` **3** = budget refusal, **4** = a scheduled Tuesday capture ran before the predict
+job built the week's snapshot (owner ruling 2026-09-15; any other missing snapshot is still 1);
+`fetch_results` **3** = no completed games yet, **4** = no
 claim for this week yet (the normal preseason state — the Sunday job runs every week, but the
 week-1 claim is not written until the Aug 25 predict run). Only anything else fails the job.
 
@@ -211,8 +250,9 @@ issue rather than a hundred comments.
 the matching issue. Without self-clearing you hand-close issues all season and stop trusting the
 label; with it, an open `pipeline-failure` label always means a live problem.
 
-**Not every non-zero is a failure.** `fetch_lines` exit **3** is a budget refusal and
-`fetch_results` exit **3** is "no games finished yet" — both leave the job green and commit nothing.
+**Not every non-zero is a failure.** `fetch_lines` exit **3** is a budget refusal, `fetch_lines` exit
+**4** is a Tuesday capture that beat the snapshot, and `fetch_results` exit **3** is "no games
+finished yet". All three leave the job green and commit nothing.
 
 ---
 
@@ -290,11 +330,11 @@ Every key has a consumer; `verify-phase-5` fails if one appears here without one
 | `timezone` | `utils.season_calendar.pipeline_today` / `pipeline_timezone` → all week resolution |
 | `freeze_tag` | `scripts/pipeline_preflight.py` (tree-hash assertion), `freeze-integrity.yml` |
 | `slate_filter` | documents SPEC §16.1 scope; the dropped-game detector will consume it |
-| `schedule_et` | `pipeline_preflight` (intended-vs-actual ET) + the cron-agreement test |
-| `kickoff_windows_et` | `pipeline_preflight.check_timing` (warn-only slack check) |
-| `jitter_slack_minutes` | `pipeline_preflight.check_timing` |
+| `schedule_et` | `pipeline_preflight.evaluate_timing` (maps `github.event.schedule` to its slot; capture `precedes`/`kind`) + the cron-agreement test |
+| `kickoff_windows_et` | `pipeline_preflight.evaluate_timing` (which games a missed window affects); every `schedule_et.capture.*.precedes` must name one (test) |
+| `jitter_slack_minutes` | `pipeline_preflight.evaluate_timing` (`on_time` vs `late`, before the window) |
 | `data_quality` | `scripts/check_snapshot_quality.py` (per-threshold `fail`/`warn`) |
-| `odds_budget` | `fetch_lines --min-credits`, `pipeline_preflight.report_budget` |
+| `odds_budget` | `fetch_lines --min-credits`, `pipeline_preflight.report_budget` (`expected_weekly_credits` = capture slots + 1, test-pinned) |
 | `rehearsal` | the live/rehearsal guard in `.github/actions/cfb-setup` |
 
 `schedule_et.*.cron_utc` is the one deliberately non-executable key — Actions cannot read this file,

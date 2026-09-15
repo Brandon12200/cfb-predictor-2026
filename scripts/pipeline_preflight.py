@@ -29,9 +29,11 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
-from datetime import datetime, timedelta
+from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -54,6 +56,7 @@ class Preflight:
         self.aborts: list[str] = []
         self.warns: list[str] = []
         self.notes: list[str] = []
+        self.annotations: list[str] = []
 
     def abort(self, msg: str) -> None:
         self.aborts.append(msg)
@@ -63,6 +66,10 @@ class Preflight:
 
     def note(self, msg: str) -> None:
         self.notes.append(msg)
+
+    def annotate(self, msg: str) -> None:
+        """A `::warning::` annotation on the run page, for warnings that must not be scrolled past."""
+        self.annotations.append(msg)
 
 
 def check_freeze(pf: Preflight, freeze_tag: str) -> None:
@@ -125,28 +132,152 @@ def check_secrets(pf: Preflight, role: str) -> None:
         pf.note(f"secrets present: {', '.join(needed)}")
 
 
-def check_timing(pf: Preflight, cal: dict, now: datetime) -> None:
-    """WARN ONLY: a late run still produces a usable observation; no run produces nothing."""
+@dataclass
+class TimingVerdict:
+    """What the timing guard concluded about one run (D44).
+
+    ``status``: ``not_time_critical`` (not a capture) | ``manual`` (no scheduled slot) |
+    ``unknown_slot`` (the triggering cron is not in season.json) | ``on_time`` | ``late`` (after the
+    slack, still before its window) | ``missed`` (at or after the window its slot precedes).
+    """
+    status: str
+    kind: str | None = None
+    slot_et: datetime | None = None
+    window_et: datetime | None = None
+    lateness_min: int | None = None
+    margin_min: int | None = None
+    games: list[str] = field(default_factory=list)
+
+    @property
+    def guarantee_miss(self) -> bool:
+        return self.status == "missed" and self.kind == "guarantee"
+
+
+def _norm_cron(cron: str) -> str:
+    return " ".join(cron.split())
+
+
+def slot_fired_at(cron: str, now: datetime) -> datetime:
+    """The most recent UTC time at or before ``now`` that ``cron`` (``m h * * dow``) names."""
+    minute, hour, _, _, dow = _norm_cron(cron).split()
+    days = None if dow == "*" else {int(d) for d in dow.split(",")}
+    now_utc = now.astimezone(UTC)
+    for back in range(8):
+        day = now_utc - timedelta(days=back)
+        cand = day.replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
+        if cand <= now_utc and (days is None or (cand.weekday() + 1) % 7 in days):
+            return cand
+    raise ValueError(f"cron {cron!r} names no time in the last week")
+
+
+def _games_in_window(window: datetime, windows: list[str], week: int | None,
+                     year: int | None) -> list[str]:
+    """Slate games that kick off at or after ``window`` and before the next window of that ET day."""
+    if week is None or year is None:
+        return []
+    path = ROOT / "data" / "lines" / f"{year}_week_{week:02d}.json"
+    if not path.exists():
+        return []
+    later = sorted(t for t in (window.replace(hour=int(w[:2]), minute=int(w[3:])) for w in windows)
+                   if t > window)
+    until = later[0] if later else window.replace(hour=23, minute=59, second=59)
+    games = []
+    for key, entry in json.loads(path.read_text()).items():
+        kick = entry.get("kickoff")
+        if not kick:
+            continue
+        k = datetime.fromisoformat(kick.replace("Z", "+00:00")).astimezone(window.tzinfo)
+        if window <= k < until:
+            games.append(key)
+    return sorted(games)
+
+
+def evaluate_timing(cal: dict, role: str, now: datetime, *, event_name: str, schedule: str,
+                    week: int | None = None, year: int | None = None) -> TimingVerdict:
+    """Judge a run against the slot that fired it and the window that slot precedes (D44).
+
+    The previous check measured slack against the next kickoff window still ahead TODAY. So a
+    capture that missed its own window found a later one to count against and reported healthy
+    slack (13 of 21 missed captures through week 3), a Saturday slot firing after midnight was
+    scored against Sunday's window, and the Sunday grade warned every week. This uses
+    ``github.event.schedule`` to identify the slot, and judges the run on the slot's own ET date.
+    """
+    if role != "capture":
+        return TimingVerdict("not_time_critical")
+    if event_name != "schedule" or not schedule.strip():
+        return TimingVerdict("manual")
     pipeline = cal.get("pipeline", {})
+    entry = next((e for e in pipeline.get("schedule_et", {}).get("capture", [])
+                  if _norm_cron(e["cron_utc"]) == _norm_cron(schedule)), None)
+    if entry is None:
+        return TimingVerdict("unknown_slot")
+    tz = now.tzinfo or ZoneInfo(pipeline_timezone(cal))
+    slot_et = slot_fired_at(entry["cron_utc"], now).astimezone(tz)
+    hh, mm = (int(x) for x in entry["precedes"].split(":"))
+    window = slot_et.replace(hour=hh, minute=mm, second=0, microsecond=0)
+    lateness = int((now - slot_et).total_seconds() // 60)
+    margin = int((window - now).total_seconds() // 60)
     slack = int(pipeline.get("jitter_slack_minutes", 60))
-    windows = (pipeline.get("kickoff_windows_et") or {}).get(
-        ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][now.weekday()], [])
-    if not windows:
+    status = "missed" if now >= window else ("late" if lateness > slack else "on_time")
+    day = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][slot_et.weekday()]
+    games = _games_in_window(window, pipeline.get("kickoff_windows_et", {}).get(day, []), week, year)
+    return TimingVerdict(status, entry["kind"], slot_et, window, lateness, margin, games)
+
+
+def check_timing(pf: Preflight, cal: dict, now: datetime, *, role: str, event_name: str,
+                 schedule: str, week: int | None = None, year: int | None = None) -> TimingVerdict:
+    """WARN ONLY (owner ruling 2026-08-07, kept by D44): a late observation is still evidence.
+
+    Escalation tiers 0-1 live here; tier 2 is the capture workflow acting on the verdict:
+    * tier 0, every capture: one summary line with the slot, its lateness and the target window;
+    * tier 1, a GUARANTEE slot that landed at or after its window: a warning plus a `::warning::`
+      annotation naming the window and its games. A best-effort miss is expected by design
+      (owner ruling 2026-09-15), so it stays at tier 0.
+    """
+    v = evaluate_timing(cal, role, now, event_name=event_name, schedule=schedule, week=week, year=year)
+    if v.status == "not_time_critical":
+        pf.note(f"timing: not evaluated for role '{role}' (only capture is time-critical, D44)")
+    elif v.status == "manual":
+        pf.note("timing: manual run, no scheduled slot to judge against")
+    elif v.status == "unknown_slot":
+        pf.warn(f"timing: the triggering cron '{schedule}' is not in season.json "
+                f"schedule_et.capture, so this run's window is unknown. The workflow and the "
+                f"config have drifted apart.")
+    else:
+        assert v.slot_et and v.window_et and v.lateness_min is not None and v.margin_min is not None
+        where = (f"{v.margin_min} min before the {v.window_et:%H:%M} ET window" if v.margin_min > 0
+                 else f"{-v.margin_min} min AFTER the {v.window_et:%H:%M} ET window")
+        pf.note(f"timing: {v.kind} slot {v.slot_et:%a %H:%M} ET fired {v.lateness_min} min late, "
+                f"{where} ({v.status})")
+        if v.guarantee_miss:
+            games = ", ".join(v.games) if v.games else "no slate games loaded for this window"
+            msg = (f"GUARANTEE capture slot {v.slot_et:%a %H:%M} ET missed its {v.window_et:%H:%M} "
+                   f"ET window by {-v.margin_min} min ({v.lateness_min} min late). Games in the "
+                   f"window: {games}. Their close falls back to an earlier observation. Continuing: "
+                   f"a late observation is still evidence (WARN-not-ABORT).")
+            pf.warn(msg)
+            pf.annotate(msg)
+        elif v.status == "missed":
+            pf.note("timing: best-effort slot landed after its window, which D44 expects about "
+                    "four times in ten; the guarantee slot covers this window")
+    return v
+
+
+def write_timing_outputs(v: TimingVerdict, *, quiet: bool = False) -> None:
+    """Tier 2 hand-off: the capture workflow opens the weekly `pipeline-late` issue on a guarantee
+    miss. Written to the Preflight step's $GITHUB_OUTPUT; `quiet` keeps unit tests out of it."""
+    out = None if quiet else os.environ.get("GITHUB_OUTPUT")
+    if not out:
         return
-    for w in windows:
-        hh, mm = (int(x) for x in w.split(":"))
-        kickoff = now.replace(hour=hh, minute=mm, second=0, microsecond=0)
-        deadline = kickoff - timedelta(minutes=slack)
-        if now <= deadline:
-            pf.note(f"{int((deadline - now).total_seconds() // 60)} min of slack before the "
-                    f"{w} ET window (slack {slack} min)")
-            return
-    pf.warn(
-        f"ran at {now:%H:%M} ET, inside or past every kickoff window for today "
-        f"({', '.join(windows)}) minus {slack} min of slack. Continuing deliberately: a late "
-        f"observation is simply not selected as the close for a game that already kicked, whereas "
-        f"skipping the run loses the close for the whole slate."
-    )
+    detail = ""
+    if v.slot_et and v.window_et and v.margin_min is not None:
+        detail = (f"{v.kind} slot {v.slot_et:%a %Y-%m-%d %H:%M} ET, window {v.window_et:%H:%M} ET, "
+                  f"{v.lateness_min} min late, margin {v.margin_min} min; games: "
+                  f"{', '.join(v.games) or 'none loaded'}")
+    with open(out, "a") as fh:
+        fh.write(f"timing_status={v.status}\n")
+        fh.write(f"timing_guarantee_miss={'true' if v.guarantee_miss else 'false'}\n")
+        fh.write(f"timing_detail={detail}\n")
 
 
 def report_budget(pf: Preflight, cal: dict, role: str) -> None:
@@ -183,6 +314,8 @@ def emit(pf: Preflight, role: str, week: int | None, *, quiet: bool = False) -> 
     # "ABORT: factors/ has drifted" against a tag that does not exist and reasonably panics.
     if not quiet:
         print(body)
+        for ann in pf.annotations:
+            print(f"::warning::{ann}")
 
     # `quiet` must also suppress the step-summary write. It did not, so in CI the unit tests'
     # synthetic ABORT blocks were appended to the REAL run summary — a reader saw
@@ -224,7 +357,11 @@ def main(argv: list[str] | None = None) -> int:
     check_model_version(pf, freeze_tag)   # ABORT
     if not args.skip_secrets:
         check_secrets(pf, args.role)      # ABORT
-    check_timing(pf, cal, now)            # WARN
+    verdict = check_timing(pf, cal, now, role=args.role,   # WARN, tiers 0-1 (D44)
+                           event_name=os.environ.get("GITHUB_EVENT_NAME", ""),
+                           schedule=os.environ.get("CFB_EVENT_SCHEDULE", ""),
+                           week=args.week, year=int(cal.get("season", 0)) or None)
+    write_timing_outputs(verdict)                            # tier 2 hand-off
     report_budget(pf, cal, args.role)     # report / WARN
 
     return emit(pf, args.role, args.week)

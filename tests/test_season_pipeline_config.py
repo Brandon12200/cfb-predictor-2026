@@ -79,7 +79,10 @@ def test_schedule_covers_every_job():
 @pytest.mark.parametrize("job,entry", ALL_ENTRIES,
                          ids=[f"{j}-{e['time']}" for j, e in ALL_ENTRIES])
 def test_entry_shape(job, entry):
-    assert set(entry) == {"days", "time", "cron_utc"}
+    # Capture slots also name the window they precede and their kind (D44); the timing guard reads
+    # both. No other job is time-critical, so no other job carries them.
+    extra = {"precedes", "kind"} if job == "capture" else set()
+    assert set(entry) == {"days", "time", "cron_utc"} | extra
     assert entry["days"], "entry declares no days"
     hh, mm = entry["time"].split(":")
     assert 0 <= int(hh) <= 23 and 0 <= int(mm) <= 59
@@ -119,6 +122,53 @@ def test_cron_utc_matches_the_stated_et_time(job, entry):
                 f"{job} {entry['time']} ET on {day} falls on UTC weekday {utc_cron_dow}, "
                 f"not in cron field '{dow}'"
             )
+
+
+CAPTURE = PIPELINE.get("schedule_et", {}).get("capture", [])
+# D44: the worst Saturday lateness observed through week 3 was 309 min. A guarantee slot must land
+# before its window even at that lateness, so it sits at least 310 min ahead of it.
+GUARANTEE_LEAD_MIN = 310
+
+
+def _minutes(hhmm: str) -> int:
+    h, m = hhmm.split(":")
+    return int(h) * 60 + int(m)
+
+
+@pytest.mark.parametrize("entry", CAPTURE, ids=[f"{'/'.join(e['days'])}-{e['time']}" for e in CAPTURE])
+def test_capture_slot_precedes_a_real_window_on_every_day_it_runs(entry):
+    assert entry["kind"] in {"guarantee", "best_effort"}
+    for day in entry["days"]:
+        assert entry["precedes"] in PIPELINE["kickoff_windows_et"].get(day, []), (
+            f"{day} {entry['time']} precedes {entry['precedes']}, which is not a {day} kickoff window"
+        )
+    assert _minutes(entry["time"]) < _minutes(entry["precedes"]), "a slot must be before its window"
+
+
+@pytest.mark.parametrize("entry", [e for e in CAPTURE if e["kind"] == "guarantee"],
+                         ids=[f"{'/'.join(e['days'])}-{e['time']}" for e in CAPTURE if e["kind"] == "guarantee"])
+def test_guarantee_slots_absorb_the_worst_observed_lateness(entry):
+    lead = _minutes(entry["precedes"]) - _minutes(entry["time"])
+    assert lead >= GUARANTEE_LEAD_MIN, (
+        f"{entry['time']} is {lead} min before {entry['precedes']}; a guarantee slot needs "
+        f"{GUARANTEE_LEAD_MIN}. At :23, 06:53 and 10:23 missed this by 2 minutes."
+    )
+
+
+def test_every_window_on_a_capture_day_has_exactly_one_guarantee_slot():
+    """Tiers 1–2 of the D44 escalation fire only on a guarantee miss, so a window without one could
+    never escalate, and a window with two would double-count."""
+    days = {d for e in CAPTURE for d in e["days"]}
+    for day in days:
+        for window in PIPELINE["kickoff_windows_et"][day]:
+            g = [e for e in CAPTURE if e["kind"] == "guarantee" and day in e["days"] and e["precedes"] == window]
+            assert len(g) == 1, f"{day} {window}: {len(g)} guarantee slots"
+
+
+def test_cron_strings_are_unique_so_the_triggering_slot_is_identifiable():
+    """The guard maps `github.event.schedule` back to its entry, so no two entries may share a cron."""
+    crons = [" ".join(e["cron_utc"].split()) for es in PIPELINE["schedule_et"].values() for e in es]
+    assert len(crons) == len(set(crons))
 
 
 def test_cron_minutes_are_never_top_of_hour():

@@ -194,6 +194,29 @@ jobs:
           suffix: ${{ steps.setup.outputs.commit_suffix }}
           push: ${{ inputs.dry_run != true }}
 
+      # D44 escalation, tier 2 (close). Each GUARANTEE capture slot that missed its window this week
+      # opened or commented on one `pipeline-late` issue (daily-capture.yml). The week's captures are
+      # over by Sunday, so the grade closes that issue with the week's tally rather than leaving it
+      # open into the next week. A best-effort miss never reaches the issue (owner ruling 2026-09-15).
+      - name: Close the week's late-capture issue with its tally
+        if: success() && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IN_WEEK: ${{ steps.setup.outputs.week_padded }}
+          IN_MODE: ${{ steps.setup.outputs.mode }}
+        run: |
+          set -euo pipefail
+          ARGS=(--state open --json number --limit 10
+                --label pipeline-late --label stage:capture --label "week:${IN_WEEK}")
+          [ "$IN_MODE" = "rehearsal" ] && ARGS+=(--label rehearsal)
+          for N in $(gh issue list "${ARGS[@]}" --jq '.[].number'); do
+            MISSES="$(gh issue view "$N" --json body,comments \
+                       --jq '[.body, .comments[].body] | map(select(test("late-miss"))) | length')"
+            gh issue comment "$N" --body "Week ${IN_WEEK} captures are complete: ${MISSES} guarantee slot(s) missed their window. Closed by the Sunday grade (D44 tier 2)."
+            gh issue close "$N"
+            echo "::notice::closed late-capture issue #${N} (${MISSES} guarantee miss(es))"
+          done
+
       - uses: ./.github/actions/report-failure
         # A dry run must not open a real issue. `dry_run` previously gated only `skip-secrets`
         # and `push`, so a failing dry run filed an issue labelled exactly like a live failure —

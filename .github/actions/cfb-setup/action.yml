@@ -59,6 +59,15 @@ outputs:
     value: ${{ steps.mode.outputs.mode }}
   commit_suffix:
     value: ${{ steps.mode.outputs.commit_suffix }}
+  # D44 timing verdict, written by the preflight. Declared for the same reason as claim_window_open
+  # (D39): a composite exposes only what it declares, and an undeclared output reads as the empty
+  # string, which would silently disable tier 2.
+  timing_status:
+    value: ${{ steps.preflight.outputs.timing_status }}
+  timing_guarantee_miss:
+    value: ${{ steps.preflight.outputs.timing_guarantee_miss }}
+  timing_detail:
+    value: ${{ steps.preflight.outputs.timing_detail }}
 
 runs:
   using: composite
@@ -122,12 +131,16 @@ runs:
         exit "${PIPESTATUS[0]}"
 
     - name: Preflight
+      id: preflight
       shell: bash
       # The secret check runs HERE, so the secrets must exist HERE. Setting them only on the later
       # step that spends them is what made every cadence run abort before it did anything.
       env:
         CFBD_API_KEY: ${{ inputs.cfbd-api-key }}
         ODDS_API_KEY: ${{ inputs.odds-api-key }}
+        # The cron line that fired this run (empty for a manual dispatch). The timing guard maps it
+        # back to its season.json slot and the window that slot precedes (D44).
+        CFB_EVENT_SCHEDULE: ${{ github.event.schedule }}
       run: |
         ARGS=(--role "${{ inputs.role }}" --week "${{ steps.resolve.outputs.week }}")
         if [ "${{ inputs.skip-secrets }}" = "true" ]; then ARGS+=(--skip-secrets); fi

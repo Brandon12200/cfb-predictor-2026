@@ -13,10 +13,18 @@ build-time balance) are below `--min-credits` — an honest pre-spend stop, not 
 
 Usage: python scripts/fetch_lines.py --week N [--year 2026] [--min-credits 20]
 
-Exit codes (Phase 5): 0 appended, 1 error (no snapshot / fetch failed), **3 budget refusal**.
-A budget stop is a designed outcome, not a failure — the scheduled capture job commits nothing
-and stays green on 3, but alarms on 1. They shared exit 1 until Phase 5, which left the workflow
-string-matching stdout to tell them apart.
+Exit codes (Phase 5): 0 appended, 1 error (no snapshot / fetch failed), **3 budget refusal**,
+**4 snapshot not built yet (scheduled Tuesday capture only)**. Budget stops and a Tuesday capture
+that beats the predict job are designed outcomes, not failures — the scheduled capture job commits
+nothing and stays green on 3 or 4, but alarms on 1. They shared exit 1 until Phase 5, which left the
+workflow string-matching stdout to tell them apart.
+
+**Exit 4 (owner ruling 2026-09-15, D44).** The Tuesday 13:50 ET capture resolves the week being
+claimed that day. The predict job builds that week's snapshot, and both share one concurrency group.
+If the scheduler delays predict about 4.5 h more than the capture, the capture runs first and finds
+no snapshot. On a *scheduled* run on a Tuesday in the pipeline timezone that is a designed state:
+no credit is spent, and a failed predict files its own issue. Any other day, or a manual run, a
+missing snapshot is still exit 1 and alarms.
 """
 
 from __future__ import annotations
@@ -27,6 +35,7 @@ import sys
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -34,9 +43,18 @@ from data.normalize import odds as odds_norm  # noqa: E402
 from data.odds_budget import append_ledger, last_remaining, record_quota  # noqa: E402
 from data.snapshot.lines import record_observation  # noqa: E402
 from data.snapshot.store import SnapshotNotFoundError, load_snapshot  # noqa: E402
+from utils.season_calendar import pipeline_timezone  # noqa: E402
 
 
-EXIT_OK, EXIT_ERROR, EXIT_BUDGET_REFUSAL = 0, 1, 3
+EXIT_OK, EXIT_ERROR, EXIT_BUDGET_REFUSAL, EXIT_SNAPSHOT_PENDING = 0, 1, 3, 4
+
+
+def snapshot_pending_is_designed(now: datetime | None = None) -> bool:
+    """True only for a scheduled run on a Tuesday in the pipeline timezone (see exit 4 above)."""
+    if os.environ.get("GITHUB_EVENT_NAME") != "schedule":
+        return False
+    when = (now or datetime.now(UTC)).astimezone(ZoneInfo(pipeline_timezone()))
+    return when.weekday() == 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -52,6 +70,11 @@ def main(argv: list[str] | None = None) -> int:
     try:
         slate = set(load_snapshot(args.week, args.year)["data"]["betting_lines"])
     except SnapshotNotFoundError:
+        if snapshot_pending_is_designed():
+            print(f"No snapshot for {args.year} week {args.week} yet: this scheduled Tuesday capture "
+                  f"ran before the predict job built it. Designed state (exit 4); nothing fetched, "
+                  f"no credit spent.")
+            return EXIT_SNAPSHOT_PENDING
         print(f"No snapshot for {args.year} week {args.week} — "
               f"run `python scripts/build_snapshot.py --week {args.week}` first.")
         return EXIT_ERROR

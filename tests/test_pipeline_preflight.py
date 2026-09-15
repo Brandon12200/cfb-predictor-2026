@@ -114,29 +114,141 @@ def test_blank_secret_counts_as_missing(monkeypatch):
     assert len(pf.aborts) == 1
 
 
-# --- WARN class: timing ------------------------------------------------------------------------
+# --- WARN class: timing (D44) -------------------------------------------------------------------
+#
+# Every case below is one of the shapes the week 1-3 measurement found the old check got wrong,
+# replayed from the real run history: the Saturday 10:23 slot of 2026-09-12 fired at 13:15 and was
+# reported as "74 min of slack before the 15:30 ET window"; the 20:23 slot fired Sunday 00:58 and was
+# scored against Sunday's 13:00 window; and every Sunday grade warned. The crons are now the D44
+# ones, so the replays use D44 slots firing with the same lateness.
 
-def test_a_late_run_warns_and_never_aborts():
-    """Aborting a jittered capture converts a degraded observation into no observation."""
+SAT = "50 10 * * 6"        # Sat 06:50 ET, guarantee, precedes 12:00
+SAT_BEST = "20 13 * * 6"   # Sat 09:20 ET, best-effort, precedes 12:00
+SAT_LATE = "50 23 * * 6"   # Sat 19:50 ET, best-effort, precedes 22:30
+SAT_G4 = "20 21 * * 6"     # Sat 17:20 ET, guarantee, precedes 22:30
+
+
+def _t(pf, now, schedule, role="capture", event="schedule"):
+    return check_timing(pf, CAL, now, role=role, event_name=event, schedule=schedule)
+
+
+def test_a_guarantee_miss_warns_annotates_and_never_aborts():
+    """Aborting a late capture converts a degraded observation into no observation."""
     pf = Preflight()
-    # Saturday 2026-09-12, 23:30 ET — past every kickoff window for the day.
-    check_timing(pf, CAL, datetime(2026, 9, 12, 23, 30, tzinfo=ET))
+    v = _t(pf, datetime(2026, 9, 26, 12, 5, tzinfo=ET), SAT)   # 06:50 slot, 315 min late
+    assert v.status == "missed" and v.guarantee_miss
     assert pf.aborts == []
-    assert len(pf.warns) == 1
-    assert "Continuing deliberately" in pf.warns[0]
+    assert len(pf.warns) == 1 and "missed its 12:00 ET window by 5 min" in pf.warns[0]
+    assert pf.annotations == pf.warns
+    assert emit(pf, "capture", 4, quiet=True) == 0
 
 
-def test_an_early_run_records_its_slack():
+def test_a_miss_is_judged_against_its_own_window_not_a_later_one():
+    """The old check reported this shape as healthy slack before the NEXT window."""
     pf = Preflight()
-    check_timing(pf, CAL, datetime(2026, 9, 12, 10, 23, tzinfo=ET))
-    assert pf.aborts == [] and pf.warns == []
-    assert any("slack before the 12:00 ET window" in n for n in pf.notes)
+    v = _t(pf, datetime(2026, 9, 26, 13, 15, tzinfo=ET), SAT)   # after 12:00, before 15:30
+    assert v.status == "missed" and v.window_et.strftime("%H:%M") == "12:00"
+    assert not any("15:30" in n for n in pf.notes)
 
 
-def test_timing_never_contributes_to_the_exit_code():
+def test_a_best_effort_miss_is_tier_zero_only():
+    """Owner ruling 2026-09-15: a best-effort slot is designed to miss about four times in ten."""
     pf = Preflight()
-    check_timing(pf, CAL, datetime(2026, 9, 12, 23, 59, tzinfo=ET))
-    assert emit(pf, "capture", 2, quiet=True) == 0
+    v = _t(pf, datetime(2026, 9, 26, 12, 30, tzinfo=ET), SAT_BEST)
+    assert v.status == "missed" and not v.guarantee_miss
+    assert pf.warns == [] and pf.annotations == []
+    assert any("best-effort" in n for n in pf.notes)
+
+
+def test_a_slot_that_fires_after_midnight_is_judged_on_its_own_et_date():
+    """Sat 19:50 firing Sun 00:58 must be a miss of SATURDAY's 22:30 window, not slack before Sunday's."""
+    pf = Preflight()
+    v = _t(pf, datetime(2026, 9, 27, 0, 58, tzinfo=ET), SAT_LATE)
+    assert v.status == "missed"
+    assert v.slot_et.date().isoformat() == "2026-09-26" and v.window_et.date().isoformat() == "2026-09-26"
+
+
+def test_an_on_time_run_records_its_margin_and_does_not_warn():
+    pf = Preflight()
+    v = _t(pf, datetime(2026, 9, 26, 17, 40, tzinfo=ET), SAT_G4)   # 20 min late, 290 min to spare
+    assert v.status == "on_time" and v.margin_min == 290
+    assert pf.warns == []
+    assert any("290 min before the 22:30 ET window" in n for n in pf.notes)
+
+
+def test_a_late_run_before_its_window_is_late_not_missed():
+    pf = Preflight()
+    v = _t(pf, datetime(2026, 9, 26, 20, 0, tzinfo=ET), SAT_G4)    # 160 min late, still before 22:30
+    assert v.status == "late" and pf.warns == []
+
+
+def test_grade_and_other_roles_are_not_time_critical():
+    """Every Sunday grade warned under the old check (6 of 6), 15+ min after a 12:47 slot."""
+    for role in ("grade", "predict", "freeze"):
+        pf = Preflight()
+        v = _t(pf, datetime(2026, 9, 20, 15, 0, tzinfo=ET), "47 16 * * 0", role=role)
+        assert v.status == "not_time_critical" and pf.warns == []
+
+
+def test_a_manual_capture_is_not_judged():
+    pf = Preflight()
+    v = _t(pf, datetime(2026, 9, 26, 23, 0, tzinfo=ET), "", event="workflow_dispatch")
+    assert v.status == "manual" and pf.warns == []
+
+
+def test_an_unknown_cron_warns_about_drift():
+    pf = Preflight()
+    v = _t(pf, datetime(2026, 9, 26, 13, 0, tzinfo=ET), "23 14 * * 6")   # the retired 10:23 slot
+    assert v.status == "unknown_slot" and len(pf.warns) == 1
+
+
+def test_the_tuesday_slot_is_judged():
+    pf = Preflight()
+    v = _t(pf, datetime(2026, 10, 6, 19, 10, tzinfo=ET), "50 17 * * 2")
+    assert v.status == "missed" and v.guarantee_miss and v.window_et.strftime("%a %H:%M") == "Tue 19:00"
+
+
+def test_after_the_dst_flip_the_slot_is_an_hour_earlier_in_et():
+    """17:50 UTC is 13:50 EDT but 12:50 EST (dst_note); the window stays 19:00 ET on the slot's date."""
+    pf = Preflight()
+    v = _t(pf, datetime(2026, 11, 7, 12, 55, tzinfo=ET), "50 17 * * 6")
+    assert v.slot_et.strftime("%H:%M") == "12:50" and v.window_et.strftime("%H:%M") == "19:00"
+    assert v.status == "on_time"
+
+
+def test_games_in_the_window_come_from_the_week_lines(tmp_path, monkeypatch):
+    import scripts.pipeline_preflight as pp
+    (tmp_path / "data" / "lines").mkdir(parents=True)
+    (tmp_path / "data" / "lines" / "2026_week_04.json").write_text(json.dumps({
+        "A@B": {"kickoff": "2026-09-26T16:00:00Z"},   # 12:00 ET: in the 12:00 window
+        "C@D": {"kickoff": "2026-09-26T19:30:00Z"},   # 15:30 ET: the next window
+        "E@F": {"kickoff": "2026-09-25T23:00:00Z"},   # Friday
+    }))
+    monkeypatch.setattr(pp, "ROOT", tmp_path)
+    pf = Preflight()
+    v = check_timing(pf, CAL, datetime(2026, 9, 26, 12, 5, tzinfo=ET), role="capture",
+                     event_name="schedule", schedule=SAT, week=4, year=2026)
+    assert v.games == ["A@B"] and "A@B" in pf.warns[0]
+
+
+def test_timing_outputs_feed_tier_two(tmp_path, monkeypatch):
+    from scripts.pipeline_preflight import write_timing_outputs
+    out = tmp_path / "out"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+    pf = Preflight()
+    write_timing_outputs(_t(pf, datetime(2026, 9, 26, 12, 5, tzinfo=ET), SAT))
+    text = out.read_text()
+    assert "timing_status=missed" in text and "timing_guarantee_miss=true" in text
+    write_timing_outputs(_t(Preflight(), datetime(2026, 9, 26, 12, 30, tzinfo=ET), SAT_BEST))
+    assert out.read_text().count("timing_guarantee_miss=false") == 1
+
+
+def test_quiet_timing_outputs_do_not_touch_github_output(tmp_path, monkeypatch):
+    from scripts.pipeline_preflight import write_timing_outputs
+    out = tmp_path / "out"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+    write_timing_outputs(_t(Preflight(), datetime(2026, 9, 26, 12, 5, tzinfo=ET), SAT), quiet=True)
+    assert not out.exists()
 
 
 def test_a_freeze_abort_does_set_the_exit_code():

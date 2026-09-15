@@ -42,7 +42,11 @@ runs:
     - name: Upload logs
       uses: actions/upload-artifact@v4
       with:
-        name: pipeline-${{ inputs.stage }}-${{ github.run_id }}
+        # `kind` is in the name because one run can call this action twice: freeze-integrity with
+        # `transition` and `failure`, and capture with `late` (D44) and then `failure`.
+        # upload-artifact@v4 refuses a second artifact of the same name in a run, which would break
+        # the failure report at the moment it matters.
+        name: pipeline-${{ inputs.stage }}-${{ inputs.kind }}-${{ github.run_id }}
         path: ${{ runner.temp }}/pipeline.log
         if-no-files-found: ignore
         retention-days: 30

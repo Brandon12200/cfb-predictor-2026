@@ -1014,3 +1014,84 @@ and the "Not ruled" paragraph above is superseded by rulings 2 and 3.
 ("out-of-season → exit 2"), which exposes it to the reader without flagging it. It cannot see C1 or C3,
 because neither contains a bad pointer. That is the half-a-tool limit, measured: re-derive every bare
 assertion separately (D42 (d)).
+
+---
+
+## D44 — Capture cadence: two slots per kickoff window plus Tuesday; the timing guard and its escalation; close-age buckets; boundary week 4 — **RATIFIED (owner, 2026-09-15)**
+**Date:** 2026-09-15. Ruled on the proposal `docs/proposals/D44_CRON_CADENCE.md` after #65 merged
+(2026-09-15 14:50 UTC). Three implementation rulings followed the same day. The proposal file holds
+the measurements and is deleted at the next session boundary; this entry is the record.
+
+**Why.** Through week 3, GitHub's scheduler fired every in-season capture (21 of 21) 97–485 min after
+its slot, so each landed after the kickoff window it was meant to precede. Saturday's noon window
+took a 16.7 h-stale close, and 8 of the 27 graded games in weeks 1–2 carry a close more than 12 h old.
+The timing guard reported "ok" on 13 of the 21 misses and warned on every Sunday grade.
+
+### (1) Cadence: B4 + a Tuesday slot
+
+Each kickoff window gets a **guarantee** slot at window − 5 h 10 min, which lands in time at the worst
+observed Saturday lateness (309 min). It also gets a **best-effort** slot timed to the median lateness.
+`season.json` `pipeline.schedule_et.capture` is the authority; each entry names the window it
+`precedes` and its `kind`.
+
+| day (ET) | guarantee | best-effort | window |
+|---|---|---|---|
+| Tue | 13:50 | — | 19:00 |
+| Wed–Fri | 13:50 | 17:23 | 19:00 |
+| Sat | 06:50 / 10:20 / 13:50 / 17:20 | 09:20 / 12:50 / 16:20 / 19:50 | 12:00 / 15:30 / 19:00 / 22:30 |
+
+**16 credits a week** (15 captures plus the Tuesday snapshot), about 70 a month and at most 76
+(October 2026) of 500. `odds_budget.expected_weekly_credits` moves from 8 to **16**, so the
+retry-storm warning stays correct. The crons remain single UTC expressions anchored to EDT
+(`dst_note`); from 2026-11-01 they land an hour earlier in ET.
+
+**This extends a binding refinement, by this ruling.** `docs/PHASE5_NOTES.md` §1 (quoted in SPEC §10's
+banner) binds line capture to "daily Wed–Sat, not Saturday-only". D44 adds **Tuesday**, so capture is
+now daily **Tue–Sat**. The substance of the refinement, daily and not Saturday-only, with each close
+the last observation before that game's kickoff, is unchanged. `scripts/verify_phase_5.py` checks
+Tue–Sat. SPEC and PHASE5_NOTES are not edited; this entry is the amendment.
+
+### (2) Effective week 4: the boundary
+
+The workflow change merges before **Wed 2026-09-23**, which is the first capture under the new cadence.
+**Weeks 1–3 ran the earlier cadence** (one wave per window, 8 credits a week, no Tuesday capture).
+**Week 4 onward runs D44.** Reports mark this boundary.
+
+### (3) Timing guard: the next-window defect fixed, with an escalation path
+
+WARN-not-ABORT stays (owner ruling 2026-08-07): a late observation is still evidence. The guard
+identifies the slot from `github.event.schedule`, judges the run against that slot's window on the
+slot's own ET date, and judges only `capture`. Escalation:
+- **tier 0:** a summary line on every capture;
+- **tier 1:** a warning and annotation on a miss;
+- **tier 2:** one `pipeline-late` issue per week, closed by the Sunday grade with the tally;
+- **tier 3:** a capture-timeliness line in the Sunday report;
+- **tier 4:** escalation to the owner when a guarantee slot misses in 2 or more weeks of any 3.
+
+### (4) Close-age buckets in the reports
+
+CLV is reported by close age (**≤3 h, 3–12 h, >12 h**), with counts. **The season total is never
+blended across the cadence boundary.** Close age is derived from `close_as_of` and each game's
+kickoff, so weeks 1–3 bucket correctly with no relabel of any append-only file.
+
+### (5) The claim path is D45
+
+Whether a claim excludes games that have already kicked off is a separate ruling, **D45**, due before
+2026-10-06. It is not part of this entry.
+
+### Implementation rulings (owner, 2026-09-15)
+
+1. **Tiers 1–2 fire only on a guarantee slot's miss.** A best-effort slot is designed to miss about four
+   times in ten, and the Wed–Fri 17:23 slot about eight in nine. If they escalated, the weekly issue
+   would be open nearly every week, recreating the guard that warned where timing did not matter.
+   A best-effort miss stays at tier 0. Tier 4 was already guarantee-only.
+2. **A scheduled Tuesday capture that runs before the week's snapshot exists is a designed state.**
+   The Tuesday capture and predict share one concurrency group, so a predict delayed about 4.5 h more
+   than the capture lets the capture run first. `fetch_lines` exits **4**: green, a notice, nothing
+   fetched or committed, no credit spent. A predict that failed files its own issue. Any other day,
+   or a manual run, a missing snapshot stays exit 1 and alarms.
+3. **Two PRs.**
+   - **The workflow PR, merged before 2026-09-23:** cadence, `season.json`, the guard fix, and tiers 0–2.
+   - **The report PR, merged before the Sun 2026-09-27 12:47 ET grade,** which is the first render
+     with a week-4 grade: close-age buckets, the boundary marking, the unblended season total, and
+     tiers 3–4.
