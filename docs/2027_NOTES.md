@@ -461,3 +461,21 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     floor because an activated factor produces both the lean and the confidence that lowers the
     threshold, so the two correlate through a shared cause rather than one setting the other. Any
     2027 write-up of 2026 selectivity must quote the distribution, never one representative number.
+
+### Carry-forward from the 2026-09-13/14 rulings
+
+31. **`_lean_cell`'s empty-cell wording keys off a push-excluding count.** Owner ruling 2026-09-13:
+    this is a drawer item, not a fix now. `analytics/reports.py::_lean_cell` says "no games graded on
+    this side yet" when `n_graded` is 0, but `n_graded` is `wins + losses` and excludes pushes (the
+    ATS denominator; `analytics/attribution.py:29`). The column beside it (#60) deliberately counts
+    `wins + losses + pushes`. The cell only reaches that branch when `n_clv` is 0. So the wording is
+    wrong only for a side whose graded games are **all pushes and none has a close**: it would say
+    nothing was graded while the `graded` column shows a count. Found by the #60 review; no instance
+    has rendered. The 2027 fix is to key the message on the same `wins + losses + pushes` the column
+    uses.
+32. **`resolve_locators` should skip triple-quoted strings when resolving `::symbol`.** Owner ruling
+    2026-09-14: the indented-assignment match stays, and its false `ok` on docstring prose is
+    documented as a known limit in `scripts/resolve_locators.py`'s docstring. This is the proper fix.
+    A docstring line such as `bar: the input value` currently satisfies `file::bar`. Found by the
+    second review of #64. The same ruling puts a caveat on sentence splitting ("e.g. ", semicolons)
+    with no abbreviation list; that is a documented limit, not a drawer item.

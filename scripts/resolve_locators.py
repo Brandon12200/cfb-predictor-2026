@@ -19,14 +19,27 @@ For each locator the tool reports:
    locally but is on no path to `main` is not evidence a successor can follow.
 
 Locators recognised: `path:N`, `path:N-M`, `path::symbol`, a backticked `path/with.ext`, a backticked
-basename, a bare `:N` (it inherits the file and frame of the previous line locator), and a
-backticked 7–40-character hex SHA (an all-digit token is checked only if it resolves to a commit;
-otherwise it is an Actions run ID and is skipped). A locator
-on a line that names a frame is read from that commit. Any other locator is read from the working
-tree, so a branch is checked as it stands.
+basename, a bare `:N`, and a backticked 7–40-character hex SHA. A bare `:N` inherits the file of
+the previous line locator in its paragraph; a table row and a list item are each their own paragraph.
+An all-digit token is checked only if it resolves to a commit; otherwise it is an Actions run ID and
+is skipped. A locator in a sentence that names a frame is read from that commit. Any other locator is
+read from the working tree, so a branch is checked as it stands.
 
 **Half a tool, by design (D42 (a)3, `HANDOFF_SEASON.md` §9).** It cannot re-derive a claim with no
 pointer: a count, a date, a status, a figure. Run it, then separately re-derive those (D42 (d)).
+
+**Known limits, accepted by owner ruling 2026-09-14 (after #64):**
+
+- **`::symbol` can pass on docstring prose.** Indented assignments count as definitions, so a class
+  attribute can be cited, but the same pattern also matches a docstring line such as
+  `bar: the input value`. `file::bar` then reports `ok` when `bar` is only a documented parameter.
+  The printed `says:` line shows what matched; read it. The proper fix, skipping triple-quoted
+  strings, is `docs/2027_NOTES.md` §8 item 32.
+- **Sentence splitting is naive.** A frame governs only its own sentence, and sentences are split at
+  `.`, `;`, `!` or `?` followed by whitespace. "e.g. ", "i.e. ", "etc. ", "vs. " or a semicolon inside
+  an aside can therefore end a frame's sentence early, and a locator after it is read from the working
+  tree instead of the frame. No abbreviation list, by ruling. When a frame matters, keep it in the
+  same plain sentence as its locator, or pass `--frame`.
 
 Exit 0: every locator passes `exists` and `reachable` (`CHECK` hints do not fail).
 Exit 1: at least one locator is `MISSING`, out of range, ambiguous, unknown or unreachable.
