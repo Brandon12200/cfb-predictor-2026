@@ -8,7 +8,9 @@ warn-on-drift lets an unfrozen model write a byte-immutable claim.
 
 from __future__ import annotations
 
+import ast
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -472,3 +474,47 @@ def test_a_torn_quota_ledger_warns_and_the_capture_still_proceeds(monkeypatch):
     assert pf.aborts == []
     assert len(pf.warns) == 1 and "could not be reported" in pf.warns[0]
     assert emit(pf, "capture", 4, quiet=True) == 0
+
+
+# --- runtime messages carry no figure that moves with the cadence --------------------------------
+
+RUNTIME_SOURCES = ["scripts/pipeline_preflight.py", "scripts/claim_tripwire.py",
+                   "scripts/fetch_lines.py"]
+# "about four times in ten", "one in three", "42%" — a rate, in text a run prints.
+_RATE_SHAPE = re.compile(
+    r"(?i)\b(?:one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+(?:times\s+)?in\s+"
+    r"(?:ten|three|nine|twelve|\d+)\b|\b\d+\s?%")
+
+
+def _runtime_strings(path: Path) -> list[tuple[int, str]]:
+    """Every string literal that reaches a run's output: pf.note/warn/annotate and print."""
+    out: list[tuple[int, str]] = []
+    tree = ast.parse(path.read_text())
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        fn = node.func
+        name = fn.attr if isinstance(fn, ast.Attribute) else getattr(fn, "id", "")
+        if name not in {"note", "warn", "annotate", "print"}:
+            continue
+        for arg in ast.walk(node):
+            if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                out.append((getattr(arg, "lineno", 0), arg.value))
+    return out
+
+
+@pytest.mark.parametrize("source", RUNTIME_SOURCES)
+def test_no_runtime_message_quotes_a_cadence_rate(source):
+    """A measured rate printed by a run is a number nobody updates when the cadence moves.
+
+    The preflight's best-effort note said "about four times in ten", measured against a 155-minute
+    lead. The lead became 190 in the same PR and the message was stale on the day it merged — the
+    fourth figure in this cadence work to go stale that way, and the first in code that runs. The
+    rate belongs in D44, dated and sourced beside the figures it is derived with; a log line says
+    what happened and points at the record.
+    """
+    offenders = [(ln, s) for ln, s in _runtime_strings(ROOT / source) if _RATE_SHAPE.search(s)]
+    assert not offenders, (
+        f"{source} prints a cadence-derived rate: {offenders}. Put the figure in docs/DECISIONS.md "
+        f"where the next retune will find it, and leave the message qualitative."
+    )
