@@ -80,21 +80,21 @@
         {"days": ["tue"], "time": "09:17", "cron_utc": "17 13 * * 2"}
       ],
       "capture": [
-        {"days": ["tue"], "time": "13:50", "cron_utc": "50 17 * * 2", "precedes": "19:00", "kind": "guarantee"},
-        {"days": ["wed"], "time": "13:50", "cron_utc": "50 17 * * 3", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["tue"], "time": "12:50", "cron_utc": "50 16 * * 2", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["wed"], "time": "12:50", "cron_utc": "50 16 * * 3", "precedes": "19:00", "kind": "guarantee"},
         {"days": ["wed"], "time": "17:23", "cron_utc": "23 21 * * 3", "precedes": "19:00", "kind": "best_effort"},
-        {"days": ["thu"], "time": "13:50", "cron_utc": "50 17 * * 4", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["thu"], "time": "12:50", "cron_utc": "50 16 * * 4", "precedes": "19:00", "kind": "guarantee"},
         {"days": ["thu"], "time": "17:23", "cron_utc": "23 21 * * 4", "precedes": "19:00", "kind": "best_effort"},
-        {"days": ["fri"], "time": "13:50", "cron_utc": "50 17 * * 5", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["fri"], "time": "12:50", "cron_utc": "50 16 * * 5", "precedes": "19:00", "kind": "guarantee"},
         {"days": ["fri"], "time": "17:23", "cron_utc": "23 21 * * 5", "precedes": "19:00", "kind": "best_effort"},
-        {"days": ["sat"], "time": "06:50", "cron_utc": "50 10 * * 6", "precedes": "12:00", "kind": "guarantee"},
-        {"days": ["sat"], "time": "09:20", "cron_utc": "20 13 * * 6", "precedes": "12:00", "kind": "best_effort"},
-        {"days": ["sat"], "time": "10:20", "cron_utc": "20 14 * * 6", "precedes": "15:30", "kind": "guarantee"},
-        {"days": ["sat"], "time": "12:50", "cron_utc": "50 16 * * 6", "precedes": "15:30", "kind": "best_effort"},
-        {"days": ["sat"], "time": "13:50", "cron_utc": "50 17 * * 6", "precedes": "19:00", "kind": "guarantee"},
-        {"days": ["sat"], "time": "16:20", "cron_utc": "20 20 * * 6", "precedes": "19:00", "kind": "best_effort"},
-        {"days": ["sat"], "time": "17:20", "cron_utc": "20 21 * * 6", "precedes": "22:30", "kind": "guarantee"},
-        {"days": ["sat"], "time": "19:50", "cron_utc": "50 23 * * 6", "precedes": "22:30", "kind": "best_effort"}
+        {"days": ["sat"], "time": "05:50", "cron_utc": "50 9 * * 6", "precedes": "12:00", "kind": "guarantee"},
+        {"days": ["sat"], "time": "09:25", "cron_utc": "25 13 * * 6", "precedes": "12:00", "kind": "best_effort"},
+        {"days": ["sat"], "time": "09:20", "cron_utc": "20 13 * * 6", "precedes": "15:30", "kind": "guarantee"},
+        {"days": ["sat"], "time": "12:55", "cron_utc": "55 16 * * 6", "precedes": "15:30", "kind": "best_effort"},
+        {"days": ["sat"], "time": "12:50", "cron_utc": "50 16 * * 6", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["sat"], "time": "16:25", "cron_utc": "25 20 * * 6", "precedes": "19:00", "kind": "best_effort"},
+        {"days": ["sat"], "time": "16:20", "cron_utc": "20 20 * * 6", "precedes": "22:30", "kind": "guarantee"},
+        {"days": ["sat"], "time": "19:55", "cron_utc": "55 23 * * 6", "precedes": "22:30", "kind": "best_effort"}
       ],
       "grade": [
         {"days": ["sun"], "time": "12:47", "cron_utc": "47 16 * * 0"}

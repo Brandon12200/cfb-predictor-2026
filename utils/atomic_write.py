@@ -25,6 +25,16 @@ def write_text_atomic(path: Path, text: str) -> None:
     Same directory because `os.replace` is only atomic within one filesystem. The temp name starts
     with a dot and ends in `.tmp`, which `.gitignore` already excludes, so a hard kill (SIGKILL,
     where the `finally` never runs) cannot leave anything committable behind.
+
+    The temp name is fixed rather than unique, which is safe here only because the cadence workflows
+    serialize on one concurrency group: two writers of the same file never run at once. A follow-up
+    moves it to `tempfile.mkstemp(dir=path.parent)` so the safety does not rest on that
+    (`docs/2027_NOTES.md` §8 item 36).
+    **What this does not do.** No `fsync`: after `os.replace` returns, the rename is visible to every
+    later reader in this process and on this machine, which is the property the pipeline needs (a
+    killed run must never expose a half-written file). It is not a guarantee against a machine-level
+    power loss, where an unsynced rename can still be lost. That is out of scope on an ephemeral
+    runner whose disk does not outlive the job.
     """
     tmp = path.with_name(f".{path.name}.tmp")
     try:

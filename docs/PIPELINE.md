@@ -14,7 +14,7 @@ conversational context can operate or repair the pipeline.
 | Job | Fires | Does |
 |---|---|---|
 | **Weekly predict** | Tue 09:17 ET | **catch-up grade first** (CLV sign check per week), then snapshot → quality gate → predict |
-| **Daily capture** | Tue 13:50; Wed–Fri 13:50 and 17:23; Sat 06:50 / 09:20 / 10:20 / 12:50 / 13:50 / 16:20 / 17:20 / 19:50 ET (D44, from week 4) | append one line observation per slate game |
+| **Daily capture** | Tue 12:50; Wed–Fri 12:50 and 17:23; Sat 05:50 / 09:20 / 09:25 / 12:50 / 12:55 / 16:20 / 16:25 / 19:55 ET (D44, from week 4) | append one line observation per slate game |
 | **Weekly grade** | Sun 12:47 ET | finals → grade → CLV sign check → regenerate reports |
 | **Freeze integrity** | daily 07:43 ET | frozen-tree assertion + fingerprint + SP+ watch |
 | **CI** | push to `main`, every PR | lint, tests, all seven verify targets |
@@ -41,11 +41,15 @@ and GitHub's scheduler fired every in-season capture 97–485 min late, so each 
 window it was meant to precede: Saturday noon games took a 16.7 h-stale close. Each capture slot in
 `season.json` now names the window it `precedes` and its `kind`:
 
-* **guarantee**, at window − 5 h 10 min. It lands before the window even at the worst Saturday
-  lateness observed (309 min). A test pins the 310-min lead and exactly one guarantee slot per window.
-* **best_effort**, at about window − 2 h 40 min, timed to the median lateness. It usually lands
-  shortly before kickoff, and is designed to miss about four times in ten. The Wed–Fri 17:23 slot
-  is best-effort too; it serves 19:30+ kickoffs.
+* **guarantee**, at window − 6 h 10 min. It clears the worst Saturday lateness observed (309 min)
+  by 61 minutes. The lead was 5 h 10 min until review: one minute of margin on twelve samples is a
+  point estimate, not margin. A test pins the 370-min lead and exactly one guarantee slot per window.
+* **best_effort**, at window − 2 h 35 min, timed to the median lateness. It usually lands shortly
+  before kickoff, and is designed to miss about four times in ten. The Wed–Fri 17:23 slot is
+  best-effort too; it serves 19:30+ kickoffs.
+
+The cost of the longer lead is about an hour of typical guarantee-close freshness, and a measured
+step down in the 22:30 window (median 0.62 h → 0.97 h). D44 carries the figures.
 
 The **Tuesday 13:50 slot** exists because Tuesday games start in week 6. Without a capture, a Tuesday
 game's only close would be the claim's own snapshot observation, and its CLV would be zero by
@@ -198,8 +202,12 @@ matter under D44:
   a third group run, in practice a manual dispatch, is created. The week then has no claim.
   **Detected, not prevented:** the claim tripwire in the daily freeze-integrity job
   (`scripts/claim_tripwire.py`; its own concurrency group, so no cadence run can cancel it). From
-  Wednesday to Saturday it opens a `stage:predict` failure issue if the current week's claim is
-  missing, unreadable, or stamped `-dirty`. Re-dispatching predict for that week closes it.
+  Wednesday to Saturday, once that week's own predict day has passed, it opens a `stage:predict`
+  issue if the claim is missing, unreadable, or stamped `-dirty`. **The two are not the same alarm.**
+  A *missing* claim is recoverable: re-dispatching predict writes it, and that run closes the issue
+  (`kind: failure`). A *dirty* one is not: a claim is byte-immutable (D22), so a re-dispatched
+  predict skips it and succeeds while nothing is repaired, which is why it gets `kind: dirty-claim`,
+  a kind `clear-failure` never clears. It stands until the owner rules on it.
 * **A lost capture.** On a Saturday under scheduler lateness, two adjacent slots (as close as 60 min
   apart) can be pending together with a third arriving. The dropped capture never reaches the
   preflight, so no D44 timing tier fires for it. Nothing detects this yet. A per-slot count of

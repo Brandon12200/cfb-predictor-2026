@@ -103,3 +103,25 @@ def test_identical_input_still_produces_identical_bytes(tmp_path):
     first = lines_path(1, base=tmp_path).read_bytes()
     record_observation(1, _obs("2026-09-01T00:00:00Z", -3.0), base=tmp_path)   # deduped no-op
     assert lines_path(1, base=tmp_path).read_bytes() == first
+
+
+def test_the_temp_file_is_a_sibling_of_its_target(tmp_path, monkeypatch):
+    """`os.replace` is only atomic within one filesystem, so the temp file must live in the target's
+    own directory — not `/tmp`, which is often a different mount (review of the D44 PR, finding 13).
+    """
+    import utils.atomic_write as aw
+
+    seen = {}
+    real = aw.os.replace
+
+    def watch(src, dst):
+        seen["src"], seen["dst"] = str(src), str(dst)
+        return real(src, dst)
+
+    monkeypatch.setattr(aw.os, "replace", watch)
+    target = tmp_path / "nested" / "store.json"
+    target.parent.mkdir(parents=True)
+    aw.write_text_atomic(target, "{}\n")
+    from pathlib import Path
+    assert Path(seen["src"]).parent == target.parent, "temp file must be a sibling of the target"
+    assert Path(seen["src"]).name.endswith(".tmp") and Path(seen["src"]).name.startswith(".")

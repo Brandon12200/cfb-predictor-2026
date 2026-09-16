@@ -126,8 +126,9 @@ def test_cron_utc_matches_the_stated_et_time(job, entry):
 
 CAPTURE = PIPELINE.get("schedule_et", {}).get("capture", [])
 # D44: the worst Saturday lateness observed through week 3 was 309 min. A guarantee slot must land
-# before its window even at that lateness, so it sits at least 310 min ahead of it.
-GUARANTEE_LEAD_MIN = 310
+# before its window even at that lateness — with margin, not by a minute. 310 cleared the worst
+# sample by 1 min on n=12; the owner raised it to 370 (window − 6 h 10 min), which clears it by 61.
+GUARANTEE_LEAD_MIN = 370
 
 
 def _minutes(hhmm: str) -> int:
@@ -151,7 +152,7 @@ def test_guarantee_slots_absorb_the_worst_observed_lateness(entry):
     lead = _minutes(entry["precedes"]) - _minutes(entry["time"])
     assert lead >= GUARANTEE_LEAD_MIN, (
         f"{entry['time']} is {lead} min before {entry['precedes']}; a guarantee slot needs "
-        f"{GUARANTEE_LEAD_MIN}. At :23, 06:53 and 10:23 missed this by 2 minutes."
+        f"{GUARANTEE_LEAD_MIN}. One minute of slack on twelve samples is not margin (I1.1)."
     )
 
 

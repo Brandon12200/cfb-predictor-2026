@@ -6,6 +6,11 @@ claim exists. And a claim whose `model_version` carries `-dirty` fires as well, 
 is not a claim.
 
 Week 4 (2026-09-21 to 09-27, `season.json`) is used throughout: Wed 09-23 is inside its claim window.
+
+**Caveat (HANDOFF_REHEARSALS §(g).1):** the workflow-wiring tests at the end of this module read
+`freeze-integrity.yml` as text. They prove the gates are written, not that Actions evaluates them as
+intended — deletion and drift, not a present-but-wrong expression. The script's own behaviour, which
+is where the decisions live, is tested directly above them.
 """
 from __future__ import annotations
 
@@ -151,7 +156,10 @@ def test_it_runs_in_freeze_integrity_whatever_else_fails():
     assert "group: freeze-integrity" in WORKFLOW
     i = WORKFLOW.index("scripts/claim_tripwire.py")
     step = WORKFLOW[WORKFLOW.rindex("- name:", 0, i):i]
-    assert "if: ${{ !cancelled() }}" in step and "id: tripwire" in step
+    assert "!cancelled()" in step and "id: tripwire" in step
+    # Default branch only: the job hardcodes `mode: live`, so a dispatch on a rehearsal branch could
+    # otherwise file a live "no claim" alarm off that branch's tree (review of the D44 PR, finding 4).
+    assert "github.ref_name == github.event.repository.default_branch" in step
 
 
 def test_a_tripped_wire_opens_a_predict_issue_that_a_successful_predict_clears():

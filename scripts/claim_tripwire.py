@@ -133,8 +133,8 @@ def main(argv: list[str] | None = None) -> int:
         with open(out, "a") as fh:
             fh.write(f"week_padded={week:02d}\n")
             fh.write(f"reason={reason}\n")
-            # `failure` is cleared by a successful predict; `dirty-claim` never is.
-            fh.write(f"kind={'dirty-claim' if rc == EXIT_DIRTY_CLAIM else 'failure'}\n")
+            # No `kind` output: the workflow routes rc 2 and rc 3 to their own steps, each naming its
+            # kind literally, so a second source of that decision would be one that could drift.
     return rc
 
 

@@ -3,6 +3,13 @@
 The timing verdict itself is tested in `tests/test_pipeline_preflight.py`. What is pinned here is the
 connective tissue, which D39 showed can be computed correctly and still never connected: a composite
 output that is not declared reads as the empty string, and a gate on it silently never fires.
+
+**Caveat, stated rather than assumed (HANDOFF_REHEARSALS §(g).1): string-presence-in-YAML is not
+behaviour.** These assertions read the workflow as text, so they prove a condition is *written*, not
+that Actions evaluates it as intended. They catch deletion and drift, which is what they are for; they
+cannot catch an expression that is present and wrong. The step's shell is a different matter, and the
+Sunday sweep's `gh`/jq block gets an extract-and-run test in the report PR, in the shape
+`report-failure`'s signature block already uses (`tests/test_failure_signature.py`).
 """
 from __future__ import annotations
 
@@ -23,11 +30,11 @@ REPORT = (ROOT / ".github/actions/report-failure/action.yml").read_text()
 # --- exit 4: a scheduled Tuesday capture that beat the predict job ------------------------------
 
 @pytest.mark.parametrize("event, cron, designed", [
-    ("schedule", "50 17 * * 2", True),           # the Tuesday capture slot
-    ("schedule", "50  17 * * 2", True),          # whitespace does not matter
-    ("schedule", "50 17 * * 3", False),          # Wednesday's guarantee slot
+    ("schedule", "50 16 * * 2", True),           # the Tuesday capture slot
+    ("schedule", "50  16 * * 2", True),          # whitespace does not matter
+    ("schedule", "50 16 * * 3", False),          # Wednesday's guarantee slot
     ("schedule", "", False),                     # a scheduled run with no cron: fail loud
-    ("workflow_dispatch", "50 17 * * 2", False), # a manual run
+    ("workflow_dispatch", "50 16 * * 2", False), # a manual run
     ("schedule", "17 13 * * 2", False),          # the Tuesday PREDICT cron is not a capture slot
 ])
 def test_snapshot_pending_is_designed_only_for_the_scheduled_tuesday_slot(monkeypatch, event, cron, designed):
@@ -102,3 +109,15 @@ def test_the_sunday_grade_closes_the_late_issue_with_the_tally():
 
 def test_one_run_can_report_two_kinds_without_an_artifact_name_collision():
     assert "name: pipeline-${{ inputs.stage }}-${{ inputs.kind }}-${{ github.run_id }}" in REPORT
+
+
+def test_a_designed_state_exit_cannot_close_a_real_capture_failure():
+    """`daily-capture` has two green exits that capture nothing — 3 (budget refusal) and 4 (Tuesday
+    before the snapshot) — so its clear step is gated on `rc == '0'`, not `success()`. Under
+    `success()` a run that did no work would mark a real capture failure recovered (review of the
+    D44 PR, finding 6)."""
+    i = CAPTURE.index("actions/clear-failure")
+    cond = next(ln for ln in CAPTURE[i:].splitlines() if ln.strip().startswith("if:"))
+    assert "steps.capture.outputs.rc == '0'" in cond, cond
+    assert "success()" not in cond, "success() is true on exits 3 and 4, which captured nothing"
+    assert "inputs.dry_run != true" in cond

@@ -105,16 +105,20 @@ jobs:
       # exists and is not `-dirty`. It lives here because this job has its own group, which no
       # cadence run can cancel. It runs LAST so a tripwire error can never skip the freeze checks above,
       # and `!cancelled()` keeps a failed freeze check from also hiding a missing claim.
+      # Default branch only. This job has no live/rehearsal mode resolution (unlike `cfb-setup`) and
+      # hardcodes `mode: live`, so a dispatch on a rehearsal branch would judge that branch's tree and
+      # file a LIVE "no claim for the week" alarm — the one alarm that must not be forgeable from a
+      # drill (review of the D44 PR, finding 4).
       - name: Claim tripwire
         id: tripwire
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && github.ref_name == github.event.repository.default_branch }}
         run: |
           set +e
           python scripts/claim_tripwire.py 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
           echo "rc=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 
       - name: Fail on a tripwire error
-        if: ${{ !cancelled() && steps.tripwire.outputs.rc != '0' && steps.tripwire.outputs.rc != '2' && steps.tripwire.outputs.rc != '3' }}
+        if: ${{ !cancelled() && steps.tripwire.outputs.rc != '' && steps.tripwire.outputs.rc != '0' && steps.tripwire.outputs.rc != '2' && steps.tripwire.outputs.rc != '3' }}
         run: |
           echo "::error::claim_tripwire exited ${{ steps.tripwire.outputs.rc }}"
           exit 1
@@ -164,8 +168,10 @@ jobs:
       # freeze-integrity failure stayed open forever once fixed. It clears only `kind: failure`:
       # an SP+ arrival is not "recovered" by a later green run, because the data is still there.
       # That issue is closed deliberately, by the retag that resolves it.
+      # Default branch only, for the mirror of the reason above: a green dispatch on a rehearsal
+      # branch must not close a live freeze-integrity issue (review of the D44 PR, finding 4).
       - uses: ./.github/actions/clear-failure
-        if: success()
+        if: success() && github.ref_name == github.event.repository.default_branch
         with:
           stage: freeze
           kind: failure

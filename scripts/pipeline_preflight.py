@@ -408,14 +408,33 @@ def main(argv: list[str] | None = None) -> int:
     check_model_version(pf, freeze_tag)   # ABORT
     if not args.skip_secrets:
         check_secrets(pf, args.role)      # ABORT
+    # Guarding `check_timing` was not enough: everything that follows it here is also WARN-class,
+    # also runs before the fetch, and also touches a file it does not own. `int(cal["season"])` reads
+    # config, `write_timing_outputs` appends to `$GITHUB_OUTPUT`, and `emit` appends to
+    # `$GITHUB_STEP_SUMMARY` — a full disk or a read-only mount in any of them would fail cfb-setup
+    # and the capture would never happen (review of the D44 PR, finding 2).
+    try:
+        year = int(cal.get("season", 0)) or None
+    except (TypeError, ValueError):
+        year = None
     verdict = check_timing(pf, cal, now, role=args.role,   # WARN, tiers 0-1 (D44)
                            event_name=os.environ.get("GITHUB_EVENT_NAME", ""),
                            schedule=os.environ.get("CFB_EVENT_SCHEDULE", ""),
-                           week=args.week, year=int(cal.get("season", 0)) or None)
-    write_timing_outputs(verdict)                            # tier 2 hand-off
+                           week=args.week, year=year)
+    try:
+        write_timing_outputs(verdict)                        # tier 2 hand-off
+    except Exception as exc:                                 # noqa: BLE001
+        pf.warn(f"timing: the verdict could not be handed to the workflow "
+                f"({type(exc).__name__}: {exc}), so tier 2 cannot fire for this run.")
     report_budget(pf, cal, args.role)     # report / WARN
 
-    return emit(pf, args.role, args.week)
+    try:
+        return emit(pf, args.role, args.week)
+    except Exception as exc:                                 # noqa: BLE001
+        # The summary is a report of the checks, not a check. Losing it must not lose the capture.
+        print(f"::warning::preflight could not write its report ({type(exc).__name__}: {exc}); "
+              f"the checks themselves ran, and their verdict is the exit code below.")
+        return EXIT_ABORT if pf.aborts else EXIT_OK
 
 
 if __name__ == "__main__":

@@ -107,14 +107,20 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_ERROR
     # Both stores: the committed append-only ledger (the SPEC §10.5 record, survives a fresh
     # checkout) and the legacy single-value cache (gitignored, kept as a fallback).
-    record_quota(client.last_quota)
-    append_ledger(client.last_quota, caller="fetch_lines", week=args.week,
-                  run_id=os.environ.get("GITHUB_RUN_ID"))
-
+    # ORDER MATTERS: the observation first, then the accounting. The credit is already spent by the
+    # time this line runs, and the observation is the only thing that cannot be reconstructed — the
+    # market moves on, and this instant never comes back. The balance can be re-read from the next
+    # response header. With the accounting first, a ledger failure threw away an observation we had
+    # already paid for (review of the D44 PR, finding 1). A ledger failure after this point still
+    # fails the run loudly: the spend must never go unrecorded silently.
     gamelines = odds_norm.normalize_lines(raw, fetched_at)
     games = {key: asdict(gl) for gl in gamelines.values()
              if (key := f"{gl.away_team}@{gl.home_team}") in slate}
     added = record_observation(args.week, games, year=args.year)
+
+    record_quota(client.last_quota)
+    append_ledger(client.last_quota, caller="fetch_lines", week=args.week,
+                  run_id=os.environ.get("GITHUB_RUN_ID"))
 
     print(f"Appended {added} slate observation(s) at {fetched_at} "
           f"({len(games)}/{len(slate)} slate games had lines). "

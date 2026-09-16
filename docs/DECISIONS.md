@@ -1029,19 +1029,49 @@ The timing guard reported "ok" on 13 of the 21 misses and warned on every Sunday
 
 ### (1) Cadence: B4 + a Tuesday slot
 
-Each kickoff window gets a **guarantee** slot at window − 5 h 10 min, which lands in time at the worst
-observed Saturday lateness (309 min). It also gets a **best-effort** slot timed to the median lateness.
+Each kickoff window gets a **guarantee** slot and a **best-effort** slot timed to the median lateness.
 `season.json` `pipeline.schedule_et.capture` is the authority; each entry names the window it
 `precedes` and its `kind`.
 
 | day (ET) | guarantee | best-effort | window |
 |---|---|---|---|
-| Tue | 13:50 | — | 19:00 |
-| Wed–Fri | 13:50 | 17:23 | 19:00 |
-| Sat | 06:50 / 10:20 / 13:50 / 17:20 | 09:20 / 12:50 / 16:20 / 19:50 | 12:00 / 15:30 / 19:00 / 22:30 |
+| Tue | 12:50 | — | 19:00 |
+| Wed–Fri | 12:50 | 17:23 | 19:00 |
+| Sat | 05:50 / 09:20 / 12:50 / 16:20 | 09:25 / 12:55 / 16:25 / 19:55 | 12:00 / 15:30 / 19:00 / 22:30 |
+
+**The guarantee lead is window − 6 h 10 min (370 min), raised from 5 h 10 min (310) before merge.**
+310 cleared the worst observed lateness (309 min) by **one minute on twelve samples**, which is a
+point estimate, not margin: the sample is small, the tail is unmeasured, and the whole cadence exists
+because that tail moved once already. 370 clears the same sample by **61 minutes**. Best-effort slots
+moved 5 minutes later (window − 155 min) so that no two slots share a cron string, which the guard's
+slot lookup requires.
+
+**What it costs, measured** (20,000 draws, the 12 in-season Saturday lateness samples):
+
+| | 310 lead | 370 lead |
+|---|---|---|
+| guarantee slot's own close age, 19:00 window (median) | 2.70 h | **3.70 h** |
+| all slots, median close age, 12:00 / 15:30 / 19:00 | 0.62 h | 0.53 h |
+| all slots, median close age, **22:30** | 0.62 h | **0.97 h** |
+| all slots, P(close ≤ 3 h), 22:30 | 90% | **77%** |
+| lateness needed to miss | **> 310 min** (1 min beyond the worst seen) | **> 370 min** (61 beyond) |
+
+So the trade is about an hour of typical *guarantee-close* freshness, and a real step down in the
+22:30 window, for a coverage threshold that is no longer one minute from the worst thing observed.
+The owner ruled the coverage side is what the cadence is for.
+
+**Tier 2's expected frequency, re-estimated at the new lead.** No sample in the twelve exceeds either
+lead, so the observed miss rate is 0 of 12 at 310 *and* at 370; the honest statement is an upper
+bound, not a rate. By the rule of three, 0 of 12 is consistent with a per-slot miss probability up to
+~22%, which across 8 Saturday guarantee slots would be a tier-2 issue most weeks — that bound is what
+310's one-minute margin could not rule out. At 370 the same arithmetic applies to a threshold 61
+minutes further out, and the only in-season episode that came close (the 2026-08-27/28 backlog, which
+put weekday runs 349 and 485 min late) would still have breached it. **Tier 2 is therefore expected to
+be rare but not absent, and the first weeks under the new cadence are the measurement**; if it opens
+in 2 of any 3 weeks, tier 4 escalates to the owner, which is what that tier is for.
 
 **16 credits a week** (15 captures plus the Tuesday snapshot), about 70 a month and at most 76
-(October 2026) of 500. `odds_budget.expected_weekly_credits` moves from 8 to **16**, so the
+(October 2026) of 500 — unchanged by the lead change, which moves slots rather than adding them. `odds_budget.expected_weekly_credits` moves from 8 to **16**, so the
 retry-storm warning stays correct. The crons remain single UTC expressions anchored to EDT
 (`dst_note`); from 2026-11-01 they land an hour earlier in ET.
 

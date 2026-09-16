@@ -122,10 +122,10 @@ def test_blank_secret_counts_as_missing(monkeypatch):
 # scored against Sunday's 13:00 window; and every Sunday grade warned. The crons are now the D44
 # ones, so the replays use D44 slots firing with the same lateness.
 
-SAT = "50 10 * * 6"        # Sat 06:50 ET, guarantee, precedes 12:00
-SAT_BEST = "20 13 * * 6"   # Sat 09:20 ET, best-effort, precedes 12:00
-SAT_LATE = "50 23 * * 6"   # Sat 19:50 ET, best-effort, precedes 22:30
-SAT_G4 = "20 21 * * 6"     # Sat 17:20 ET, guarantee, precedes 22:30
+SAT = "50 9 * * 6"         # Sat 05:50 ET, guarantee, precedes 12:00
+SAT_BEST = "25 13 * * 6"   # Sat 09:25 ET, best-effort, precedes 12:00
+SAT_LATE = "55 23 * * 6"   # Sat 19:55 ET, best-effort, precedes 22:30
+SAT_G4 = "20 20 * * 6"     # Sat 16:20 ET, guarantee, precedes 22:30
 
 
 def _t(pf, now, schedule, role="capture", event="schedule"):
@@ -135,7 +135,7 @@ def _t(pf, now, schedule, role="capture", event="schedule"):
 def test_a_guarantee_miss_warns_annotates_and_never_aborts():
     """Aborting a late capture converts a degraded observation into no observation."""
     pf = Preflight()
-    v = _t(pf, datetime(2026, 9, 26, 12, 5, tzinfo=ET), SAT)   # 06:50 slot, 315 min late
+    v = _t(pf, datetime(2026, 9, 26, 12, 5, tzinfo=ET), SAT)   # 05:50 slot, 375 min late
     assert v.status == "missed" and v.guarantee_miss
     assert pf.aborts == []
     assert len(pf.warns) == 1 and "missed its 12:00 ET window by 5 min" in pf.warns[0]
@@ -161,7 +161,7 @@ def test_a_best_effort_miss_is_tier_zero_only():
 
 
 def test_a_slot_that_fires_after_midnight_is_judged_on_its_own_et_date():
-    """Sat 19:50 firing Sun 00:58 must be a miss of SATURDAY's 22:30 window, not slack before Sunday's."""
+    """Sat 19:55 firing Sun 00:58 must be a miss of SATURDAY's 22:30 window, not slack before Sunday's."""
     pf = Preflight()
     v = _t(pf, datetime(2026, 9, 27, 0, 58, tzinfo=ET), SAT_LATE)
     assert v.status == "missed"
@@ -170,15 +170,15 @@ def test_a_slot_that_fires_after_midnight_is_judged_on_its_own_et_date():
 
 def test_an_on_time_run_records_its_margin_and_does_not_warn():
     pf = Preflight()
-    v = _t(pf, datetime(2026, 9, 26, 17, 40, tzinfo=ET), SAT_G4)   # 20 min late, 290 min to spare
-    assert v.status == "on_time" and v.margin_min == 290
+    v = _t(pf, datetime(2026, 9, 26, 16, 40, tzinfo=ET), SAT_G4)   # 20 min late, 350 min to spare
+    assert v.status == "on_time" and v.margin_min == 350
     assert pf.warns == []
-    assert any("290 min before the 22:30 ET window" in n for n in pf.notes)
+    assert any("350 min before the 22:30 ET window" in n for n in pf.notes)
 
 
 def test_a_late_run_before_its_window_is_late_not_missed():
     pf = Preflight()
-    v = _t(pf, datetime(2026, 9, 26, 20, 0, tzinfo=ET), SAT_G4)    # 160 min late, still before 22:30
+    v = _t(pf, datetime(2026, 9, 26, 20, 0, tzinfo=ET), SAT_G4)    # 220 min late, still before 22:30
     assert v.status == "late" and pf.warns == []
 
 
@@ -270,7 +270,7 @@ def test_a_run_more_than_a_day_late_is_still_matched_to_its_own_weekday():
     """Wed-Fri crons are one line per weekday. With a shared `3,4,5` line, a Wednesday slot firing
     Thursday afternoon would have matched Thursday's slot and reported on time (D44 audit)."""
     pf = Preflight()
-    v = _t(pf, datetime(2026, 9, 24, 14, 0, tzinfo=ET), "50 17 * * 3")   # Wed slot, fired Thu 14:00
+    v = _t(pf, datetime(2026, 9, 24, 14, 0, tzinfo=ET), "50 16 * * 3")   # Wed slot, fired Thu 14:00
     assert v.slot_et.strftime("%a %Y-%m-%d") == "Wed 2026-09-23" and v.status == "missed"
 
 
@@ -282,15 +282,15 @@ def test_an_unknown_cron_warns_about_drift():
 
 def test_the_tuesday_slot_is_judged():
     pf = Preflight()
-    v = _t(pf, datetime(2026, 10, 6, 19, 10, tzinfo=ET), "50 17 * * 2")
+    v = _t(pf, datetime(2026, 10, 6, 19, 10, tzinfo=ET), "50 16 * * 2")
     assert v.status == "missed" and v.guarantee_miss and v.window_et.strftime("%a %H:%M") == "Tue 19:00"
 
 
 def test_after_the_dst_flip_the_slot_is_an_hour_earlier_in_et():
-    """17:50 UTC is 13:50 EDT but 12:50 EST (dst_note); the window stays 19:00 ET on the slot's date."""
+    """16:50 UTC is 12:50 EDT but 11:50 EST (dst_note); the window stays 19:00 ET on the slot's date."""
     pf = Preflight()
-    v = _t(pf, datetime(2026, 11, 7, 12, 55, tzinfo=ET), "50 17 * * 6")
-    assert v.slot_et.strftime("%H:%M") == "12:50" and v.window_et.strftime("%H:%M") == "19:00"
+    v = _t(pf, datetime(2026, 11, 7, 11, 55, tzinfo=ET), "50 16 * * 6")
+    assert v.slot_et.strftime("%H:%M") == "11:50" and v.window_et.strftime("%H:%M") == "19:00"
     assert v.status == "on_time"
 
 
@@ -319,6 +319,21 @@ def test_timing_outputs_feed_tier_two(tmp_path, monkeypatch):
     assert "timing_status=missed" in text and "timing_guarantee_miss=true" in text
     write_timing_outputs(_t(Preflight(), datetime(2026, 9, 26, 12, 30, tzinfo=ET), SAT_BEST))
     assert out.read_text().count("timing_guarantee_miss=false") == 1
+
+
+def test_main_writes_the_verdict_to_github_output(tmp_path, monkeypatch):
+    """The call site, not just the function: a verdict computed and never handed over is the D39
+    shape, and mutating the `write_timing_outputs(verdict)` line out of `main()` survived every
+    other test (review of the D44 PR, finding 11)."""
+    import scripts.pipeline_preflight as pp
+    out = tmp_path / "gh_output"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "schedule")
+    monkeypatch.setenv("CFB_EVENT_SCHEDULE", SAT)
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    assert pp.main(["--role", "capture", "--week", "4", "--skip-secrets"]) == 0
+    text = out.read_text()
+    assert "timing_guarantee_miss=" in text and "timing_status=" in text
 
 
 def test_quiet_timing_outputs_do_not_touch_github_output(tmp_path, monkeypatch):
@@ -411,6 +426,33 @@ def test_the_real_registry_clears_the_floor():
 # ({"sp_ratings": 0, "returning_production": 0}), which SPEC §3 exception 1 superseded when
 # returning production published at 136 rows. Keeping a second, overlapping set of baseline
 # assertions here is how the two would drift — the dedicated file is the single home.
+
+
+@pytest.mark.parametrize("target", ["write_timing_outputs", "emit"])
+def test_an_unwritable_runner_file_cannot_abort_a_capture(monkeypatch, target):
+    """`$GITHUB_OUTPUT` and `$GITHUB_STEP_SUMMARY` are reports about the checks, not checks. A full
+    disk or a read-only mount in either must not be what stops a capture (review of the D44 PR,
+    finding 2)."""
+    import scripts.pipeline_preflight as pp
+
+    def unwritable(*a, **k):
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "schedule")
+    monkeypatch.setenv("CFB_EVENT_SCHEDULE", SAT)
+    monkeypatch.setattr(pp, target, unwritable)
+    assert pp.main(["--role", "capture", "--week", "4", "--skip-secrets"]) == 0
+
+
+def test_a_malformed_season_year_does_not_abort_a_capture(monkeypatch):
+    """`int(cal["season"])` sat outside the guard (review of the D44 PR, finding 2)."""
+    import scripts.pipeline_preflight as pp
+    cal = dict(json.loads((ROOT / "season.json").read_text()))
+    cal["season"] = "not-a-year"
+    monkeypatch.setattr(pp, "load_calendar", lambda *a, **k: cal)
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "schedule")
+    monkeypatch.setenv("CFB_EVENT_SCHEDULE", SAT)
+    assert pp.main(["--role", "capture", "--week", "4", "--skip-secrets"]) == 0
 
 
 def test_a_torn_quota_ledger_warns_and_the_capture_still_proceeds(monkeypatch):
