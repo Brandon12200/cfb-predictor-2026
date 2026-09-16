@@ -172,3 +172,20 @@ def test_a_tripped_wire_opens_a_predict_issue_that_a_successful_predict_clears()
     assert "actions/clear-failure" in predict and "stage: predict" in predict
     fail = WORKFLOW[WORKFLOW.index("- name: Fail on a tripwire error"):]
     assert "rc != '0' && steps.tripwire.outputs.rc != '2'" in fail.split("run:")[0]
+
+
+def test_a_skipped_tripwire_does_not_fail_the_job():
+    """When the default-branch guard skips the tripwire step, `steps.tripwire.outputs.rc` is the
+    EMPTY STRING, not '0'. Without an explicit `rc != ''` the error step's condition is true and a
+    rehearsal-branch dispatch of freeze-integrity goes red for no reason.
+
+    Asserted on its own rather than inside a longer substring: the previous assertion matched the
+    condition as a prefix, so deleting this clause changed nothing that any test could see (review of
+    the D44 PR)."""
+    fail = WORKFLOW[WORKFLOW.index("- name: Fail on a tripwire error"):]
+    cond = next(ln for ln in fail.splitlines() if ln.strip().startswith("if:"))
+    assert "steps.tripwire.outputs.rc != ''" in cond, (
+        "a skipped tripwire leaves rc empty, which is not '0', '2' or '3' — the error step would fire"
+    )
+    for designed in ("'0'", "'2'", "'3'"):
+        assert f"steps.tripwire.outputs.rc != {designed}" in cond, designed

@@ -1078,13 +1078,22 @@ retry-storm warning stays correct. The crons remain single UTC expressions ancho
 **Games after the last window are not covered by the guarantee, and their close gets slightly
 staler.** `kickoff_windows_et` ends at 22:30 ET, and six Saturday games this season start later:
 23:00 in weeks 2, 3 and 13, and 23:59 in weeks 2, 5 and 11. No slot `precedes` them, so no guarantee
-applies; they are served by whatever the 17:20 guarantee and 19:50 best-effort slots produce. D44
-also moves the last Saturday slot from 20:23 ET to 19:50 ET. Replayed against the measured Saturday
-lateness (the 12 in-season samples, 20,000 draws), the typical close age for those games rises:
-**23:00 — median 0.9 h before D44, 1.1 h after; 23:59 — 1.5 h before, 2.1 h after** (coverage is 100%
-in both cadences, and p90 is unchanged or better: 3.5 h → 3.3 h and 4.3 h → 4.1 h). The proposal's
-simulation only evaluated the four windows, so this trade was not quantified before ratification.
-Accepted as measured, not discovered later; a 2027 option is a 23:00 window with its own guarantee.
+applies; they are served by whatever the 16:20 guarantee and 19:55 best-effort slots produce. D44
+also moves the last Saturday slot from 20:23 ET to 19:55 ET. Replayed against the measured Saturday
+lateness (the 12 in-season samples, 20,000 draws, **the slots as merged at the 370-min lead**), the
+close age for those games rises at both ends:
+
+| Saturday kickoff | pre-D44 median | D44 median | pre-D44 p90 | D44 p90 |
+|---|---|---|---|---|
+| 23:00 (weeks 2, 3, 13) | 0.90 h | **1.03 h** | 3.55 h | **4.00 h** |
+| 23:59 (weeks 2, 5, 11) | 1.53 h | **2.00 h** | 4.35 h | **4.70 h** |
+
+Coverage stays 100% in both cadences. **An earlier version of this entry said p90 was unchanged or
+better; that was measured at the 310-min lead and is no longer true** — the longer lead pulls the last
+guarantee slot an hour earlier, which costs the tail as well as the median for games past the last
+window. The proposal's simulation only evaluated the four windows, so this trade was not quantified
+before ratification. Accepted as measured, not discovered later; a 2027 option is a 23:00 window with
+its own guarantee.
 
 **The simpler alternative, considered.** Shifting the existing four Saturday slots earlier by the
 measured lateness (option A in the proposal) would have bought the same worst-case guarantee with 8
@@ -1150,7 +1159,7 @@ Whether a claim excludes games that have already kicked off is a separate ruling
      tiers 3–4.
 4. **A claim tripwire, detection only, in the workflow PR.** The cadence workflows share one
    concurrency group, and GitHub keeps one *pending* run per group, silently cancelling the older.
-   A Tuesday predict queued behind the 13:50 capture can therefore be lost when a third run arrives.
+   A Tuesday predict queued behind the 12:50 capture can therefore be lost when a third run arrives.
    The daily freeze-integrity job (its own group) checks, from Wednesday to Saturday, that the
    current week's claim exists and is valid. It opens a `stage:predict` failure issue otherwise, which
    a successful predict re-dispatch closes. The owner set two conditions:

@@ -53,7 +53,7 @@ window it was meant to precede: Saturday noon games took a 16.7 h-stale close. E
 The cost of the longer lead is about an hour of typical guarantee-close freshness, and a measured
 step down in the 22:30 window (median 0.62 h → 0.97 h). D44 carries the figures.
 
-The **Tuesday 13:50 slot** exists because Tuesday games start in week 6. Without a capture, a Tuesday
+The **Tuesday 12:50 slot** exists because Tuesday games start in week 6. Without a capture, a Tuesday
 game's only close would be the claim's own snapshot observation, and its CLV would be zero by
 construction. Cost: 16 credits a week (15 captures plus the snapshot), with
 `odds_budget.expected_weekly_credits` moved to match. The boundary is week 4 (D44). Marking it in the
@@ -111,8 +111,8 @@ before doing anything. Wed–Fri captures on Aug 26–28 fail the same way.
 
 Dates come from `pipeline_today`, which reads the **pipeline timezone**, never the runner's clock.
 Actions runners are UTC, and a late-evening ET capture can already be Sunday in UTC: the week-1–3
-Saturday 20:23 ET slot was literally `23 0 * * 0`. Under D44 the last Saturday slot is 19:50 ET,
-which is 23:50 UTC under EDT but a late run still crosses midnight. A UTC-derived date would file the
+Saturday 20:23 ET slot was literally `23 0 * * 0`. Under D44 the last Saturday slot is 19:55 ET,
+which is 23:55 UTC under EDT but a late run still crosses midnight. A UTC-derived date would file the
 observation under the following week.
 
 **Known consequence:** `pipeline_week` returns 1 for every date through 2026-09-07, so the Tuesday
@@ -134,7 +134,7 @@ One push per run; **one commit per artifact tier**. The tiers are D22/D23:
 | Job | Commits, in order |
 |---|---|
 | Tuesday | `grading: … catch-up` → `snapshot: …` (+`data/lines`, `data/quota`, **`data/ratings`, `data/projections`**) → **`predictions: … (pre-kickoff)`** |
-| Tue–Sat | `lines: … observation HH:MM ET` (Tuesday's from the 13:50 capture, after the claim; D44) |
+| Tue–Sat | `lines: … observation HH:MM ET` (Tuesday's from the 12:50 capture, after the claim; D44) |
 | Sunday | `results: …` → `grading: …` → `report: …` |
 
 Three things here are load-bearing:
@@ -200,7 +200,7 @@ cancels the older one. A cancelled run concludes `cancelled`, which never fires 
 (`2027_NOTES` §8 item 15 records the same blind spot for timeouts), so nothing reports it. Two shapes
 matter under D44:
 
-* **A lost predict.** On a Tuesday the predict can be pending behind the running 13:50 capture when
+* **A lost predict.** On a Tuesday the predict can be pending behind the running 12:50 capture when
   a third group run, in practice a manual dispatch, is created. The week then has no claim.
   **Detected, not prevented:** the claim tripwire in the daily freeze-integrity job
   (`scripts/claim_tripwire.py`; its own concurrency group, so no cadence run can cancel it). From

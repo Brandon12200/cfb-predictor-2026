@@ -487,7 +487,7 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     2027; the owner ruled 2026-09-15 to record it here, not decide it now. GitHub keeps one
     *pending* run per group, and a newer pending run cancels the older one silently (a `cancelled`
     conclusion fires no `if: failure()`; compare item 15). Under the D44 cadence that can drop a
-    Tuesday predict queued behind the 13:50 capture when a third run arrives, and a Saturday
+    Tuesday predict queued behind the 12:50 capture when a third run arrives, and a Saturday
     capture when adjacent slots, 60 min apart, bunch under scheduler lateness. 2026 answers the
     first with detection only: the claim tripwire in freeze-integrity. The second is not detected.
     The option on the table is a capture-only group, so that captures serialize against each other

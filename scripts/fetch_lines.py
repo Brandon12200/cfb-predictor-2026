@@ -19,7 +19,7 @@ that beats the predict job are designed outcomes, not failures — the scheduled
 nothing and stays green on 3 or 4, but alarms on 1. They shared exit 1 until Phase 5, which left the
 workflow string-matching stdout to tell them apart.
 
-**Exit 4 (owner ruling 2026-09-15, D44).** The Tuesday 13:50 ET capture resolves the week being
+**Exit 4 (owner ruling 2026-09-15, D44).** The Tuesday 12:50 ET capture resolves the week being
 claimed that day. The predict job builds that week's snapshot, and both share one concurrency group.
 If the scheduler delays predict about 4.5 h more than the capture, the capture runs first and finds
 no snapshot. On a run fired by the *scheduled Tuesday capture slot* that is a designed state:

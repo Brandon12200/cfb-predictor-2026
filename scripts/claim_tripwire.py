@@ -4,7 +4,7 @@
 **Why it exists (owner ruling 2026-09-15, D44).** The three cadence workflows share one concurrency
 group, and GitHub keeps at most one *pending* run per group: a newer pending run cancels the older
 one, whatever `cancel-in-progress` says. A cancelled run's conclusion is `cancelled`, which never
-fires `if: failure()`. With the Tuesday 13:50 capture in the group, a Tuesday predict can be lost
+fires `if: failure()`. With the Tuesday 12:50 capture in the group, a Tuesday predict can be lost
 without a trace. That happens if it is pending behind a running capture when a third group run (in
 practice a manual dispatch) is created. The cost is no claim for the week, and before this nothing
 alarmed until Wednesday's capture failed on a missing snapshot, about a day later and with the wrong
