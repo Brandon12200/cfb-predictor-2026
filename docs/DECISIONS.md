@@ -1037,28 +1037,39 @@ Each kickoff window gets a **guarantee** slot and a **best-effort** slot timed t
 |---|---|---|---|
 | Tue | 12:50 | — | 19:00 |
 | Wed–Fri | 12:50 | 17:23 | 19:00 |
-| Sat | 05:50 / 09:20 / 12:50 / 16:20 | 09:25 / 12:55 / 16:25 / 19:55 | 12:00 / 15:30 / 19:00 / 22:30 |
+| Sat | 05:50 / 09:20 / 12:50 / 16:20 | 08:50 / 12:20 / 15:50 / 19:20 | 12:00 / 15:30 / 19:00 / 22:30 |
 
 **The guarantee lead is window − 6 h 10 min (370 min), raised from 5 h 10 min (310) before merge.**
 310 cleared the worst observed lateness (309 min) by **one minute on twelve samples**, which is a
 point estimate, not margin: the sample is small, the tail is unmeasured, and the whole cadence exists
-because that tail moved once already. 370 clears the same sample by **61 minutes**. Best-effort slots
-moved 5 minutes later (window − 155 min) so that no two slots share a cron string, which the guard's
-slot lookup requires.
+because that tail moved once already. 370 clears the same sample by **61 minutes**.
+
+**The guarantee lead interacts with the window spacing, and that set the best-effort lead.** Saturday
+windows are **210 minutes** apart, so a guarantee at window − 370 is the *previous* window − 160. A
+best-effort slot at the median lateness (window − 155) therefore landed **5 minutes after** the next
+window's guarantee: three Saturday pairs five minutes apart, each spending a credit on a near-duplicate
+observation and putting two runs inside ordinary dispatch jitter of each other, where the shared
+concurrency group can drop one (`2027_NOTES` §8 item 33). **The best-effort lead is window − 190
+minutes**, which clears the guarantee by 30 minutes and, measured, also improves the tail. A test pins
+a minimum 30-minute gap between any two slots on a day, so a future lead change cannot recreate the
+collapse silently.
 
 **What it costs, measured** (20,000 draws, the 12 in-season Saturday lateness samples):
 
-| | 310 lead | 370 lead |
-|---|---|---|
-| guarantee slot's own close age, 19:00 window (median) | 2.70 h | **3.70 h** |
-| all slots, median close age, 12:00 / 15:30 / 19:00 | 0.62 h | 0.53 h |
-| all slots, median close age, **22:30** | 0.62 h | **0.97 h** |
-| all slots, P(close ≤ 3 h), 22:30 | 90% | **77%** |
-| lateness needed to miss | **> 310 min** (1 min beyond the worst seen) | **> 370 min** (61 beyond) |
+Measured against the cadence as merged (20,000 draws, the 12 in-season Saturday samples; "pre-D44" is
+the weeks 1–3 schedule of 10:23 / 14:23 / 17:23 / 20:23):
 
-So the trade is about an hour of typical *guarantee-close* freshness, and a real step down in the
-22:30 window, for a coverage threshold that is no longer one minute from the worst thing observed.
-The owner ruled the coverage side is what the cadence is for.
+| Saturday window | pre-D44 median | D44 median | pre-D44 p90 | D44 p90 | D44 P(close ≤ 3 h) |
+|---|---|---|---|---|---|
+| 12:00 | 16.70 h | **0.62 h** | 16.70 h | **2.80 h** | 91% |
+| 15:30 | 2.65 h | **0.62 h** | 3.50 h | **1.72 h** | 93% |
+| 19:00 | 2.37 h | **0.62 h** | 3.00 h | **1.72 h** | 93% |
+| 22:30 | 2.25 h | **1.12 h** | 3.40 h | 3.70 h | 83% |
+
+The guarantee slot **on its own** now leaves a 3.70 h median close age at the 19:00 window, against
+2.70 h at the 310 lead — that hour is what the coverage margin costs when the best-effort slot misses.
+The lateness needed to miss a guarantee moves from **> 310 min** (one minute beyond the worst observed)
+to **> 370 min** (61 beyond). The owner ruled the coverage side is what the cadence is for.
 
 **Tier 2's expected frequency, re-estimated at the new lead.** No sample in the twelve exceeds either
 lead, so the observed miss rate is 0 of 12 at 310 *and* at 370; the honest statement is an upper
@@ -1078,20 +1089,21 @@ retry-storm warning stays correct. The crons remain single UTC expressions ancho
 **Games after the last window are not covered by the guarantee, and their close gets slightly
 staler.** `kickoff_windows_et` ends at 22:30 ET, and six Saturday games this season start later:
 23:00 in weeks 2, 3 and 13, and 23:59 in weeks 2, 5 and 11. No slot `precedes` them, so no guarantee
-applies; they are served by whatever the 16:20 guarantee and 19:55 best-effort slots produce. D44
-also moves the last Saturday slot from 20:23 ET to 19:55 ET. Replayed against the measured Saturday
+applies; they are served by whatever the 16:20 guarantee and 19:20 best-effort slots produce. D44
+also moves the last Saturday slot from 20:23 ET to 19:20 ET. Replayed against the measured Saturday
 lateness (the 12 in-season samples, 20,000 draws, **the slots as merged at the 370-min lead**), the
 close age for those games rises at both ends:
 
 | Saturday kickoff | pre-D44 median | D44 median | pre-D44 p90 | D44 p90 |
 |---|---|---|---|---|
-| 23:00 (weeks 2, 3, 13) | 0.90 h | **1.03 h** | 3.55 h | **4.00 h** |
-| 23:59 (weeks 2, 5, 11) | 1.53 h | **2.00 h** | 4.35 h | **4.70 h** |
+| 23:00 (weeks 2, 3, 13) | 0.90 h | **1.60 h** | 3.55 h | **3.80 h** |
+| 23:59 (weeks 2, 5, 11) | 1.53 h | **2.18 h** | 4.35 h | **3.03 h** |
 
-Coverage stays 100% in both cadences. **An earlier version of this entry said p90 was unchanged or
-better; that was measured at the 310-min lead and is no longer true** — the longer lead pulls the last
-guarantee slot an hour earlier, which costs the tail as well as the median for games past the last
-window. The proposal's simulation only evaluated the four windows, so this trade was not quantified
+Coverage stays 100% in both cadences. **Two earlier versions of this table were wrong, both because
+the slots moved under them** — the first measured the 310-min lead, the second the 155-min best-effort
+spacing. These figures are the cadence as merged. The median is worse for both late kickoffs, and the
+p90 is worse at 23:00 and better at 23:59. Games past the last window have no guarantee slot, so they
+get whatever the 22:30 pair leaves behind. The proposal's simulation only evaluated the four windows, so this trade was not quantified
 before ratification. Accepted as measured, not discovered later; a 2027 option is a 23:00 window with
 its own guarantee.
 

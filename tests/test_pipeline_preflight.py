@@ -123,8 +123,8 @@ def test_blank_secret_counts_as_missing(monkeypatch):
 # ones, so the replays use D44 slots firing with the same lateness.
 
 SAT = "50 9 * * 6"         # Sat 05:50 ET, guarantee, precedes 12:00
-SAT_BEST = "25 13 * * 6"   # Sat 09:25 ET, best-effort, precedes 12:00
-SAT_LATE = "55 23 * * 6"   # Sat 19:55 ET, best-effort, precedes 22:30
+SAT_BEST = "50 12 * * 6"   # Sat 08:50 ET, best-effort, precedes 12:00
+SAT_LATE = "20 23 * * 6"   # Sat 19:20 ET, best-effort, precedes 22:30
 SAT_G4 = "20 20 * * 6"     # Sat 16:20 ET, guarantee, precedes 22:30
 
 
@@ -161,7 +161,7 @@ def test_a_best_effort_miss_is_tier_zero_only():
 
 
 def test_a_slot_that_fires_after_midnight_is_judged_on_its_own_et_date():
-    """Sat 19:55 firing Sun 00:58 must be a miss of SATURDAY's 22:30 window, not slack before Sunday's."""
+    """Sat 19:20 firing Sun 00:58 must be a miss of SATURDAY's 22:30 window, not slack before Sunday's."""
     pf = Preflight()
     v = _t(pf, datetime(2026, 9, 27, 0, 58, tzinfo=ET), SAT_LATE)
     assert v.status == "missed"

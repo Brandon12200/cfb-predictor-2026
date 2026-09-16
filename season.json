@@ -88,13 +88,13 @@
         {"days": ["fri"], "time_edt": "12:50", "time_est": "11:50", "cron_utc": "50 16 * * 5", "precedes": "19:00", "kind": "guarantee"},
         {"days": ["fri"], "time_edt": "17:23", "time_est": "16:23", "cron_utc": "23 21 * * 5", "precedes": "19:00", "kind": "best_effort"},
         {"days": ["sat"], "time_edt": "05:50", "time_est": "04:50", "cron_utc": "50 9 * * 6", "precedes": "12:00", "kind": "guarantee"},
-        {"days": ["sat"], "time_edt": "09:25", "time_est": "08:25", "cron_utc": "25 13 * * 6", "precedes": "12:00", "kind": "best_effort"},
+        {"days": ["sat"], "time_edt": "08:50", "time_est": "07:50", "cron_utc": "50 12 * * 6", "precedes": "12:00", "kind": "best_effort"},
         {"days": ["sat"], "time_edt": "09:20", "time_est": "08:20", "cron_utc": "20 13 * * 6", "precedes": "15:30", "kind": "guarantee"},
-        {"days": ["sat"], "time_edt": "12:55", "time_est": "11:55", "cron_utc": "55 16 * * 6", "precedes": "15:30", "kind": "best_effort"},
+        {"days": ["sat"], "time_edt": "12:20", "time_est": "11:20", "cron_utc": "20 16 * * 6", "precedes": "15:30", "kind": "best_effort"},
         {"days": ["sat"], "time_edt": "12:50", "time_est": "11:50", "cron_utc": "50 16 * * 6", "precedes": "19:00", "kind": "guarantee"},
-        {"days": ["sat"], "time_edt": "16:25", "time_est": "15:25", "cron_utc": "25 20 * * 6", "precedes": "19:00", "kind": "best_effort"},
+        {"days": ["sat"], "time_edt": "15:50", "time_est": "14:50", "cron_utc": "50 19 * * 6", "precedes": "19:00", "kind": "best_effort"},
         {"days": ["sat"], "time_edt": "16:20", "time_est": "15:20", "cron_utc": "20 20 * * 6", "precedes": "22:30", "kind": "guarantee"},
-        {"days": ["sat"], "time_edt": "19:55", "time_est": "18:55", "cron_utc": "55 23 * * 6", "precedes": "22:30", "kind": "best_effort"}
+        {"days": ["sat"], "time_edt": "19:20", "time_est": "18:20", "cron_utc": "20 23 * * 6", "precedes": "22:30", "kind": "best_effort"}
       ],
       "grade": [
         {"days": ["sun"], "time_edt": "12:47", "time_est": "11:47", "cron_utc": "47 16 * * 0"}

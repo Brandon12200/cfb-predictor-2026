@@ -9,9 +9,12 @@
 # Each window now has two slots, recorded with `precedes` and `kind` in season.json:
 # * a GUARANTEE slot at window − 6 h 10 min. 5 h 10 min cleared the worst observed lateness
 #   (309 min) by one minute on n=12, which is not margin; 6 h 10 min clears it by 61 (I1.1);
-# * a BEST-EFFORT slot at window − 2 h 35 min on Saturday, timed to the median lateness, so it
-#   usually lands shortly before kickoff. The Wed–Fri 17:23 slot is best-effort with a 97-min lead,
-#   which every measured weekday sample exceeds; it serves the 19:30+ kickoffs, not the 19:00 window.
+# * a BEST-EFFORT slot at window − 3 h 10 min on Saturday. Not the median lateness (155 min): at
+#   that spacing it landed 5 minutes after the NEXT window's guarantee, because windows are 210 min
+#   apart and 210 − 370 = −160. Three pairs of slots were 5 min apart, which bought a near-duplicate
+#   observation and made a pending-run collision likelier. 190 keeps every slot ≥ 30 min from its
+#   neighbour and improves the tail. The Wed–Fri 17:23 slot is best-effort with a 97-min lead, which
+#   every measured weekday sample exceeds; it serves the 19:30+ kickoffs, not the 19:00 window.
 # The Tuesday slot exists because Tuesday games start in week 6, and without a capture their only
 # close would be the claim's own snapshot observation.
 name: Daily line capture (Tue–Sat)
@@ -29,13 +32,13 @@ on:
     - cron: "50 16 * * 5"      # Fri 12:50 ET — guarantee, before 19:00
     - cron: "23 21 * * 5"      # Fri 17:23 ET — best-effort, before 19:00
     - cron: "50 9 * * 6"       # Sat 05:50 ET — guarantee, before 12:00
-    - cron: "25 13 * * 6"      # Sat 09:25 ET — best-effort, before 12:00
+    - cron: "50 12 * * 6"      # Sat 08:50 ET — best-effort, before 12:00
     - cron: "20 13 * * 6"      # Sat 09:20 ET — guarantee, before 15:30
-    - cron: "55 16 * * 6"      # Sat 12:55 ET — best-effort, before 15:30
+    - cron: "20 16 * * 6"      # Sat 12:20 ET — best-effort, before 15:30
     - cron: "50 16 * * 6"      # Sat 12:50 ET — guarantee, before 19:00
-    - cron: "25 20 * * 6"      # Sat 16:25 ET — best-effort, before 19:00
+    - cron: "50 19 * * 6"      # Sat 15:50 ET — best-effort, before 19:00
     - cron: "20 20 * * 6"      # Sat 16:20 ET — guarantee, before 22:30
-    - cron: "55 23 * * 6"      # Sat 19:55 ET — best-effort, before 22:30. Still Saturday in UTC under
+    - cron: "20 23 * * 6"      # Sat 19:20 ET — best-effort, before 22:30. Still Saturday in UTC under
                                # EDT; week resolution uses ET regardless (utils.season_calendar).
   workflow_dispatch:
     inputs:

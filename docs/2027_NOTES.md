@@ -488,7 +488,9 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     *pending* run per group, and a newer pending run cancels the older one silently (a `cancelled`
     conclusion fires no `if: failure()`; compare item 15). Under the D44 cadence that can drop a
     Tuesday predict queued behind the 12:50 capture when a third run arrives, and a Saturday
-    capture when adjacent slots, 60 min apart, bunch under scheduler lateness. 2026 answers the
+    capture when adjacent slots bunch under scheduler lateness. The merged D44 schedule keeps every
+    pair **≥ 30 min** apart, pinned by a test; an earlier draft of it put three Saturday pairs 5 min
+    apart, which is what that test now prevents. 2026 answers the
     first with detection only: the claim tripwire in freeze-integrity. The second is not detected.
     The option on the table is a capture-only group, so that captures serialize against each other
     (the `data/lines` append) but can never sit in front of predict or grade. Concurrent pushes to

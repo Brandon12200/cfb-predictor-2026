@@ -245,3 +245,25 @@ def test_the_est_time_is_the_edt_time_an_hour_earlier(job, entry):
     assert entry["time_est"] == f"{est:%H:%M}", (
         f"{job} {entry['time_edt']} EDT is {est:%H:%M} EST, not {entry['time_est']}"
     )
+
+
+MIN_SLOT_GAP_MIN = 30
+
+
+@pytest.mark.parametrize("day", sorted({d for e in CAPTURE for d in e["days"]}))
+def test_capture_slots_are_never_near_duplicates(day):
+    """No two capture slots on a day may sit inside `MIN_SLOT_GAP_MIN` of each other.
+
+    Not cosmetic. At the ratified 370-min guarantee lead and a 155-min best-effort lead, the
+    guarantee for the NEXT window landed 5 minutes before the best-effort for the current one —
+    windows are 210 min apart and 210 − 370 = −160. Three Saturday pairs were 5 min apart, which
+    spent a credit on a near-duplicate observation and put two runs inside ordinary dispatch jitter
+    of each other, where the shared concurrency group can drop one. The best-effort lead moved to
+    190 min to clear it. This pins the property so a future lead change cannot recreate it silently.
+    """
+    times = sorted(_minutes(e["time_edt"]) for e in CAPTURE if day in e["days"])
+    gaps = [b - a for a, b in zip(times, times[1:], strict=False)]
+    assert all(g >= MIN_SLOT_GAP_MIN for g in gaps), (
+        f"{day}: slots {[e['time_edt'] for e in CAPTURE if day in e['days']]} have gaps {gaps}, "
+        f"minimum allowed {MIN_SLOT_GAP_MIN} min"
+    )

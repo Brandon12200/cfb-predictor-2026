@@ -14,7 +14,7 @@ conversational context can operate or repair the pipeline.
 | Job | Fires | Does |
 |---|---|---|
 | **Weekly predict** | Tue 09:17 ET | **catch-up grade first** (CLV sign check per week), then snapshot → quality gate → predict |
-| **Daily capture** | Tue 12:50; Wed–Fri 12:50 and 17:23; Sat 05:50 / 09:20 / 09:25 / 12:50 / 12:55 / 16:20 / 16:25 / 19:55 ET (D44, from week 4) | append one line observation per slate game |
+| **Daily capture** | Tue 12:50; Wed–Fri 12:50 and 17:23; Sat 05:50 / 08:50 / 09:20 / 12:20 / 12:50 / 15:50 / 16:20 / 19:20 ET (D44, from week 4) | append one line observation per slate game |
 | **Weekly grade** | Sun 12:47 ET | finals → grade → CLV sign check → regenerate reports |
 | **Freeze integrity** | daily 07:43 ET | frozen-tree assertion + fingerprint + SP+ watch |
 | **CI** | push to `main`, every PR | lint, tests, all seven verify targets |
@@ -44,8 +44,10 @@ window it was meant to precede: Saturday noon games took a 16.7 h-stale close. E
 * **guarantee**, at window − 6 h 10 min. It clears the worst Saturday lateness observed (309 min)
   by 61 minutes. The lead was 5 h 10 min until review: one minute of margin on twelve samples is a
   point estimate, not margin. A test pins the 370-min lead and exactly one guarantee slot per window.
-* **best_effort**, at window − 2 h 35 min on Saturday, timed to the median lateness: it usually lands
-  shortly before kickoff, and is designed to miss about four times in ten. The Wed–Fri 17:23 slot is
+* **best_effort**, at window − 3 h 10 min on Saturday. Not the median lateness: at that spacing it
+  fell 5 minutes after the next window's guarantee (210-minute windows against a 370-minute lead), so
+  three pairs of slots were near-duplicates. At 190 minutes every slot is ≥ 30 min from its neighbour,
+  and the tail improves: p90 2.80 h at 12:00 and 1.72 h at 15:30 and 19:00. The Wed–Fri 17:23 slot is
   best-effort too, but its lead is only 97 min, and all nine measured weekday samples exceed that —
   it has missed the nominal 19:00 window every time. It is kept because weekday kickoffs mostly run
   19:30 or later, which it does serve.
@@ -111,8 +113,8 @@ before doing anything. Wed–Fri captures on Aug 26–28 fail the same way.
 
 Dates come from `pipeline_today`, which reads the **pipeline timezone**, never the runner's clock.
 Actions runners are UTC, and a late-evening ET capture can already be Sunday in UTC: the week-1–3
-Saturday 20:23 ET slot was literally `23 0 * * 0`. Under D44 the last Saturday slot is 19:55 ET,
-which is 23:55 UTC under EDT but a late run still crosses midnight. A UTC-derived date would file the
+Saturday 20:23 ET slot was literally `23 0 * * 0`. Under D44 the last Saturday slot is 19:20 ET,
+which is 23:20 UTC under EDT but a late run still crosses midnight. A UTC-derived date would file the
 observation under the following week.
 
 **Known consequence:** `pipeline_week` returns 1 for every date through 2026-09-07, so the Tuesday
@@ -210,8 +212,11 @@ matter under D44:
   (`kind: failure`). A *dirty* one is not: a claim is byte-immutable (D22), so a re-dispatched
   predict skips it and succeeds while nothing is repaired, which is why it gets `kind: dirty-claim`,
   a kind `clear-failure` never clears. It stands until the owner rules on it.
-* **A lost capture.** On a Saturday under scheduler lateness, two adjacent slots (as close as 60 min
-  apart) can be pending together with a third arriving. The dropped capture never reaches the
+* **A lost capture.** On a Saturday under scheduler lateness, two adjacent slots can be pending
+  together with a third arriving. Slots are **at least 30 minutes** apart, pinned by a test: at the
+  ratified 370-minute guarantee lead, a best-effort slot at the median lateness would have sat 5
+  minutes from the next window's guarantee, because windows are 210 minutes apart. The best-effort
+  lead is 190 minutes to clear it (D44). The dropped capture never reaches the
   preflight, so no D44 timing tier fires for it. Nothing detects this yet. A per-slot count of
   observations is the natural detector for the report PR's timeliness line.
 
