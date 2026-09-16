@@ -296,8 +296,12 @@ def check_timing(pf: Preflight, cal: dict, now: datetime, *, role: str, event_na
             pf.warn(msg)
             pf.annotate(msg)
         elif v.status == "missed":
-            pf.note("timing: best-effort slot landed after its window, which D44 expects about "
-                    "four times in ten; the guarantee slot covers this window")
+            # Deliberately no frequency here. The measured miss rate is a property of the slot's
+            # lead, which moves when the cadence is retuned, and a statistic baked into a log line
+            # is one nobody updates: the first version of this message said "about four times in
+            # ten" and was stale within the same PR. The rate lives in D44, dated and sourced.
+            pf.note("timing: best-effort slot landed after its window, which D44 expects; the "
+                    "guarantee slot for this window is the one that must not miss")
     return v
 
 

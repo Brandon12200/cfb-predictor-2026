@@ -1152,8 +1152,8 @@ Whether a claim excludes games that have already kicked off is a separate ruling
 ### Implementation rulings (owner, 2026-09-15)
 
 1. **Tiers 1–2 fire only on a guarantee slot's miss.** A best-effort slot is designed to miss about four
-   times in ten (the Saturday slots, at window − 155 min), and the Wed–Fri 17:23 slot — whose lead is
-   only 97 min — **nine times in nine**: every one of the nine measured weekday samples (minimum 102
+   one in three (the Saturday slots, at window − 190 min: 4 of the 12 measured samples exceed it),
+   and the Wed–Fri 17:23 slot — whose lead is only 97 min — **nine times in nine**: every one of the nine measured weekday samples (minimum 102
    min) exceeds it. If they escalated, the weekly issue
    would be open nearly every week, recreating the guard that warned where timing did not matter.
    A best-effort miss stays at tier 0. Tier 4 was already guarantee-only.

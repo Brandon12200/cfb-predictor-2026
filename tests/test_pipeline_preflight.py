@@ -152,7 +152,9 @@ def test_a_miss_is_judged_against_its_own_window_not_a_later_one():
 
 
 def test_a_best_effort_miss_is_tier_zero_only():
-    """Owner ruling 2026-09-15: a best-effort slot is designed to miss about four times in ten."""
+    """Owner ruling 2026-09-15: a best-effort slot is designed to miss — 4 of the 12 measured
+    Saturday samples exceed its 190-min lead. The rate is not asserted here or printed at runtime:
+    it moves with the lead, and a number in a log line is one nobody updates."""
     pf = Preflight()
     v = _t(pf, datetime(2026, 9, 26, 12, 30, tzinfo=ET), SAT_BEST)
     assert v.status == "missed" and not v.guarantee_miss
