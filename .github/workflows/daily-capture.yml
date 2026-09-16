@@ -9,8 +9,9 @@
 # Each window now has two slots, recorded with `precedes` and `kind` in season.json:
 # * a GUARANTEE slot at window − 6 h 10 min. 5 h 10 min cleared the worst observed lateness
 #   (309 min) by one minute on n=12, which is not margin; 6 h 10 min clears it by 61 (I1.1);
-# * a BEST-EFFORT slot at about window − 2 h 40 min, timed to the median lateness, so it usually
-#   lands shortly before kickoff.
+# * a BEST-EFFORT slot at window − 2 h 35 min on Saturday, timed to the median lateness, so it
+#   usually lands shortly before kickoff. The Wed–Fri 17:23 slot is best-effort with a 97-min lead,
+#   which every measured weekday sample exceeds; it serves the 19:30+ kickoffs, not the 19:00 window.
 # The Tuesday slot exists because Tuesday games start in week 6, and without a capture their only
 # close would be the claim's own snapshot observation.
 name: Daily line capture (Tue–Sat)
@@ -156,7 +157,11 @@ jobs:
           mode: ${{ steps.setup.outputs.mode }}
           kind: late
           title: "pipeline: late capture — 2026 week ${{ steps.setup.outputs.week_padded }}"
-          body: "<!-- late-miss --> A guarantee capture slot missed its kickoff window (D44). ${{ steps.setup.outputs.timing_detail }}"
+          # `capture rc` is in the body because both things can be true at once: the slot missed its
+          # window AND nothing was captured because the snapshot did not exist yet (exit 4). An issue
+          # that reported only the first would be two true statements adding up to a wrong diagnosis
+          # (review of the D44 PR, finding 18).
+          body: "<!-- late-miss --> A guarantee capture slot missed its kickoff window (D44). ${{ steps.setup.outputs.timing_detail }} — capture exit code: ${{ steps.capture.outputs.rc }} (0 = an observation was recorded; 3 = budget refusal; 4 = the Tuesday snapshot did not exist yet, so nothing was captured for a reason unrelated to this slot's timing)."
           cooldown-minutes: "0"
           token: ${{ secrets.GITHUB_TOKEN }}
 

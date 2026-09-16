@@ -282,8 +282,11 @@ def check_timing(pf: Preflight, cal: dict, now: datetime, *, role: str, event_na
         assert v.slot_et and v.window_et and v.lateness_min is not None and v.margin_min is not None
         where = (f"{v.margin_min} min before the {v.window_et:%H:%M} ET window" if v.margin_min > 0
                  else f"{-v.margin_min} min AFTER the {v.window_et:%H:%M} ET window")
-        pf.note(f"timing: {v.kind} slot {v.slot_et:%a %H:%M} ET fired {v.lateness_min} min late, "
-                f"{where} ({v.status})")
+        # The tier-0 line has to read correctly on its own: someone scrolling a log without D44 in
+        # hand should not file a bug about a slot that is designed to miss (review of the D44 PR, 15).
+        expected = ", miss expected" if v.kind == "best_effort" else ""
+        pf.note(f"timing: {v.kind} slot{expected} {v.slot_et:%a %H:%M} ET fired {v.lateness_min} "
+                f"min late, {where} ({v.status})")
         if v.guarantee_miss:
             games = ", ".join(v.games) if v.games else "no slate games loaded for this window"
             msg = (f"GUARANTEE capture slot {v.slot_et:%a %H:%M} ET missed its {v.window_et:%H:%M} "

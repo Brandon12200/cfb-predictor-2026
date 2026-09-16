@@ -44,9 +44,11 @@ window it was meant to precede: Saturday noon games took a 16.7 h-stale close. E
 * **guarantee**, at window − 6 h 10 min. It clears the worst Saturday lateness observed (309 min)
   by 61 minutes. The lead was 5 h 10 min until review: one minute of margin on twelve samples is a
   point estimate, not margin. A test pins the 370-min lead and exactly one guarantee slot per window.
-* **best_effort**, at window − 2 h 35 min, timed to the median lateness. It usually lands shortly
-  before kickoff, and is designed to miss about four times in ten. The Wed–Fri 17:23 slot is
-  best-effort too; it serves 19:30+ kickoffs.
+* **best_effort**, at window − 2 h 35 min on Saturday, timed to the median lateness: it usually lands
+  shortly before kickoff, and is designed to miss about four times in ten. The Wed–Fri 17:23 slot is
+  best-effort too, but its lead is only 97 min, and all nine measured weekday samples exceed that —
+  it has missed the nominal 19:00 window every time. It is kept because weekday kickoffs mostly run
+  19:30 or later, which it does serve.
 
 The cost of the longer lead is about an hour of typical guarantee-close freshness, and a measured
 step down in the 22:30 window (median 0.62 h → 0.97 h). D44 carries the figures.

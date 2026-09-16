@@ -84,7 +84,11 @@ def test_the_timing_verdict_is_declared_on_the_composite():
 
 def test_a_guarantee_miss_opens_the_weekly_late_issue():
     i = CAPTURE.index("kind: late")
-    step = CAPTURE[CAPTURE.rindex("- uses: ./.github/actions/report-failure", 0, i):i + 400]
+    start = CAPTURE.rindex("- uses: ./.github/actions/report-failure", 0, i)
+    # To the next step, not a fixed character count: a longer body silently truncated this slice and
+    # took `cooldown-minutes` out of view with it.
+    rest = re.split(r"\n\s{6}- (?:uses|name):", CAPTURE[start:], maxsplit=1)
+    step = rest[0]
     assert "if: steps.setup.outputs.timing_guarantee_miss == 'true' && inputs.dry_run != true" in step
     assert 'cooldown-minutes: "0"' in step, "every guarantee miss must reach the tally"
     assert "late-miss" in step, "the Sunday tally counts this marker"

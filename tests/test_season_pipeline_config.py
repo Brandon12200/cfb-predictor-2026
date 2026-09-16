@@ -14,7 +14,7 @@ Two jobs:
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -77,24 +77,26 @@ def test_schedule_covers_every_job():
 
 
 @pytest.mark.parametrize("job,entry", ALL_ENTRIES,
-                         ids=[f"{j}-{e['time']}" for j, e in ALL_ENTRIES])
+                         ids=[f"{j}-{e['time_edt']}" for j, e in ALL_ENTRIES])
 def test_entry_shape(job, entry):
     # Capture slots also name the window they precede and their kind (D44); the timing guard reads
     # both. No other job is time-critical, so no other job carries them.
     extra = {"precedes", "kind"} if job == "capture" else set()
-    assert set(entry) == {"days", "time", "cron_utc"} | extra
+    # `time_edt` + `time_est`, not a bare `time`: the crons are anchored to EDT, so a single ET time
+    # is wrong for every slot from 2026-11-01 (review of the D44 PR, finding 17).
+    assert set(entry) == {"days", "time_edt", "time_est", "cron_utc"} | extra
     assert entry["days"], "entry declares no days"
-    hh, mm = entry["time"].split(":")
+    hh, mm = entry["time_edt"].split(":")
     assert 0 <= int(hh) <= 23 and 0 <= int(mm) <= 59
     assert len(entry["cron_utc"].split()) == 5, "cron must have 5 fields"
 
 
 @pytest.mark.parametrize("job,entry", ALL_ENTRIES,
-                         ids=[f"{j}-{e['time']}" for j, e in ALL_ENTRIES])
+                         ids=[f"{j}-{e['time_edt']}" for j, e in ALL_ENTRIES])
 def test_cron_utc_matches_the_stated_et_time(job, entry):
     """Re-derive the cron from the ET time under EDT (the anchor documented in `dst_note`)."""
     minute, hour, _, _, dow = entry["cron_utc"].split()
-    hh, mm = (int(x) for x in entry["time"].split(":"))
+    hh, mm = (int(x) for x in entry["time_edt"].split(":"))
 
     if entry["days"] == ["daily"]:
         assert dow == "*", "a daily job must not pin a weekday"
@@ -136,20 +138,20 @@ def _minutes(hhmm: str) -> int:
     return int(h) * 60 + int(m)
 
 
-@pytest.mark.parametrize("entry", CAPTURE, ids=[f"{'/'.join(e['days'])}-{e['time']}" for e in CAPTURE])
+@pytest.mark.parametrize("entry", CAPTURE, ids=[f"{'/'.join(e['days'])}-{e['time_edt']}" for e in CAPTURE])
 def test_capture_slot_precedes_a_real_window_on_every_day_it_runs(entry):
     assert entry["kind"] in {"guarantee", "best_effort"}
     for day in entry["days"]:
         assert entry["precedes"] in PIPELINE["kickoff_windows_et"].get(day, []), (
             f"{day} {entry['time']} precedes {entry['precedes']}, which is not a {day} kickoff window"
         )
-    assert _minutes(entry["time"]) < _minutes(entry["precedes"]), "a slot must be before its window"
+    assert _minutes(entry["time_edt"]) < _minutes(entry["precedes"]), "a slot must be before its window"
 
 
 @pytest.mark.parametrize("entry", [e for e in CAPTURE if e["kind"] == "guarantee"],
-                         ids=[f"{'/'.join(e['days'])}-{e['time']}" for e in CAPTURE if e["kind"] == "guarantee"])
+                         ids=[f"{'/'.join(e['days'])}-{e['time_edt']}" for e in CAPTURE if e["kind"] == "guarantee"])
 def test_guarantee_slots_absorb_the_worst_observed_lateness(entry):
-    lead = _minutes(entry["precedes"]) - _minutes(entry["time"])
+    lead = _minutes(entry["precedes"]) - _minutes(entry["time_edt"])
     assert lead >= GUARANTEE_LEAD_MIN, (
         f"{entry['time']} is {lead} min before {entry['precedes']}; a guarantee slot needs "
         f"{GUARANTEE_LEAD_MIN}. One minute of slack on twelve samples is not margin (I1.1)."
@@ -171,7 +173,7 @@ def test_every_capture_cron_pins_exactly_one_weekday():
     than 24 h late match the NEXT day's slot and report on time, so each capture line names one day."""
     for e in CAPTURE:
         dow = e["cron_utc"].split()[4]
-        assert dow.isdigit(), f"{e['time']} {e['days']}: cron weekday '{dow}' must be a single day"
+        assert dow.isdigit(), f"{e['time_edt']} {e['days']}: cron weekday '{dow}' must be a single day"
         assert len(e["days"]) == 1
 
 
@@ -231,3 +233,15 @@ def test_expected_weekly_credits_matches_the_scheduled_capture_count():
 
 def test_rehearsal_prefix():
     assert PIPELINE["rehearsal"]["branch_prefix"].endswith("/")
+
+
+@pytest.mark.parametrize("job,entry", ALL_ENTRIES,
+                         ids=[f"{j}-{e['time_edt']}" for j, e in ALL_ENTRIES])
+def test_the_est_time_is_the_edt_time_an_hour_earlier(job, entry):
+    """From 2026-11-01 a fixed UTC cron lands an hour earlier in ET (`dst_note`). Both halves of the
+    season are stated, because one `time` field read as authoritative was wrong for half of it."""
+    edt_h, edt_m = (int(x) for x in entry["time_edt"].split(":"))
+    est = datetime(2026, 11, 7, edt_h, edt_m, tzinfo=ZoneInfo(PIPELINE["timezone"])) - timedelta(hours=1)
+    assert entry["time_est"] == f"{est:%H:%M}", (
+        f"{job} {entry['time_edt']} EDT is {est:%H:%M} EST, not {entry['time_est']}"
+    )

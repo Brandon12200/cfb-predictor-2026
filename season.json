@@ -71,36 +71,36 @@
     "save": false
   },
   "pipeline": {
-    "_note": "SPEC §10.6 pipeline config (Phase 5). Every key here has a named consumer — see the key→consumer table in docs/PIPELINE.md. `schedule_et.*.cron_utc` is the one deliberately non-executable key: GitHub Actions cannot read this file, so the crons are duplicated in .github/workflows/ and a test asserts the two agree.",
+    "_note": "SPEC §10.6 pipeline config (Phase 5). `schedule_et.*.time_edt` / `time_est` are the SAME cron seen in the two halves of the year: the crons are single UTC expressions anchored to EDT, so from 2026-11-01 every slot lands an hour earlier in ET (see dst_note). Neither is read by code — the guard resolves `cron_utc` — but a single `time` field read as authoritative was wrong for half the season. Every key here has a named consumer — see the key→consumer table in docs/PIPELINE.md. `schedule_et.*.cron_utc` is the one deliberately non-executable key: GitHub Actions cannot read this file, so the crons are duplicated in .github/workflows/ and a test asserts the two agree.",
     "timezone": "America/New_York",
     "freeze_tag": "v2026-frozen-3",
     "slate_filter": "fbs_vs_fbs",
     "schedule_et": {
       "predict": [
-        {"days": ["tue"], "time": "09:17", "cron_utc": "17 13 * * 2"}
+        {"days": ["tue"], "time_edt": "09:17", "time_est": "08:17", "cron_utc": "17 13 * * 2"}
       ],
       "capture": [
-        {"days": ["tue"], "time": "12:50", "cron_utc": "50 16 * * 2", "precedes": "19:00", "kind": "guarantee"},
-        {"days": ["wed"], "time": "12:50", "cron_utc": "50 16 * * 3", "precedes": "19:00", "kind": "guarantee"},
-        {"days": ["wed"], "time": "17:23", "cron_utc": "23 21 * * 3", "precedes": "19:00", "kind": "best_effort"},
-        {"days": ["thu"], "time": "12:50", "cron_utc": "50 16 * * 4", "precedes": "19:00", "kind": "guarantee"},
-        {"days": ["thu"], "time": "17:23", "cron_utc": "23 21 * * 4", "precedes": "19:00", "kind": "best_effort"},
-        {"days": ["fri"], "time": "12:50", "cron_utc": "50 16 * * 5", "precedes": "19:00", "kind": "guarantee"},
-        {"days": ["fri"], "time": "17:23", "cron_utc": "23 21 * * 5", "precedes": "19:00", "kind": "best_effort"},
-        {"days": ["sat"], "time": "05:50", "cron_utc": "50 9 * * 6", "precedes": "12:00", "kind": "guarantee"},
-        {"days": ["sat"], "time": "09:25", "cron_utc": "25 13 * * 6", "precedes": "12:00", "kind": "best_effort"},
-        {"days": ["sat"], "time": "09:20", "cron_utc": "20 13 * * 6", "precedes": "15:30", "kind": "guarantee"},
-        {"days": ["sat"], "time": "12:55", "cron_utc": "55 16 * * 6", "precedes": "15:30", "kind": "best_effort"},
-        {"days": ["sat"], "time": "12:50", "cron_utc": "50 16 * * 6", "precedes": "19:00", "kind": "guarantee"},
-        {"days": ["sat"], "time": "16:25", "cron_utc": "25 20 * * 6", "precedes": "19:00", "kind": "best_effort"},
-        {"days": ["sat"], "time": "16:20", "cron_utc": "20 20 * * 6", "precedes": "22:30", "kind": "guarantee"},
-        {"days": ["sat"], "time": "19:55", "cron_utc": "55 23 * * 6", "precedes": "22:30", "kind": "best_effort"}
+        {"days": ["tue"], "time_edt": "12:50", "time_est": "11:50", "cron_utc": "50 16 * * 2", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["wed"], "time_edt": "12:50", "time_est": "11:50", "cron_utc": "50 16 * * 3", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["wed"], "time_edt": "17:23", "time_est": "16:23", "cron_utc": "23 21 * * 3", "precedes": "19:00", "kind": "best_effort"},
+        {"days": ["thu"], "time_edt": "12:50", "time_est": "11:50", "cron_utc": "50 16 * * 4", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["thu"], "time_edt": "17:23", "time_est": "16:23", "cron_utc": "23 21 * * 4", "precedes": "19:00", "kind": "best_effort"},
+        {"days": ["fri"], "time_edt": "12:50", "time_est": "11:50", "cron_utc": "50 16 * * 5", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["fri"], "time_edt": "17:23", "time_est": "16:23", "cron_utc": "23 21 * * 5", "precedes": "19:00", "kind": "best_effort"},
+        {"days": ["sat"], "time_edt": "05:50", "time_est": "04:50", "cron_utc": "50 9 * * 6", "precedes": "12:00", "kind": "guarantee"},
+        {"days": ["sat"], "time_edt": "09:25", "time_est": "08:25", "cron_utc": "25 13 * * 6", "precedes": "12:00", "kind": "best_effort"},
+        {"days": ["sat"], "time_edt": "09:20", "time_est": "08:20", "cron_utc": "20 13 * * 6", "precedes": "15:30", "kind": "guarantee"},
+        {"days": ["sat"], "time_edt": "12:55", "time_est": "11:55", "cron_utc": "55 16 * * 6", "precedes": "15:30", "kind": "best_effort"},
+        {"days": ["sat"], "time_edt": "12:50", "time_est": "11:50", "cron_utc": "50 16 * * 6", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["sat"], "time_edt": "16:25", "time_est": "15:25", "cron_utc": "25 20 * * 6", "precedes": "19:00", "kind": "best_effort"},
+        {"days": ["sat"], "time_edt": "16:20", "time_est": "15:20", "cron_utc": "20 20 * * 6", "precedes": "22:30", "kind": "guarantee"},
+        {"days": ["sat"], "time_edt": "19:55", "time_est": "18:55", "cron_utc": "55 23 * * 6", "precedes": "22:30", "kind": "best_effort"}
       ],
       "grade": [
-        {"days": ["sun"], "time": "12:47", "cron_utc": "47 16 * * 0"}
+        {"days": ["sun"], "time_edt": "12:47", "time_est": "11:47", "cron_utc": "47 16 * * 0"}
       ],
       "freeze_integrity": [
-        {"days": ["daily"], "time": "07:43", "cron_utc": "43 11 * * *"}
+        {"days": ["daily"], "time_edt": "07:43", "time_est": "06:43", "cron_utc": "43 11 * * *"}
       ]
     },
     "dst_note": "Crons are single UTC expressions anchored to EDT (UTC-4). After the 2026-11-01 EST flip a fixed UTC time lands one hour EARLIER in ET — always the safe direction for a pre-kickoff capture. No dual crons and no date guards: Actions cron has no date ranges, and a second cron guarded by a string literal is a booby trap. The intended ET time is recorded above and every run logs its actual ET time, so the drift is auditable rather than silent.",
