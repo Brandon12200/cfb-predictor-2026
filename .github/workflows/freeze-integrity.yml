@@ -98,6 +98,60 @@ jobs:
           mode: live
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # D44 claim tripwire, detection only (owner ruling 2026-09-15). The cadence workflows share
+      # one concurrency group, and GitHub keeps one PENDING run per group: a newer pending run
+      # cancels the older, and a cancelled run never fires `if: failure()`. So a Tuesday predict can
+      # vanish without a trace. From Wednesday to Saturday this checks the current week's claim
+      # exists and is not `-dirty`. It lives here because this job has its own group, which no
+      # cadence run can cancel. It runs LAST so a tripwire error can never skip the freeze checks above,
+      # and `!cancelled()` keeps a failed freeze check from also hiding a missing claim.
+      - name: Claim tripwire
+        id: tripwire
+        if: ${{ !cancelled() }}
+        run: |
+          set +e
+          python scripts/claim_tripwire.py 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
+          echo "rc=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Fail on a tripwire error
+        if: ${{ !cancelled() && steps.tripwire.outputs.rc != '0' && steps.tripwire.outputs.rc != '2' && steps.tripwire.outputs.rc != '3' }}
+        run: |
+          echo "::error::claim_tripwire exited ${{ steps.tripwire.outputs.rc }}"
+          exit 1
+
+      # A tripped wire leaves this job GREEN and opens an issue for the week. The two outcomes get
+      # different kinds, because only one of them is fixable:
+      #   rc 2, the claim is MISSING — re-dispatching predict writes it, and that run's
+      #         `clear-failure` (kind `failure`) closes this issue. Recovery is real.
+      #   rc 3, the claim is DIRTY — a claim is byte-immutable (D22), so nothing can replace it. A
+      #         re-dispatched predict SKIPS the claim and succeeds, which under kind `failure` would
+      #         have closed the issue while nothing was fixed, and the next morning's tripwire would
+      #         reopen it: a daily flap around a permanent fact. `dirty-claim` is never cleared by
+      #         `clear-failure`; it stays open for the owner.
+      - name: Claim missing — open a predict Issue
+        if: ${{ !cancelled() && steps.tripwire.outputs.rc == '2' }}
+        uses: ./.github/actions/report-failure
+        with:
+          stage: predict
+          kind: failure
+          week: ${{ steps.tripwire.outputs.week_padded }}
+          title: "pipeline: no claim — 2026 week ${{ steps.tripwire.outputs.week_padded }}"
+          body: "Claim tripwire (D44): ${{ steps.tripwire.outputs.reason }}. Re-dispatch weekly-predict for this week before its first kickoff; a successful run writes the claim and closes this issue."
+          mode: live
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Claim is dirty — open a permanent Issue
+        if: ${{ !cancelled() && steps.tripwire.outputs.rc == '3' }}
+        uses: ./.github/actions/report-failure
+        with:
+          stage: predict
+          kind: dirty-claim
+          week: ${{ steps.tripwire.outputs.week_padded }}
+          title: "pipeline: claim is -dirty — 2026 week ${{ steps.tripwire.outputs.week_padded }}"
+          body: "Claim tripwire (D44): ${{ steps.tripwire.outputs.reason }}. This CANNOT be repaired by re-running anything: the claim is byte-immutable (D22), so a re-dispatched predict skips it and succeeds. The week's pre-registration carries this stamp permanently — an owner decision, not a recovery."
+          mode: live
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: ./.github/actions/report-failure
         if: failure()
         with:

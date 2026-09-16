@@ -11,8 +11,13 @@ Closing line = the last observation before each game's own kickoff (`closing_obs
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
+from utils.atomic_write import write_text_atomic  # noqa: E402
 
 _LINES_DIR = Path(__file__).resolve().parent.parent / "lines"
 
@@ -44,5 +49,6 @@ def record_observation(week: int, games: dict[str, dict], year: int = 2026,
         entry["observations"].sort(key=lambda o: o.get("fetched_at") or "")
     path = lines_path(week, year, base)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(store, indent=2, sort_keys=True) + "\n")
+    write_text_atomic(path, json.dumps(store, indent=2, sort_keys=True) + "\n")
     return added
+

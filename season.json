@@ -80,11 +80,21 @@
         {"days": ["tue"], "time": "09:17", "cron_utc": "17 13 * * 2"}
       ],
       "capture": [
-        {"days": ["wed", "thu", "fri"], "time": "17:23", "cron_utc": "23 21 * * 3,4,5"},
-        {"days": ["sat"], "time": "10:23", "cron_utc": "23 14 * * 6"},
-        {"days": ["sat"], "time": "14:23", "cron_utc": "23 18 * * 6"},
-        {"days": ["sat"], "time": "17:23", "cron_utc": "23 21 * * 6"},
-        {"days": ["sat"], "time": "20:23", "cron_utc": "23 0 * * 0"}
+        {"days": ["tue"], "time": "13:50", "cron_utc": "50 17 * * 2", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["wed"], "time": "13:50", "cron_utc": "50 17 * * 3", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["wed"], "time": "17:23", "cron_utc": "23 21 * * 3", "precedes": "19:00", "kind": "best_effort"},
+        {"days": ["thu"], "time": "13:50", "cron_utc": "50 17 * * 4", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["thu"], "time": "17:23", "cron_utc": "23 21 * * 4", "precedes": "19:00", "kind": "best_effort"},
+        {"days": ["fri"], "time": "13:50", "cron_utc": "50 17 * * 5", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["fri"], "time": "17:23", "cron_utc": "23 21 * * 5", "precedes": "19:00", "kind": "best_effort"},
+        {"days": ["sat"], "time": "06:50", "cron_utc": "50 10 * * 6", "precedes": "12:00", "kind": "guarantee"},
+        {"days": ["sat"], "time": "09:20", "cron_utc": "20 13 * * 6", "precedes": "12:00", "kind": "best_effort"},
+        {"days": ["sat"], "time": "10:20", "cron_utc": "20 14 * * 6", "precedes": "15:30", "kind": "guarantee"},
+        {"days": ["sat"], "time": "12:50", "cron_utc": "50 16 * * 6", "precedes": "15:30", "kind": "best_effort"},
+        {"days": ["sat"], "time": "13:50", "cron_utc": "50 17 * * 6", "precedes": "19:00", "kind": "guarantee"},
+        {"days": ["sat"], "time": "16:20", "cron_utc": "20 20 * * 6", "precedes": "19:00", "kind": "best_effort"},
+        {"days": ["sat"], "time": "17:20", "cron_utc": "20 21 * * 6", "precedes": "22:30", "kind": "guarantee"},
+        {"days": ["sat"], "time": "19:50", "cron_utc": "50 23 * * 6", "precedes": "22:30", "kind": "best_effort"}
       ],
       "grade": [
         {"days": ["sun"], "time": "12:47", "cron_utc": "47 16 * * 0"}
@@ -95,6 +105,7 @@
     },
     "dst_note": "Crons are single UTC expressions anchored to EDT (UTC-4). After the 2026-11-01 EST flip a fixed UTC time lands one hour EARLIER in ET — always the safe direction for a pre-kickoff capture. No dual crons and no date guards: Actions cron has no date ranges, and a second cron guarded by a string literal is a booby trap. The intended ET time is recorded above and every run logs its actual ET time, so the drift is auditable rather than silent.",
     "kickoff_windows_et": {
+      "tue": ["19:00"],
       "wed": ["19:00"],
       "thu": ["19:00"],
       "fri": ["19:00"],
@@ -118,9 +129,9 @@
       "monthly_credits": 500,
       "min_credits_capture": 20,
       "min_credits_snapshot": 40,
-      "expected_weekly_credits": 8,
+      "expected_weekly_credits": 16,
       "alert_below": 100,
-      "_note": "One get_ncaaf_spreads(regions=us, markets=spreads) call = 1 credit. The ratified cadence spends ~8/week (~35/month) against 500, so exhaustion is not the risk — a retry storm is, which is what expected_weekly_credits exists to detect. min_credits_snapshot is the higher floor because the Tuesday snapshot is the week's foundation."
+      "_note": "One get_ncaaf_spreads(regions=us, markets=spreads) call = 1 credit. The D44 cadence (from week 4) spends 16/week — 15 captures plus the Tuesday snapshot, ~70/month, at most 76 (October 2026, five Saturdays) — against 500, so exhaustion is not the risk; a retry storm is, which is what expected_weekly_credits exists to detect. Weeks 1-3 ran the earlier 8/week cadence. min_credits_snapshot is the higher floor because the Tuesday snapshot is the week's foundation."
     },
     "rehearsal": {
       "branch_prefix": "rehearsal/"

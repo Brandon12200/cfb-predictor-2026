@@ -21,9 +21,14 @@ balance whenever a cache was evicted and left the guard blind in between.
 from __future__ import annotations
 
 import json
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from utils.atomic_write import write_text_atomic  # noqa: E402
 
 _DATA = Path(__file__).resolve().parent
 _QUOTA_FILE = _DATA / "odds_quota.json"
@@ -66,7 +71,9 @@ def append_ledger(quota: dict | None, *, caller: str, week: int | None = None,
         "week": week,
         "run_id": run_id,
     })
-    path.write_text(json.dumps(existing, indent=2, sort_keys=True) + "\n")
+    # Atomic: this ledger is the committed SPEC §10.5 record and append-only, so a run killed
+    # between truncate and write would put a torn file into the record on the next cfb-commit.
+    write_text_atomic(path, json.dumps(existing, indent=2, sort_keys=True) + "\n")
     return True
 
 
@@ -74,7 +81,7 @@ def record_quota(quota: dict | None, path: Path = _QUOTA_FILE) -> None:
     """Persist the latest Odds credit balance (no-op if the header wasn't present)."""
     if not quota or quota.get("remaining") is None:
         return
-    path.write_text(json.dumps(
+    write_text_atomic(path, json.dumps(
         {"remaining": quota.get("remaining"), "used": quota.get("used"),
          "recorded_at": datetime.now(UTC).isoformat()}, indent=2) + "\n")
 

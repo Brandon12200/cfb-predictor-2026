@@ -56,6 +56,18 @@ are corrected in place and recorded as **C10–C14 in `docs/HANDOFF_SEASON.md` �
 2. **PR D — CLV gate in `weekly-predict`'s catch-up** (ruling 2). **Deadline: before 2026-09-22.**
    **Taken first, ahead of PR C, by owner ruling 2026-09-13**, and it also carries D43. **Merged as #63
    (`5eb8453`).** The fail-closed design stands, with the narrower shape recorded as rejected (D43, appended).
+**Queue as ruled 2026-09-15 (supersedes the order below; orientation update per D42 (a)1):**
+**D44 ratified** (proposal #65).
+1. **The D44 workflow PR** (cadence, `season.json`, guard fix, tiers 0–2). It must merge before
+   **Wed 2026-09-23**.
+2. **The D44 report PR** (close-age buckets, the week-4 boundary, no cross-boundary season blend,
+   tiers 3–4). It must merge before **Sun 2026-09-27 12:47 ET**.
+3. **D45, the claim-path ruling:** exclude any game whose scheduled kickoff precedes the claim run plus
+   a margin, and list each exclusion in the claim's meta with its reason. A Tuesday game with no
+   post-claim observation gets `closing_spread` null with a reason, never a zero CLV. Implementation
+   PR before **2026-10-06**, with a GO before merge.
+4. Then the proposals for **variance/tier visibility**, **CFBD retry** and **feasibility**.
+
 3. **Then four proposals for the owner's ruling — proposals, not PRs:**
    - **D44 candidate** (was "D43" before D43 was taken, 2026-09-13) **— cron cadence**, with an **escalation path for the timing guard.**
      **Filed as `docs/proposals/D44_CRON_CADENCE.md` (2026-09-14)**, which supersedes the figures in this

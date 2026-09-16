@@ -1,21 +1,41 @@
-# Wed–Sat line capture (PHASE5_NOTES §1: daily, NOT Saturday-only) plus intra-Saturday waves.
+# Tue–Sat line capture (PHASE5_NOTES §1: daily, NOT Saturday-only), two slots per kickoff window.
 #
 # Each game's close is the last observation before THAT game's own kickoff (per-game as-of-T,
 # `closing_observation`), so the schedule's job is simply to have a recent observation standing
-# before each kickoff window. One Saturday-morning fetch would leave a 22:30 ET kickoff with a
-# 12-hour-stale "close", and closing_observation would faithfully report it — CLV noise for the
-# largest part of the slate. The four Saturday waves are a ratified refinement of the daily
-# cadence, not a replacement for it (D-7).
-name: Daily line capture (Wed–Sat)
+# before each kickoff window.
+#
+# D44 (from week 4). Actions scheduled runs fired 97–485 min late through week 3, so each run landed
+# after the window its slot was meant to precede, and Saturday's noon games took a 16.7 h-stale close.
+# Each window now has two slots, recorded with `precedes` and `kind` in season.json:
+# * a GUARANTEE slot at window − 5 h 10 min, which lands before the window at the worst Saturday
+#   lateness observed (309 min);
+# * a BEST-EFFORT slot at about window − 2 h 40 min, timed to the median lateness, so it usually
+#   lands shortly before kickoff.
+# The Tuesday slot exists because Tuesday games start in week 6, and without a capture their only
+# close would be the claim's own snapshot observation.
+name: Daily line capture (Tue–Sat)
 
 on:
   schedule:
-    - cron: "23 21 * * 3,4,5"  # Wed/Thu/Fri 17:23 ET — ~1h37m before a 19:00 ET kickoff
-    - cron: "23 14 * * 6"      # Sat 10:23 ET — before the 12:00 wave
-    - cron: "23 18 * * 6"      # Sat 14:23 ET — before the 15:30 wave
-    - cron: "23 21 * * 6"      # Sat 17:23 ET — before the 19:00 wave
-    - cron: "23  0 * * 0"      # Sat 20:23 ET — before the 22:30 wave. SUNDAY in UTC; this line is
-                               # why week resolution must use ET (see utils.season_calendar).
+    - cron: "50 17 * * 2"      # Tue 13:50 ET — guarantee, before 19:00
+    # One line per weekday, never `3,4,5`: the timing guard finds the slot that fired by matching
+    # `github.event.schedule` and walking back to that cron's latest time. With a shared line, a
+    # Wednesday run more than 24 h late would match THURSDAY's slot and report on-time (D44 audit).
+    - cron: "50 17 * * 3"      # Wed 13:50 ET — guarantee, before 19:00
+    - cron: "23 21 * * 3"      # Wed 17:23 ET — best-effort, before 19:00 (serves 19:30+ kickoffs)
+    - cron: "50 17 * * 4"      # Thu 13:50 ET — guarantee, before 19:00
+    - cron: "23 21 * * 4"      # Thu 17:23 ET — best-effort, before 19:00
+    - cron: "50 17 * * 5"      # Fri 13:50 ET — guarantee, before 19:00
+    - cron: "23 21 * * 5"      # Fri 17:23 ET — best-effort, before 19:00
+    - cron: "50 10 * * 6"      # Sat 06:50 ET — guarantee, before 12:00
+    - cron: "20 13 * * 6"      # Sat 09:20 ET — best-effort, before 12:00
+    - cron: "20 14 * * 6"      # Sat 10:20 ET — guarantee, before 15:30
+    - cron: "50 16 * * 6"      # Sat 12:50 ET — best-effort, before 15:30
+    - cron: "50 17 * * 6"      # Sat 13:50 ET — guarantee, before 19:00
+    - cron: "20 20 * * 6"      # Sat 16:20 ET — best-effort, before 19:00
+    - cron: "20 21 * * 6"      # Sat 17:20 ET — guarantee, before 22:30
+    - cron: "50 23 * * 6"      # Sat 19:50 ET — best-effort, before 22:30. Still Saturday in UTC under
+                               # EDT; week resolution uses ET regardless (utils.season_calendar).
   workflow_dispatch:
     inputs:
       week:
@@ -81,6 +101,8 @@ jobs:
         id: capture
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          # The slot that fired this run: fetch_lines' exit 4 applies only to the Tuesday slot.
+          CFB_EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
           set +e
           ARGS=(--week "${{ steps.setup.outputs.week }}" --year "${{ steps.setup.outputs.year }}")
@@ -97,8 +119,19 @@ jobs:
           echo "The pre-spend guard declined this capture; no credit was spent and nothing was committed." >> "$GITHUB_STEP_SUMMARY"
           echo "::warning::Odds budget guard refused the fetch — see the step summary."
 
+      # Exit 4: a scheduled Tuesday capture ran before the predict job built this week's snapshot.
+      # A designed state by owner ruling (2026-09-15, D44): nothing was fetched and no credit spent,
+      # and a predict that actually failed files its own issue. fetch_lines only returns 4 for the
+      # scheduled Tuesday capture slot; any other missing snapshot is still exit 1.
+      - name: Snapshot not built yet (not a failure)
+        if: steps.capture.outputs.rc == '4'
+        run: |
+          echo "### Capture skipped: snapshot not built yet" >> "$GITHUB_STEP_SUMMARY"
+          echo "This Tuesday capture ran before the predict job built week ${{ steps.setup.outputs.week_padded }}'s snapshot. Nothing was fetched or committed." >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice::Tuesday capture ran before the week's snapshot existed — designed state, nothing committed."
+
       - name: Fail on a real error
-        if: steps.capture.outputs.rc != '0' && steps.capture.outputs.rc != '3'
+        if: steps.capture.outputs.rc != '0' && steps.capture.outputs.rc != '3' && steps.capture.outputs.rc != '4'
         run: |
           echo "::error::fetch_lines exited ${{ steps.capture.outputs.rc }}"
           exit 1
@@ -110,6 +143,22 @@ jobs:
           message: "lines: ${{ steps.setup.outputs.year }} week ${{ steps.setup.outputs.week_padded }} observation ${{ steps.setup.outputs.et_now }}"
           suffix: ${{ steps.setup.outputs.commit_suffix }}
           push: ${{ inputs.dry_run != true }}
+
+      # D44 escalation, tier 2 (open). The preflight judged this run against the slot that fired it
+      # (tiers 0-1). A GUARANTEE slot that landed at or after its window opens, or comments on, one
+      # `pipeline-late` issue per week; the Sunday grade closes it with the tally. Cooldown 0, because
+      # every guarantee miss is a distinct event the tally counts. The run stays green: WARN-not-ABORT.
+      - uses: ./.github/actions/report-failure
+        if: steps.setup.outputs.timing_guarantee_miss == 'true' && inputs.dry_run != true
+        with:
+          stage: capture
+          week: ${{ steps.setup.outputs.week_padded }}
+          mode: ${{ steps.setup.outputs.mode }}
+          kind: late
+          title: "pipeline: late capture — 2026 week ${{ steps.setup.outputs.week_padded }}"
+          body: "<!-- late-miss --> A guarantee capture slot missed its kickoff window (D44). ${{ steps.setup.outputs.timing_detail }}"
+          cooldown-minutes: "0"
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: ./.github/actions/report-failure
         # A dry run must not open a real issue. `dry_run` previously gated only `skip-secrets`
