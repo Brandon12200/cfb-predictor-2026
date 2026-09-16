@@ -11,13 +11,10 @@ Closing line = the last observation before each game's own kickoff (`closing_obs
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-
-from utils.atomic_write import write_text_atomic  # noqa: E402
+from utils.atomic_write import write_text_atomic
 
 _LINES_DIR = Path(__file__).resolve().parent.parent / "lines"
 

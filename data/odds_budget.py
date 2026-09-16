@@ -21,14 +21,11 @@ balance whenever a cache was evicted and left the guard blind in between.
 from __future__ import annotations
 
 import json
-import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from utils.atomic_write import write_text_atomic  # noqa: E402
+from utils.atomic_write import write_text_atomic
 
 _DATA = Path(__file__).resolve().parent
 _QUOTA_FILE = _DATA / "odds_quota.json"
