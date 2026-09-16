@@ -1045,6 +1045,25 @@ observed Saturday lateness (309 min). It also gets a **best-effort** slot timed 
 retry-storm warning stays correct. The crons remain single UTC expressions anchored to EDT
 (`dst_note`); from 2026-11-01 they land an hour earlier in ET.
 
+**Games after the last window are not covered by the guarantee, and their close gets slightly
+staler.** `kickoff_windows_et` ends at 22:30 ET, and six Saturday games this season start later:
+23:00 in weeks 2, 3 and 13, and 23:59 in weeks 2, 5 and 11. No slot `precedes` them, so no guarantee
+applies; they are served by whatever the 17:20 guarantee and 19:50 best-effort slots produce. D44
+also moves the last Saturday slot from 20:23 ET to 19:50 ET. Replayed against the measured Saturday
+lateness (the 12 in-season samples, 20,000 draws), the typical close age for those games rises:
+**23:00 — median 0.9 h before D44, 1.1 h after; 23:59 — 1.5 h before, 2.1 h after** (coverage is 100%
+in both cadences, and p90 is unchanged or better: 3.5 h → 3.3 h and 4.3 h → 4.1 h). The proposal's
+simulation only evaluated the four windows, so this trade was not quantified before ratification.
+Accepted as measured, not discovered later; a 2027 option is a 23:00 window with its own guarantee.
+
+**The simpler alternative, considered.** Shifting the existing four Saturday slots earlier by the
+measured lateness (option A in the proposal) would have bought the same worst-case guarantee with 8
+crons instead of 15, no `precedes`/`kind` vocabulary, and no guarantee-versus-best-effort taxonomy
+for tiers 1–2 to rest on. It was not chosen because its median close age is 2.6 h against B4's 0.6 h,
+and because it makes weekday closes worse (the 17:23 slot's lateness is what currently serves 19:30+
+kickoffs). Recorded because an independent review argued the coverage failure, not freshness, was the
+measured problem, and that half of D44's surface serves the smaller half of it.
+
 **This extends a binding refinement, by this ruling.** `docs/PHASE5_NOTES.md` §1 (quoted in SPEC §10's
 banner) binds line capture to "daily Wed–Sat, not Saturday-only". D44 adds **Tuesday**, so capture is
 now daily **Tue–Sat**. The substance of the refinement, daily and not Saturday-only, with each close
@@ -1106,6 +1125,15 @@ Whether a claim excludes games that have already kicked off is a separate ruling
    - a test that it fires on a synthetic missing claim and stays silent when the claim exists;
    - it also fires when the claim's `model_version` carries **`-dirty`**, because a dirty claim is not
      a claim.
+
+   **Corrected after review (2026-09-16): the two outcomes are not the same alarm.** This entry first
+   said a successful predict re-dispatch closes the issue. That is true of a **missing** claim and
+   false of a **dirty** one: a claim is byte-immutable (D22 — `write_predictions` refuses to
+   overwrite), so a re-dispatched predict *skips* the claim, succeeds, and its `clear-failure` would
+   close the issue while nothing had been repaired; the next morning's tripwire would reopen it, a
+   daily flap around a permanent fact. The tripwire now exits **2** for a missing claim
+   (`kind: failure`, cleared by a successful predict) and **3** for a dirty one
+   (`kind: dirty-claim`, which `clear-failure` never clears — it stands until the owner rules).
 
    **The concurrency hazard itself is not ruled.** Whether capture should leave the shared group is
    recorded as a 2027 design question (`docs/2027_NOTES.md` §8 item 33, `docs/PIPELINE.md`

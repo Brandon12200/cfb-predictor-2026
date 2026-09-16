@@ -208,6 +208,13 @@ matter under D44:
 Whether capture should leave the shared group (serialization then resting on `cfb-commit`'s
 rebase-retry) is a **2027 design question, not ruled** (`2027_NOTES` §8 item 33).
 
+**The tripwire checks only the week in play.** `pipeline_week` resolves one week, so once the week
+rolls over, an earlier week's missing claim is never re-examined. Its Wed–Sat checks are four
+independent chances, but if all four are missed — GitHub may **drop** scheduled runs under load, and
+a dispatch cancels a pending freeze-integrity run — that week's absence is never alarmed again.
+Verified by walking dates with a missing week-4 claim: 09-23 and 09-26 check week 4, 09-30 and 10-03
+check week 5.
+
 **Identity (D30, as amended 2026-08-11).** Commits are authored by
 `cfb-pipeline <cfb-pipeline@cfb-predictor-2026.invalid>` with a `Run: <actions-run-url>` trailer. A
 project machine identity is not AI attribution (D3); the trailer is the tamper-evident link SPEC §10

@@ -182,6 +182,67 @@ def test_a_late_run_before_its_window_is_late_not_missed():
     assert v.status == "late" and pf.warns == []
 
 
+# --- B1: timing is WARN-only, so nothing in the guard may abort a capture -----------------------
+#
+# The guard runs in the preflight, BEFORE the fetch. An exception there fails cfb-setup and the
+# capture never happens: a timing check deciding there is no observation at all, which inverts the
+# severity split the module exists to keep. Found by an adversarial review of the D44 PR, which
+# demonstrated an uncaught ValueError escaping `main()`.
+
+def test_a_corrupt_lines_store_warns_and_the_capture_still_proceeds(tmp_path, monkeypatch):
+    import scripts.pipeline_preflight as pp
+    (tmp_path / "data" / "lines").mkdir(parents=True)
+    (tmp_path / "data" / "lines" / "2026_week_04.json").write_text('{"A@B": {"kickoff"')  # truncated
+    monkeypatch.setattr(pp, "ROOT", tmp_path)
+    pf = Preflight()
+    v = check_timing(pf, CAL, datetime(2026, 9, 26, 12, 5, tzinfo=ET), role="capture",
+                     event_name="schedule", schedule=SAT, week=4, year=2026)
+    assert v.status == "missed" and v.guarantee_miss, "the verdict still stands"
+    assert any("could not be read" in w for w in pf.warns)
+    assert emit(pf, "capture", 4, quiet=True) == 0, "a corrupt store must not fail the preflight"
+
+
+def test_an_unparseable_kickoff_warns_and_the_capture_still_proceeds(tmp_path, monkeypatch):
+    import scripts.pipeline_preflight as pp
+    (tmp_path / "data" / "lines").mkdir(parents=True)
+    (tmp_path / "data" / "lines" / "2026_week_04.json").write_text(
+        json.dumps({"A@B": {"kickoff": "not-a-timestamp"}}))
+    monkeypatch.setattr(pp, "ROOT", tmp_path)
+    pf = Preflight()
+    v = check_timing(pf, CAL, datetime(2026, 9, 26, 12, 5, tzinfo=ET), role="capture",
+                     event_name="schedule", schedule=SAT, week=4, year=2026)
+    assert v.status == "missed"
+    assert any("could not be read" in w for w in pf.warns)
+    assert emit(pf, "capture", 4, quiet=True) == 0
+
+
+def test_any_failure_inside_the_verdict_is_a_warning_not_a_raise(monkeypatch):
+    """Whatever breaks — the slot maths, the config shape, an unreadable file — the capture runs."""
+    import scripts.pipeline_preflight as pp
+
+    def boom(*a, **k):
+        raise ValueError("anything at all")
+
+    monkeypatch.setattr(pp, "evaluate_timing", boom)
+    pf = Preflight()
+    v = pp.check_timing(pf, CAL, datetime(2026, 9, 26, 12, 5, tzinfo=ET), role="capture",
+                        event_name="schedule", schedule=SAT, week=4, year=2026)
+    assert v.status == "unknown_slot"
+    assert len(pf.warns) == 1 and "could not judge this run" in pf.warns[0]
+    assert pf.annotations == pf.warns
+    assert emit(pf, "capture", 4, quiet=True) == 0
+
+
+def test_the_preflight_exits_zero_when_the_guard_breaks(monkeypatch, tmp_path):
+    """End to end through main(): the adversarial review's exact reproduction."""
+    import scripts.pipeline_preflight as pp
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "schedule")
+    monkeypatch.setenv("CFB_EVENT_SCHEDULE", SAT)
+    monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
+    monkeypatch.setattr(pp, "_games_in_window", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("torn file")))
+    assert pp.main(["--role", "capture", "--week", "4", "--skip-secrets"]) == 0
+
+
 def test_grade_and_other_roles_are_not_time_critical():
     """Every Sunday grade warned under the old check (6 of 6), 15+ min after a 12:47 slot."""
     for role in ("grade", "predict", "freeze"):

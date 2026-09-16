@@ -29,8 +29,13 @@ It is silent:
   tripwire PR).
 
 Exit 0: a valid claim exists, or the check does not apply today.
-Exit 2: the claim is due and missing or invalid. The workflow opens a `stage:predict` issue and stays
-green; a later successful predict run for that week clears it.
+Exit 2: the claim is due and **missing or unreadable**. Re-dispatching `weekly-predict` for that week
+writes it, so the workflow opens an ordinary `pipeline-failure` issue, which that successful run clears.
+Exit 3: the claim exists and is **`-dirty`**. This is NOT recoverable by re-running anything. A claim
+is byte-immutable (D22: `write_predictions` refuses to overwrite), so the week's pre-registration
+carries that stamp permanently; a re-dispatched predict skips the claim, succeeds, and would close an
+ordinary failure issue while nothing had been fixed. It therefore opens `pipeline-dirty-claim`, a kind
+`clear-failure` never clears: the fact stands until the owner decides what to do with it.
 Exit 1: the check itself failed.
 
 Usage: python scripts/claim_tripwire.py [--today YYYY-MM-DD] [--base DIR]
@@ -54,7 +59,7 @@ from utils.season_calendar import (  # noqa: E402
 )
 
 ROOT = Path(__file__).resolve().parent.parent
-EXIT_OK, EXIT_ERROR, EXIT_NO_VALID_CLAIM = 0, 1, 2
+EXIT_OK, EXIT_ERROR, EXIT_NO_VALID_CLAIM, EXIT_DIRTY_CLAIM = 0, 1, 2, 3
 # Wednesday..Saturday: the predict job runs Tuesday, so from Wednesday a missing claim is not "not
 # yet". Sunday and Monday are after the week's games.
 _ACTIVE_WEEKDAYS = {2, 3, 4, 5}
@@ -78,6 +83,11 @@ def claim_problem(path: Path, shown: str | None = None) -> str | None:
     return None
 
 
+def is_dirty(problem: str) -> bool:
+    """A dirty claim is permanent; a missing one is fixable. They need different issue kinds."""
+    return "-dirty" in problem
+
+
 def claim_due(week: int, today: date, calendar: dict) -> bool:
     """True once the most recent Tuesday before ``today`` was ``week``'s own predict day."""
     tuesday = today - timedelta(days=(today.weekday() - 1) % 7 or 7)
@@ -97,7 +107,7 @@ def evaluate(today: date, calendar: dict, base: Path) -> tuple[int, int | None, 
     problem = claim_problem(base / rel, rel)
     if problem is None:
         return EXIT_OK, week, f"week {week} has a valid claim"
-    return EXIT_NO_VALID_CLAIM, week, problem
+    return (EXIT_DIRTY_CLAIM if is_dirty(problem) else EXIT_NO_VALID_CLAIM), week, problem
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -109,8 +119,13 @@ def main(argv: list[str] | None = None) -> int:
     today = args.today or pipeline_today(calendar)
     rc, week, reason = evaluate(today, calendar, args.base)
     if rc == EXIT_NO_VALID_CLAIM:
-        print(f"::error::claim tripwire: week {week} is due a claim and has none valid: {reason}. "
+        print(f"::error::claim tripwire: week {week} is due a claim and has none: {reason}. "
               f"Re-dispatch weekly-predict for week {week} before its first kickoff.")
+    elif rc == EXIT_DIRTY_CLAIM:
+        print(f"::error::claim tripwire: week {week}'s claim is dirty and cannot be repaired: "
+              f"{reason}. Claims are byte-immutable (D22), so re-running predict will NOT replace it "
+              f"— it skips the existing claim and succeeds. This is a permanent fact about week "
+              f"{week}'s pre-registration, for the owner to rule on.")
     else:
         print(f"claim tripwire: {reason}")
     out = os.environ.get("GITHUB_OUTPUT")
@@ -118,6 +133,8 @@ def main(argv: list[str] | None = None) -> int:
         with open(out, "a") as fh:
             fh.write(f"week_padded={week:02d}\n")
             fh.write(f"reason={reason}\n")
+            # `failure` is cleared by a successful predict; `dirty-claim` never is.
+            fh.write(f"kind={'dirty-claim' if rc == EXIT_DIRTY_CLAIM else 'failure'}\n")
     return rc
 
 

@@ -147,6 +147,7 @@ class TimingVerdict:
     lateness_min: int | None = None
     margin_min: int | None = None
     games: list[str] = field(default_factory=list)
+    slate_problem: str | None = None
 
     @property
     def guarantee_miss(self) -> bool:
@@ -171,25 +172,34 @@ def slot_fired_at(cron: str, now: datetime) -> datetime:
 
 
 def _games_in_window(window: datetime, windows: list[str], week: int | None,
-                     year: int | None) -> list[str]:
-    """Slate games that kick off at or after ``window`` and before the next window of that ET day."""
+                     year: int | None) -> tuple[list[str], str | None]:
+    """(games kicking off in this window, problem reading the store).
+
+    Never raises. The game list is colour on a warning; the store it reads is a live append-only
+    file that a killed run could leave truncated, and a timing check must not be the thing that
+    decides whether a capture happens (WARN-not-ABORT).
+    """
     if week is None or year is None:
-        return []
+        return [], None
     path = ROOT / "data" / "lines" / f"{year}_week_{week:02d}.json"
     if not path.exists():
-        return []
-    later = sorted(t for t in (window.replace(hour=int(w[:2]), minute=int(w[3:])) for w in windows)
-                   if t > window)
-    until = later[0] if later else window.replace(hour=23, minute=59, second=59)
-    games = []
-    for key, entry in json.loads(path.read_text()).items():
-        kick = entry.get("kickoff")
-        if not kick:
-            continue
-        k = datetime.fromisoformat(kick.replace("Z", "+00:00")).astimezone(window.tzinfo)
-        if window <= k < until:
-            games.append(key)
-    return sorted(games)
+        return [], None
+    try:
+        store = json.loads(path.read_text())
+        later = sorted(t for t in (window.replace(hour=int(w[:2]), minute=int(w[3:])) for w in windows)
+                       if t > window)
+        until = later[0] if later else window.replace(hour=23, minute=59, second=59)
+        games = []
+        for key, entry in store.items():
+            kick = entry.get("kickoff")
+            if not kick:
+                continue
+            k = datetime.fromisoformat(kick.replace("Z", "+00:00")).astimezone(window.tzinfo)
+            if window <= k < until:
+                games.append(key)
+        return sorted(games), None
+    except Exception as exc:                       # noqa: BLE001 — see the docstring
+        return [], f"{path.name} could not be read ({type(exc).__name__}: {exc})"
 
 
 def evaluate_timing(cal: dict, role: str, now: datetime, *, event_name: str, schedule: str,
@@ -224,8 +234,9 @@ def evaluate_timing(cal: dict, role: str, now: datetime, *, event_name: str, sch
     slack = int(pipeline.get("jitter_slack_minutes", 60))
     status = "missed" if now >= window else ("late" if lateness > slack else "on_time")
     day = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][slot_et.weekday()]
-    games = _games_in_window(window, pipeline.get("kickoff_windows_et", {}).get(day, []), week, year)
-    return TimingVerdict(status, entry["kind"], slot_et, window, lateness, margin, games)
+    day_windows = pipeline.get("kickoff_windows_et", {}).get(day, [])
+    games, problem = _games_in_window(window, day_windows, week, year)
+    return TimingVerdict(status, entry["kind"], slot_et, window, lateness, margin, games, problem)
 
 
 def check_timing(pf: Preflight, cal: dict, now: datetime, *, role: str, event_name: str,
@@ -238,7 +249,22 @@ def check_timing(pf: Preflight, cal: dict, now: datetime, *, role: str, event_na
       annotation naming the window and its games. A best-effort miss is expected by design
       (owner ruling 2026-09-15), so it stays at tier 0.
     """
-    v = evaluate_timing(cal, role, now, event_name=event_name, schedule=schedule, week=week, year=year)
+    try:
+        v = evaluate_timing(cal, role, now, event_name=event_name, schedule=schedule,
+                            week=week, year=year)
+    except Exception as exc:                       # noqa: BLE001
+        # The timing check is WARN-only by ratified ruling (2026-08-07, kept by D44). It runs in the
+        # preflight, BEFORE the fetch, so an exception here would fail cfb-setup and the capture
+        # would never happen — a guard deciding there is no observation at all, which is the exact
+        # inversion the severity split exists to prevent. Reported loudly, never raised.
+        msg = (f"timing: the guard could not judge this run ({type(exc).__name__}: {exc}). "
+               f"Continuing: timing is WARN-only and the capture matters more than the verdict.")
+        pf.warn(msg)
+        pf.annotate(msg)
+        return TimingVerdict("unknown_slot")
+    if v.slate_problem:
+        pf.warn(f"timing: {v.slate_problem}. The window's games cannot be listed; the verdict "
+                f"below stands, and grading reads the same file.")
     if v.status == "not_time_critical":
         pf.note(f"timing: not evaluated for role '{role}' (only capture is time-critical, D44)")
     elif v.status == "manual":

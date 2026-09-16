@@ -57,3 +57,49 @@ def test_record_observation_dedups_by_fetched_at(tmp_path):
     assert record_observation(1, obs, base=tmp_path) == 1
     assert record_observation(1, obs, base=tmp_path) == 0  # same fetched_at → idempotent
     assert len(load_lines(1, base=tmp_path)["G@H"]["observations"]) == 1
+
+
+# --- the store is replaced in one step, never truncated in place ---------------------------------
+#
+# `record_observation` used to `path.write_text`, which truncates and then writes. A run killed in
+# that window — a 20-minute job timeout, a cancelled run, a runner reset — left a half-written JSON
+# file, and every later reader of that week died on it: `closing_observation`, grading, and the
+# capture preflight, which turned one torn write into every remaining capture of the week failing
+# before it fetched anything. Found by an adversarial review of the D44 cadence PR.
+
+def _obs(at: str, spread: float) -> dict:
+    return {"G@H": {"home_team": "H", "away_team": "G", "kickoff": "2026-09-05T16:00:00Z",
+                    "observations": [{"fetched_at": at, "lines": [], "consensus_spread": spread}]}}
+
+
+def test_a_killed_write_leaves_the_previous_store_intact(tmp_path, monkeypatch):
+    import os
+
+    from data.snapshot.lines import lines_path
+
+    record_observation(1, _obs("2026-09-01T00:00:00Z", -3.0), base=tmp_path)
+    before = lines_path(1, base=tmp_path).read_bytes()
+
+    def killed(*args, **kwargs):
+        raise OSError("runner died between the write and the rename")
+
+    monkeypatch.setattr(os, "replace", killed)
+    try:
+        record_observation(1, _obs("2026-09-02T00:00:00Z", -4.0), base=tmp_path)
+    except OSError:
+        pass
+    assert lines_path(1, base=tmp_path).read_bytes() == before, "a torn write must not be visible"
+    assert load_lines(1, base=tmp_path)["G@H"]["observations"][0]["consensus_spread"] == -3.0
+    assert [p.name for p in lines_path(1, base=tmp_path).parent.iterdir()] == \
+        ["2026_week_01.json"], "no temp file may be left behind"
+
+
+def test_identical_input_still_produces_identical_bytes(tmp_path):
+    """The atomic write must not change serialization: the append-only hooks and the byte-identity
+    golden compare bytes, not parsed JSON."""
+    from data.snapshot.lines import lines_path
+
+    record_observation(1, _obs("2026-09-01T00:00:00Z", -3.0), base=tmp_path)
+    first = lines_path(1, base=tmp_path).read_bytes()
+    record_observation(1, _obs("2026-09-01T00:00:00Z", -3.0), base=tmp_path)   # deduped no-op
+    assert lines_path(1, base=tmp_path).read_bytes() == first

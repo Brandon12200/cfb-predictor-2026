@@ -491,3 +491,18 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     `main` would then rest on `cfb-commit`'s rebase-retry, which is safe for append-only additions
     but is a change to the "must serialize" rule in `docs/PIPELINE.md`. Found by the
     `pipeline-adversary` audit and the code review of the D44 workflow PR.
+34. **A designed-state exit still satisfies `clear-failure`.** `daily-capture.yml` ends with
+    `clear-failure if: success()`, and a run that captured nothing — exit 3 (budget refusal) or
+    exit 4 (a Tuesday capture before the snapshot, D44) — is still a success, so it closes any open
+    `pipeline-failure` issue for that stage and week as "recovered". The issue was real and nothing
+    re-ran successfully; only a run that *did* the work should clear it. Pre-existing with exit 3,
+    extended by exit 4. A 2027 fix is to clear only when the job actually produced its artifact
+    (e.g. gate `clear-failure` on the same `rc == '0'` the commit step already uses). Found by an
+    adversarial review of the D44 workflow PR.
+35. **`freeze-integrity` hardcodes `mode: live` and has an unguarded `workflow_dispatch`.** Unlike
+    the three cadence workflows it never resolves live-versus-rehearsal from the ref
+    (`.github/actions/cfb-setup`), so dispatching it on a `rehearsal/*` branch judges that branch's
+    tree and files **live**-labelled issues — including, since D44, the claim tripwire's
+    `stage:predict` alarm. Low likelihood, since rehearsal branches carry `main`'s claims, but the
+    one alarm that means "no claim for the week" should not be forgeable from a drill. Found by an
+    adversarial review of the D44 workflow PR.

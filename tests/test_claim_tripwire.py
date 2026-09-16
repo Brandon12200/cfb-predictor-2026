@@ -15,7 +15,13 @@ from pathlib import Path
 
 import pytest
 
-from scripts.claim_tripwire import EXIT_NO_VALID_CLAIM, EXIT_OK, evaluate, main
+from scripts.claim_tripwire import (
+    EXIT_DIRTY_CLAIM,
+    EXIT_NO_VALID_CLAIM,
+    EXIT_OK,
+    evaluate,
+    main,
+)
 from utils.season_calendar import load_calendar
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -46,10 +52,43 @@ def test_silent_when_the_claim_exists(tmp_path):
 
 
 def test_fires_when_the_claim_is_dirty(tmp_path):
-    """A claim stamped from a modified working tree is not a claim of the frozen model."""
+    """A claim stamped from a modified working tree is not a claim of the frozen model, and it is
+    a DIFFERENT outcome from a missing one: nothing can repair it (D22 byte-immutability)."""
     _claim(tmp_path, model_version="v2026-frozen-3-70-gabc1234-dirty")
     rc, _, reason = evaluate(WED, CAL, tmp_path)
-    assert rc == EXIT_NO_VALID_CLAIM and "-dirty" in reason
+    assert rc == EXIT_DIRTY_CLAIM and "-dirty" in reason
+
+
+def test_a_dirty_claim_is_reported_as_permanent_not_as_a_re_run(tmp_path, capsys):
+    _claim(tmp_path, model_version="v2026-frozen-3-70-gabc1234-dirty")
+    assert main(["--today", "2026-09-23", "--base", str(tmp_path)]) == EXIT_DIRTY_CLAIM
+    out = capsys.readouterr().out
+    assert "cannot be repaired" in out and "byte-immutable" in out
+    assert "Re-dispatch" not in out, "re-running predict does not replace a claim"
+
+
+def test_a_skipped_claim_predict_success_cannot_close_the_dirty_issue():
+    """weekly-predict skips the claim when one exists and still succeeds, so its `clear-failure`
+    would close an ordinary failure issue while nothing was fixed. The dirty issue uses a kind that
+    `clear-failure` never clears."""
+    dirty = WORKFLOW[WORKFLOW.index("Claim is dirty"):]
+    dirty = dirty[:dirty.index("token:")]
+    assert "kind: dirty-claim" in dirty
+    predict = (ROOT / ".github/workflows/weekly-predict.yml").read_text()
+    clear = predict[predict.index("actions/clear-failure"):]
+    assert "kind:" not in clear[:clear.index("token:")], "clear-failure defaults to kind: failure"
+    clear_action = (ROOT / ".github/actions/clear-failure/action.yml").read_text()
+    assert 'default: failure' in clear_action and 'pipeline-${KIND}' in clear_action
+
+
+def test_the_two_outcomes_have_different_exit_codes_and_kinds(tmp_path):
+    """A missing claim is fixable by a re-dispatch; a dirty one is not. Same alarm would be wrong."""
+    assert evaluate(WED, CAL, tmp_path)[0] == EXIT_NO_VALID_CLAIM
+    missing = WORKFLOW[WORKFLOW.index("Claim missing"):]
+    assert "kind: failure" in missing[:missing.index("token:")]
+    assert "rc == '2'" in missing[:missing.index("token:")]
+    fail = WORKFLOW[WORKFLOW.index("- name: Fail on a tripwire error"):]
+    assert "rc != '3'" in fail.split("run:")[0], "exit 3 is a designed outcome, not an error"
 
 
 @pytest.mark.parametrize("model_version, raw", [(None, None), (None, "{not json")])

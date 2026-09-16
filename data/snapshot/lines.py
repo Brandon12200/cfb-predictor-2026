@@ -11,6 +11,7 @@ Closing line = the last observation before each game's own kickoff (`closing_obs
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -44,5 +45,26 @@ def record_observation(week: int, games: dict[str, dict], year: int = 2026,
         entry["observations"].sort(key=lambda o: o.get("fetched_at") or "")
     path = lines_path(week, year, base)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(store, indent=2, sort_keys=True) + "\n")
+    _write_atomic(path, json.dumps(store, indent=2, sort_keys=True) + "\n")
     return added
+
+
+def _write_atomic(path: Path, text: str) -> None:
+    """Replace ``path`` in one step, so a killed run can never leave a truncated store.
+
+    The store was written with `path.write_text`, which truncates first and then writes. A run
+    killed in that window — a 20-minute job timeout, a cancelled run, a runner reset — left a
+    half-written JSON file, and every later reader of that week died on it: `closing_observation`,
+    grading, and (since D44) the capture preflight itself, which turned one torn write into every
+    remaining capture of the week failing before it fetched anything.
+
+    The temp file is created in the SAME directory, because `os.replace` is only atomic within a
+    filesystem. Identical input still produces identical bytes: same serialization, same trailing
+    newline — `tests/test_golden_byte_identity.py` and the append-only hooks depend on that.
+    """
+    tmp = path.with_name(f".{path.name}.tmp")
+    try:
+        tmp.write_text(text)
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
