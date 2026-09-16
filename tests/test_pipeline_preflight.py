@@ -411,3 +411,20 @@ def test_the_real_registry_clears_the_floor():
 # ({"sp_ratings": 0, "returning_production": 0}), which SPEC §3 exception 1 superseded when
 # returning production published at 136 rows. Keeping a second, overlapping set of baseline
 # assertions here is how the two would drift — the dedicated file is the single home.
+
+
+def test_a_torn_quota_ledger_warns_and_the_capture_still_proceeds(monkeypatch):
+    """`report_budget` is reporting only, and it reads a committed ledger a killed run could have
+    left torn. Like the timing check, it must never be the thing that stops a capture. The pre-spend
+    guard is unaffected: it lives in fetch_lines and reads the balance itself."""
+    import scripts.pipeline_preflight as pp
+
+    def torn(*a, **k):
+        raise ValueError("Expecting property name enclosed in double quotes")
+
+    monkeypatch.setattr(pp, "last_remaining", torn)
+    pf = Preflight()
+    pp.report_budget(pf, CAL, "capture")
+    assert pf.aborts == []
+    assert len(pf.warns) == 1 and "could not be reported" in pf.warns[0]
+    assert emit(pf, "capture", 4, quiet=True) == 0

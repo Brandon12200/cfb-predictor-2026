@@ -113,3 +113,40 @@ def test_no_workflow_still_caches_the_quota(workflow):
     from pathlib import Path
     text = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / workflow).read_text()
     assert "odds-quota-" not in text
+
+
+# --- the ledger is replaced in one step, never truncated in place --------------------------------
+#
+# This ledger is COMMITTED and append-only (SPEC §10.5): `cfb-commit` stages `data/quota` on the very
+# next capture, so a run killed between truncate and write would put a torn file into the record
+# itself. Found by an adversarial review of the D44 cadence PR, alongside the same defect in the
+# line store.
+
+def test_a_killed_ledger_write_leaves_the_previous_ledger_intact(tmp_path, monkeypatch):
+    import os
+
+    append_ledger({"remaining": 480, "used": 20}, caller="fetch_lines", week=4,
+                  base=tmp_path, when=AT)
+    path = ledger_path(AT, tmp_path)
+    before = path.read_bytes()
+
+    def killed(*args, **kwargs):
+        raise OSError("runner died between the write and the rename")
+
+    monkeypatch.setattr(os, "replace", killed)
+    with pytest.raises(OSError):
+        append_ledger({"remaining": 479, "used": 21}, caller="fetch_lines", week=4,
+                      base=tmp_path, when=AT)
+    assert path.read_bytes() == before, "a torn write must never reach the committed record"
+    assert [p.name for p in path.parent.iterdir()] == [path.name], "no temp file left behind"
+    assert len(read_ledger(path)) == 1
+
+
+def test_identical_ledger_input_still_produces_identical_bytes(tmp_path):
+    """The append-only hooks and the record compare bytes, so the atomic write must not reformat."""
+    append_ledger({"remaining": 480, "used": 20}, caller="fetch_lines", week=4,
+                  base=tmp_path, when=AT)
+    path = ledger_path(AT, tmp_path)
+    first = path.read_bytes()
+    assert append_ledger(None, caller="fetch_lines", week=4, base=tmp_path, when=AT) is False
+    assert path.read_bytes() == first

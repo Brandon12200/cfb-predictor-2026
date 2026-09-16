@@ -316,7 +316,23 @@ def write_timing_outputs(v: TimingVerdict, *, quiet: bool = False) -> None:
 
 
 def report_budget(pf: Preflight, cal: dict, role: str) -> None:
-    """Reporting only — the pre-spend refusal is fetch_lines' (exit 3)."""
+    """Reporting only — the pre-spend refusal is fetch_lines' (exit 3).
+
+    Wrapped like the timing check, and for the same reason: this runs in the preflight, BEFORE the
+    fetch, and it reads a committed ledger that a killed run could have left torn. An exception here
+    would fail `cfb-setup` and the capture would never happen — a *report* deciding there is no
+    observation at all. The pre-spend guard is unaffected: it lives in `fetch_lines` and still
+    refuses on its own reading of the balance.
+    """
+    try:
+        _report_budget(pf, cal, role)
+    except Exception as exc:                       # noqa: BLE001
+        pf.warn(f"budget: the balance could not be reported ({type(exc).__name__}: {exc}). "
+                f"Continuing: this is reporting only, and fetch_lines still runs its own pre-spend "
+                f"check. A torn `data/quota` ledger is the likely cause and needs looking at.")
+
+
+def _report_budget(pf: Preflight, cal: dict, role: str) -> None:
     budget = (cal.get("pipeline", {}) or {}).get("odds_budget", {})
     remaining, source = last_remaining()
     if remaining is None:
