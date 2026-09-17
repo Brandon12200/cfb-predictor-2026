@@ -487,9 +487,34 @@ _RATE_SHAPE = re.compile(
 
 
 def _runtime_strings(path: Path) -> list[tuple[int, str]]:
-    """Every string literal that reaches a run's output: pf.note/warn/annotate and print."""
-    out: list[tuple[int, str]] = []
+    """String literals that reach a run's output through pf.note/warn/annotate and print.
+
+    Two shapes, because the sources use both: the literal passed directly, and the literal assigned
+    to a name one statement earlier and passed by name — `msg = (f"...")` then `pf.warn(msg)`, which
+    `check_timing` uses three times. Only the call's own argument subtree is a descendant of the
+    `Call` node, so the second shape is invisible to a plain walk and a reintroduced rate passed that
+    way sailed through (review of this PR). Module-level assignment tracking, not dataflow: a name
+    assigned a string anywhere in the file lends its literals to every guarded call that names it.
+    Over-inclusive by design — a false positive here costs a rewording, a false negative costs the
+    guard's whole purpose.
+
+    What this does NOT cover, stated rather than implied: the three scripts in RUNTIME_SOURCES only.
+    Workflow YAML, composite-action `run:` blocks and the shell that assembles an issue body are
+    runtime output too and carry no rate today, but nothing checks them.
+    """
     tree = ast.parse(path.read_text())
+    assigned: dict[str, list[tuple[int, str]]] = {}
+    for node in ast.walk(tree):
+        targets = (node.targets if isinstance(node, ast.Assign) else
+                   [node.target] if isinstance(node, ast.AnnAssign) and node.value else [])
+        for target in targets:
+            if not isinstance(target, ast.Name):
+                continue
+            literals = [(getattr(n, "lineno", 0), n.value) for n in ast.walk(node.value)
+                        if isinstance(n, ast.Constant) and isinstance(n.value, str)]
+            assigned.setdefault(target.id, []).extend(literals)
+
+    out: list[tuple[int, str]] = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
@@ -500,6 +525,8 @@ def _runtime_strings(path: Path) -> list[tuple[int, str]]:
         for arg in ast.walk(node):
             if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
                 out.append((getattr(arg, "lineno", 0), arg.value))
+            elif isinstance(arg, ast.Name):
+                out.extend(assigned.get(arg.id, []))
     return out
 
 
@@ -518,3 +545,24 @@ def test_no_runtime_message_quotes_a_cadence_rate(source):
         f"{source} prints a cadence-derived rate: {offenders}. Put the figure in docs/DECISIONS.md "
         f"where the next retune will find it, and leave the message qualitative."
     )
+
+
+@pytest.mark.parametrize("body, caught", [
+    ('pf.warn("misses one in three")', True),                        # the literal, passed directly
+    ('msg = "misses one in three"\npf.warn(msg)', True),             # assigned, then passed by name
+    ('msg = (f"misses {n} "\n       "one in three")\npf.annotate(msg)', True),   # f-string, wrapped
+    ('msg = "misses sometimes"\npf.note(msg)', False),               # no rate: not an offender
+])
+def test_the_rate_guard_sees_a_message_built_into_a_variable(tmp_path, body, caught):
+    """The shape that bypassed the first version of this guard.
+
+    `check_timing` builds three of its WARN messages as `msg = (...)` then `pf.warn(msg)`. The
+    assignment is a sibling of the call, not a descendant, so walking the call alone could not see
+    it: a reintroduced "about four times in ten" passed the guard through the one idiom used in the
+    function the guard exists to police (review of this PR). Without the assignment tracking this
+    case returns nothing and the test below it goes quiet on the most likely regression.
+    """
+    src = tmp_path / "probe.py"
+    src.write_text(body + "\n")
+    found = [s for _, s in _runtime_strings(src) if _RATE_SHAPE.search(s)]
+    assert bool(found) is caught, found
