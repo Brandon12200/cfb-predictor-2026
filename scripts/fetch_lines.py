@@ -21,8 +21,10 @@ workflow string-matching stdout to tell them apart.
 
 **Exit 4 (owner ruling 2026-09-15, D44).** The Tuesday 12:50 ET capture resolves the week being
 claimed that day. The predict job builds that week's snapshot, and both share one concurrency group.
-If the scheduler delays predict about 4.5 h more than the capture, the capture runs first and finds
-no snapshot. On a run fired by the *scheduled Tuesday capture slot* that is a designed state:
+If the scheduler delays predict more than **213 minutes** (3 h 33 min) beyond the capture, the
+capture runs first and finds no snapshot. That is the gap between the two slots in `season.json`
+(predict 09:17 ET, capture 12:50 ET); it was 4.5 h against the 13:50 slot the 310-minute guarantee
+lead produced, and moved when the lead became 370. On a run fired by the *scheduled Tuesday capture slot* that is a designed state:
 no credit is spent, and a failed predict files its own issue. Any other day, or a manual run, a
 missing snapshot is still exit 1 and alarms.
 """
