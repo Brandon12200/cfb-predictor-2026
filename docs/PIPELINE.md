@@ -52,8 +52,11 @@ window it was meant to precede: Saturday noon games took a 16.7 h-stale close. E
   it has missed the nominal 19:00 window every time. It is kept because weekday kickoffs mostly run
   19:30 or later, which it does serve.
 
-The cost of the longer lead is about an hour of typical guarantee-close freshness, and a measured
-step down in the 22:30 window (median 0.62 h → 0.97 h). D44 carries the figures.
+The cost of the longer lead is about an hour of typical guarantee-close freshness: the guarantee slot
+on its own leaves a 3.70 h median close age at the 19:00 window, against 2.70 h at the 310-min lead.
+That is what shows on a Saturday where the best-effort slot misses. The 22:30 window is the weakest
+of the four under D44 — p90 3.70 h against 3.40 h pre-D44, and P(close ≤ 3 h) of 83% — though its
+median still improves, 2.25 h to 1.12 h. D44 carries the full table and the draws behind it.
 
 The **Tuesday 12:50 slot** exists because Tuesday games start in week 6. Without a capture, a Tuesday
 game's only close would be the claim's own snapshot observation, and its CLV would be zero by

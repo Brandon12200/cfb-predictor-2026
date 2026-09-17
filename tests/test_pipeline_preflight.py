@@ -498,9 +498,14 @@ def _runtime_strings(path: Path) -> list[tuple[int, str]]:
     Over-inclusive by design — a false positive here costs a rewording, a false negative costs the
     guard's whole purpose.
 
-    What this does NOT cover, stated rather than implied: the three scripts in RUNTIME_SOURCES only.
-    Workflow YAML, composite-action `run:` blocks and the shell that assembles an issue body are
-    runtime output too and carry no rate today, but nothing checks them.
+    What this does NOT cover, stated rather than implied. By file: the three scripts in
+    RUNTIME_SOURCES only — workflow YAML, composite-action `run:` blocks and the shell that assembles
+    an issue body are runtime output too, and nothing checks them. By shape, four idioms reach output
+    unseen: `msg += "..."` (AugAssign is not tracked), a literal returned from a helper and assigned,
+    a rate-carrying module constant interpolated two hops away (one hop, straight into the call, is
+    caught), and a phrase split across an f-string's own interpolation boundary. None occurs in these
+    files today; all four were enumerated by the review of this guard, so the next author has a list
+    rather than a surprise.
     """
     tree = ast.parse(path.read_text())
     assigned: dict[str, list[tuple[int, str]]] = {}

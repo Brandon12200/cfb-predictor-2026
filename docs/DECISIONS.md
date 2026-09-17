@@ -1054,10 +1054,8 @@ minutes**, which clears the guarantee by 30 minutes and, measured, also improves
 a minimum 30-minute gap between any two slots on a day, so a future lead change cannot recreate the
 collapse silently.
 
-**What it costs, measured** (20,000 draws, the 12 in-season Saturday lateness samples):
-
-Measured against the cadence as merged (20,000 draws, the 12 in-season Saturday samples; "pre-D44" is
-the weeks 1–3 schedule of 10:23 / 14:23 / 17:23 / 20:23):
+**What it costs, measured** against the cadence as merged (20,000 draws, the 12 in-season Saturday
+lateness samples; "pre-D44" is the weeks 1–3 schedule of 10:23 / 14:23 / 17:23 / 20:23):
 
 | Saturday window | pre-D44 median | D44 median | pre-D44 p90 | D44 p90 | D44 P(close ≤ 3 h) |
 |---|---|---|---|---|---|
