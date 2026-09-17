@@ -46,6 +46,21 @@ are corrected in place and recorded as **C10–C14 in `docs/HANDOFF_SEASON.md` �
 
 ## 3. Queue, in order
 
+**Queue as ruled 2026-09-15 — this supersedes the numbered list below** (orientation update per
+D42 (a)1). **D44 is ratified** (proposal #65):
+
+* **The D44 workflow PR** — cadence, `season.json`, guard fix, tiers 0–2. Merges before
+  **Wed 2026-09-23**.
+* **The D44 report PR** — close-age buckets, the week-4 boundary, no cross-boundary season blend,
+  tiers 3–4. Merges before **Sun 2026-09-27 12:47 ET**.
+* **D45, the claim-path ruling** — exclude any game whose scheduled kickoff precedes the claim run
+  plus a margin, and list each exclusion in the claim's meta with its reason. A Tuesday game with no
+  post-claim observation gets `closing_spread` null with a reason, never a zero CLV. Implementation
+  PR before **2026-10-06**, with a GO before merge.
+* Then the proposals for **variance/tier visibility**, **CFBD retry** and **feasibility**.
+
+The list below is the earlier order, kept for the record.
+
 1. **PR C — `resolve_locators` as a make target** (D42 (a)3). The `LINT_PATHS` conflict with #60 is
    cleared now that #60 is merged. ~~Blocked on a source (C13)~~ — **ruled 2026-09-13 (D43 (b)):** the
    tool exists nowhere, in the repository or in any scratchpad, so PR C **builds it** from the

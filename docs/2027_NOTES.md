@@ -217,7 +217,11 @@ deliberately rather than fixed at the deadline. Ordered by 2027 value.
    (~15/Tuesday by season's end). Harmless against Tier-1's 5,000/mo — but that quota is **shared
    with basketball** (D5) and nothing tracks the creep. Fix shape: bound the loop to weeks with an
    open `ungraded`/`pending` remainder, and add a CFBD budget note.
-3. **No season-end kill switch.** The cadence keeps firing after week 15 (`pipeline_week` clamps
+3. **No season-end kill switch.** *(Also in scope for that stop: the D44 claim tripwire. After the
+   final grade `pipeline_week` clamps to 15, so from 2026-12-13 the tripwire keeps re-checking week
+   15's claim every Wednesday to Saturday forever. It is silent while that claim stays valid, so it
+   is noise-free rather than harmless-and-wrong, but whatever switches the crons off should switch
+   it off too — found by an independent review of the D44 PR.)* The cadence keeps firing after week 15 (`pipeline_week` clamps
    there by design). The runs are idempotent no-ops, but they are an unbounded silent tail — and
    they compound item 2.
    *Ruled 2026-09-04, recorded in D42 (b):* the three cadence crons stop after the final
@@ -479,3 +483,45 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     A docstring line such as `bar: the input value` currently satisfies `file::bar`. Found by the
     second review of #64. The same ruling puts a caveat on sentence splitting ("e.g. ", semicolons)
     with no abbreviation list; that is a documented limit, not a drawer item.
+33. **Should capture leave the shared `cfb-pipeline` concurrency group?** A design question for
+    2027; the owner ruled 2026-09-15 to record it here, not decide it now. GitHub keeps one
+    *pending* run per group, and a newer pending run cancels the older one silently (a `cancelled`
+    conclusion fires no `if: failure()`; compare item 15). Under the D44 cadence that can drop a
+    Tuesday predict queued behind the 12:50 capture when a third run arrives, and a Saturday
+    capture when adjacent slots bunch under scheduler lateness. The merged D44 schedule keeps every
+    pair **≥ 30 min** apart, pinned by a test; an earlier draft of it put three Saturday pairs 5 min
+    apart, which is what that test now prevents. 2026 answers the
+    first with detection only: the claim tripwire in freeze-integrity. The second is not detected.
+    The option on the table is a capture-only group, so that captures serialize against each other
+    (the `data/lines` append) but can never sit in front of predict or grade. Concurrent pushes to
+    `main` would then rest on `cfb-commit`'s rebase-retry, which is safe for append-only additions
+    but is a change to the "must serialize" rule in `docs/PIPELINE.md`. Found by the
+    `pipeline-adversary` audit and the code review of the D44 workflow PR.
+36. **`write_text_atomic`'s temp name is fixed, not unique.** `utils/atomic_write.py` writes
+    `.<name>.tmp` beside its target. Two writers of the same artifact at once would collide, and the
+    loser's `finally` would unlink a file the winner had already renamed into place. It is safe in
+    2026 only because the three cadence workflows share one concurrency group and never run
+    together. `tempfile.mkstemp(dir=path.parent)` removes the dependency on that; the same change
+    should land if the group is ever split (item 33). Found by an independent review of the D44 PR.
+37. **The claim tripwire's notion of "valid" is shallow.** `scripts/claim_tripwire.py` checks that
+    the file parses, has a `model_version`, and is not `-dirty`. It does not check that the claim is
+    for the week it is filed under, that it contains any predictions, or that its `snapshot_id`
+    matches the week's committed snapshot. The last is the real check: a claim whose `snapshot_id`
+    is absent from `data/snapshots/<week>/` was not built from that week's vehicle, which no amount
+    of file-level validity would show. Cross-checking `snapshot_id` is the 2027 fix. Found by an
+    independent review of the D44 PR.
+34. **A designed-state exit still satisfies `clear-failure`.** `daily-capture.yml` ends with
+    `clear-failure if: success()`, and a run that captured nothing — exit 3 (budget refusal) or
+    exit 4 (a Tuesday capture before the snapshot, D44) — is still a success, so it closes any open
+    `pipeline-failure` issue for that stage and week as "recovered". The issue was real and nothing
+    re-ran successfully; only a run that *did* the work should clear it. Pre-existing with exit 3,
+    extended by exit 4. A 2027 fix is to clear only when the job actually produced its artifact
+    (e.g. gate `clear-failure` on the same `rc == '0'` the commit step already uses). Found by an
+    adversarial review of the D44 workflow PR.
+35. **`freeze-integrity` hardcodes `mode: live` and has an unguarded `workflow_dispatch`.** Unlike
+    the three cadence workflows it never resolves live-versus-rehearsal from the ref
+    (`.github/actions/cfb-setup`), so dispatching it on a `rehearsal/*` branch judges that branch's
+    tree and files **live**-labelled issues — including, since D44, the claim tripwire's
+    `stage:predict` alarm. Low likelihood, since rehearsal branches carry `main`'s claims, but the
+    one alarm that means "no claim for the week" should not be forgeable from a drill. Found by an
+    adversarial review of the D44 workflow PR.

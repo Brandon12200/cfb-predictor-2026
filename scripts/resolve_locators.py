@@ -41,6 +41,12 @@ pointer: a count, a date, a status, a figure. Run it, then separately re-derive 
   tree instead of the frame. No abbreviation list, by ruling. When a frame matters, keep it in the
   same plain sentence as its locator, or pass `--frame`.
 
+**A report, not a gate.** Nothing runs this in CI, so a green pipeline says nothing about a
+document's locators. It is also expected to FAIL on the historical record: `docs/DECISIONS.md` and
+`docs/CALIBRATION_LOG.md` cite files deleted since and commits from the voided era, and those entries
+are welded (supersede, never edit). A non-zero exit there is the tool working, not a document to fix —
+run it on what you are about to merge.
+
 Exit 0: every locator passes `exists` and `reachable` (`CHECK` hints do not fail).
 Exit 1: at least one locator is `MISSING`, out of range, ambiguous, unknown or unreachable.
 Exit 2: usage error.

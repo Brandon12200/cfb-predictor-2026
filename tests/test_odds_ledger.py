@@ -113,3 +113,109 @@ def test_no_workflow_still_caches_the_quota(workflow):
     from pathlib import Path
     text = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / workflow).read_text()
     assert "odds-quota-" not in text
+
+
+# --- the ledger is replaced in one step, never truncated in place --------------------------------
+#
+# This ledger is COMMITTED and append-only (SPEC §10.5): `cfb-commit` stages `data/quota` on the very
+# next capture, so a run killed between truncate and write would put a torn file into the record
+# itself. Found by an adversarial review of the D44 cadence PR, alongside the same defect in the
+# line store.
+
+def test_a_killed_ledger_write_leaves_the_previous_ledger_intact(tmp_path, monkeypatch):
+    import os
+
+    append_ledger({"remaining": 480, "used": 20}, caller="fetch_lines", week=4,
+                  base=tmp_path, when=AT)
+    path = ledger_path(AT, tmp_path)
+    before = path.read_bytes()
+
+    def killed(*args, **kwargs):
+        raise OSError("runner died between the write and the rename")
+
+    monkeypatch.setattr(os, "replace", killed)
+    with pytest.raises(OSError):
+        append_ledger({"remaining": 479, "used": 21}, caller="fetch_lines", week=4,
+                      base=tmp_path, when=AT)
+    assert path.read_bytes() == before, "a torn write must never reach the committed record"
+    assert [p.name for p in path.parent.iterdir()] == [path.name], "no temp file left behind"
+    assert len(read_ledger(path)) == 1
+
+
+def test_identical_ledger_input_still_produces_identical_bytes(tmp_path):
+    """The append-only hooks and the record compare bytes, so the atomic write must not reformat."""
+    append_ledger({"remaining": 480, "used": 20}, caller="fetch_lines", week=4,
+                  base=tmp_path, when=AT)
+    path = ledger_path(AT, tmp_path)
+    first = path.read_bytes()
+    assert append_ledger(None, caller="fetch_lines", week=4, base=tmp_path, when=AT) is False
+    assert path.read_bytes() == first
+
+
+def test_an_observation_survives_a_ledger_write_that_fails(tmp_path, monkeypatch):
+    """Order of writes in `fetch_lines.main`: the observation is recorded BEFORE the accounting.
+
+    The credit is spent the moment the response arrives, and the observation is the only part that
+    cannot be reconstructed — the market moves on. With the accounting first, a ledger failure threw
+    away an observation already paid for. The ledger failure must still fail the run loudly, so the
+    spend is never silently unrecorded (review of the D44 PR, finding 1).
+    """
+    import scripts.fetch_lines as fl
+    from data.snapshot.lines import lines_path, load_lines
+
+    monkeypatch.setattr(fl, "load_snapshot", lambda w, y: {"data": {"betting_lines": {"G@H": {}}}})
+    monkeypatch.setattr(fl, "last_remaining", lambda: (400, "ledger"))
+
+    class _Client:
+        last_quota = {"remaining": 399, "used": 101}
+
+        def get_ncaaf_spreads(self):
+            return [{"home_team": "H", "away_team": "G", "commence_time": "2026-09-26T16:00:00Z",
+                     "bookmakers": []}]
+
+    monkeypatch.setattr("data.clients.odds.get_odds_client", lambda: _Client())
+    monkeypatch.setattr(fl, "record_observation",
+                        lambda week, games, year=2026: (
+                            __import__("data.snapshot.lines", fromlist=["x"]).record_observation(
+                                week, {"G@H": {"home_team": "H", "away_team": "G",
+                                               "kickoff": "2026-09-26T16:00:00Z",
+                                               "observations": [{"fetched_at": "2026-09-26T10:00:00Z",
+                                                                 "lines": [], "consensus_spread": -3.0}]}},
+                                year=year, base=tmp_path)))
+
+    def ledger_dies(*a, **k):
+        raise OSError("ledger write failed")
+
+    monkeypatch.setattr(fl, "append_ledger", ledger_dies)
+    monkeypatch.setattr(fl, "record_quota", lambda *a, **k: None)
+    with pytest.raises(OSError):
+        fl.main(["--week", "4"])
+    assert load_lines(4, base=tmp_path)["G@H"]["observations"], (
+        "the observation was paid for and must be on disk before the accounting runs"
+    )
+    assert lines_path(4, base=tmp_path).exists()
+
+
+def test_the_observation_is_written_before_any_accounting(monkeypatch):
+    """Order, not just survival: BOTH `record_quota` and `append_ledger` must run after the
+    observation is on disk. Asserting only that a ledger failure spares the observation passes even
+    if the quota cache is written first (mutation-checked)."""
+    import scripts.fetch_lines as fl
+
+    calls: list[str] = []
+    monkeypatch.setattr(fl, "load_snapshot", lambda w, y: {"data": {"betting_lines": {"G@H": {}}}})
+    monkeypatch.setattr(fl, "last_remaining", lambda: (400, "ledger"))
+
+    class _Client:
+        last_quota = {"remaining": 399, "used": 101}
+
+        def get_ncaaf_spreads(self):
+            return []
+
+    monkeypatch.setattr("data.clients.odds.get_odds_client", lambda: _Client())
+    monkeypatch.setattr(fl, "record_observation", lambda *a, **k: calls.append("observation") or 0)
+    monkeypatch.setattr(fl, "record_quota", lambda *a, **k: calls.append("quota"))
+    monkeypatch.setattr(fl, "append_ledger", lambda *a, **k: calls.append("ledger"))
+    assert fl.main(["--week", "4"]) == fl.EXIT_OK
+    assert calls[0] == "observation", f"the unrecoverable write must go first, got {calls}"
+    assert set(calls[1:]) == {"quota", "ledger"}

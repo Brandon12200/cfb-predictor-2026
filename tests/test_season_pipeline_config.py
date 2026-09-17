@@ -14,7 +14,7 @@ Two jobs:
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -77,21 +77,26 @@ def test_schedule_covers_every_job():
 
 
 @pytest.mark.parametrize("job,entry", ALL_ENTRIES,
-                         ids=[f"{j}-{e['time']}" for j, e in ALL_ENTRIES])
+                         ids=[f"{j}-{e['time_edt']}" for j, e in ALL_ENTRIES])
 def test_entry_shape(job, entry):
-    assert set(entry) == {"days", "time", "cron_utc"}
+    # Capture slots also name the window they precede and their kind (D44); the timing guard reads
+    # both. No other job is time-critical, so no other job carries them.
+    extra = {"precedes", "kind"} if job == "capture" else set()
+    # `time_edt` + `time_est`, not a bare `time`: the crons are anchored to EDT, so a single ET time
+    # is wrong for every slot from 2026-11-01 (review of the D44 PR, finding 17).
+    assert set(entry) == {"days", "time_edt", "time_est", "cron_utc"} | extra
     assert entry["days"], "entry declares no days"
-    hh, mm = entry["time"].split(":")
+    hh, mm = entry["time_edt"].split(":")
     assert 0 <= int(hh) <= 23 and 0 <= int(mm) <= 59
     assert len(entry["cron_utc"].split()) == 5, "cron must have 5 fields"
 
 
 @pytest.mark.parametrize("job,entry", ALL_ENTRIES,
-                         ids=[f"{j}-{e['time']}" for j, e in ALL_ENTRIES])
+                         ids=[f"{j}-{e['time_edt']}" for j, e in ALL_ENTRIES])
 def test_cron_utc_matches_the_stated_et_time(job, entry):
     """Re-derive the cron from the ET time under EDT (the anchor documented in `dst_note`)."""
     minute, hour, _, _, dow = entry["cron_utc"].split()
-    hh, mm = (int(x) for x in entry["time"].split(":"))
+    hh, mm = (int(x) for x in entry["time_edt"].split(":"))
 
     if entry["days"] == ["daily"]:
         assert dow == "*", "a daily job must not pin a weekday"
@@ -109,22 +114,79 @@ def test_cron_utc_matches_the_stated_et_time(job, entry):
                           tzinfo=ZoneInfo(PIPELINE["timezone"]))
         utc = et.astimezone(UTC)
         assert (utc.hour, utc.minute) == (int(hour), int(minute)), (
-            f"{job} {entry['time']} ET -> {utc:%H:%M} UTC, but cron says {hour}:{minute}"
+            f"{job} {entry['time_edt']} EDT -> {utc:%H:%M} UTC, but cron says {hour}:{minute}"
         )
         if dow != "*":
             # cron weekday: 0=Sunday. Compare against the UTC weekday, which may differ from the
             # ET one — that is the whole point of this assertion.
             utc_cron_dow = (utc.weekday() + 1) % 7
             assert utc_cron_dow in {int(d) for d in dow.split(",")}, (
-                f"{job} {entry['time']} ET on {day} falls on UTC weekday {utc_cron_dow}, "
+                f"{job} {entry['time_edt']} EDT on {day} falls on UTC weekday {utc_cron_dow}, "
                 f"not in cron field '{dow}'"
             )
+
+
+CAPTURE = PIPELINE.get("schedule_et", {}).get("capture", [])
+# D44: the worst Saturday lateness observed through week 3 was 309 min. A guarantee slot must land
+# before its window even at that lateness — with margin, not by a minute. 310 cleared the worst
+# sample by 1 min on n=12; the owner raised it to 370 (window − 6 h 10 min), which clears it by 61.
+GUARANTEE_LEAD_MIN = 370
+
+
+def _minutes(hhmm: str) -> int:
+    h, m = hhmm.split(":")
+    return int(h) * 60 + int(m)
+
+
+@pytest.mark.parametrize("entry", CAPTURE, ids=[f"{'/'.join(e['days'])}-{e['time_edt']}" for e in CAPTURE])
+def test_capture_slot_precedes_a_real_window_on_every_day_it_runs(entry):
+    assert entry["kind"] in {"guarantee", "best_effort"}
+    for day in entry["days"]:
+        assert entry["precedes"] in PIPELINE["kickoff_windows_et"].get(day, []), (
+            f"{day} {entry['time_edt']} precedes {entry['precedes']}, which is not a {day} kickoff window"
+        )
+    assert _minutes(entry["time_edt"]) < _minutes(entry["precedes"]), "a slot must be before its window"
+
+
+@pytest.mark.parametrize("entry", [e for e in CAPTURE if e["kind"] == "guarantee"],
+                         ids=[f"{'/'.join(e['days'])}-{e['time_edt']}" for e in CAPTURE if e["kind"] == "guarantee"])
+def test_guarantee_slots_absorb_the_worst_observed_lateness(entry):
+    lead = _minutes(entry["precedes"]) - _minutes(entry["time_edt"])
+    assert lead >= GUARANTEE_LEAD_MIN, (
+        f"{entry['time_edt']} is {lead} min before {entry['precedes']}; a guarantee slot needs "
+        f"{GUARANTEE_LEAD_MIN}. One minute of slack on twelve samples is not margin (I1.1)."
+    )
+
+
+def test_every_window_on_a_capture_day_has_exactly_one_guarantee_slot():
+    """Tiers 1–2 of the D44 escalation fire only on a guarantee miss, so a window without one could
+    never escalate, and a window with two would double-count."""
+    days = {d for e in CAPTURE for d in e["days"]}
+    for day in days:
+        for window in PIPELINE["kickoff_windows_et"][day]:
+            g = [e for e in CAPTURE if e["kind"] == "guarantee" and day in e["days"] and e["precedes"] == window]
+            assert len(g) == 1, f"{day} {window}: {len(g)} guarantee slots"
+
+
+def test_every_capture_cron_pins_exactly_one_weekday():
+    """The guard walks back from `now` to the cron's latest time. A multi-day cron lets a run more
+    than 24 h late match the NEXT day's slot and report on time, so each capture line names one day."""
+    for e in CAPTURE:
+        dow = e["cron_utc"].split()[4]
+        assert dow.isdigit(), f"{e['time_edt']} {e['days']}: cron weekday '{dow}' must be a single day"
+        assert len(e["days"]) == 1
+
+
+def test_cron_strings_are_unique_so_the_triggering_slot_is_identifiable():
+    """The guard maps `github.event.schedule` back to its entry, so no two entries may share a cron."""
+    crons = [" ".join(e["cron_utc"].split()) for es in PIPELINE["schedule_et"].values() for e in es]
+    assert len(crons) == len(set(crons))
 
 
 def test_cron_minutes_are_never_top_of_hour():
     """Top-of-hour Actions crons are the most heavily delayed; the cadence deliberately avoids them."""
     for job, entry in ALL_ENTRIES:
-        assert entry["cron_utc"].split()[0] != "0", f"{job} {entry['time']} is scheduled at :00"
+        assert entry["cron_utc"].split()[0] != "0", f"{job} {entry['time_edt']} is scheduled at :00"
 
 
 def test_kickoff_windows_are_lists_of_times():
@@ -171,3 +233,37 @@ def test_expected_weekly_credits_matches_the_scheduled_capture_count():
 
 def test_rehearsal_prefix():
     assert PIPELINE["rehearsal"]["branch_prefix"].endswith("/")
+
+
+@pytest.mark.parametrize("job,entry", ALL_ENTRIES,
+                         ids=[f"{j}-{e['time_edt']}" for j, e in ALL_ENTRIES])
+def test_the_est_time_is_the_edt_time_an_hour_earlier(job, entry):
+    """From 2026-11-01 a fixed UTC cron lands an hour earlier in ET (`dst_note`). Both halves of the
+    season are stated, because one `time` field read as authoritative was wrong for half of it."""
+    edt_h, edt_m = (int(x) for x in entry["time_edt"].split(":"))
+    est = datetime(2026, 11, 7, edt_h, edt_m, tzinfo=ZoneInfo(PIPELINE["timezone"])) - timedelta(hours=1)
+    assert entry["time_est"] == f"{est:%H:%M}", (
+        f"{job} {entry['time_edt']} EDT is {est:%H:%M} EST, not {entry['time_est']}"
+    )
+
+
+MIN_SLOT_GAP_MIN = 30
+
+
+@pytest.mark.parametrize("day", sorted({d for e in CAPTURE for d in e["days"]}))
+def test_capture_slots_are_never_near_duplicates(day):
+    """No two capture slots on a day may sit inside `MIN_SLOT_GAP_MIN` of each other.
+
+    Not cosmetic. At the ratified 370-min guarantee lead and a 155-min best-effort lead, the
+    guarantee for the NEXT window landed 5 minutes before the best-effort for the current one —
+    windows are 210 min apart and 210 − 370 = −160. Three Saturday pairs were 5 min apart, which
+    spent a credit on a near-duplicate observation and put two runs inside ordinary dispatch jitter
+    of each other, where the shared concurrency group can drop one. The best-effort lead moved to
+    190 min to clear it. This pins the property so a future lead change cannot recreate it silently.
+    """
+    times = sorted(_minutes(e["time_edt"]) for e in CAPTURE if day in e["days"])
+    gaps = [b - a for a, b in zip(times, times[1:], strict=False)]
+    assert all(g >= MIN_SLOT_GAP_MIN for g in gaps), (
+        f"{day}: slots {[e['time_edt'] for e in CAPTURE if day in e['days']]} have gaps {gaps}, "
+        f"minimum allowed {MIN_SLOT_GAP_MIN} min"
+    )

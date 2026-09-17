@@ -84,8 +84,19 @@ def test_a_dry_run_cannot_open_an_issue(workflow):
 def test_a_dry_run_cannot_close_an_issue(workflow):
     """**The worse half.** A PASSING dry run would have cleared a real, unresolved failure issue.
     Only run ordering avoided it when the live capture proof happened to run before any dry smoke —
-    and sequencing is not a control."""
-    assert "if: success() && inputs.dry_run != true" in wf(workflow)
+    and sequencing is not a control.
+
+    The condition is read off the clear step rather than matched literally: `daily-capture` gates on
+    `rc == '0'` instead of `success()`, because exits 3 and 4 leave the job green having captured
+    nothing (D44). What must hold for every cadence workflow is both halves — it clears only on real
+    success, and never on a dry run."""
+    text = wf(workflow)
+    i = text.index("actions/clear-failure")
+    cond = next(ln for ln in text[i:].splitlines() if ln.strip().startswith("if:"))
+    assert "inputs.dry_run != true" in cond, f"{workflow}: a dry run could close a real issue"
+    assert "success()" in cond or "outputs.rc == '0'" in cond, (
+        f"{workflow}: the clear step must be gated on the run actually having done its work"
+    )
 
 
 @pytest.mark.parametrize("workflow", CADENCE)
