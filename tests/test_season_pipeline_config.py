@@ -114,14 +114,14 @@ def test_cron_utc_matches_the_stated_et_time(job, entry):
                           tzinfo=ZoneInfo(PIPELINE["timezone"]))
         utc = et.astimezone(UTC)
         assert (utc.hour, utc.minute) == (int(hour), int(minute)), (
-            f"{job} {entry['time']} ET -> {utc:%H:%M} UTC, but cron says {hour}:{minute}"
+            f"{job} {entry['time_edt']} EDT -> {utc:%H:%M} UTC, but cron says {hour}:{minute}"
         )
         if dow != "*":
             # cron weekday: 0=Sunday. Compare against the UTC weekday, which may differ from the
             # ET one — that is the whole point of this assertion.
             utc_cron_dow = (utc.weekday() + 1) % 7
             assert utc_cron_dow in {int(d) for d in dow.split(",")}, (
-                f"{job} {entry['time']} ET on {day} falls on UTC weekday {utc_cron_dow}, "
+                f"{job} {entry['time_edt']} EDT on {day} falls on UTC weekday {utc_cron_dow}, "
                 f"not in cron field '{dow}'"
             )
 
@@ -143,7 +143,7 @@ def test_capture_slot_precedes_a_real_window_on_every_day_it_runs(entry):
     assert entry["kind"] in {"guarantee", "best_effort"}
     for day in entry["days"]:
         assert entry["precedes"] in PIPELINE["kickoff_windows_et"].get(day, []), (
-            f"{day} {entry['time']} precedes {entry['precedes']}, which is not a {day} kickoff window"
+            f"{day} {entry['time_edt']} precedes {entry['precedes']}, which is not a {day} kickoff window"
         )
     assert _minutes(entry["time_edt"]) < _minutes(entry["precedes"]), "a slot must be before its window"
 
@@ -153,7 +153,7 @@ def test_capture_slot_precedes_a_real_window_on_every_day_it_runs(entry):
 def test_guarantee_slots_absorb_the_worst_observed_lateness(entry):
     lead = _minutes(entry["precedes"]) - _minutes(entry["time_edt"])
     assert lead >= GUARANTEE_LEAD_MIN, (
-        f"{entry['time']} is {lead} min before {entry['precedes']}; a guarantee slot needs "
+        f"{entry['time_edt']} is {lead} min before {entry['precedes']}; a guarantee slot needs "
         f"{GUARANTEE_LEAD_MIN}. One minute of slack on twelve samples is not margin (I1.1)."
     )
 
@@ -186,7 +186,7 @@ def test_cron_strings_are_unique_so_the_triggering_slot_is_identifiable():
 def test_cron_minutes_are_never_top_of_hour():
     """Top-of-hour Actions crons are the most heavily delayed; the cadence deliberately avoids them."""
     for job, entry in ALL_ENTRIES:
-        assert entry["cron_utc"].split()[0] != "0", f"{job} {entry['time']} is scheduled at :00"
+        assert entry["cron_utc"].split()[0] != "0", f"{job} {entry['time_edt']} is scheduled at :00"
 
 
 def test_kickoff_windows_are_lists_of_times():
