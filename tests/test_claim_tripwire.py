@@ -162,6 +162,25 @@ def test_it_runs_in_freeze_integrity_whatever_else_fails():
     assert "github.ref_name == github.event.repository.default_branch" in step
 
 
+def test_a_rehearsal_dispatch_cannot_close_a_live_freeze_issue():
+    """The other half of finding 4, which nothing asserted: dropping the clear step's gate survived
+    the whole suite.
+
+    `freeze-integrity` has no live/rehearsal resolution and hardcodes `mode: live`, so a GREEN
+    dispatch on a `rehearsal/*` branch would close a live `stage:freeze` issue that nothing had
+    fixed — the mirror of the tripwire's forged alarm, and the worse direction of the two, because
+    it is silent (`docs/PIPELINE.md`: a passing dry run must not clear a real failure). Both halves
+    of the condition are asserted: `success()` alone would clear off any branch, and the
+    default-branch clause alone would clear after a failure.
+    """
+    i = WORKFLOW.index("actions/clear-failure")
+    cond = next(ln for ln in WORKFLOW[i:].splitlines() if ln.strip().startswith("if:"))
+    assert "success()" in cond, "the clear step must require the run to have passed"
+    assert "github.ref_name == github.event.repository.default_branch" in cond, (
+        "a rehearsal-branch dispatch of freeze-integrity would close a live freeze issue"
+    )
+
+
 def test_a_tripped_wire_opens_a_predict_issue_that_a_successful_predict_clears():
     i = WORKFLOW.index("steps.tripwire.outputs.rc == '2'")
     step = WORKFLOW[i:WORKFLOW.index("token:", i)]
