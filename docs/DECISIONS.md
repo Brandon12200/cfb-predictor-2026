@@ -1157,8 +1157,11 @@ Whether a claim excludes games that have already kicked off is a separate ruling
    not matter.
    A best-effort miss stays at tier 0. Tier 4 was already guarantee-only.
 2. **A scheduled Tuesday capture that runs before the week's snapshot exists is a designed state.**
-   The Tuesday capture and predict share one concurrency group, so a predict delayed about 4.5 h more
-   than the capture lets the capture run first. `fetch_lines` exits **4**: green, a notice, nothing
+   The Tuesday capture and predict share one concurrency group, so a predict delayed more than
+   **213 minutes** (3 h 33 min) beyond the capture lets the capture run first — the gap between the
+   two slots as merged, predict 09:17 ET to capture 12:50 ET. (This read "about 4.5 h" while the
+   guarantee lead was 310 minutes and the slot was 13:50; the lead became 370 and the figure moved
+   with it.) `fetch_lines` exits **4**: green, a notice, nothing
    fetched or committed, no credit spent. A predict that failed files its own issue. Any other day,
    or a manual run, a missing snapshot stays exit 1 and alarms. As built, it keys on the **slot**
    that fired the run (the Tuesday capture cron), not on the run's clock. A Tuesday capture delayed
@@ -1191,3 +1194,25 @@ Whether a claim excludes games that have already kicked off is a separate ruling
    recorded as a 2027 design question (`docs/2027_NOTES.md` §8 item 33, `docs/PIPELINE.md`
    Concurrency). That includes the undetected Saturday variant, where adjacent capture slots bunch
    and one is dropped.
+
+### Appended — the observation-before-accounting fix is PARTIAL (2026-09-17)
+
+The second independent review of the workflow PR found that `fetch_lines` recorded the Odds spend
+(`record_quota`, `append_ledger`) **before** `record_observation`, so a ledger failure threw away an
+observation the credit had already been spent on. The fix reordered the two, and was reported as
+closed.
+
+**It is partial, and the label is corrected here rather than left standing.** A later read-only
+review injected an `append_ledger` failure (ENOSPC) end to end rather than asserting on call order:
+the observation reaches disk, the process still exits **1**, `daily-capture`'s "Fail on a real
+error" step fails the job, `cfb-commit` never runs, and the runner is discarded with the observation
+on it. **The end-to-end outcome is the same as before the reorder** — the observation is lost — and
+what the reorder bought is the ordering itself, not survival. Read row 1 of that review's table as:
+*observation written first; still lost end-to-end on a ledger-write failure, because `rc=1` prevents
+the commit.*
+
+**The complete fix is a distinct exit code meaning "observation recorded, accounting failed"**,
+which commits `data/lines` and *then* fails the job with its issue. **It goes in the D46 PR, not the
+workflow PR** (owner ruling, 2026-09-17): it changes what `cfb-commit` is gated on, which is a
+change to the commit choreography rather than to the cadence, and the D46 PR is already opening that
+seam.
