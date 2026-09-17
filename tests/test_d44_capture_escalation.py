@@ -90,7 +90,10 @@ def test_a_guarantee_miss_opens_the_weekly_late_issue():
     rest = re.split(r"\n\s{6}- (?:uses|name):", CAPTURE[start:], maxsplit=1)
     step = rest[0]
     assert "if: steps.setup.outputs.timing_guarantee_miss == 'true' && inputs.dry_run != true" in step
-    assert 'cooldown-minutes: "0"' in step, "every guarantee miss must reach the tally"
+    # Cooldown 0, so a second miss in the same week comments instead of being throttled as a repeat
+    # of the first. It is not "every miss reaches the tally": this step carries no status function,
+    # so a capture that fails earlier (exit 1) skips it and that miss is recorded only in the run log.
+    assert 'cooldown-minutes: "0"' in step, "a second miss in the week must not be throttled"
     assert "late-miss" in step, "the Sunday tally counts this marker"
     assert "failure()" not in step.split("with:")[0], "tier 2 fires on a GREEN run"
 

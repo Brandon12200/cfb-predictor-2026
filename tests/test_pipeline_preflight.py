@@ -498,14 +498,22 @@ def _runtime_strings(path: Path) -> list[tuple[int, str]]:
     Over-inclusive by design — a false positive here costs a rewording, a false negative costs the
     guard's whole purpose.
 
-    What this does NOT cover, stated rather than implied. By file: the three scripts in
-    RUNTIME_SOURCES only — workflow YAML, composite-action `run:` blocks and the shell that assembles
-    an issue body are runtime output too, and nothing checks them. By shape, four idioms reach output
-    unseen: `msg += "..."` (AugAssign is not tracked), a literal returned from a helper and assigned,
-    a rate-carrying module constant interpolated two hops away (one hop, straight into the call, is
-    caught), and a phrase split across an f-string's own interpolation boundary. None occurs in these
-    files today; all four were enumerated by the review of this guard, so the next author has a list
-    rather than a surprise.
+    **What it covers, stated positively, because the previous docstring listed four gaps and a later
+    review found more.** Measured against probe sources, not reasoned about: a string **literal in
+    one of the three files in RUNTIME_SOURCES**, reaching `pf.note` / `pf.warn` / `pf.annotate` /
+    `print` either inside that call's own argument subtree or **one hop** through a name assigned a
+    string-bearing expression anywhere in the same file. Nesting inside the argument does not hide it
+    — `.format(...)`, `%` and f-strings are all caught while the phrase stays inside a single
+    literal. That is the whole of it.
+
+    Everything else is out of scope, and the list is open rather than exhaustive: any other sink
+    (`pf.abort`, a `$GITHUB_OUTPUT` write, `sys.stdout`), any other file (workflow YAML, composite
+    `run:` blocks, the shell that assembles an issue body), a second hop (`b = a`), a constant
+    imported from another module, `+=`, tuple-unpacking targets, a literal returned from a helper, a
+    phrase split across a concatenation or an interpolation boundary — and any phrasing `_RATE_SHAPE`
+    does not match, which includes "one in the 12", "33 percent", "a third" and "9/9". Treat the
+    guard as a tripwire on the idiom these files actually use, never as proof that no rate is
+    printed.
     """
     tree = ast.parse(path.read_text())
     assigned: dict[str, list[tuple[int, str]]] = {}
