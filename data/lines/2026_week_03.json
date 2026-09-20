@@ -3766,6 +3766,37 @@
             "spread_open": null
           }
         ]
+      },
+      {
+        "consensus_spread": -6.2,
+        "fetched_at": "2026-09-20T05:02:12.587511+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": -6.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": -6.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -5.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -6.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -6.0,
+            "spread_open": null
+          }
+        ]
       }
     ]
   },
