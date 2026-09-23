@@ -7,6 +7,7 @@ history (D23), so a message that omits a week misdescribes that history.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -51,7 +52,9 @@ def test_other_years_and_unrelated_files_are_ignored():
 def test_the_commit_message_uses_the_label_not_the_scalar_week():
     """Wired, not just written — and the label step must not be able to swallow its own failure."""
     text = (ROOT / ".github/workflows/weekly-grade.yml").read_text()
-    commit = text.split("paths: reports", 1)[1].split("- uses:", 1)[0]
+    # The step ends at the next step of EITHER shape. Splitting only on `- uses:` read into the D44
+    # `- name:` step that follows, which names `week_padded` for a different reason.
+    commit = re.split(r"\n\s+- (?:uses|name):", text.split("paths: reports", 1)[1], maxsplit=1)[0]
     assert "steps.reportweeks.outputs.label" in commit
     assert "week_padded" not in commit, "the report message still names only pipeline_week"
 

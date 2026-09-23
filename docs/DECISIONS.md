@@ -1014,3 +1014,205 @@ and the "Not ruled" paragraph above is superseded by rulings 2 and 3.
 ("out-of-season → exit 2"), which exposes it to the reader without flagging it. It cannot see C1 or C3,
 because neither contains a bad pointer. That is the half-a-tool limit, measured: re-derive every bare
 assertion separately (D42 (d)).
+
+---
+
+## D44 — Capture cadence: two slots per kickoff window plus Tuesday; the timing guard and its escalation; close-age buckets; boundary week 4 — **RATIFIED (owner, 2026-09-15)**
+**Date:** 2026-09-15. Ruled on the proposal `docs/proposals/D44_CRON_CADENCE.md` after #65 merged
+(2026-09-15 14:50 UTC). Three implementation rulings followed the same day. The proposal file holds
+the measurements and is deleted at the next session boundary; this entry is the record.
+
+**Why.** Through week 3, GitHub's scheduler fired every in-season capture (21 of 21) 97–485 min after
+its slot, so each landed after the kickoff window it was meant to precede. Saturday's noon window
+took a 16.7 h-stale close, and 8 of the 27 graded games in weeks 1–2 carry a close more than 12 h old.
+The timing guard reported "ok" on 13 of the 21 misses and warned on every Sunday grade.
+
+### (1) Cadence: B4 + a Tuesday slot
+
+Each kickoff window gets a **guarantee** slot and a **best-effort** slot timed to the median lateness.
+`season.json` `pipeline.schedule_et.capture` is the authority; each entry names the window it
+`precedes` and its `kind`.
+
+| day (ET) | guarantee | best-effort | window |
+|---|---|---|---|
+| Tue | 12:50 | — | 19:00 |
+| Wed–Fri | 12:50 | 17:23 | 19:00 |
+| Sat | 05:50 / 09:20 / 12:50 / 16:20 | 08:50 / 12:20 / 15:50 / 19:20 | 12:00 / 15:30 / 19:00 / 22:30 |
+
+**The guarantee lead is window − 6 h 10 min (370 min), raised from 5 h 10 min (310) before merge.**
+310 cleared the worst observed lateness (309 min) by **one minute on twelve samples**, which is a
+point estimate, not margin: the sample is small, the tail is unmeasured, and the whole cadence exists
+because that tail moved once already. 370 clears the same sample by **61 minutes**.
+
+**The guarantee lead interacts with the window spacing, and that set the best-effort lead.** Saturday
+windows are **210 minutes** apart, so a guarantee at window − 370 is the *previous* window − 160. A
+best-effort slot at the median lateness (window − 155) therefore landed **5 minutes after** the next
+window's guarantee: three Saturday pairs five minutes apart, each spending a credit on a near-duplicate
+observation and putting two runs inside ordinary dispatch jitter of each other, where the shared
+concurrency group can drop one (`2027_NOTES` §8 item 33). **The best-effort lead is window − 190
+minutes**, which clears the guarantee by 30 minutes and, measured, also improves the tail. A test pins
+a minimum 30-minute gap between any two slots on a day, so a future lead change cannot recreate the
+collapse silently.
+
+**What it costs, measured** against the cadence as merged (20,000 draws, the 12 in-season Saturday
+lateness samples; "pre-D44" is the weeks 1–3 schedule of 10:23 / 14:23 / 17:23 / 20:23):
+
+| Saturday window | pre-D44 median | D44 median | pre-D44 p90 | D44 p90 | D44 P(close ≤ 3 h) |
+|---|---|---|---|---|---|
+| 12:00 | 16.70 h | **0.62 h** | 16.70 h | **2.80 h** | 91% |
+| 15:30 | 2.65 h | **0.62 h** | 3.50 h | **1.72 h** | 93% |
+| 19:00 | 2.37 h | **0.62 h** | 3.00 h | **1.72 h** | 93% |
+| 22:30 | 2.25 h | **1.12 h** | 3.40 h | 3.70 h | 83% |
+
+The guarantee slot **on its own** now leaves a 3.70 h median close age at the 19:00 window, against
+2.70 h at the 310 lead — that hour is what the coverage margin costs when the best-effort slot misses.
+The lateness needed to miss a guarantee moves from **> 310 min** (one minute beyond the worst observed)
+to **> 370 min** (61 beyond). The owner ruled the coverage side is what the cadence is for.
+
+**Tier 2's expected frequency, re-estimated at the new lead.** No sample in the twelve exceeds either
+lead, so the observed miss rate is 0 of 12 at 310 *and* at 370; the honest statement is an upper
+bound, not a rate. By the rule of three, 0 of 12 is consistent with a per-slot miss probability up to
+~22%, which across 8 Saturday guarantee slots would be a tier-2 issue most weeks — that bound is what
+310's one-minute margin could not rule out. At 370 the same arithmetic applies to a threshold 61
+minutes further out, and the only in-season episode that came close (the 2026-08-27/28 backlog, which
+put weekday runs 349 and 485 min late) would still have breached it. **Tier 2 is therefore expected to
+be rare but not absent, and the first weeks under the new cadence are the measurement**; if it opens
+in 2 of any 3 weeks, tier 4 escalates to the owner, which is what that tier is for.
+
+**16 credits a week** (15 captures plus the Tuesday snapshot), about 70 a month and at most 76
+(October 2026) of 500 — unchanged by the lead change, which moves slots rather than adding them. `odds_budget.expected_weekly_credits` moves from 8 to **16**, so the
+retry-storm warning stays correct. The crons remain single UTC expressions anchored to EDT
+(`dst_note`); from 2026-11-01 they land an hour earlier in ET.
+
+**Games after the last window are not covered by the guarantee, and their close gets slightly
+staler.** `kickoff_windows_et` ends at 22:30 ET, and six Saturday games this season start later:
+23:00 in weeks 2, 3 and 13, and 23:59 in weeks 2, 5 and 11. No slot `precedes` them, so no guarantee
+applies; they are served by whatever the 16:20 guarantee and 19:20 best-effort slots produce. D44
+also moves the last Saturday slot from 20:23 ET to 19:20 ET. Replayed against the measured Saturday
+lateness (the 12 in-season samples, 20,000 draws, **the slots as merged at the 370-min lead**), the
+close age for those games rises at both ends:
+
+| Saturday kickoff | pre-D44 median | D44 median | pre-D44 p90 | D44 p90 |
+|---|---|---|---|---|
+| 23:00 (weeks 2, 3, 13) | 0.90 h | **1.60 h** | 3.55 h | **3.80 h** |
+| 23:59 (weeks 2, 5, 11) | 1.53 h | **2.18 h** | 4.35 h | **3.03 h** |
+
+Coverage stays 100% in both cadences. **Two earlier versions of this table were wrong, both because
+the slots moved under them** — the first measured the 310-min lead, the second the 155-min best-effort
+spacing. These figures are the cadence as merged. The median is worse for both late kickoffs, and the
+p90 is worse at 23:00 and better at 23:59. Games past the last window have no guarantee slot, so they
+get whatever the 22:30 pair leaves behind. The proposal's simulation only evaluated the four windows, so this trade was not quantified
+before ratification. Accepted as measured, not discovered later; a 2027 option is a 23:00 window with
+its own guarantee.
+
+**The simpler alternative, considered.** Shifting the existing four Saturday slots earlier by the
+measured lateness (option A in the proposal) would have bought the same worst-case guarantee with 8
+crons instead of 15, no `precedes`/`kind` vocabulary, and no guarantee-versus-best-effort taxonomy
+for tiers 1–2 to rest on. It was not chosen because its median close age is 2.6 h against B4's 0.6 h,
+and because it makes weekday closes worse (the 17:23 slot's lateness is what currently serves 19:30+
+kickoffs). Recorded because an independent review argued the coverage failure, not freshness, was the
+measured problem, and that half of D44's surface serves the smaller half of it.
+
+**This extends a binding refinement, by this ruling.** `docs/PHASE5_NOTES.md` §1 (quoted in SPEC §10's
+banner) binds line capture to "daily Wed–Sat, not Saturday-only". D44 adds **Tuesday**, so capture is
+now daily **Tue–Sat**. The substance of the refinement, daily and not Saturday-only, with each close
+the last observation before that game's kickoff, is unchanged. `scripts/verify_phase_5.py` checks
+Tue–Sat. SPEC and PHASE5_NOTES are not edited; this entry is the amendment.
+
+### (2) Effective week 4: the boundary
+
+The workflow change merges before **Wed 2026-09-23**, which is the first capture under the new cadence.
+**Weeks 1–3 ran the earlier cadence** (one wave per window, 8 credits a week, no Tuesday capture).
+**Week 4 onward runs D44.** Reports mark this boundary.
+
+### (3) Timing guard: the next-window defect fixed, with an escalation path
+
+WARN-not-ABORT stays (owner ruling 2026-08-07): a late observation is still evidence. The guard
+identifies the slot from `github.event.schedule`, judges the run against that slot's window on the
+slot's own ET date, and judges only `capture`. Escalation:
+- **tier 0:** a summary line on every capture;
+- **tier 1:** a warning and annotation on a miss;
+- **tier 2:** one `pipeline-late` issue per week, closed by the Sunday grade with the tally;
+- **tier 3:** a capture-timeliness line in the Sunday report;
+- **tier 4:** escalation to the owner when a guarantee slot misses in 2 or more weeks of any 3.
+
+### (4) Close-age buckets in the reports
+
+CLV is reported by close age (**≤3 h, 3–12 h, >12 h**), with counts. **The season total is never
+blended across the cadence boundary.** Close age is derived from `close_as_of` and each game's
+kickoff, so weeks 1–3 bucket correctly with no relabel of any append-only file.
+
+### (5) The claim path is D45
+
+Whether a claim excludes games that have already kicked off is a separate ruling, **D45**, due before
+2026-10-06. It is not part of this entry.
+
+### Implementation rulings (owner, 2026-09-15)
+
+1. **Tiers 1–2 fire only on a guarantee slot's miss.** A best-effort slot is designed to miss. The
+   Saturday slots, at window − 190 min, miss **one in three** — 4 of the 12 measured samples exceed
+   190 min. The Wed–Fri 17:23 slot, whose lead is only 97 min, misses **nine in nine**: every one of
+   the nine measured weekday samples exceeds it, the smallest at 102 min. If they escalated, the
+   weekly issue would be open nearly every week, recreating the guard that warned where timing did
+   not matter.
+   A best-effort miss stays at tier 0. Tier 4 was already guarantee-only.
+2. **A scheduled Tuesday capture that runs before the week's snapshot exists is a designed state.**
+   The Tuesday capture and predict share one concurrency group, so a predict delayed more than
+   **213 minutes** (3 h 33 min) beyond the capture lets the capture run first — the gap between the
+   two slots as merged, predict 09:17 ET to capture 12:50 ET. (This read "about 4.5 h" while the
+   guarantee lead was 310 minutes and the slot was 13:50; the lead became 370 and the figure moved
+   with it.) `fetch_lines` exits **4**: green, a notice, nothing
+   fetched or committed, no credit spent. A predict that failed files its own issue. Any other day,
+   or a manual run, a missing snapshot stays exit 1 and alarms. As built, it keys on the **slot**
+   that fired the run (the Tuesday capture cron), not on the run's clock. A Tuesday capture delayed
+   past midnight is still the Tuesday slot.
+3. **Two PRs.**
+   - **The workflow PR, merged before 2026-09-23:** cadence, `season.json`, the guard fix, and tiers 0–2.
+   - **The report PR, merged before the Sun 2026-09-27 12:47 ET grade,** which is the first render
+     with a week-4 grade: close-age buckets, the boundary marking, the unblended season total, and
+     tiers 3–4.
+4. **A claim tripwire, detection only, in the workflow PR.** The cadence workflows share one
+   concurrency group, and GitHub keeps one *pending* run per group, silently cancelling the older.
+   A Tuesday predict queued behind the 12:50 capture can therefore be lost when a third run arrives.
+   The daily freeze-integrity job (its own group) checks, from Wednesday to Saturday, that the
+   current week's claim exists and is valid. It opens a `stage:predict` failure issue otherwise, which
+   a successful predict re-dispatch closes. The owner set two conditions:
+   - a test that it fires on a synthetic missing claim and stays silent when the claim exists;
+   - it also fires when the claim's `model_version` carries **`-dirty`**, because a dirty claim is not
+     a claim.
+
+   **Corrected after review (2026-09-16): the two outcomes are not the same alarm.** This entry first
+   said a successful predict re-dispatch closes the issue. That is true of a **missing** claim and
+   false of a **dirty** one: a claim is byte-immutable (D22 — `write_predictions` refuses to
+   overwrite), so a re-dispatched predict *skips* the claim, succeeds, and its `clear-failure` would
+   close the issue while nothing had been repaired; the next morning's tripwire would reopen it, a
+   daily flap around a permanent fact. The tripwire now exits **2** for a missing claim
+   (`kind: failure`, cleared by a successful predict) and **3** for a dirty one
+   (`kind: dirty-claim`, which `clear-failure` never clears — it stands until the owner rules).
+
+   **The concurrency hazard itself is not ruled.** Whether capture should leave the shared group is
+   recorded as a 2027 design question (`docs/2027_NOTES.md` §8 item 33, `docs/PIPELINE.md`
+   Concurrency). That includes the undetected Saturday variant, where adjacent capture slots bunch
+   and one is dropped.
+
+### Appended — the observation-before-accounting fix is PARTIAL (2026-09-17)
+
+The second independent review of the workflow PR found that `fetch_lines` recorded the Odds spend
+(`record_quota`, `append_ledger`) **before** `record_observation`, so a ledger failure threw away an
+observation the credit had already been spent on. The fix reordered the two, and was reported as
+closed.
+
+**It is partial, and the label is corrected here rather than left standing.** A later read-only
+review injected an `append_ledger` failure (ENOSPC) end to end rather than asserting on call order:
+the observation reaches disk, the process still exits **1**, `daily-capture`'s "Fail on a real
+error" step fails the job, `cfb-commit` never runs, and the runner is discarded with the observation
+on it. **The end-to-end outcome is the same as before the reorder** — the observation is lost — and
+what the reorder bought is the ordering itself, not survival. Read row 1 of that review's table as:
+*observation written first; still lost end-to-end on a ledger-write failure, because `rc=1` prevents
+the commit.*
+
+**The complete fix is a distinct exit code meaning "observation recorded, accounting failed"**,
+which commits `data/lines` and *then* fails the job with its issue. **It goes in the D46 PR, not the
+workflow PR** (owner ruling, 2026-09-17): it changes what `cfb-commit` is gated on, which is a
+change to the commit choreography rather than to the cadence, and the D46 PR is already opening that
+seam.

@@ -115,7 +115,11 @@ def test_every_job_has_a_timeout(filename):
 def test_cadence_workflows_report_and_clear_failures(filename):
     text = (WORKFLOWS / filename).read_text()
     assert "actions/report-failure" in text and "if: failure()" in text
-    assert "actions/clear-failure" in text and "if: success()" in text
+    assert "actions/clear-failure" in text
+    # A successful run clears its stage's issue — but `daily-capture` clears on `rc == '0'` rather
+    # than `success()`, because exits 3 and 4 are designed states that leave the job green having
+    # captured nothing, and a run that did no work must not mark a real failure recovered (D44).
+    assert "if: success()" in text or "steps.capture.outputs.rc == '0'" in text
 
 
 @pytest.mark.parametrize("filename", CADENCE_FILES)

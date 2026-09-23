@@ -13,10 +13,20 @@ build-time balance) are below `--min-credits` — an honest pre-spend stop, not 
 
 Usage: python scripts/fetch_lines.py --week N [--year 2026] [--min-credits 20]
 
-Exit codes (Phase 5): 0 appended, 1 error (no snapshot / fetch failed), **3 budget refusal**.
-A budget stop is a designed outcome, not a failure — the scheduled capture job commits nothing
-and stays green on 3, but alarms on 1. They shared exit 1 until Phase 5, which left the workflow
-string-matching stdout to tell them apart.
+Exit codes (Phase 5): 0 appended, 1 error (no snapshot / fetch failed), **3 budget refusal**,
+**4 snapshot not built yet (a scheduled Tuesday capture slot only)**. Budget stops and a Tuesday capture
+that beats the predict job are designed outcomes, not failures — the scheduled capture job commits
+nothing and stays green on 3 or 4, but alarms on 1. They shared exit 1 until Phase 5, which left the
+workflow string-matching stdout to tell them apart.
+
+**Exit 4 (owner ruling 2026-09-15, D44).** The Tuesday 12:50 ET capture resolves the week being
+claimed that day. The predict job builds that week's snapshot, and both share one concurrency group.
+If the scheduler delays predict more than **213 minutes** (3 h 33 min) beyond the capture, the
+capture runs first and finds no snapshot. That is the gap between the two slots in `season.json`
+(predict 09:17 ET, capture 12:50 ET); it was 4.5 h against the 13:50 slot the 310-minute guarantee
+lead produced, and moved when the lead became 370. On a run fired by the *scheduled Tuesday capture slot* that is a designed state:
+no credit is spent, and a failed predict files its own issue. Any other day, or a manual run, a
+missing snapshot is still exit 1 and alarms.
 """
 
 from __future__ import annotations
@@ -34,9 +44,28 @@ from data.normalize import odds as odds_norm  # noqa: E402
 from data.odds_budget import append_ledger, last_remaining, record_quota  # noqa: E402
 from data.snapshot.lines import record_observation  # noqa: E402
 from data.snapshot.store import SnapshotNotFoundError, load_snapshot  # noqa: E402
+from utils.season_calendar import load_calendar  # noqa: E402
 
 
-EXIT_OK, EXIT_ERROR, EXIT_BUDGET_REFUSAL = 0, 1, 3
+EXIT_OK, EXIT_ERROR, EXIT_BUDGET_REFUSAL, EXIT_SNAPSHOT_PENDING = 0, 1, 3, 4
+
+
+def snapshot_pending_is_designed(calendar: dict | None = None) -> bool:
+    """True only for a run fired by a scheduled TUESDAY capture slot (see exit 4 above).
+
+    Keyed on the slot (`CFB_EVENT_SCHEDULE`, the cron that fired the run), not on the run's own clock.
+    A Tuesday capture delayed past midnight runs on Wednesday, and a weekday check would turn the
+    designed state into a false failure (D44 audit). No cron, or one that is not a Tuesday capture
+    slot, is never designed: fail loud.
+    """
+    if os.environ.get("GITHUB_EVENT_NAME") != "schedule":
+        return False
+    fired = " ".join(os.environ.get("CFB_EVENT_SCHEDULE", "").split())
+    if not fired:
+        return False
+    cal = calendar if calendar is not None else load_calendar()
+    slots = ((cal.get("pipeline") or {}).get("schedule_et") or {}).get("capture", [])
+    return any(" ".join(e["cron_utc"].split()) == fired and e["days"] == ["tue"] for e in slots)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -52,6 +81,11 @@ def main(argv: list[str] | None = None) -> int:
     try:
         slate = set(load_snapshot(args.week, args.year)["data"]["betting_lines"])
     except SnapshotNotFoundError:
+        if snapshot_pending_is_designed():
+            print(f"No snapshot for {args.year} week {args.week} yet: this scheduled Tuesday capture "
+                  f"ran before the predict job built it. Designed state (exit 4); nothing fetched, "
+                  f"no credit spent.")
+            return EXIT_SNAPSHOT_PENDING
         print(f"No snapshot for {args.year} week {args.week} — "
               f"run `python scripts/build_snapshot.py --week {args.week}` first.")
         return EXIT_ERROR
@@ -75,14 +109,20 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_ERROR
     # Both stores: the committed append-only ledger (the SPEC §10.5 record, survives a fresh
     # checkout) and the legacy single-value cache (gitignored, kept as a fallback).
-    record_quota(client.last_quota)
-    append_ledger(client.last_quota, caller="fetch_lines", week=args.week,
-                  run_id=os.environ.get("GITHUB_RUN_ID"))
-
+    # ORDER MATTERS: the observation first, then the accounting. The credit is already spent by the
+    # time this line runs, and the observation is the only thing that cannot be reconstructed — the
+    # market moves on, and this instant never comes back. The balance can be re-read from the next
+    # response header. With the accounting first, a ledger failure threw away an observation we had
+    # already paid for (review of the D44 PR, finding 1). A ledger failure after this point still
+    # fails the run loudly: the spend must never go unrecorded silently.
     gamelines = odds_norm.normalize_lines(raw, fetched_at)
     games = {key: asdict(gl) for gl in gamelines.values()
              if (key := f"{gl.away_team}@{gl.home_team}") in slate}
     added = record_observation(args.week, games, year=args.year)
+
+    record_quota(client.last_quota)
+    append_ledger(client.last_quota, caller="fetch_lines", week=args.week,
+                  run_id=os.environ.get("GITHUB_RUN_ID"))
 
     print(f"Appended {added} slate observation(s) at {fetched_at} "
           f"({len(games)}/{len(slate)} slate games had lines). "
