@@ -25,6 +25,8 @@ from scripts.pipeline_preflight import (
     check_secrets,
     check_timing,
     emit,
+    guarantee_miss_token,
+    write_timing_outputs,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -184,6 +186,47 @@ def test_a_late_run_before_its_window_is_late_not_missed():
     pf = Preflight()
     v = _t(pf, datetime(2026, 9, 26, 20, 0, tzinfo=ET), SAT_G4)    # 220 min late, still before 22:30
     assert v.status == "late" and pf.warns == []
+
+
+# --- D46: the value tier 2 keys on must be readable in the job log ------------------------------
+#
+# `timing_guarantee_miss` goes straight to $GITHUB_OUTPUT and was echoed nowhere, so in a job log
+# `''` and `'false'` look identical — both merely leave the late-issue step skipped. The first live
+# D44 captures (2026-09-23) could only be judged by inference: the step was skipped, and no "could
+# not be handed to the workflow" warning appeared. That is the D39 shape, where an empty output
+# silently inverts a gate, and it is not something to re-derive every time.
+
+@pytest.mark.parametrize("schedule, now, expected", [
+    (SAT, datetime(2026, 9, 26, 12, 5, tzinfo=ET), "true"),     # guarantee, 5 min past its window
+    (SAT_G4, datetime(2026, 9, 26, 16, 40, tzinfo=ET), "false"),  # guarantee, 350 min to spare
+    (SAT_BEST, datetime(2026, 9, 26, 12, 30, tzinfo=ET), "false"),  # best-effort miss: never tier 2
+])
+def test_the_tier_zero_line_carries_the_flag_tier_two_keys_on(schedule, now, expected):
+    pf = Preflight()
+    v = _t(pf, now, schedule)
+    line = next(n for n in pf.notes if n.startswith("timing: ") and "slot" in n and "ET fired" in n)
+    assert f"timing_guarantee_miss={expected}" in line, line
+    assert guarantee_miss_token(v) == expected
+
+
+def test_the_printed_flag_is_the_same_string_the_workflow_reads(tmp_path, monkeypatch):
+    """The printed token and the written output agree on the same verdict.
+
+    What it cannot prove, stated rather than implied: that both come from ONE expression. Reverting
+    `write_timing_outputs` to its own `'true' if ... else 'false'` literal passes this — two
+    agreeing literals are indistinguishable from one helper at this level (review of this PR). The
+    agreement is the useful property; `guarantee_miss_token` exists so the two cannot drift later,
+    and its inversion is caught by the parametrized test above.
+    """
+    out = tmp_path / "gh_output"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+    pf = Preflight()
+    v = _t(pf, datetime(2026, 9, 26, 12, 5, tzinfo=ET), SAT)      # a real guarantee miss
+    write_timing_outputs(v)
+    written = dict(ln.split("=", 1) for ln in out.read_text().splitlines() if "=" in ln)
+    line = next(n for n in pf.notes if "ET fired" in n)
+    assert written["timing_guarantee_miss"] == "true"
+    assert f"timing_guarantee_miss={written['timing_guarantee_miss']}" in line
 
 
 # --- B1: timing is WARN-only, so nothing in the guard may abort a capture -----------------------

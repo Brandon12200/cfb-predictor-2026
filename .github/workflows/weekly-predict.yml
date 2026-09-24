@@ -32,8 +32,16 @@ concurrency:
   # Shared across all three cadence workflows: they all push to the same branch, so they must
   # serialize. cancel-in-progress is false because cancelling can tear a run between an Odds spend
   # and record_quota, or between two of the three commits.
+  #
+  # `queue: max` (D46) is the other half, and it protects the run that has not started yet. The
+  # default, `queue: single`, keeps at most ONE pending run per group and CANCELS the older one when
+  # a newer arrives — so a Tuesday predict waiting behind a running capture could be discarded by a
+  # third arrival, and a cancelled run fires no `if: failure()`, so nothing would report it. With
+  # `max` the group holds up to 100 pending runs, processed FIFO, and only overflow past 100 is
+  # cancelled. Incompatible with `cancel-in-progress: true` only; `false` is the required pairing.
   group: cfb-pipeline-${{ github.ref }}
   cancel-in-progress: false
+  queue: max
 
 permissions:
   contents: write

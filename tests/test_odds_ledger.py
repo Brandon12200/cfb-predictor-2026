@@ -159,6 +159,13 @@ def test_an_observation_survives_a_ledger_write_that_fails(tmp_path, monkeypatch
     cannot be reconstructed — the market moves on. With the accounting first, a ledger failure threw
     away an observation already paid for. The ledger failure must still fail the run loudly, so the
     spend is never silently unrecorded (review of the D44 PR, finding 1).
+
+    **D46 changed HOW it fails, not whether.** This asserted `pytest.raises(OSError)`, which is what
+    an uncaught exception did: exit 1, and `daily-capture.yml` then skipped the commit step (gated on
+    `rc == '0'`), so the observation on disk never reached the repository and the runner was thrown
+    away with it — the reason D44's finding 1 is recorded as PARTIAL. The exception is now caught and
+    turned into exit 5, which the workflow commits on *before* failing the job. The on-disk
+    assertions below are unchanged; only the failure channel moved.
     """
     import scripts.fetch_lines as fl
     from data.snapshot.lines import lines_path, load_lines
@@ -188,12 +195,101 @@ def test_an_observation_survives_a_ledger_write_that_fails(tmp_path, monkeypatch
 
     monkeypatch.setattr(fl, "append_ledger", ledger_dies)
     monkeypatch.setattr(fl, "record_quota", lambda *a, **k: None)
-    with pytest.raises(OSError):
-        fl.main(["--week", "4"])
+    rc = fl.main(["--week", "4"])
+    assert rc == fl.EXIT_ACCOUNTING_FAILED, "an unrecorded spend must still end the run red"
     assert load_lines(4, base=tmp_path)["G@H"]["observations"], (
         "the observation was paid for and must be on disk before the accounting runs"
     )
     assert lines_path(4, base=tmp_path).exists()
+
+
+@pytest.mark.parametrize("exc", [
+    OSError("disk full"),
+    # NOT hypothetical, and the reason `except Exception` is load-bearing rather than lazy:
+    # `data/odds_budget.py` reads the committed ledger with `json.loads`, so a torn file raises
+    # JSONDecodeError (a ValueError), and appending to `existing["entries"]` raises KeyError or
+    # TypeError if the JSON is well-formed but the wrong shape. Narrowing the except to OSError
+    # survived the whole suite before this case existed: those escape, the run exits 1, the commit
+    # is skipped, and the observation is lost — the exact D44-PARTIAL outcome D46 closes.
+    ValueError("Expecting value: line 1 column 1 (char 0)"),
+    KeyError("entries"),
+])
+def test_any_accounting_exception_gives_exit_five_not_a_traceback(tmp_path, monkeypatch, exc):
+    import scripts.fetch_lines as fl
+    from data.snapshot.lines import load_lines
+
+    monkeypatch.setattr(fl, "load_snapshot", lambda w, y: {"data": {"betting_lines": {"G@H": {}}}})
+    monkeypatch.setattr(fl, "last_remaining", lambda: (400, "ledger"))
+
+    class _Client:
+        last_quota = {"remaining": 399, "used": 101}
+
+        def get_ncaaf_spreads(self):
+            return [{"home_team": "H", "away_team": "G", "commence_time": "2026-09-26T16:00:00Z",
+                     "bookmakers": []}]
+
+    monkeypatch.setattr("data.clients.odds.get_odds_client", lambda: _Client())
+    monkeypatch.setattr(fl, "record_observation",
+                        lambda week, games, year=2026: (
+                            __import__("data.snapshot.lines", fromlist=["x"]).record_observation(
+                                week, {"G@H": {"home_team": "H", "away_team": "G",
+                                               "kickoff": "2026-09-26T16:00:00Z",
+                                               "observations": [{"fetched_at": "2026-09-26T10:00:00Z",
+                                                                 "lines": [], "consensus_spread": -3.0}]}},
+                                year=year, base=tmp_path)))
+
+    def dies(*a, **k):
+        raise exc
+
+    monkeypatch.setattr(fl, "record_quota", lambda *a, **k: None)
+    monkeypatch.setattr(fl, "append_ledger", dies)
+    assert fl.main(["--week", "4"]) == fl.EXIT_ACCOUNTING_FAILED, type(exc).__name__
+    assert load_lines(4, base=tmp_path)["G@H"]["observations"]
+
+
+def test_either_accounting_writer_failing_gives_exit_five(tmp_path, monkeypatch, capsys):
+    """`record_quota` is inside the same `try:` as `append_ledger`.
+
+    Guarding only the ledger would leave the quota cache — the first of the two calls — able to
+    raise past it, restoring exactly the behaviour D46 removed: exit 1, no commit, observation lost
+    on the runner. Mutation-checked by narrowing the `try:` to `append_ledger` alone, which fails
+    this test and no other.
+    """
+    import scripts.fetch_lines as fl
+    from data.snapshot.lines import load_lines
+
+    monkeypatch.setattr(fl, "load_snapshot", lambda w, y: {"data": {"betting_lines": {"G@H": {}}}})
+    monkeypatch.setattr(fl, "last_remaining", lambda: (400, "ledger"))
+
+    class _Client:
+        last_quota = {"remaining": 399, "used": 101}
+
+        def get_ncaaf_spreads(self):
+            return [{"home_team": "H", "away_team": "G", "commence_time": "2026-09-26T16:00:00Z",
+                     "bookmakers": []}]
+
+    monkeypatch.setattr("data.clients.odds.get_odds_client", lambda: _Client())
+    monkeypatch.setattr(fl, "record_observation",
+                        lambda week, games, year=2026: (
+                            __import__("data.snapshot.lines", fromlist=["x"]).record_observation(
+                                week, {"G@H": {"home_team": "H", "away_team": "G",
+                                               "kickoff": "2026-09-26T16:00:00Z",
+                                               "observations": [{"fetched_at": "2026-09-26T10:00:00Z",
+                                                                 "lines": [], "consensus_spread": -3.0}]}},
+                                year=year, base=tmp_path)))
+
+    reached_ledger = []
+    monkeypatch.setattr(fl, "record_quota", lambda *a, **k: (_ for _ in ()).throw(OSError("quota cache full")))
+    monkeypatch.setattr(fl, "append_ledger", lambda *a, **k: reached_ledger.append(True))
+
+    rc = fl.main(["--week", "4"])
+    assert rc == fl.EXIT_ACCOUNTING_FAILED
+    assert reached_ledger == [], "record_quota raised, so append_ledger is skipped by the same try"
+    assert load_lines(4, base=tmp_path)["G@H"]["observations"], "the observation is still on disk"
+    out = capsys.readouterr().out
+    assert "::error::" in out and "NOT recorded" in out, (
+        "the unrecorded spend must be visible in the log, not only in the exit code"
+    )
 
 
 def test_the_observation_is_written_before_any_accounting(monkeypatch):

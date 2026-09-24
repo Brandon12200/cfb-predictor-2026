@@ -27,8 +27,12 @@ on:
         default: false
 
 concurrency:
+  # See weekly-predict.yml for why this group is shared and why `queue: max` (D46) is set: the
+  # default `single` cancels the older pending run when a newer one arrives, and the Sunday grade
+  # writes three commits that nothing else reproduces until the next Sunday.
   group: cfb-pipeline-${{ github.ref }}
   cancel-in-progress: false
+  queue: max
 
 permissions:
   contents: write

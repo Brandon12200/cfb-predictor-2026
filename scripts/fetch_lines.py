@@ -14,10 +14,22 @@ build-time balance) are below `--min-credits` — an honest pre-spend stop, not 
 Usage: python scripts/fetch_lines.py --week N [--year 2026] [--min-credits 20]
 
 Exit codes (Phase 5): 0 appended, 1 error (no snapshot / fetch failed), **3 budget refusal**,
-**4 snapshot not built yet (a scheduled Tuesday capture slot only)**. Budget stops and a Tuesday capture
-that beats the predict job are designed outcomes, not failures — the scheduled capture job commits
-nothing and stays green on 3 or 4, but alarms on 1. They shared exit 1 until Phase 5, which left the
-workflow string-matching stdout to tell them apart.
+**4 snapshot not built yet (a scheduled Tuesday capture slot only)**, **5 observation recorded,
+accounting failed**. Budget stops and a Tuesday capture that beats the predict job are designed
+outcomes, not failures — the scheduled capture job commits nothing and stays green on 3 or 4, but
+alarms on 1. They shared exit 1 until Phase 5, which left the workflow string-matching stdout to
+tell them apart.
+
+**Exit 5 (D46).** 5 is neither designed nor ordinary: the observation IS on disk and must be
+committed, and the run must still end red because a spent credit went unrecorded. D44's review
+found the accounting running *before* `record_observation`, so a ledger failure threw away an
+observation already paid for; the order was reversed, but the outcome did not change — an uncaught
+ledger exception exited 1, `daily-capture.yml` failed the job, and `cfb-commit` (gated on
+`rc == '0'`) never staged `data/lines`, so the runner was discarded with the observation on it.
+That is why D44 records finding 1 as PARTIAL. Exit 5 is the completion: the workflow commits on 0
+**or** 5, and the failure step runs *after* the commit, so the observation reaches `main` and the
+alarm still fires. The ledger is re-derivable from the next response header; the observation is not
+— the market moves on and that instant never comes back.
 
 **Exit 4 (owner ruling 2026-09-15, D44).** The Tuesday 12:50 ET capture resolves the week being
 claimed that day. The predict job builds that week's snapshot, and both share one concurrency group.
@@ -48,6 +60,7 @@ from utils.season_calendar import load_calendar  # noqa: E402
 
 
 EXIT_OK, EXIT_ERROR, EXIT_BUDGET_REFUSAL, EXIT_SNAPSHOT_PENDING = 0, 1, 3, 4
+EXIT_ACCOUNTING_FAILED = 5  # observation written, spend unrecorded — commit it, then fail (D46)
 
 
 def snapshot_pending_is_designed(calendar: dict | None = None) -> bool:
@@ -107,26 +120,46 @@ def main(argv: list[str] | None = None) -> int:
         # lines are what land in the auto-Issue. Matches fetch_results.py's handling.
         print(f"Odds fetch failed: {type(exc).__name__}: {exc}")
         return EXIT_ERROR
-    # Both stores: the committed append-only ledger (the SPEC §10.5 record, survives a fresh
-    # checkout) and the legacy single-value cache (gitignored, kept as a fallback).
-    # ORDER MATTERS: the observation first, then the accounting. The credit is already spent by the
-    # time this line runs, and the observation is the only thing that cannot be reconstructed — the
-    # market moves on, and this instant never comes back. The balance can be re-read from the next
+    # ORDER, then SURVIVAL — one rule in two steps, and both halves were paid for.
+    #
+    # Order (D44 finding 1): the observation first, then the accounting. The credit is spent by the
+    # time this line runs, and the observation is the only part that cannot be reconstructed — the
+    # market moves on and this instant never comes back, while the balance re-reads from the next
     # response header. With the accounting first, a ledger failure threw away an observation we had
-    # already paid for (review of the D44 PR, finding 1). A ledger failure after this point still
-    # fails the run loudly: the spend must never go unrecorded silently.
+    # already paid for.
+    #
+    # Survival (D46): the order alone did not save it. An escaping exception exited 1, and the
+    # commit step — gated on rc == '0' — never ran, so the observation died on the runner anyway,
+    # which is why D44 records its finding 1 as PARTIAL. Exit 5 says "committable, but the spend is
+    # unrecorded", and `daily-capture.yml` commits on 0 or 5 BEFORE failing the job.
+    #
+    # `except Exception` is deliberate and load-bearing: the two stores read committed JSON, so a
+    # torn ledger raises JSONDecodeError (ValueError) and a wrong-shaped one KeyError/TypeError.
+    # Narrowing this to OSError restores the lost-observation path for every non-OSError fault.
     gamelines = odds_norm.normalize_lines(raw, fetched_at)
     games = {key: asdict(gl) for gl in gamelines.values()
              if (key := f"{gl.away_team}@{gl.home_team}") in slate}
     added = record_observation(args.week, games, year=args.year)
 
-    record_quota(client.last_quota)
-    append_ledger(client.last_quota, caller="fetch_lines", week=args.week,
-                  run_id=os.environ.get("GITHUB_RUN_ID"))
+    accounting_error: str | None = None
+    try:
+        record_quota(client.last_quota)          # gitignored single-value cache
+        append_ledger(client.last_quota, caller="fetch_lines", week=args.week,
+                      run_id=os.environ.get("GITHUB_RUN_ID"))   # committed SPEC §10.5 record
+    except Exception as exc:                       # noqa: BLE001
+        # Flattened: a newline inside a `::error::` command ends the annotation and spills the rest
+        # as plain text, so a multi-line exception message would truncate its own diagnosis.
+        accounting_error = f"{type(exc).__name__}: {exc}".replace("\n", " ")
 
     print(f"Appended {added} slate observation(s) at {fetched_at} "
           f"({len(games)}/{len(slate)} slate games had lines). "
           f"Odds credits remaining: {(client.last_quota or {}).get('remaining')}")
+    if accounting_error is not None:
+        print(f"::error::the Odds spend was NOT recorded ({accounting_error}). The observation is "
+              f"on disk and is committed by the step after this one; this run still ends red, "
+              f"because an unrecorded spend must never be silent. The balance re-derives from the "
+              f"next response header — the observation would not (D46).")
+        return EXIT_ACCOUNTING_FAILED
     return EXIT_OK
 
 

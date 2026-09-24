@@ -484,8 +484,12 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     second review of #64. The same ruling puts a caveat on sentence splitting ("e.g. ", semicolons)
     with no abbreviation list; that is a documented limit, not a drawer item.
 33. **Should capture leave the shared `cfb-pipeline` concurrency group?** A design question for
-    2027; the owner ruled 2026-09-15 to record it here, not decide it now. GitHub keeps one
-    *pending* run per group, and a newer pending run cancels the older one silently (a `cancelled`
+    2027; the owner ruled 2026-09-15 to record it here, not decide it now. **Partly overtaken by
+    D46 (2026-09-23):** `queue: max` is now set on the group, so pending runs queue FIFO (up to 100)
+    instead of the newer one silently cancelling the older. The *silent loss* described below is
+    therefore closed; what remains open is the serialization itself — a late capture still waits
+    behind a running grade — which is the actual question here. Under the old default GitHub kept one
+    *pending* run per group, and a newer pending run cancelled the older one silently (a `cancelled`
     conclusion fires no `if: failure()`; compare item 15). Under the D44 cadence that can drop a
     Tuesday predict queued behind the 12:50 capture when a third run arrives, and a Saturday
     capture when adjacent slots bunch under scheduler lateness. The merged D44 schedule keeps every
@@ -510,6 +514,16 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     is absent from `data/snapshots/<week>/` was not built from that week's vehicle, which no amount
     of file-level validity would show. Cross-checking `snapshot_id` is the 2027 fix. Found by an
     independent review of the D44 PR.
+38. **Nothing in this repository parses a workflow file.** There is no `yaml.safe_load` anywhere in
+    `tests/`, no `actionlint` step in `ci.yml`, and PyYAML is not a dependency — so the workflow
+    tests read YAML as text (the §(g).1 caveat each of them states) and an *invalid* workflow passes
+    every check we have. Measured during D46: over-indenting one key produces a file PyYAML refuses
+    to parse, and the whole suite stayed green. D46 closed that one case by asserting the key's
+    indentation matches its sibling's, which is a guard against the instance rather than the class.
+    **The durable fix is `actionlint` as a CI step**, which validates expression syntax and `if:`
+    conditions as well as YAML shape. Deferred in 2026 because adding a linter to the required-check
+    set mid-season would gate the cadence on a tool nobody here has run yet. Found by an independent
+    review of the D46 PR.
 34. **A designed-state exit still satisfies `clear-failure`.** `daily-capture.yml` ends with
     `clear-failure if: success()`, and a run that captured nothing — exit 3 (budget refusal) or
     exit 4 (a Tuesday capture before the snapshot, D44) — is still a success, so it closes any open

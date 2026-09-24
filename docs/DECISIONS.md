@@ -1216,3 +1216,127 @@ which commits `data/lines` and *then* fails the job with its issue. **It goes in
 workflow PR** (owner ruling, 2026-09-17): it changes what `cfb-commit` is gated on, which is a
 change to the commit choreography rather than to the cadence, and the D46 PR is already opening that
 seam.
+
+---
+
+## D46 — The cadence group queues instead of discarding; an unrecorded spend commits then fails; three rulings carried from the #66 merge — **RATIFIED (owner, 2026-09-23)**
+**Date:** 2026-09-23. Scoped by the owner when #66 merged (`0aec2f2`, 22:55 ET on 09-22), plus one
+addition from the first live D44 captures on 09-23.
+
+### (1) `queue: max` on the shared cadence group
+
+All three cadence workflows keep `group: cfb-pipeline-${{ github.ref }}` and
+`cancel-in-progress: false`, and now add **`queue: max`**.
+
+**The default was the defect.** `queue: single` — the default — keeps **at most one pending run** per
+group and **cancels the older one** when a newer arrives. A cancelled run concludes `cancelled`,
+which fires no `if: failure()`, so nothing reports it (`2027_NOTES` §8 item 15 is the same blind spot
+for timeouts). Two shapes were reachable: a Tuesday predict pending behind a running capture when a
+third run arrives — **the week then has no claim** — and two adjacent Saturday capture slots pending
+together under scheduler lateness.
+
+`max` holds **up to 100 pending runs per group, processed FIFO** by the time each started waiting,
+cancelling only overflow past 100. The busiest day is Saturday, with **8 captures and no other
+cadence job** — the one grade cron is Sunday and capture runs Tue–Sat — so the limit is not
+reachable here; with 20-minute job timeouts and slots at least 30 minutes apart, about two runs can
+be pending at once. *(An earlier draft of this paragraph said "8 captures plus a grade", which is
+true of no day: corrected here rather than left, since the 100-limit argument rests on the figure.)* **It may not be combined with `cancel-in-progress: true`** — that is a workflow
+validation error, which would break every cadence run at once, so the pairing with `false` is pinned
+by a test rather than left to be discovered on a Tuesday.
+
+Sources, read directly rather than from a search snippet: GitHub Docs, *Control the concurrency of
+workflows and jobs*
+(`https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency`),
+and the changelog *GitHub Actions concurrency groups now allow larger queues*, 2026-05-07
+(`https://github.blog/changelog/2026-05-07-github-actions-concurrency-groups-now-allow-larger-queues/`).
+
+**`freeze-integrity` deliberately keeps the default.** It has its own group, is idempotent, writes no
+artifact, and the next day's run redoes all of it. Recorded so the omission reads as a decision.
+
+**What it costs, recorded rather than discovered later.** Queueing converts a *cancelled* run into a
+*late* one, and for the predict job that is a real trade rather than a free win. Under `single`, a
+predict pending behind a running capture when a third run arrived was **cancelled**: no claim, and
+the tripwire caught it on Wednesday. Under `max` that predict **runs**, later, and writes a claim —
+and nothing refuses a claim written *after* the week's first kickoff. `claim_window_open` gates only
+the lead (the week's `start` within `CLAIM_LEAD_DAYS`), not the trailing edge. From week 6 there are
+Tuesday kickoffs around 19:00 ET, and D44 measured scheduler lateness up to 485 min against a 09:17
+predict, so a queued-and-late predict writing a post-kickoff claim is reachable — and a claim is
+byte-immutable (D22), undoable only by a void that D38 §6 forbids outright.
+
+**A detected loss becomes an undetected late pre-registration.** Both need the same three-run
+collision, so the probability is unchanged and small; what changes is which way it fails. **The guard
+for it is D45's kickoff margin, which §(4).3 of this very entry defers** — so the exposure is open
+between now and that ruling, and is stated here rather than left for the next reader to find. The
+same trade applies, trivially, to a queued capture: it now spends a credit it would previously have
+had cancelled, worth one of 500 a month against a 16-credit week.
+
+**What this does NOT close.** Whether capture should leave the shared group stays unruled
+(`2027_NOTES` §8 item 33): the three workflows still serialize, so a late capture still waits behind
+a running grade. D46 removes the *silent loss*, not the serialization. **The claim tripwire stays**,
+and its premise is now broader rather than narrower — queueing was never the only way a week loses
+its claim (GitHub drops scheduled runs under load, a predict can fail outright, a claim can land
+`-dirty`), and a tripwire that only fires for the one cause it was written against is one nobody can
+trust for the others.
+
+### (2) Exit 5: the observation commits, then the run fails
+
+`fetch_lines` gains **`EXIT_ACCOUNTING_FAILED = 5`**: the observation reached disk and the Odds spend
+did not reach the ledger. Both accounting writers (`record_quota`, `append_ledger`) sit inside one
+`try:`, so either failing yields 5.
+
+**This completes D44's finding 1, which that entry relabels PARTIAL.** Reversing the order put the
+observation on disk first, but the outcome did not change: an uncaught ledger exception exited 1,
+`daily-capture.yml` failed the job, and `cfb-commit` — gated on `rc == '0'` — never staged
+`data/lines`, so the runner was discarded with the observation on it.
+
+**The ordering in the workflow is the fix, not the exit code.** The commit step now runs **before**
+"Fail on a real error" and is gated on `rc == '0' || rc == '5'`. `cfb-commit` carries no status
+function, so it is implicitly `success()`: with the failure step above it, an exit-5 run fails first
+and the commit is skipped — the defect in a new costume. Exit **1** still commits nothing, because
+there is no observation to commit.
+
+5 is **not** a designed state: the job ends red and files its `stage:capture` issue, and
+`clear-failure` stays on `rc == '0'` so a run that could not record its spend cannot mark a real
+failure recovered. The asymmetry is the point — **the balance re-derives from the next response
+header; the observation never does**, because the market moves on and that instant does not return.
+
+**Accepted, recorded rather than fixed:** an exit-5 run that *also* missed its guarantee window does
+not open the weekly `pipeline-late` issue, because the tier-2 step carries no status function and the
+job has already failed. That is unchanged from exit 1's behaviour; the capture-failure issue carries
+the log, including the tier-0 timing line.
+
+### (3) The tier-2 flag is readable in the job log
+
+`timing_guarantee_miss` was written straight to `$GITHUB_OUTPUT` and echoed nowhere, so in a job log
+**`''` and `'false'` are indistinguishable** — both merely leave the late-issue step skipped. That is
+the **D39 shape**: an empty output silently inverts a gate. Found on 2026-09-23, judging the first
+live D44 captures, where the value could only be established by inference (the step was skipped, and
+no "could not be handed to the workflow" warning appeared).
+
+The tier-0 line now ends `; timing_guarantee_miss=<true|false>`, and both that line and the
+`$GITHUB_OUTPUT` write call **one** helper, `guarantee_miss_token` — two literals would drift, and a
+log line describing a decision the workflow did not make is worse than no line, because it reads as
+evidence. A test asserts the printed token and the written value agree.
+
+### (4) Three rulings carried from the #66 merge (owner, 2026-09-22)
+
+1. **#66 merged AFTER the week-4 claim, not before the predict**, as the 09-17 window had ruled.
+   Deliberate: the predict runs `cfb-setup` → `pipeline_preflight`, both rewritten in #66, and
+   merging ahead of it would have put unexercised code in front of the one artifact that cannot be
+   rewritten. **Consequence: week 4 is mixed** — its claim was made on pre-D44 code, its captures run
+   on D44 code. D44 §(2)'s boundary at week 4 still holds; the mixed week is recorded so nobody reads
+   that boundary as "all of week 4". Week 4 also has no Tuesday capture, the slot that exists for
+   Tuesday games from week 6.
+2. **A GO survives base movement, under a stated test.** Practised since #58 and never written down:
+   a `code-reviewer` GO stands when `main` has moved only in files **outside** the PR's diff —
+   verified by `git merge-tree` reporting no conflict **and** an empty intersection between the files
+   changed on `main` since the merge-base and the files in the diff. Any overlap requires a new GO at
+   a new head. **Never merge `main` into the branch to "refresh" it:** that produces a head no GO
+   covers, which is the thing the rule exists to prevent.
+3. **D45's kickoff margin is NOT ruled.** The handoff overstated it. The shape is settled — exclude
+   any game whose scheduled kickoff precedes the claim run plus a margin, list each exclusion in the
+   claim's `meta` with its reason, and give a game with no post-claim observation a null
+   `closing_spread` with a reason rather than a zero CLV by construction — but **the margin itself
+   and the timestamp it is measured from are open** until the owner rules them (proposed: the claim's
+   own `generated_at`, with a margin of at least the predict-to-first-capture gap, 213 min on a
+   Tuesday). **D45 is not to be implemented until then.** Neither PR F nor this entry depends on it.

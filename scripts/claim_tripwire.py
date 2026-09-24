@@ -2,14 +2,21 @@
 """Claim tripwire: from Wednesday to Saturday, a week whose claim is due must have a valid claim.
 
 **Why it exists (owner ruling 2026-09-15, D44).** The three cadence workflows share one concurrency
-group, and GitHub keeps at most one *pending* run per group: a newer pending run cancels the older
-one, whatever `cancel-in-progress` says. A cancelled run's conclusion is `cancelled`, which never
-fires `if: failure()`. With the Tuesday 12:50 capture in the group, a Tuesday predict can be lost
-without a trace. That happens if it is pending behind a running capture when a third group run (in
-practice a manual dispatch) is created. The cost is no claim for the week, and before this nothing
-alarmed until Wednesday's capture failed on a missing snapshot, about a day later and with the wrong
-diagnosis. This is **detection only**; the concurrency design is a 2027 question
-(`docs/2027_NOTES.md`).
+group, and under the queue default (`single`) GitHub keeps at most one *pending* run per group: a
+newer pending run cancels the older one, whatever `cancel-in-progress` says. A cancelled run's
+conclusion is `cancelled`, which never fires `if: failure()`. With the Tuesday 12:50 capture in the
+group, a Tuesday predict could be lost without a trace — pending behind a running capture when a
+third group run (in practice a manual dispatch) was created. The cost is no claim for the week, and
+nothing alarmed until Wednesday's capture failed on a missing snapshot, about a day later and with
+the wrong diagnosis.
+
+**That specific cause was removed by D46**, which sets `queue: max` on the group: up to 100 pending
+runs, FIFO, no silent replacement. **This check stays, and its premise is now broader rather than
+narrower** — queueing was never the only way a week loses its claim. GitHub drops scheduled runs
+under load; a predict can fail outright; a claim can land `-dirty`; and a tripwire that only ever
+fires for the one cause it was written against is a tripwire nobody can trust for the others. It
+remains **detection only**: whether capture should leave the shared group is still a 2027 question
+(`docs/2027_NOTES.md` §8 item 33).
 
 It runs in the daily freeze-integrity job, which has its own concurrency group, so no cadence run
 can cancel it. Wednesday's run leaves time to re-dispatch predict before evening kickoffs.

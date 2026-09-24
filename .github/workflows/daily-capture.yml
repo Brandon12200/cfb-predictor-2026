@@ -60,8 +60,13 @@ on:
         default: ""
 
 concurrency:
+  # See weekly-predict.yml for why this group is shared and why `queue: max` (D46) is set: the
+  # default `single` cancels the older pending run when a newer one arrives, silently, and a
+  # cancelled run fires no `if: failure()`. Saturday is where that bit here — adjacent capture slots
+  # can be pending together under scheduler lateness.
   group: cfb-pipeline-${{ github.ref }}
   cancel-in-progress: false
+  queue: max
 
 permissions:
   contents: write
@@ -134,19 +139,40 @@ jobs:
           echo "This Tuesday capture ran before the predict job built week ${{ steps.setup.outputs.week_padded }}'s snapshot. Nothing was fetched or committed." >> "$GITHUB_STEP_SUMMARY"
           echo "::notice::Tuesday capture ran before the week's snapshot existed — designed state, nothing committed."
 
-      - name: Fail on a real error
-        if: steps.capture.outputs.rc != '0' && steps.capture.outputs.rc != '3' && steps.capture.outputs.rc != '4'
+      # Exit 5 (D46): the observation reached disk and the Odds spend did not reach the ledger.
+      # NOT a designed state — the run ends red below — but the observation is committable and must
+      # be committed, which is why this step and the commit sit BEFORE "Fail on a real error".
+      - name: Accounting failed, observation kept (run will fail)
+        if: steps.capture.outputs.rc == '5'
         run: |
-          echo "::error::fetch_lines exited ${{ steps.capture.outputs.rc }}"
-          exit 1
+          echo "### Odds spend was not recorded" >> "$GITHUB_STEP_SUMMARY"
+          echo "The observation is on disk and is committed by the next step; the ledger write failed, so this run ends red. The balance re-derives from the next response header — the observation would not." >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::Odds spend unrecorded — committing the observation, then failing the run."
 
+      # ORDER IS LOAD-BEARING, and it is the whole of D46's second half. The commit runs before the
+      # failure step so an exit-5 observation reaches `main`; putting the failure first would skip
+      # this step (it carries no status function, so it is implicitly `success()`) and discard the
+      # observation on the runner — the outcome D44's finding 1 was reported as having fixed, and
+      # had not. Exit 1 still commits nothing: the fetch produced no observation to commit.
       - uses: ./.github/actions/cfb-commit
-        if: steps.capture.outputs.rc == '0'
+        if: steps.capture.outputs.rc == '0' || steps.capture.outputs.rc == '5'
         with:
           paths: data/lines data/quota
           message: "lines: ${{ steps.setup.outputs.year }} week ${{ steps.setup.outputs.week_padded }} observation ${{ steps.setup.outputs.et_now }}"
           suffix: ${{ steps.setup.outputs.commit_suffix }}
           push: ${{ inputs.dry_run != true }}
+
+      # Moved BELOW the commit by D46 — it used to sit above it. 3 and 4 are designed states; 5 is
+      # not, and this is where it turns red, after its observation is safely committed. The relative
+      # order with the tier-2 step below is unchanged: a failing capture has never opened the weekly
+      # late issue, because that step carries no status function. An exit-5 run that ALSO missed its
+      # guarantee window therefore reports through the capture-failure issue (which carries the log,
+      # including the tier-0 timing line) rather than the `pipeline-late` one.
+      - name: Fail on a real error
+        if: steps.capture.outputs.rc != '0' && steps.capture.outputs.rc != '3' && steps.capture.outputs.rc != '4'
+        run: |
+          echo "::error::fetch_lines exited ${{ steps.capture.outputs.rc }}"
+          exit 1
 
       # D44 escalation, tier 2 (open). The preflight judged this run against the slot that fired it
       # (tiers 0-1). A GUARANTEE slot that landed at or after its window opens, or comments on, one
