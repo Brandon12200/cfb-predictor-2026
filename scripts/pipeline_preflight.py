@@ -285,8 +285,15 @@ def check_timing(pf: Preflight, cal: dict, now: datetime, *, role: str, event_na
         # The tier-0 line has to read correctly on its own: someone scrolling a log without D44 in
         # hand should not file a bug about a slot that is designed to miss (review of the D44 PR, 15).
         expected = ", miss expected" if v.kind == "best_effort" else ""
+        # The tier-2 flag is echoed here because it was otherwise readable NOWHERE: it is written
+        # straight to $GITHUB_OUTPUT, and in a job log `''` and `'false'` are indistinguishable —
+        # both merely leave the late-issue step skipped. That is the D39 shape (an undeclared output
+        # reads as empty and inverts a gate silently), and the first live D44 captures could only be
+        # judged by inference. Same expression as the writer, via `guarantee_miss_token`, so the
+        # printed value cannot drift from the written one; a test pins that they agree.
         pf.note(f"timing: {v.kind} slot{expected} {v.slot_et:%a %H:%M} ET fired {v.lateness_min} "
-                f"min late, {where} ({v.status})")
+                f"min late, {where} ({v.status}); "
+                f"timing_guarantee_miss={guarantee_miss_token(v)}")
         if v.guarantee_miss:
             games = ", ".join(v.games) if v.games else "no slate games loaded for this window"
             msg = (f"GUARANTEE capture slot {v.slot_et:%a %H:%M} ET missed its {v.window_et:%H:%M} "
@@ -305,6 +312,16 @@ def check_timing(pf: Preflight, cal: dict, now: datetime, *, role: str, event_na
     return v
 
 
+def guarantee_miss_token(v: TimingVerdict) -> str:
+    """The exact string the workflow compares against `'true'`.
+
+    One definition, two consumers: `$GITHUB_OUTPUT` (what tier 2 keys on) and the tier-0 log line
+    (what a human reads). Two literals would eventually disagree, and the log would then describe a
+    decision the workflow did not make.
+    """
+    return "true" if v.guarantee_miss else "false"
+
+
 def write_timing_outputs(v: TimingVerdict, *, quiet: bool = False) -> None:
     """Tier 2 hand-off: the capture workflow opens the weekly `pipeline-late` issue on a guarantee
     miss. Written to the Preflight step's $GITHUB_OUTPUT; `quiet` keeps unit tests out of it."""
@@ -318,7 +335,7 @@ def write_timing_outputs(v: TimingVerdict, *, quiet: bool = False) -> None:
                   f"{', '.join(v.games) or 'none loaded'}")
     with open(out, "a") as fh:
         fh.write(f"timing_status={v.status}\n")
-        fh.write(f"timing_guarantee_miss={'true' if v.guarantee_miss else 'false'}\n")
+        fh.write(f"timing_guarantee_miss={guarantee_miss_token(v)}\n")
         fh.write(f"timing_detail={detail}\n")
 
 
