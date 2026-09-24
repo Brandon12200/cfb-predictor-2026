@@ -187,6 +187,15 @@ job built the week's snapshot (owner ruling 2026-09-15; any other missing snapsh
 claim for this week yet (the normal preseason state — the Sunday job runs every week, but the
 week-1 claim is not written until the Aug 25 predict run). Only anything else fails the job.
 
+**`fetch_lines` 5 is the one non-zero that commits (D46).** The observation reached disk and the
+Odds spend did not reach the ledger. It is *not* a designed state — the job ends red and files its
+issue — but the observation is committable, so `daily-capture.yml` runs the commit step **before**
+"Fail on a real error" and gates it on `rc == '0' || rc == '5'`. That ordering is the fix, not the
+exit code: with the failure step first, the commit is skipped as implicitly `success()` and the
+runner is discarded with the observation on it, which is exactly what happened under exit 1 and why
+D44 records its finding 1 as PARTIAL. Exit **1** still commits nothing — there is no observation to
+commit. The balance re-derives from the next response header; the observation never does.
+
 **`dry_run` has no issue side effects, in either direction.** It gates `skip-secrets` and `push`,
 and — since the fast-follow batch — the `report-failure` and `clear-failure` steps too. A failing
 dry run must not open a live-labelled issue, and a *passing* one must not **close** a real
@@ -194,20 +203,28 @@ unresolved failure. The second is the worse half, and for one day only run order
 Rehearsals still belong on a `rehearsal/*` branch so `mode` labels their artifacts (D32).
 
 **Concurrency.** All three cadence workflows share `cfb-pipeline-${{ github.ref }}` with
-`cancel-in-progress: false` — they push to the same branch and must serialize, and cancelling could
-tear a run between an Odds spend and `record_quota`, or between two of the Sunday commits. Every job
-carries `timeout-minutes: 20` so a hung job cannot hold the group. Push races are handled by a
-rebase-retry, safe because every pipeline commit is an *addition* under an append-only tree.
+`cancel-in-progress: false` **and `queue: max` (D46)** — they push to the same branch and must
+serialize, and cancelling could tear a run between an Odds spend and `record_quota`, or between two
+of the Sunday commits. Every job carries `timeout-minutes: 20` so a hung job cannot hold the group.
+Push races are handled by a rebase-retry, safe because every pipeline commit is an *addition* under
+an append-only tree.
 
-**Known hazard: a pending run can be cancelled silently.** `cancel-in-progress: false` protects
-only a *running* job. GitHub keeps **at most one pending run** per group, and a newer pending run
-cancels the older one. A cancelled run concludes `cancelled`, which never fires `if: failure()`
-(`2027_NOTES` §8 item 15 records the same blind spot for timeouts), so nothing reports it. Two shapes
-matter under D44:
+**`queue: max` is what protects a run that has not started yet.** `cancel-in-progress: false`
+protects only a *running* job. The queue default, `queue: single`, keeps **at most one pending run**
+per group and cancels the older one when a newer arrives; `max` holds **up to 100**, processed
+**FIFO** by the time each started waiting, and cancels only overflow past 100. It may not be
+combined with `cancel-in-progress: true`, which is why `false` is stated explicitly beside it. A
+cadence group never approaches 100 — the busiest day, Saturday, schedules 8 captures plus a grade.
+
+This closes both shapes recorded below as hazards, because a cancelled run concludes `cancelled`,
+which never fires `if: failure()` (`2027_NOTES` §8 item 15 records the same blind spot for
+timeouts), so **nothing would have reported either one**:
 
 * **A lost predict.** On a Tuesday the predict can be pending behind the running 12:50 capture when
-  a third group run, in practice a manual dispatch, is created. The week then has no claim.
-  **Detected, not prevented:** the claim tripwire in the daily freeze-integrity job
+  a third group run, in practice a manual dispatch, is created. Under `single` the week then had no
+  claim; under `max` it waits its turn. **The tripwire stays**, because queueing is not the only way
+  a claim goes missing — GitHub drops scheduled runs under load, a predict can fail outright, and a
+  claim can land `-dirty`. Detection, in the daily freeze-integrity job
   (`scripts/claim_tripwire.py`; its own concurrency group, so no cadence run can cancel it). From
   Wednesday to Saturday, once that week's own predict day has passed, it opens a `stage:predict`
   issue if the claim is missing, unreadable, or stamped `-dirty`. **The two are not the same alarm.**
@@ -219,12 +236,20 @@ matter under D44:
   together with a third arriving. Slots are **at least 30 minutes** apart, pinned by a test: at the
   ratified 370-minute guarantee lead, a best-effort slot at the median lateness would have sat 5
   minutes from the next window's guarantee, because windows are 210 minutes apart. The best-effort
-  lead is 190 minutes to clear it (D44). The dropped capture never reaches the
-  preflight, so no D44 timing tier fires for it. Nothing detects this yet. A per-slot count of
-  observations is the natural detector for the report PR's timeliness line.
+  lead is 190 minutes to clear it (D44). Under `single` a dropped capture never reached the
+  preflight, so no D44 timing tier fired for it and **nothing detected it at all**; under `max` it
+  queues instead. A per-slot count of observations remains the natural detector for the report PR's
+  timeliness line, and is now a cross-check rather than the only line of defence.
 
 Whether capture should leave the shared group (serialization then resting on `cfb-commit`'s
-rebase-retry) is a **2027 design question, not ruled** (`2027_NOTES` §8 item 33).
+rebase-retry) stays **unruled** (`2027_NOTES` §8 item 33). D46 removed the reason that question was
+urgent — silent cancellation — not the question itself: the three workflows still serialize, so a
+late capture still waits behind a running grade.
+
+**`queue: max` is set on the cadence group only.** `freeze-integrity` has its own group
+(`freeze-integrity`) and keeps the default `queue: single`, so a dispatch can still cancel a pending
+run of it. That is deliberate: it is a daily idempotent check, the next day's run re-does the whole
+of it, and it writes no artifact — the reasons the cadence group needed `max` do not apply.
 
 **The tripwire checks only the week in play.** `pipeline_week` resolves one week, so once the week
 rolls over, an earlier week's missing claim is never re-examined. Its Wed–Sat checks are four
@@ -297,7 +322,8 @@ label; with it, an open `pipeline-failure` label always means a live problem.
 
 **Not every non-zero is a failure.** `fetch_lines` exit **3** is a budget refusal, `fetch_lines` exit
 **4** is a Tuesday capture that beat the snapshot, and `fetch_results` exit **3** is "no games
-finished yet". All three leave the job green and commit nothing.
+finished yet". All three leave the job green and commit nothing. `fetch_lines` exit **5** is the
+inverse and the only one of its kind: red, and it commits (D46, §3).
 
 ---
 

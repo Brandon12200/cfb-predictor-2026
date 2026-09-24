@@ -484,8 +484,12 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     second review of #64. The same ruling puts a caveat on sentence splitting ("e.g. ", semicolons)
     with no abbreviation list; that is a documented limit, not a drawer item.
 33. **Should capture leave the shared `cfb-pipeline` concurrency group?** A design question for
-    2027; the owner ruled 2026-09-15 to record it here, not decide it now. GitHub keeps one
-    *pending* run per group, and a newer pending run cancels the older one silently (a `cancelled`
+    2027; the owner ruled 2026-09-15 to record it here, not decide it now. **Partly overtaken by
+    D46 (2026-09-24):** `queue: max` is now set on the group, so pending runs queue FIFO (up to 100)
+    instead of the newer one silently cancelling the older. The *silent loss* described below is
+    therefore closed; what remains open is the serialization itself — a late capture still waits
+    behind a running grade — which is the actual question here. Under the old default GitHub kept one
+    *pending* run per group, and a newer pending run cancelled the older one silently (a `cancelled`
     conclusion fires no `if: failure()`; compare item 15). Under the D44 cadence that can drop a
     Tuesday predict queued behind the 12:50 capture when a third run arrives, and a Saturday
     capture when adjacent slots bunch under scheduler lateness. The merged D44 schedule keeps every
