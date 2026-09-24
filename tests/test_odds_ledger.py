@@ -197,11 +197,54 @@ def test_an_observation_survives_a_ledger_write_that_fails(tmp_path, monkeypatch
     monkeypatch.setattr(fl, "record_quota", lambda *a, **k: None)
     rc = fl.main(["--week", "4"])
     assert rc == fl.EXIT_ACCOUNTING_FAILED, "an unrecorded spend must still end the run red"
-    assert rc != fl.EXIT_OK, "exit 5 is not a designed state; the job fails after committing"
     assert load_lines(4, base=tmp_path)["G@H"]["observations"], (
         "the observation was paid for and must be on disk before the accounting runs"
     )
     assert lines_path(4, base=tmp_path).exists()
+
+
+@pytest.mark.parametrize("exc", [
+    OSError("disk full"),
+    # NOT hypothetical, and the reason `except Exception` is load-bearing rather than lazy:
+    # `data/odds_budget.py` reads the committed ledger with `json.loads`, so a torn file raises
+    # JSONDecodeError (a ValueError), and appending to `existing["entries"]` raises KeyError or
+    # TypeError if the JSON is well-formed but the wrong shape. Narrowing the except to OSError
+    # survived the whole suite before this case existed: those escape, the run exits 1, the commit
+    # is skipped, and the observation is lost — the exact D44-PARTIAL outcome D46 closes.
+    ValueError("Expecting value: line 1 column 1 (char 0)"),
+    KeyError("entries"),
+])
+def test_any_accounting_exception_gives_exit_five_not_a_traceback(tmp_path, monkeypatch, exc):
+    import scripts.fetch_lines as fl
+    from data.snapshot.lines import load_lines
+
+    monkeypatch.setattr(fl, "load_snapshot", lambda w, y: {"data": {"betting_lines": {"G@H": {}}}})
+    monkeypatch.setattr(fl, "last_remaining", lambda: (400, "ledger"))
+
+    class _Client:
+        last_quota = {"remaining": 399, "used": 101}
+
+        def get_ncaaf_spreads(self):
+            return [{"home_team": "H", "away_team": "G", "commence_time": "2026-09-26T16:00:00Z",
+                     "bookmakers": []}]
+
+    monkeypatch.setattr("data.clients.odds.get_odds_client", lambda: _Client())
+    monkeypatch.setattr(fl, "record_observation",
+                        lambda week, games, year=2026: (
+                            __import__("data.snapshot.lines", fromlist=["x"]).record_observation(
+                                week, {"G@H": {"home_team": "H", "away_team": "G",
+                                               "kickoff": "2026-09-26T16:00:00Z",
+                                               "observations": [{"fetched_at": "2026-09-26T10:00:00Z",
+                                                                 "lines": [], "consensus_spread": -3.0}]}},
+                                year=year, base=tmp_path)))
+
+    def dies(*a, **k):
+        raise exc
+
+    monkeypatch.setattr(fl, "record_quota", lambda *a, **k: None)
+    monkeypatch.setattr(fl, "append_ledger", dies)
+    assert fl.main(["--week", "4"]) == fl.EXIT_ACCOUNTING_FAILED, type(exc).__name__
+    assert load_lines(4, base=tmp_path)["G@H"]["observations"]
 
 
 def test_either_accounting_writer_failing_gives_exit_five(tmp_path, monkeypatch, capsys):

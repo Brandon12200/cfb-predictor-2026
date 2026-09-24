@@ -1236,8 +1236,11 @@ third run arrives — **the week then has no claim** — and two adjacent Saturd
 together under scheduler lateness.
 
 `max` holds **up to 100 pending runs per group, processed FIFO** by the time each started waiting,
-cancelling only overflow past 100. The busiest day schedules 8 captures plus a grade, so the limit is
-not reachable here. **It may not be combined with `cancel-in-progress: true`** — that is a workflow
+cancelling only overflow past 100. The busiest day is Saturday, with **8 captures and no other
+cadence job** — the one grade cron is Sunday and capture runs Tue–Sat — so the limit is not
+reachable here; with 20-minute job timeouts and slots at least 30 minutes apart, about two runs can
+be pending at once. *(An earlier draft of this paragraph said "8 captures plus a grade", which is
+true of no day: corrected here rather than left, since the 100-limit argument rests on the figure.)* **It may not be combined with `cancel-in-progress: true`** — that is a workflow
 validation error, which would break every cadence run at once, so the pairing with `false` is pinned
 by a test rather than left to be discovered on a Tuesday.
 
@@ -1249,6 +1252,23 @@ and the changelog *GitHub Actions concurrency groups now allow larger queues*, 2
 
 **`freeze-integrity` deliberately keeps the default.** It has its own group, is idempotent, writes no
 artifact, and the next day's run redoes all of it. Recorded so the omission reads as a decision.
+
+**What it costs, recorded rather than discovered later.** Queueing converts a *cancelled* run into a
+*late* one, and for the predict job that is a real trade rather than a free win. Under `single`, a
+predict pending behind a running capture when a third run arrived was **cancelled**: no claim, and
+the tripwire caught it on Wednesday. Under `max` that predict **runs**, later, and writes a claim —
+and nothing refuses a claim written *after* the week's first kickoff. `claim_window_open` gates only
+the lead (the week's `start` within `CLAIM_LEAD_DAYS`), not the trailing edge. From week 6 there are
+Tuesday kickoffs around 19:00 ET, and D44 measured scheduler lateness up to 485 min against a 09:17
+predict, so a queued-and-late predict writing a post-kickoff claim is reachable — and a claim is
+byte-immutable (D22), undoable only by a void that D38 §6 forbids outright.
+
+**A detected loss becomes an undetected late pre-registration.** Both need the same three-run
+collision, so the probability is unchanged and small; what changes is which way it fails. **The guard
+for it is D45's kickoff margin, which §(4).3 of this very entry defers** — so the exposure is open
+between now and that ruling, and is stated here rather than left for the next reader to find. The
+same trade applies, trivially, to a queued capture: it now spends a credit it would previously have
+had cancelled, worth one of 500 a month against a 16-credit week.
 
 **What this does NOT close.** Whether capture should leave the shared group stays unruled
 (`2027_NOTES` §8 item 33): the three workflows still serialize, so a late capture still waits behind

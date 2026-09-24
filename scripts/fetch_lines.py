@@ -120,30 +120,36 @@ def main(argv: list[str] | None = None) -> int:
         # lines are what land in the auto-Issue. Matches fetch_results.py's handling.
         print(f"Odds fetch failed: {type(exc).__name__}: {exc}")
         return EXIT_ERROR
-    # Both stores: the committed append-only ledger (the SPEC §10.5 record, survives a fresh
-    # checkout) and the legacy single-value cache (gitignored, kept as a fallback).
-    # ORDER MATTERS: the observation first, then the accounting. The credit is already spent by the
-    # time this line runs, and the observation is the only thing that cannot be reconstructed — the
-    # market moves on, and this instant never comes back. The balance can be re-read from the next
+    # ORDER, then SURVIVAL — one rule in two steps, and both halves were paid for.
+    #
+    # Order (D44 finding 1): the observation first, then the accounting. The credit is spent by the
+    # time this line runs, and the observation is the only part that cannot be reconstructed — the
+    # market moves on and this instant never comes back, while the balance re-reads from the next
     # response header. With the accounting first, a ledger failure threw away an observation we had
-    # already paid for (review of the D44 PR, finding 1). A ledger failure after this point still
-    # fails the run loudly: the spend must never go unrecorded silently.
+    # already paid for.
+    #
+    # Survival (D46): the order alone did not save it. An escaping exception exited 1, and the
+    # commit step — gated on rc == '0' — never ran, so the observation died on the runner anyway,
+    # which is why D44 records its finding 1 as PARTIAL. Exit 5 says "committable, but the spend is
+    # unrecorded", and `daily-capture.yml` commits on 0 or 5 BEFORE failing the job.
+    #
+    # `except Exception` is deliberate and load-bearing: the two stores read committed JSON, so a
+    # torn ledger raises JSONDecodeError (ValueError) and a wrong-shaped one KeyError/TypeError.
+    # Narrowing this to OSError restores the lost-observation path for every non-OSError fault.
     gamelines = odds_norm.normalize_lines(raw, fetched_at)
     games = {key: asdict(gl) for gl in gamelines.values()
              if (key := f"{gl.away_team}@{gl.home_team}") in slate}
     added = record_observation(args.week, games, year=args.year)
 
-    # Neither store may take the observation down with it. Reversing the order (D44 finding 1) kept
-    # the observation on disk but not in the repository: the exception escaped, the run exited 1,
-    # and the commit step — gated on rc == '0' — never ran. Exit 5 carries the fact that the
-    # observation is committable, and `daily-capture.yml` commits before it fails the job (D46).
     accounting_error: str | None = None
     try:
-        record_quota(client.last_quota)
+        record_quota(client.last_quota)          # gitignored single-value cache
         append_ledger(client.last_quota, caller="fetch_lines", week=args.week,
-                      run_id=os.environ.get("GITHUB_RUN_ID"))
+                      run_id=os.environ.get("GITHUB_RUN_ID"))   # committed SPEC §10.5 record
     except Exception as exc:                       # noqa: BLE001
-        accounting_error = f"{type(exc).__name__}: {exc}"
+        # Flattened: a newline inside a `::error::` command ends the annotation and spills the rest
+        # as plain text, so a multi-line exception message would truncate its own diagnosis.
+        accounting_error = f"{type(exc).__name__}: {exc}".replace("\n", " ")
 
     print(f"Appended {added} slate observation(s) at {fetched_at} "
           f"({len(games)}/{len(slate)} slate games had lines). "

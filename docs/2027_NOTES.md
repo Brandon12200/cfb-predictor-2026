@@ -485,7 +485,7 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     with no abbreviation list; that is a documented limit, not a drawer item.
 33. **Should capture leave the shared `cfb-pipeline` concurrency group?** A design question for
     2027; the owner ruled 2026-09-15 to record it here, not decide it now. **Partly overtaken by
-    D46 (2026-09-24):** `queue: max` is now set on the group, so pending runs queue FIFO (up to 100)
+    D46 (2026-09-23):** `queue: max` is now set on the group, so pending runs queue FIFO (up to 100)
     instead of the newer one silently cancelling the older. The *silent loss* described below is
     therefore closed; what remains open is the serialization itself — a late capture still waits
     behind a running grade — which is the actual question here. Under the old default GitHub kept one

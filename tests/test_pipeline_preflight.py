@@ -210,11 +210,13 @@ def test_the_tier_zero_line_carries_the_flag_tier_two_keys_on(schedule, now, exp
 
 
 def test_the_printed_flag_is_the_same_string_the_workflow_reads(tmp_path, monkeypatch):
-    """Not just "both say false": the log line and `$GITHUB_OUTPUT` must come from ONE expression.
+    """The printed token and the written output agree on the same verdict.
 
-    Two literals would drift, and the log would then describe a decision the workflow did not make —
-    worse than no line at all, because it reads as evidence. Both call `guarantee_miss_token`, and
-    this asserts the tier-0 note and the written output agree on the same verdict.
+    What it cannot prove, stated rather than implied: that both come from ONE expression. Reverting
+    `write_timing_outputs` to its own `'true' if ... else 'false'` literal passes this — two
+    agreeing literals are indistinguishable from one helper at this level (review of this PR). The
+    agreement is the useful property; `guarantee_miss_token` exists so the two cannot drift later,
+    and its inversion is caught by the parametrized test above.
     """
     out = tmp_path / "gh_output"
     monkeypatch.setenv("GITHUB_OUTPUT", str(out))

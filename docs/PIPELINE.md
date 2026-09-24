@@ -214,7 +214,9 @@ protects only a *running* job. The queue default, `queue: single`, keeps **at mo
 per group and cancels the older one when a newer arrives; `max` holds **up to 100**, processed
 **FIFO** by the time each started waiting, and cancels only overflow past 100. It may not be
 combined with `cancel-in-progress: true`, which is why `false` is stated explicitly beside it. A
-cadence group never approaches 100 — the busiest day, Saturday, schedules 8 captures plus a grade.
+cadence group never approaches 100 — the busiest day, Saturday, schedules **8 captures and nothing
+else** (the single grade cron is Sunday, `47 16 * * 0`, and capture runs Tue–Sat), and with
+`timeout-minutes: 20` against slots at least 30 minutes apart, only about two can be pending at once.
 
 This closes both shapes recorded below as hazards, because a cancelled run concludes `cancelled`,
 which never fires `if: failure()` (`2027_NOTES` §8 item 15 records the same blind spot for
@@ -323,7 +325,7 @@ label; with it, an open `pipeline-failure` label always means a live problem.
 **Not every non-zero is a failure.** `fetch_lines` exit **3** is a budget refusal, `fetch_lines` exit
 **4** is a Tuesday capture that beat the snapshot, and `fetch_results` exit **3** is "no games
 finished yet". All three leave the job green and commit nothing. `fetch_lines` exit **5** is the
-inverse and the only one of its kind: red, and it commits (D46, §3).
+inverse and the only one of its kind: red, and it commits (D46 §(2)).
 
 ---
 
