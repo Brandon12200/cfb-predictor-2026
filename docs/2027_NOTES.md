@@ -532,8 +532,17 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     ratified entry before anyone checked it against `data/team_registry.py` (D46 §(1), appended
     2026-09-28). **Kept for 2026 by owner ruling**: it costs one credit a week of 500, it gives
     Thursday's games an extra pre-window observation, and removing it is a workflow change nothing
-    forces mid-season — the change would touch `daily-capture.yml`, `season.json` and four tests to
-    save a credit. **For 2027, decide it on the schedule the season actually has**: drop the slot if
+    forces mid-season, to save one credit. **What it would touch, enumerated rather than counted:**
+    the cron literal `50 16 * * 2` in `.github/workflows/daily-capture.yml`, its entry in
+    `season.json`'s `schedule_et.capture`, and two test sites that name it —
+    `tests/test_pipeline_preflight.py::test_the_tuesday_slot_is_judged` and the parametrize table
+    feeding `tests/test_d44_capture_escalation.py::test_snapshot_pending_is_designed_only_for_the_scheduled_tuesday_slot`.
+    `fetch_lines`' **exit 4** goes with it: that designed state exists only for a scheduled Tuesday
+    capture that beats the snapshot, so removing the slot makes it unreachable and the workflow's
+    exit-4 branch dead. The credit-count tests (`test_expected_weekly_credits_matches_the_scheduled_capture_count`,
+    `test_workflow_crons_match_season_json`) are data-driven off those two artifacts and need no edit
+    provided both are changed together. *(An earlier draft of this item said "four tests" — a count
+    nobody had derived, in an item about a premise nobody had derived. Enumerated here instead.)* **For 2027, decide it on the schedule the season actually has**: drop the slot if
     the slate still has no Tuesday games, and re-derive `expected_weekly_credits` with it. The wider
     lesson belongs with the item, not just the slot: **a cadence built for a game type nobody
     verified is a cadence tuned to a document rather than to the schedule.**
