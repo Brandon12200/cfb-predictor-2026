@@ -113,9 +113,18 @@ The list below is the earlier order, kept for the record.
   the first scheduled `weekly-grade` since #60. That run is the first live `check_clv.py` gate, the
   first render with the `leans | graded` split (the committed reports still show `games`), and the
   first `changed_report_weeks.py` label.
-- **A background reviewer can run git and tests in the shared working tree.** Either do not switch
-  branches, edit or commit while one runs, or instruct it to work in an isolated `git clone`. On 2026-09-13 one
-  ran `git stash` in the shared tree mid-review — that is the stash in §1.
+- **A background reviewer can run git and tests in the shared working tree, and telling it not to
+  does not work.** The mechanism, measured after it happened three times (2026-09-13, and twice on
+  2026-09-23): a subagent's shell resets its working directory between calls, so a chained
+  `cd <clone> && git …` runs that git command **in this checkout** the moment the `cd` fails — and a
+  failed `cd` inside a chain is silent. The first left a `git stash` here (§1); the other two left
+  stray branches and a moved `HEAD`, each after a prompt that explicitly demanded an isolated clone.
+  Nothing was lost in any of them, but each needed restoring by hand. **The fix is structural, not a
+  stronger instruction:** build the clone yourself before spawning the reviewer (`git clone --branch`
+  avoids a `git checkout <sha>` the bash hook blocks), hand over the absolute path, require
+  `git -C "<path>" …` for every git command, and ban `cd` and every writing git verb — `checkout`,
+  `switch`, `branch`, `stash`, `reset` — everywhere, clone included. A reviewer already at the right
+  commit needs none of them. Then check this tree afterwards rather than trusting the report.
 - **Prose claims are re-derived, not proofread** (D42 (d)): resolve every locator, then separately
   re-derive every count, date, SHA and status. Every error caught this tenure was caught that way.
 - **No AI attribution** in commits or PR text (D3). Freeze untouched: `factors/`, `engine/`.
