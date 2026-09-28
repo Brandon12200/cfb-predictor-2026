@@ -1278,6 +1278,48 @@ its claim (GitHub drops scheduled runs under load, a predict can fail outright, 
 `-dirty`), and a tripwire that only fires for the one cause it was written against is one nobody can
 trust for the others.
 
+#### Appended 2026-09-28 — the Tuesday-kickoff premise above is FALSE; the exposure is real but far rarer
+
+**Superseding, not editing** (supersede-never-edit): the paragraph above stands as written, and this
+block is what to read through it. The sentence *"From week 6 there are Tuesday kickoffs around 19:00
+ET"* is wrong, and it is the sentence that made the queued-late-predict exposure sound reachable.
+
+**The tracked slate is P4 + Notre Dame — 68 teams**, SEC 16, Big Ten 18, Big 12 16, ACC 17 and Notre
+Dame (owner, verified against `data/team_registry.py`, 2026-09-28). Every team in every claim to date
+is inside it. **P4 slates play Thursday, Friday and Saturday; there are no Tuesday games.** Measured
+over the four claimed weeks: **58 Saturday, 7 Friday, 2 Thursday, 2 Sunday, 1 Monday** kickoffs, the
+Sunday and Monday ones in week 1 only.
+
+**Where the false premise came from.** `ADVISOR_HANDOFF_4` carried *"first Tuesday game SOUTHERN
+MISS@TROY, 2026-10-06"* marked `(u)` — unverified. Both are Sun Belt, so neither is in scope. It was
+never checked against the registry, and it propagated from a handoff into a ratified entry, into
+`docs/PIPELINE.md`'s rationale for a live capture slot, and into a deadline. **The registry is the
+answer to any slate question; a handoff is not.**
+
+**The exposure, re-derived rather than re-asserted.** A claim is written by the Tuesday 09:17 ET
+predict slot, so the exposure opens only if that run is late enough to pass the week's *earliest*
+kickoff. Measured per claimed week, from the committed claims and line stores:
+
+| week | claim slot | earliest tracked kickoff | lateness that would open the exposure |
+|---|---|---|---:|
+| 01 | Tue 08-25 09:17 ET | Sat 08-29 12:00 ET | 98.7 h |
+| 02 | Tue 09-08 09:17 ET | Fri 09-11 19:30 ET | 82.2 h |
+| 03 | Tue 09-15 09:17 ET | **Thu 09-17 19:30 ET** | **58.2 h** |
+| 04 | Tue 09-22 09:17 ET | Fri 09-25 20:00 ET | 82.7 h |
+
+**The floor is 58.2 h**, set by the one week whose earliest game was a Thursday night. Against a
+measured worst-case scheduler lateness of 485 min (8.1 h), that is not a margin under pressure.
+*(The ruling that ordered this block estimated "~36 h"; 36 h from the slot lands Wednesday evening,
+which would require a Wednesday game. This slate scheduled none in weeks 1–4 and P4 does not play
+Wednesday, so the measured floor is used here instead — a figure in a ratified entry is re-derived,
+not adopted, D42 (d).)*
+
+**What does not change.** The exposure is still real, and `claim_window_open` still gates only the
+lead. **D45 remains the guard, and remains undated** (owner, 2026-09-28): its 2026-10-06 deadline
+rested entirely on the false premise and is withdrawn. **The Tuesday 12:50 capture slot stays** — it
+costs one credit a week, and removing it is a workflow change nothing forces; its removal is recorded
+as a 2027 drawer item instead.
+
 ### (2) Exit 5: the observation commits, then the run fails
 
 `fetch_lines` gains **`EXIT_ACCOUNTING_FAILED = 5`**: the observation reached disk and the Odds spend
