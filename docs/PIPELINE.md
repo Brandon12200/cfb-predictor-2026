@@ -133,8 +133,15 @@ One push per run; **one commit per artifact tier**. The tiers are D22/D23:
 | Tier | Paths | Contract |
 |---|---|---|
 | **Claims** | `data/predictions/` | byte-immutable forever |
-| **Outcomes + derived** | `data/results/`, `data/graded/`, `data/lines/`, `data/snapshots/` | append-only |
+| **Outcomes + derived** | `data/results/`, `data/graded/`, `data/lines/`, `data/quota/`, `data/ratings/`, `data/projections/`, `data/archive/` | append-only, hook-guarded |
 | **Renderings** | `reports/` | regenerable; git history is the audit trail |
+
+**`data/snapshots/` is in no tier, and that is the point.** It was listed here as append-only, which
+it is not: it is not in the hook's `PROTECTED` list, `write_snapshot` overwrites unconditionally, and
+the Tuesday job rebuilds the week's bundle every run. That is exactly why D29 pinned the freeze
+gate's vehicle to a byte-for-byte copy under `data/archive/frozen/` — a gate reading the live bundle
+would have re-measured the week's data instead of the model. Treat a snapshot as the current input,
+not as a record.
 
 | Job | Commits, in order |
 |---|---|
@@ -331,18 +338,21 @@ inverse and the only one of its kind: red, and it commits (D46 §(2)).
 
 ## 5. Budget guard (SPEC §10.5)
 
-One `get_ncaaf_spreads(regions=us, markets=spreads)` call = **1 credit**. The cadence spends ~8/week
-(~35/month) against a 500/month tier, so **exhaustion is not the risk — a retry storm is.**
+One `get_ncaaf_spreads(regions=us, markets=spreads)` call = **1 credit**. Under D44 the cadence
+spends **16/week** (15 captures plus the Tuesday snapshot), about 70 a month and at most 76 in
+October 2026, against a 500/month tier — so **exhaustion is not the risk, a retry storm is**, which
+is what `odds_budget.expected_weekly_credits` exists to detect.
 
 * **Pre-spend refusal** lives in `fetch_lines.py` (exit 3), where the credit is about to be spent.
 * **Preflight reports** balance, provenance and burn rate to the step summary. It does *not* gate;
   two gates on one resource eventually disagree.
-* **Cross-run memory:** `data/odds_quota.json` is gitignored, so a fresh Actions checkout would lose
-  the balance and fall back to the last snapshot manifest's build-time figure (bounded to a week,
-  but blind in between). The capture job restores it via `actions/cache`. Committing the file was
-  rejected: it belongs to no artifact tier, and two workflows writing it concurrently is a merge
-  conflict on a file whose whole purpose is being trivially correct. An append-only `data/quota/`
-  ledger is the honest long-term answer and is queued, not on the critical path.
+* **Cross-run memory is the committed ledger** (`data/quota/odds_YYYY_MM.json`, D22/D23 addendum
+  2026-08-08): append-only, month-partitioned, and in the repository, so it survives a fresh Actions
+  checkout by construction. It **supersedes** the `actions/cache` arrangement this section used to
+  describe, which lost the balance on eviction and left the pre-spend guard blind with no signal that
+  it had. The gitignored `data/odds_quota.json` remains only as a single-value local fallback.
+* **A spend that cannot be recorded is not silent**: `fetch_lines` exit 5 commits the observation and
+  then fails the run (D46 §(2)).
 
 ---
 
@@ -354,7 +364,11 @@ metres/feet fix, the venue-timezone fallback). So the freeze is enforced twice:
 
 * **Path level** — the preflight asserts `git rev-parse HEAD:factors == <freeze_tag>:factors` (and
   `engine`) before any spend. Exact, milliseconds, immune to a whitespace-preserving edit.
-* **Behavioural** — `verify-phase-3` hashes what the model produces over the 330-game tracked slate.
+* **Behavioural** — `verify-phase-3` hashes what the model produces over the **338-game** tracked
+  slate, at **10 decimal places** (D41: the exact hash measures the platform's libm as well as the
+  model, and flapped between runner images; the rounded hash held across five environments). The
+  exact hash is still printed beside it as the sharper, environment-specific reading. (330 was the
+  slate at `v2026-frozen`; it became 338 when exception 1 corrected the fabricated FCS games.)
 
 **If the fingerprint fails, do NOT update the constant.** Either the change was unintended — revert
 it — or it was intended, in which case it needs a documented **SPEC §3 exception and a new tag**.
@@ -364,11 +378,14 @@ live week-1 bundle the pipeline rebuilds. Its own SHA-256 is asserted first, so 
 changed" reports differently from "the model moved".
 
 **`sp_watch` exists because the fingerprint structurally cannot detect an external event** — it reads
-a committed snapshot, so it is a function of the commit. CFBD has not published 2026 SP+ or returning
-production; when it does, D10 activates both with no code change, `Sandwich` wakes up, model output
-moves, and the fingerprint will fail *correctly*. The daily probe turns that from a discovery into a
-countdown. It opens an Issue and leaves the job green: the right response is a decision process, and
-a red required check only pressures someone into making the change quietly.
+a committed snapshot, so it is a function of the commit. **Both arrivals have already happened:**
+returning production on 2026-08-08 (exception 1, tag `v2026-frozen-2`) and SP+ on 2026-08-14
+(exception 2, `v2026-frozen-3`, where D10 activated both with no code change, `Sandwich` woke on 114
+of 338 games, and model output moved). Each was handled as a SPEC §3 exception with a new tag, which
+is what the probe is for. It now watches the ratified baseline `{"sp_ratings": 139,
+"returning_production": 136}` and arms on **any** deviation, a shrink included, so it will also fire
+on ordinary CFBD revisions. It opens an Issue and leaves the job green: the right response is a
+decision process, and a red required check only pressures someone into making the change quietly.
 
 ---
 

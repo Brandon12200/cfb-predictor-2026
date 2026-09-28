@@ -524,9 +524,19 @@ Numbering continues the list above; see item 16 on why the sequence is not tidie
     conditions as well as YAML shape. Deferred in 2026 because adding a linter to the required-check
     set mid-season would gate the cadence on a tool nobody here has run yet. Found by an independent
     review of the D46 PR.
-34. **A designed-state exit still satisfies `clear-failure`.** `daily-capture.yml` ends with
+34. **A designed-state exit still satisfies `clear-failure` — in `weekly-grade.yml`, not where this
+    item used to point.** `daily-capture.yml` was **fixed** in the D44 workflow PR (finding 6): its
+    clear step is gated on `steps.capture.outputs.rc == '0'`, so exits 3, 4 and 5 no longer close
+    anything. The live instance is **`weekly-grade.yml`**, whose clear step is still
+    `if: success() && inputs.dry_run != true` while `fetch_results` exit **3** ("no completed games
+    yet") and exit **4** ("no claim for this week yet") both leave the job green having graded
+    nothing — so a Sunday that did no work can still mark a real `stage:grade` failure recovered.
+    The fix is the one capture already uses: gate on the same `results.outputs.rc` the commit steps
+    read. Corrected 2026-09-27 after a review of the D46 PR found this item describing the fixed
+    site and missing the open one. The original text follows, for the shape of the defect.
+    `daily-capture.yml` ended with
     `clear-failure if: success()`, and a run that captured nothing — exit 3 (budget refusal) or
-    exit 4 (a Tuesday capture before the snapshot, D44) — is still a success, so it closes any open
+    exit 4 (a Tuesday capture before the snapshot, D44) — was still a success, so it closed any open
     `pipeline-failure` issue for that stage and week as "recovered". The issue was real and nothing
     re-ran successfully; only a run that *did* the work should clear it. Pre-existing with exit 3,
     extended by exit 4. A 2027 fix is to clear only when the job actually produced its artifact

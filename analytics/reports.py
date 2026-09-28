@@ -15,6 +15,13 @@ from __future__ import annotations
 from typing import Any
 
 from analytics.attribution import by_lean_side, per_factor
+from analytics.cadence import (
+    BOUNDARY_WEEK,
+    close_age_table,
+    escalation_due,
+    kickoffs_from_lines,
+    timeliness,
+)
 from analytics.calibration import brier_score, calibration_table
 from analytics.join import join
 from analytics.kpis import kpi_pack
@@ -226,7 +233,88 @@ def _attribution_block(ctx: dict) -> list[str]:
     return lines
 
 
-def render_week(predictions_env: dict, graded_env: dict | None, *, title: str | None = None) -> str:
+def _close_age_rows(table: dict) -> list[str]:
+    rows = []
+    for b in table["buckets"]:
+        rows.append(f"| {b['bucket']} | {b['n']} | "
+                    f"{_num(b['avg_clv']) if b['avg_clv'] is not None else '—'} | "
+                    f"{_pct(b['beat_close_pct'])} |")
+    return rows
+
+
+def _close_age_block(eras: list[tuple[str, dict]]) -> list[str]:
+    """D44 §(4): CLV by close age, with counts, **never blended across the cadence boundary.**
+
+    A CLV computed against a sixteen-hour-old close is honest and nearly meaningless, and one
+    blended average cannot say which kind it was. Each era gets its own table because the cadence
+    that produced its closes is the thing the buckets measure.
+    """
+    lines = ["### CLV by close age (D44)", "",
+             "_Close age is kickoff − `close_as_of`: how stale the last pre-kickoff observation was "
+             "when the market closed for that game. Derived from the committed line store, so weeks "
+             "before the cadence change bucket correctly with no relabel of any append-only file._", ""]
+    for label, table in eras:
+        lines += [f"**{label}**", "",
+                  "| close age | games with CLV | avg CLV | beat the close |",
+                  "|---|---|---|---|"]
+        lines += _close_age_rows(table)
+        if table["n_unknown_age"]:
+            lines.append(f"| _age unknown_ | {table['n_unknown_age']} | — | — |")
+        lines.append("")
+        if table["n_no_clv"]:
+            # The gap between "games graded" and "games with CLV" is the first question this table
+            # invites, and leaving it unanswered is what tempts someone to count a null CLV as 0.0.
+            lines += [f"_{table['n_no_clv']} further graded game(s) are not counted here: a neutral "
+                      f"lean takes no side, so it has no CLV to age (D22 f3) — the close itself may "
+                      f"well have been fresh._", ""]
+    if len(eras) > 1:
+        lines += ["_The two eras are reported separately and never summed: weeks "
+                  f"1–{BOUNDARY_WEEK - 1} ran one capture wave per kickoff window, week "
+                  f"{BOUNDARY_WEEK} onward runs D44's guarantee + best-effort pair. A single season "
+                  "row would average a fixed cadence with the one that replaced it (D44 §(4))._", ""]
+    return lines
+
+
+def _timeliness_block(weekly: list[dict]) -> list[str]:
+    """D44 tier 3 (the line) and tier 4 (the escalation)."""
+    applicable = [t for t in weekly if t.get("applies")]
+    if not applicable:
+        reason = weekly[0].get("reason", "no weeks under the D44 cadence yet") if weekly else ""
+        return ["### Capture timeliness (D44 tier 3)", "", f"_Not applicable: {reason}._"]
+
+    out = ["### Capture timeliness (D44 tier 3)", "",
+           "| week | guarantee slots | landed before their window | missed |", "|---|---|---|---|"]
+    for t in applicable:
+        out.append(f"| {t['week']:02d} | {t['n_slots']} | {t['n_slots'] - t['n_missed']} | "
+                   f"{t['n_missed']} |")
+    out += ["",
+            "_A guarantee slot is judged by the capture run it produced — the earliest observation "
+            "at or after its scheduled time — and counts as covered when that run landed before the "
+            "kickoff window it precedes. Best-effort slots are designed to miss and are not counted "
+            "(D44 implementation ruling 1)._"]
+
+    for t in applicable:
+        for miss in t["missed"]:
+            ran = f"{miss['run_et']:%a %m-%d %H:%M} ET" if miss["run_et"] else "no run"
+            out.append(f"_Week {t['week']:02d}: the {miss['slot_et']:%a %H:%M} ET slot before the "
+                       f"{miss['window_et']:%H:%M} ET window was served by {ran}._")
+
+    esc = escalation_due({t["week"]: t["n_missed"] for t in applicable})
+    if esc["due"]:
+        lo, hi = esc["window"]
+        weeks = ", ".join(f"{w:02d}" for w in esc["weeks_with_misses"])
+        out += ["", f"> **D44 tier 4 — escalation to the owner.** A guarantee slot missed in "
+                    f"{len(esc['weeks_with_misses'])} weeks of the 3-week window {lo:02d}–{hi:02d} "
+                    f"(weeks {weeks}). D44 sets the threshold at 2 of any 3: the cadence is not "
+                    f"holding, and the lead is the owner's to rule on."]
+    else:
+        out += ["", "_D44 tier 4 (escalation at a guarantee miss in 2 or more weeks of any 3): not "
+                    "triggered._"]
+    return out
+
+
+def render_week(predictions_env: dict, graded_env: dict | None, *, title: str | None = None,
+                lines: dict | None = None, calendar: dict | None = None) -> str:
     joined = join(predictions_env, graded_env)
     ctx = report_context(joined)
     meta = predictions_env.get("meta", {})
@@ -236,12 +324,24 @@ def render_week(predictions_env: dict, graded_env: dict | None, *, title: str | 
     out = [f"# {head}", "",
            f"_{cov['graded']}/{cov['games']} games graded. Model: {meta.get('model_version', '—')} "
            f"(schema v{meta.get('schema_version', '—')}), year {year}._", ""]
+    if isinstance(week, int):
+        era = ("under the D44 capture cadence" if week >= BOUNDARY_WEEK
+               else f"under the pre-D44 cadence (one wave per kickoff window; D44 starts week "
+                    f"{BOUNDARY_WEEK:02d})")
+        out += [f"_Capture: {era}._", ""]
     out += _lean_block(ctx) + [""] + _kpi_block(ctx) + [""] + _calibration_block(ctx) + [""]
     out += _selectivity_block(ctx) + [""] + _attribution_block(ctx) + [""]
+    if lines is not None and isinstance(week, int):
+        table = close_age_table(joined, kickoffs_from_lines(lines))
+        out += _close_age_block([(f"Week {week:02d}", table)]) + [""]
+        if calendar is not None:
+            out += _timeliness_block([timeliness(week, calendar, lines)]) + [""]
     return "\n".join(out) + "\n"
 
 
-def render_season(weeks: list[tuple[dict, dict | None]], *, title: str, subtitle: str = "") -> str:
+def render_season(weeks: list[tuple[dict, dict | None]], *, title: str, subtitle: str = "",
+                  lines_by_week: dict[int, dict] | None = None,
+                  calendar: dict | None = None) -> str:
     """Aggregate a season (or the 2025 retro): a list of (predictions_env, graded_env) per week."""
     joined: list[dict] = []
     for pred_env, graded_env in weeks:
@@ -252,6 +352,34 @@ def render_season(weeks: list[tuple[dict, dict | None]], *, title: str, subtitle
     if subtitle:
         out += [f"_{subtitle}_", ""]
     out += [f"_{cov['graded']}/{cov['games']} games graded across {len(weeks)} week(s)._", ""]
+    if lines_by_week:
+        numbers = sorted(lines_by_week)
+        if any(w >= BOUNDARY_WEEK for w in numbers) and any(w < BOUNDARY_WEEK for w in numbers):
+            out += [f"_Capture cadence changed at **week {BOUNDARY_WEEK:02d}** (D44). Close-age and "
+                    f"timeliness figures below are reported per era and never blended across it._", ""]
     out += _lean_block(ctx) + [""] + _kpi_block(ctx) + [""] + _calibration_block(ctx) + [""]
     out += _selectivity_block(ctx) + [""] + _attribution_block(ctx) + [""]
+    if lines_by_week:
+        # Keyed by (week, matchup), never by matchup alone: the same two teams can meet twice in one
+        # era, and a flat dict would date one meeting's close against the other's kickoff, silently
+        # (review of this PR).
+        kickoffs: dict[Any, str] = {
+            (w, key): when
+            for w, ln in lines_by_week.items()
+            for key, when in kickoffs_from_lines(ln).items()
+        }
+        eras: list[tuple[str, dict]] = []
+        for label, keep in ((f"Weeks 01–{BOUNDARY_WEEK - 1:02d} — pre-D44 cadence",
+                             lambda w: w < BOUNDARY_WEEK),
+                            (f"Week {BOUNDARY_WEEK:02d} onward — D44 cadence",
+                             lambda w: w >= BOUNDARY_WEEK)):
+            rows = [r for r in joined if isinstance(r.get("week"), int) and keep(r["week"])]
+            if not rows:
+                continue
+            eras.append((label, close_age_table(rows, kickoffs)))
+        if eras:
+            out += _close_age_block(eras) + [""]
+        if calendar is not None:
+            out += _timeliness_block([timeliness(w, calendar, lines_by_week[w])
+                                      for w in sorted(lines_by_week)]) + [""]
     return "\n".join(out) + "\n"

@@ -31,11 +31,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from analytics.grading import build_graded  # noqa: E402
 from analytics.reports import render_season, render_week  # noqa: E402
 from utils.prediction_schema import convert_v1_to_v2  # noqa: E402
+from utils.season_calendar import load_calendar  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 PREDICTIONS_DIR = ROOT / "data" / "predictions"
 RESULTS_DIR = ROOT / "data" / "results"
 GRADED_DIR = ROOT / "data" / "graded"
+LINES_DIR = ROOT / "data" / "lines"
 REPORTS_DIR = ROOT / "reports"
 ARCHIVE = ROOT / "data" / "archive" / "2025"
 
@@ -50,13 +52,21 @@ def _write(path: Path, text: str) -> Path:
     return path
 
 
+def _lines(week: int, year: int) -> dict | None:
+    """The week's line store — read-only here. It is the only committed artifact carrying a kickoff
+    per game, which close age (D44 §(4)) and the timeliness line (tier 3) are both derived from."""
+    return _load(LINES_DIR / f"{year}_week_{week:02d}.json")
+
+
 def _report_week(week: int, year: int) -> None:
     predictions_env = _load(PREDICTIONS_DIR / f"{year}_week_{week:02d}.json")
     if predictions_env is None:
         print(f"No predictions for {year} week {week:02d}.")
         raise SystemExit(1)
     graded_env = _load(GRADED_DIR / f"{year}_week_{week:02d}.json")
-    out = _write(REPORTS_DIR / f"{year}_week_{week:02d}.md", render_week(predictions_env, graded_env))
+    out = _write(REPORTS_DIR / f"{year}_week_{week:02d}.md",
+                 render_week(predictions_env, graded_env,
+                             lines=_lines(week, year), calendar=load_calendar()))
     print(f"Wrote {out.relative_to(ROOT)}")
 
 
@@ -74,7 +84,14 @@ def _report_season(year: int) -> None:
     if not weeks:
         print(f"No predictions for {year}.")
         raise SystemExit(1)
-    text = render_season(weeks, title=f"{year} Season Report — to date")
+    lines_by_week = {}
+    for pred_env, _ in weeks:
+        wk = pred_env.get("meta", {}).get("week")
+        store = _lines(wk, year) if isinstance(wk, int) else None
+        if store:
+            lines_by_week[wk] = store
+    text = render_season(weeks, title=f"{year} Season Report — to date",
+                         lines_by_week=lines_by_week or None, calendar=load_calendar())
     out = _write(REPORTS_DIR / f"{year}_season.md", text)
     print(f"Wrote {out.relative_to(ROOT)}  ({len(weeks)} weeks)")
 
