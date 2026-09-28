@@ -59,6 +59,18 @@ D42 (a)1). **D44 is ratified** (proposal #65):
   PR before **2026-10-06**, with a GO before merge.
 * Then the proposals for **variance/tier visibility**, **CFBD retry** and **feasibility**.
 
+**Appended 2026-09-28 — correction to the queue above, which is record and is not edited.** All
+three dated items have since landed: the D44 workflow PR as #66, the report PR as #68 (merged
+2026-09-27 23:04 ET, after its deadline moved to 10-04), and D46 as #67. **D45's 2026-10-06 deadline
+is withdrawn and it is now undated** (owner, 2026-09-28). The date, and the "Tuesday game" it was
+built around, rested on a premise this document also carries at §3's D44-candidate bullet below —
+*"Tuesday games from week 6"* — which is **false**: the tracked slate is P4 + Notre Dame (68 teams),
+it plays Thursday/Friday/Saturday, and it has no Tuesday games at all. The premise entered from
+`ADVISOR_HANDOFF_4`, carried unverified, and was never checked against `data/team_registry.py`, which
+is the authority for any slate question. The full re-derivation, including why the exposure now needs
+a predict **58+ hours** late rather than the hours implied by a Tuesday kickoff, is in `DECISIONS.md`
+D46 §(1), appended the same day. D45 itself is unchanged in shape and stays queued as insurance.
+
 The list below is the earlier order, kept for the record.
 
 1. **PR C — `resolve_locators` as a make target** (D42 (a)3). The `LINT_PATHS` conflict with #60 is

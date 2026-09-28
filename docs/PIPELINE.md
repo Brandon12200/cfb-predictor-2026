@@ -58,11 +58,19 @@ That is what shows on a Saturday where the best-effort slot misses. The 22:30 wi
 of the four under D44 — p90 3.70 h against 3.40 h pre-D44, and P(close ≤ 3 h) of 83% — though its
 median still improves, 2.25 h to 1.12 h. D44 carries the full table and the draws behind it.
 
-The **Tuesday 12:50 slot** exists because Tuesday games start in week 6. Without a capture, a Tuesday
-game's only close would be the claim's own snapshot observation, and its CLV would be zero by
-construction. Cost: 16 credits a week (15 captures plus the snapshot), with
-`odds_budget.expected_weekly_credits` moved to match. The boundary is week 4 (D44). Marking it in the
-reports, and never blending the season across it, is the report PR's work.
+The **Tuesday 12:50 slot** was added for a reason that turned out not to exist: that Tuesday games
+start in week 6. **They do not.** The tracked slate is P4 + Notre Dame (68 teams — SEC 16, Big Ten
+18, Big 12 16, ACC 17, and Notre Dame; `data/team_registry.py` is the authority), and P4 slates play
+**Thursday, Friday and Saturday**. Across the four claimed weeks the kickoffs are 58 Saturday, 7
+Friday, 2 Thursday, 2 Sunday and 1 Monday, the last two in week 1 only. The claim came from a handoff
+document, carried unverified, and was never checked against the registry (D46 §(1), appended
+2026-09-28).
+
+**The slot stays anyway** (owner, 2026-09-28): it costs one credit a week, it gives Thursday's games
+an extra pre-window observation, and removing it is a workflow change nothing forces. Its removal is
+a 2027 drawer item. Cost of the cadence: 16 credits a week (15 captures plus the snapshot), with
+`odds_budget.expected_weekly_credits` moved to match. The boundary is week 4 (D44); the reports mark
+it and never blend the season across it.
 
 ### Why the crons are UTC and anchored to EDT
 
