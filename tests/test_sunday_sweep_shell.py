@@ -40,6 +40,11 @@ pytestmark = pytest.mark.skipif(
 _GH_STUB = r"""#!/usr/bin/env bash
 # Enough of `gh issue` for this step: list/view apply the caller's --jq filter to canned JSON with
 # real jq, exactly as gh does; comment/close are recorded rather than performed.
+#
+# One deliberate simplification: `--json <fields>` is ignored, so the full canned object reaches the
+# filter rather than a projection of it. Immaterial for this step — both of its filters name fields
+# the canned issues carry — but a future step whose filter depends on field scoping would need it
+# (review of this PR).
 set -u
 sub="${2:-}"
 num="${3:-}"

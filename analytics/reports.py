@@ -261,6 +261,12 @@ def _close_age_block(eras: list[tuple[str, dict]]) -> list[str]:
         if table["n_unknown_age"]:
             lines.append(f"| _age unknown_ | {table['n_unknown_age']} | — | — |")
         lines.append("")
+        if table["n_no_clv"]:
+            # The gap between "games graded" and "games with CLV" is the first question this table
+            # invites, and leaving it unanswered is what tempts someone to count a null CLV as 0.0.
+            lines += [f"_{table['n_no_clv']} further graded game(s) are not counted here: a neutral "
+                      f"lean takes no side, so it has no CLV to age (D22 f3) — the close itself may "
+                      f"well have been fresh._", ""]
     if len(eras) > 1:
         lines += ["_The two eras are reported separately and never summed: weeks "
                   f"1–{BOUNDARY_WEEK - 1} ran one capture wave per kickoff window, week "
@@ -354,8 +360,14 @@ def render_season(weeks: list[tuple[dict, dict | None]], *, title: str, subtitle
     out += _lean_block(ctx) + [""] + _kpi_block(ctx) + [""] + _calibration_block(ctx) + [""]
     out += _selectivity_block(ctx) + [""] + _attribution_block(ctx) + [""]
     if lines_by_week:
-        kickoffs: dict[int, dict[str, str]] = {w: kickoffs_from_lines(ln)
-                                               for w, ln in lines_by_week.items()}
+        # Keyed by (week, matchup), never by matchup alone: the same two teams can meet twice in one
+        # era, and a flat dict would date one meeting's close against the other's kickoff, silently
+        # (review of this PR).
+        kickoffs: dict[Any, str] = {
+            (w, key): when
+            for w, ln in lines_by_week.items()
+            for key, when in kickoffs_from_lines(ln).items()
+        }
         eras: list[tuple[str, dict]] = []
         for label, keep in ((f"Weeks 01–{BOUNDARY_WEEK - 1:02d} — pre-D44 cadence",
                              lambda w: w < BOUNDARY_WEEK),
@@ -364,11 +376,7 @@ def render_season(weeks: list[tuple[dict, dict | None]], *, title: str, subtitle
             rows = [r for r in joined if isinstance(r.get("week"), int) and keep(r["week"])]
             if not rows:
                 continue
-            merged: dict[str, str] = {}
-            for w, k in kickoffs.items():
-                if keep(w):
-                    merged.update(k)
-            eras.append((label, close_age_table(rows, merged)))
+            eras.append((label, close_age_table(rows, kickoffs)))
         if eras:
             out += _close_age_block(eras) + [""]
         if calendar is not None:

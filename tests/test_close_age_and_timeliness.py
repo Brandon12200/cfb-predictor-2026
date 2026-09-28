@@ -66,25 +66,93 @@ def test_a_neutral_lean_is_not_counted_in_a_clv_table():
     joined = [{"away_team": "A", "home_team": "B", "clv": None, "close_as_of": "2026-09-26T13:00:00Z"}]
     table = close_age_table(joined, {"A@B": "2026-09-26T16:00:00Z"})
     assert table["n_clv"] == 0 and table["n_unknown_age"] == 0
+    # Excluded AND counted: the report states the gap, so nobody closes it by coercing a null to 0.0.
+    assert table["n_no_clv"] == 1
+
+
+def _week(week: int) -> tuple[list[dict], dict[str, str]]:
+    """The committed graded rows and kickoffs for a week, **exactly as they are on disk.**
+
+    An earlier version of this helper coerced a null CLV to 0.0 before calling `close_age_table`,
+    which fabricated agreement between two different populations and would have let a regression
+    that counted nulls as zeros keep passing (review of this PR). Nothing is coerced here.
+    """
+    graded = json.loads((ROOT / "data" / "graded" / f"2026_week_{week:02d}.json").read_text())
+    lines = json.loads((ROOT / "data" / "lines" / f"2026_week_{week:02d}.json").read_text())
+    return graded["graded"], kickoffs_from_lines(lines)
 
 
 def test_the_table_buckets_real_graded_weeks():
-    """Measured against the committed artifacts, not a fixture: weeks 1–3 each carry stale closes
-    and week 4, the first under D44, carries none."""
-    def load(week: int) -> tuple[list[dict], dict[str, str]]:
-        graded = json.loads((ROOT / "data" / "graded" / f"2026_week_{week:02d}.json").read_text())
-        lines = json.loads((ROOT / "data" / "lines" / f"2026_week_{week:02d}.json").read_text())
-        rows = [dict(r, clv=r.get("clv") if r.get("clv") is not None else 0.0) for r in graded["graded"]]
-        return rows, kickoffs_from_lines(lines)
+    """The CLV-scoped table, over the committed artifacts, with no coercion.
 
-    rows, kicks = load(2)
-    stale = next(b for b in close_age_table(rows, kicks)["buckets"] if b["bucket"] == ">12 h")
-    assert stale["n"] == 4, "week 2 took four closes more than 12 h old"
-
-    rows, kicks = load(BOUNDARY_WEEK)
+    These counts are smaller than the week's graded count because a neutral lean has no CLV: week 2
+    grades 16 with 1 neutral, week 4 grades 25 with 2. The raw close-age population is the test
+    below; keeping them apart is the point.
+    """
+    rows, kicks = _week(2)
     table = close_age_table(rows, kicks)
-    assert next(b for b in table["buckets"] if b["bucket"] == "≤3 h")["n"] == 25
+    assert table["n_clv"] == 15 and table["n_no_clv"] == 1
+    assert next(b for b in table["buckets"] if b["bucket"] == ">12 h")["n"] == 4, (
+        "week 2 took four closes more than 12 h old")
+
+    rows, kicks = _week(BOUNDARY_WEEK)
+    table = close_age_table(rows, kicks)
+    assert table["n_clv"] == 23 and table["n_no_clv"] == 2, (
+        "25 graded, 2 neutral leans with no CLV — counted as excluded, never as zeros")
+    assert next(b for b in table["buckets"] if b["bucket"] == "≤3 h")["n"] == 23
     assert all(b["n"] == 0 for b in table["buckets"] if b["bucket"] != "≤3 h")
+
+
+def test_every_week_four_game_closed_within_three_hours_of_kickoff():
+    """The cadence fact, over ALL graded games rather than the CLV-scoped subset.
+
+    This is the number the cadence change is judged by, and it is computed straight from
+    `close_age_hours` — not through `close_age_table`, whose population is deliberately narrower.
+    Weeks 1–3 each carry four closes older than 12 h; week 4, the first under D44, carries none.
+    """
+    for week, over_12h in ((1, 4), (2, 4), (3, 4)):
+        rows, kicks = _week(week)
+        ages = [close_age_hours(kicks.get(f"{r['away_team']}@{r['home_team']}"), r.get("close_as_of"))
+                for r in rows]
+        assert all(a is not None for a in ages), f"week {week}: every graded game has a datable close"
+        assert sum(1 for a in ages if a > 12) == over_12h
+
+    rows, kicks = _week(BOUNDARY_WEEK)
+    ages = [close_age_hours(kicks.get(f"{r['away_team']}@{r['home_team']}"), r.get("close_as_of"))
+            for r in rows]
+    assert len(ages) == 25 and all(a <= 3 for a in ages)
+    assert max(ages) < 3, f"the stalest week-4 close was {max(ages):.2f} h old"
+
+
+def test_a_season_wide_lookup_cannot_date_a_rematch_against_the_wrong_kickoff():
+    """The same two teams can meet twice in one era. Keyed by matchup alone, the later week's
+    kickoff overwrites the earlier one's and one meeting's close is aged against the other's game —
+    silently, with no missing value to notice (review of this PR)."""
+    rows = [
+        {"week": 4, "away_team": "A", "home_team": "B", "clv": 0.5,
+         "close_as_of": "2026-09-26T15:00:00Z"},        # 1 h before its own kickoff
+        {"week": 12, "away_team": "A", "home_team": "B", "clv": 0.5,
+         "close_as_of": "2026-11-28T15:00:00Z"},        # 1 h before its own kickoff
+    ]
+    scoped = {(4, "A@B"): "2026-09-26T16:00:00Z", (12, "A@B"): "2026-11-28T16:00:00Z"}
+    table = close_age_table(rows, scoped)
+    assert next(b for b in table["buckets"] if b["bucket"] == "≤3 h")["n"] == 2
+
+    flat = {"A@B": "2026-11-28T16:00:00Z"}   # what a season-wide merge used to produce
+    assert next(b for b in close_age_table(rows, flat)["buckets"]
+                if b["bucket"] == ">12 h")["n"] == 1, (
+        "the flat key dates week 4's close against week 12's kickoff — the shape being prevented")
+
+
+def test_a_negative_age_is_counted_in_the_freshest_bucket_not_dropped():
+    """`closing_observation` only selects pre-kickoff observations, so an observation timestamped
+    after kickoff should not arise. If it ever does it is still counted — a dropped row would shrink
+    the denominator and flatter the cadence, which is the opposite of what this table is for."""
+    assert bucket_for(-0.5) == "≤3 h"
+    rows = [{"week": 4, "away_team": "A", "home_team": "B", "clv": 0.1,
+             "close_as_of": "2026-09-26T17:00:00Z"}]
+    table = close_age_table(rows, {"A@B": "2026-09-26T16:00:00Z"})
+    assert table["n_clv"] == 1 and table["n_unknown_age"] == 0
 
 
 # --- timeliness ---------------------------------------------------------------------------------

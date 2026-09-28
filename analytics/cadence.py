@@ -87,20 +87,39 @@ def kickoffs_from_lines(lines: dict[str, Any] | None) -> dict[str, str]:
             if isinstance(entry, dict) and entry.get("kickoff")}
 
 
-def close_age_table(joined: list[dict], kickoffs: dict[str, str]) -> dict[str, Any]:
+def kickoff_for(kickoffs: dict[Any, str], row: dict) -> str | None:
+    """The row's kickoff, preferring a week-scoped key.
+
+    `AWAY@HOME` is unique within a week but **not** across a season: the same two teams can meet
+    twice in one era (a conference-championship rematch), and a flat season-wide dict would let the
+    later week's kickoff silently overwrite the earlier one's, dating a close against the wrong
+    game. The season report therefore keys by `(week, matchup)`; the weekly report passes flat keys,
+    which this still accepts (review of this PR).
+    """
+    key = f"{row.get('away_team')}@{row.get('home_team')}"
+    week = row.get("week")
+    if (week, key) in kickoffs:
+        return kickoffs[(week, key)]
+    return kickoffs.get(key)
+
+
+def close_age_table(joined: list[dict], kickoffs: dict[Any, str]) -> dict[str, Any]:
     """CLV by close-age bucket over the graded rows that carry a CLV.
 
-    Rows with no CLV are not counted: CLV is defined from the bet side's perspective, so a neutral
-    lean has none (D22 f3), and bucketing it would pad the denominator of a CLV table with games
-    that can never contribute one.
+    Rows with no CLV are **excluded and counted**, never coerced: CLV is defined from the bet side's
+    perspective, so a neutral lean has none (D22 f3), and bucketing it as 0.0 would pad the
+    denominator of a CLV table with games that can never contribute one. `n_no_clv` is reported so
+    the table can say why it counts fewer games than the week graded — the gap is the question a
+    reader asks, and an unexplained one invites exactly the coercion this avoids.
     """
     rows: list[dict[str, Any]] = []
     unknown = 0
+    no_clv = 0
     for r in joined:
         if r.get("clv") is None:
+            no_clv += 1
             continue
-        key = f"{r.get('away_team')}@{r.get('home_team')}"
-        age = close_age_hours(kickoffs.get(key), r.get("close_as_of"))
+        age = close_age_hours(kickoff_for(kickoffs, r), r.get("close_as_of"))
         label = bucket_for(age)
         if label is None:
             unknown += 1
@@ -118,7 +137,7 @@ def close_age_table(joined: list[dict], kickoffs: dict[str, str]) -> dict[str, A
             "beat_close_pct": (sum(1 for c in clvs if c > 0) / len(clvs)) if clvs else None,
             "max_hours": max((x["hours"] for x in mine), default=None),
         })
-    return {"buckets": buckets, "n_clv": len(rows), "n_unknown_age": unknown}
+    return {"buckets": buckets, "n_clv": len(rows), "n_unknown_age": unknown, "n_no_clv": no_clv}
 
 
 def capture_runs(lines: dict[str, Any] | None, tz: str) -> list[datetime]:
