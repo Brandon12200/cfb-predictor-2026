@@ -1,0 +1,996 @@
+{
+  "meta": {
+    "elo_config": {
+      "baseline": 1500.0,
+      "early_season_weeks": 3,
+      "elo_per_point": 20.0,
+      "hfa_elo": 50.0,
+      "k_decay_games": 6.0,
+      "k_early": 64.0,
+      "k_late": 22.0,
+      "margin_sigma": 16.0,
+      "mov_b": 0.0018,
+      "mov_c": 2.2,
+      "prior_rp_max_elo": 40.0,
+      "rating_signal_floor": 0.4,
+      "rp_prior_uncertainty_penalty": 1.15,
+      "rp_reference": 0.6,
+      "rp_span": 0.35,
+      "uncertainty_floor": 0.2,
+      "uncertainty_games_full": 5.0
+    },
+    "engine": "power_ratings",
+    "generated_at": "2026-09-29T18:40:57.092883+00:00",
+    "snapshot_id": "c3aa4257524af3f4",
+    "week": 5,
+    "year": 2026
+  },
+  "ratings": {
+    "AIR FORCE": {
+      "games_played": 2,
+      "prior_elo": 1432.0,
+      "prior_source": "sp+",
+      "rating": 1442.4263,
+      "rating_uncertainty": 0.6
+    },
+    "AKRON": {
+      "games_played": 3,
+      "prior_elo": 1038.0,
+      "prior_source": "sp+",
+      "rating": 1004.0681,
+      "rating_uncertainty": 0.4
+    },
+    "ALABAMA": {
+      "games_played": 4,
+      "prior_elo": 1960.0,
+      "prior_source": "sp+",
+      "rating": 2014.2643,
+      "rating_uncertainty": 0.2
+    },
+    "APPALACHIAN STATE": {
+      "games_played": 3,
+      "prior_elo": 1412.0,
+      "prior_source": "sp+",
+      "rating": 1421.836,
+      "rating_uncertainty": 0.4
+    },
+    "ARIZONA": {
+      "games_played": 3,
+      "prior_elo": 1714.0,
+      "prior_source": "sp+",
+      "rating": 1689.4398,
+      "rating_uncertainty": 0.4
+    },
+    "ARIZONA STATE": {
+      "games_played": 2,
+      "prior_elo": 1560.0,
+      "prior_source": "sp+",
+      "rating": 1565.4533,
+      "rating_uncertainty": 0.6
+    },
+    "ARKANSAS": {
+      "games_played": 3,
+      "prior_elo": 1494.0,
+      "prior_source": "sp+",
+      "rating": 1572.9491,
+      "rating_uncertainty": 0.4
+    },
+    "ARKANSAS STATE": {
+      "games_played": 3,
+      "prior_elo": 1310.0,
+      "prior_source": "sp+",
+      "rating": 1294.5485,
+      "rating_uncertainty": 0.4
+    },
+    "ARMY": {
+      "games_played": 2,
+      "prior_elo": 1484.0,
+      "prior_source": "sp+",
+      "rating": 1483.7517,
+      "rating_uncertainty": 0.6
+    },
+    "AUBURN": {
+      "games_played": 4,
+      "prior_elo": 1728.0,
+      "prior_source": "sp+",
+      "rating": 1747.5807,
+      "rating_uncertainty": 0.2
+    },
+    "BALL STATE": {
+      "games_played": 3,
+      "prior_elo": 1000.0,
+      "prior_source": "sp+",
+      "rating": 949.6069,
+      "rating_uncertainty": 0.4
+    },
+    "BAYLOR": {
+      "games_played": 3,
+      "prior_elo": 1662.0,
+      "prior_source": "sp+",
+      "rating": 1673.3678,
+      "rating_uncertainty": 0.4
+    },
+    "BOISE STATE": {
+      "games_played": 3,
+      "prior_elo": 1652.0,
+      "prior_source": "sp+",
+      "rating": 1724.9344,
+      "rating_uncertainty": 0.4
+    },
+    "BOSTON COLLEGE": {
+      "games_played": 3,
+      "prior_elo": 1408.0,
+      "prior_source": "sp+",
+      "rating": 1419.6196,
+      "rating_uncertainty": 0.4
+    },
+    "BOWLING GREEN": {
+      "games_played": 3,
+      "prior_elo": 972.0,
+      "prior_source": "sp+",
+      "rating": 965.523,
+      "rating_uncertainty": 0.4
+    },
+    "BUFFALO": {
+      "games_played": 2,
+      "prior_elo": 1156.0,
+      "prior_source": "sp+",
+      "rating": 1124.949,
+      "rating_uncertainty": 0.6
+    },
+    "BYU": {
+      "games_played": 2,
+      "prior_elo": 1826.0,
+      "prior_source": "sp+",
+      "rating": 1876.5613,
+      "rating_uncertainty": 0.6
+    },
+    "CAL": {
+      "games_played": 3,
+      "prior_elo": 1436.0,
+      "prior_source": "sp+",
+      "rating": 1424.7323,
+      "rating_uncertainty": 0.4
+    },
+    "CENTRAL MICHIGAN": {
+      "games_played": 3,
+      "prior_elo": 1126.0,
+      "prior_source": "sp+",
+      "rating": 1201.7583,
+      "rating_uncertainty": 0.4
+    },
+    "CHARLOTTE": {
+      "games_played": 3,
+      "prior_elo": 954.0,
+      "prior_source": "sp+",
+      "rating": 941.4615,
+      "rating_uncertainty": 0.4
+    },
+    "CINCINNATI": {
+      "games_played": 3,
+      "prior_elo": 1684.0,
+      "prior_source": "sp+",
+      "rating": 1761.868,
+      "rating_uncertainty": 0.4
+    },
+    "CLEMSON": {
+      "games_played": 4,
+      "prior_elo": 1598.0,
+      "prior_source": "sp+",
+      "rating": 1691.6752,
+      "rating_uncertainty": 0.2
+    },
+    "COASTAL CAROLINA": {
+      "games_played": 3,
+      "prior_elo": 1272.0,
+      "prior_source": "sp+",
+      "rating": 1186.8806,
+      "rating_uncertainty": 0.4
+    },
+    "COLORADO": {
+      "games_played": 3,
+      "prior_elo": 1434.0,
+      "prior_source": "sp+",
+      "rating": 1407.0062,
+      "rating_uncertainty": 0.4
+    },
+    "COLORADO STATE": {
+      "games_played": 3,
+      "prior_elo": 1354.0,
+      "prior_source": "sp+",
+      "rating": 1362.8667,
+      "rating_uncertainty": 0.4
+    },
+    "DELAWARE": {
+      "games_played": 3,
+      "prior_elo": 1286.0,
+      "prior_source": "sp+",
+      "rating": 1314.565,
+      "rating_uncertainty": 0.4
+    },
+    "DUKE": {
+      "games_played": 3,
+      "prior_elo": 1704.0,
+      "prior_source": "sp+",
+      "rating": 1772.679,
+      "rating_uncertainty": 0.4
+    },
+    "EAST CAROLINA": {
+      "games_played": 3,
+      "prior_elo": 1444.0,
+      "prior_source": "sp+",
+      "rating": 1426.7614,
+      "rating_uncertainty": 0.4
+    },
+    "EASTERN MICHIGAN": {
+      "games_played": 4,
+      "prior_elo": 1140.0,
+      "prior_source": "sp+",
+      "rating": 1110.0671,
+      "rating_uncertainty": 0.2
+    },
+    "FAU": {
+      "games_played": 4,
+      "prior_elo": 1416.0,
+      "prior_source": "sp+",
+      "rating": 1496.9374,
+      "rating_uncertainty": 0.2
+    },
+    "FLORIDA": {
+      "games_played": 3,
+      "prior_elo": 1870.0,
+      "prior_source": "sp+",
+      "rating": 1960.7963,
+      "rating_uncertainty": 0.4
+    },
+    "FLORIDA INTERNATIONAL": {
+      "games_played": 3,
+      "prior_elo": 1348.0,
+      "prior_source": "sp+",
+      "rating": 1331.2509,
+      "rating_uncertainty": 0.4
+    },
+    "FLORIDA STATE": {
+      "games_played": 3,
+      "prior_elo": 1614.0,
+      "prior_source": "sp+",
+      "rating": 1584.0182,
+      "rating_uncertainty": 0.4
+    },
+    "FRESNO STATE": {
+      "games_played": 4,
+      "prior_elo": 1494.0,
+      "prior_source": "sp+",
+      "rating": 1529.0254,
+      "rating_uncertainty": 0.2
+    },
+    "GEORGIA": {
+      "games_played": 3,
+      "prior_elo": 2104.0,
+      "prior_source": "sp+",
+      "rating": 2120.2416,
+      "rating_uncertainty": 0.4
+    },
+    "GEORGIA SOUTHERN": {
+      "games_played": 3,
+      "prior_elo": 1328.0,
+      "prior_source": "sp+",
+      "rating": 1273.4436,
+      "rating_uncertainty": 0.4
+    },
+    "GEORGIA STATE": {
+      "games_played": 3,
+      "prior_elo": 1276.0,
+      "prior_source": "sp+",
+      "rating": 1365.6212,
+      "rating_uncertainty": 0.4
+    },
+    "GEORGIA TECH": {
+      "games_played": 3,
+      "prior_elo": 1498.0,
+      "prior_source": "sp+",
+      "rating": 1396.6654,
+      "rating_uncertainty": 0.4
+    },
+    "HAWAII": {
+      "games_played": 4,
+      "prior_elo": 1256.0,
+      "prior_source": "sp+",
+      "rating": 1135.1758,
+      "rating_uncertainty": 0.2
+    },
+    "HOUSTON": {
+      "games_played": 3,
+      "prior_elo": 1742.0,
+      "prior_source": "sp+",
+      "rating": 1761.9326,
+      "rating_uncertainty": 0.4
+    },
+    "ILLINOIS": {
+      "games_played": 3,
+      "prior_elo": 1670.0,
+      "prior_source": "sp+",
+      "rating": 1622.656,
+      "rating_uncertainty": 0.4
+    },
+    "INDIANA": {
+      "games_played": 3,
+      "prior_elo": 2038.0,
+      "prior_source": "sp+",
+      "rating": 2047.9547,
+      "rating_uncertainty": 0.4
+    },
+    "IOWA": {
+      "games_played": 3,
+      "prior_elo": 1796.0,
+      "prior_source": "sp+",
+      "rating": 1828.2792,
+      "rating_uncertainty": 0.4
+    },
+    "IOWA STATE": {
+      "games_played": 3,
+      "prior_elo": 1568.0,
+      "prior_source": "sp+",
+      "rating": 1545.9545,
+      "rating_uncertainty": 0.4
+    },
+    "JACKSONVILLE STATE": {
+      "games_played": 4,
+      "prior_elo": 1456.0,
+      "prior_source": "sp+",
+      "rating": 1433.2268,
+      "rating_uncertainty": 0.2
+    },
+    "JAMES MADISON": {
+      "games_played": 3,
+      "prior_elo": 1698.0,
+      "prior_source": "sp+",
+      "rating": 1752.686,
+      "rating_uncertainty": 0.4
+    },
+    "KANSAS": {
+      "games_played": 2,
+      "prior_elo": 1520.0,
+      "prior_source": "sp+",
+      "rating": 1429.0703,
+      "rating_uncertainty": 0.6
+    },
+    "KANSAS STATE": {
+      "games_played": 3,
+      "prior_elo": 1780.0,
+      "prior_source": "sp+",
+      "rating": 1743.1195,
+      "rating_uncertainty": 0.4
+    },
+    "KENNESAW STATE": {
+      "games_played": 3,
+      "prior_elo": 1266.0,
+      "prior_source": "sp+",
+      "rating": 1152.2022,
+      "rating_uncertainty": 0.4
+    },
+    "KENT STATE": {
+      "games_played": 3,
+      "prior_elo": 1052.0,
+      "prior_source": "sp+",
+      "rating": 1092.8821,
+      "rating_uncertainty": 0.4
+    },
+    "KENTUCKY": {
+      "games_played": 3,
+      "prior_elo": 1660.0,
+      "prior_source": "sp+",
+      "rating": 1716.2277,
+      "rating_uncertainty": 0.4
+    },
+    "LIBERTY": {
+      "games_played": 3,
+      "prior_elo": 1550.0,
+      "prior_source": "sp+",
+      "rating": 1548.9628,
+      "rating_uncertainty": 0.4
+    },
+    "LOUISIANA": {
+      "games_played": 3,
+      "prior_elo": 1440.0,
+      "prior_source": "sp+",
+      "rating": 1458.3667,
+      "rating_uncertainty": 0.4
+    },
+    "LOUISIANA MONROE": {
+      "games_played": 3,
+      "prior_elo": 920.0,
+      "prior_source": "sp+",
+      "rating": 903.1859,
+      "rating_uncertainty": 0.4
+    },
+    "LOUISIANA TECH": {
+      "games_played": 2,
+      "prior_elo": 1304.0,
+      "prior_source": "sp+",
+      "rating": 1289.6831,
+      "rating_uncertainty": 0.6
+    },
+    "LOUISVILLE": {
+      "games_played": 3,
+      "prior_elo": 1698.0,
+      "prior_source": "sp+",
+      "rating": 1692.0467,
+      "rating_uncertainty": 0.4
+    },
+    "LSU": {
+      "games_played": 4,
+      "prior_elo": 1926.0,
+      "prior_source": "sp+",
+      "rating": 1898.7779,
+      "rating_uncertainty": 0.2
+    },
+    "MARSHALL": {
+      "games_played": 3,
+      "prior_elo": 1250.0,
+      "prior_source": "sp+",
+      "rating": 1306.2149,
+      "rating_uncertainty": 0.4
+    },
+    "MARYLAND": {
+      "games_played": 3,
+      "prior_elo": 1578.0,
+      "prior_source": "sp+",
+      "rating": 1546.4613,
+      "rating_uncertainty": 0.4
+    },
+    "MEMPHIS": {
+      "games_played": 3,
+      "prior_elo": 1546.0,
+      "prior_source": "sp+",
+      "rating": 1555.5468,
+      "rating_uncertainty": 0.4
+    },
+    "MIAMI": {
+      "games_played": 3,
+      "prior_elo": 2014.0,
+      "prior_source": "sp+",
+      "rating": 2031.2859,
+      "rating_uncertainty": 0.4
+    },
+    "MIAMI (OH)": {
+      "games_played": 3,
+      "prior_elo": 1414.0,
+      "prior_source": "sp+",
+      "rating": 1422.7208,
+      "rating_uncertainty": 0.4
+    },
+    "MICHIGAN": {
+      "games_played": 4,
+      "prior_elo": 1786.0,
+      "prior_source": "sp+",
+      "rating": 1812.466,
+      "rating_uncertainty": 0.2
+    },
+    "MICHIGAN STATE": {
+      "games_played": 4,
+      "prior_elo": 1506.0,
+      "prior_source": "sp+",
+      "rating": 1544.9491,
+      "rating_uncertainty": 0.2
+    },
+    "MIDDLE TENNESSEE": {
+      "games_played": 3,
+      "prior_elo": 1180.0,
+      "prior_source": "sp+",
+      "rating": 1215.6473,
+      "rating_uncertainty": 0.4
+    },
+    "MINNESOTA": {
+      "games_played": 3,
+      "prior_elo": 1630.0,
+      "prior_source": "sp+",
+      "rating": 1623.1455,
+      "rating_uncertainty": 0.4
+    },
+    "MISSISSIPPI": {
+      "games_played": 4,
+      "prior_elo": 1722.0,
+      "prior_source": "sp+",
+      "rating": 1787.6002,
+      "rating_uncertainty": 0.2
+    },
+    "MISSISSIPPI STATE": {
+      "games_played": 4,
+      "prior_elo": 1802.0,
+      "prior_source": "sp+",
+      "rating": 1921.6555,
+      "rating_uncertainty": 0.2
+    },
+    "MISSOURI": {
+      "games_played": 3,
+      "prior_elo": 1774.0,
+      "prior_source": "sp+",
+      "rating": 1785.4591,
+      "rating_uncertainty": 0.4
+    },
+    "MISSOURI STATE": {
+      "games_played": 3,
+      "prior_elo": 1148.0,
+      "prior_source": "sp+",
+      "rating": 1100.7657,
+      "rating_uncertainty": 0.4
+    },
+    "NAVY": {
+      "games_played": 2,
+      "prior_elo": 1426.0,
+      "prior_source": "sp+",
+      "rating": 1316.2124,
+      "rating_uncertainty": 0.6
+    },
+    "NC STATE": {
+      "games_played": 3,
+      "prior_elo": 1568.0,
+      "prior_source": "sp+",
+      "rating": 1556.8203,
+      "rating_uncertainty": 0.4
+    },
+    "NEBRASKA": {
+      "games_played": 3,
+      "prior_elo": 1838.0,
+      "prior_source": "sp+",
+      "rating": 1870.2637,
+      "rating_uncertainty": 0.4
+    },
+    "NEVADA": {
+      "games_played": 3,
+      "prior_elo": 1370.0,
+      "prior_source": "sp+",
+      "rating": 1295.0145,
+      "rating_uncertainty": 0.4
+    },
+    "NEW MEXICO": {
+      "games_played": 3,
+      "prior_elo": 1654.0,
+      "prior_source": "sp+",
+      "rating": 1627.2426,
+      "rating_uncertainty": 0.4
+    },
+    "NEW MEXICO STATE": {
+      "games_played": 3,
+      "prior_elo": 1144.0,
+      "prior_source": "sp+",
+      "rating": 1082.7024,
+      "rating_uncertainty": 0.4
+    },
+    "NORTH CAROLINA": {
+      "games_played": 2,
+      "prior_elo": 1560.0,
+      "prior_source": "sp+",
+      "rating": 1572.7649,
+      "rating_uncertainty": 0.6
+    },
+    "NORTH DAKOTA STATE": {
+      "games_played": 3,
+      "prior_elo": 1656.0,
+      "prior_source": "sp+",
+      "rating": 1715.156,
+      "rating_uncertainty": 0.4
+    },
+    "NORTH TEXAS": {
+      "games_played": 3,
+      "prior_elo": 1386.0,
+      "prior_source": "sp+",
+      "rating": 1410.1137,
+      "rating_uncertainty": 0.4
+    },
+    "NORTHERN ILLINOIS": {
+      "games_played": 3,
+      "prior_elo": 1022.0,
+      "prior_source": "sp+",
+      "rating": 1006.6877,
+      "rating_uncertainty": 0.4
+    },
+    "NORTHWESTERN": {
+      "games_played": 2,
+      "prior_elo": 1646.0,
+      "prior_source": "sp+",
+      "rating": 1676.1292,
+      "rating_uncertainty": 0.6
+    },
+    "NOTRE DAME": {
+      "games_played": 4,
+      "prior_elo": 2062.0,
+      "prior_source": "sp+",
+      "rating": 2081.9982,
+      "rating_uncertainty": 0.2
+    },
+    "OHIO": {
+      "games_played": 3,
+      "prior_elo": 1290.0,
+      "prior_source": "sp+",
+      "rating": 1264.2343,
+      "rating_uncertainty": 0.4
+    },
+    "OHIO STATE": {
+      "games_played": 4,
+      "prior_elo": 2076.0,
+      "prior_source": "sp+",
+      "rating": 2060.8124,
+      "rating_uncertainty": 0.2
+    },
+    "OKLAHOMA": {
+      "games_played": 4,
+      "prior_elo": 1756.0,
+      "prior_source": "sp+",
+      "rating": 1742.2742,
+      "rating_uncertainty": 0.2
+    },
+    "OKLAHOMA STATE": {
+      "games_played": 3,
+      "prior_elo": 1704.0,
+      "prior_source": "sp+",
+      "rating": 1753.159,
+      "rating_uncertainty": 0.4
+    },
+    "OLD DOMINION": {
+      "games_played": 3,
+      "prior_elo": 1342.0,
+      "prior_source": "sp+",
+      "rating": 1283.008,
+      "rating_uncertainty": 0.4
+    },
+    "OREGON": {
+      "games_played": 3,
+      "prior_elo": 1932.0,
+      "prior_source": "sp+",
+      "rating": 1932.5987,
+      "rating_uncertainty": 0.4
+    },
+    "OREGON STATE": {
+      "games_played": 3,
+      "prior_elo": 1524.0,
+      "prior_source": "sp+",
+      "rating": 1496.7028,
+      "rating_uncertainty": 0.4
+    },
+    "PENN STATE": {
+      "games_played": 4,
+      "prior_elo": 1838.0,
+      "prior_source": "sp+",
+      "rating": 1800.5291,
+      "rating_uncertainty": 0.2
+    },
+    "PITTSBURGH": {
+      "games_played": 3,
+      "prior_elo": 1794.0,
+      "prior_source": "sp+",
+      "rating": 1839.6156,
+      "rating_uncertainty": 0.4
+    },
+    "PURDUE": {
+      "games_played": 3,
+      "prior_elo": 1372.0,
+      "prior_source": "sp+",
+      "rating": 1347.1369,
+      "rating_uncertainty": 0.4
+    },
+    "RICE": {
+      "games_played": 3,
+      "prior_elo": 1198.0,
+      "prior_source": "sp+",
+      "rating": 1150.1055,
+      "rating_uncertainty": 0.4
+    },
+    "RUTGERS": {
+      "games_played": 3,
+      "prior_elo": 1468.0,
+      "prior_source": "sp+",
+      "rating": 1308.814,
+      "rating_uncertainty": 0.4
+    },
+    "SACRAMENTO STATE": {
+      "games_played": 4,
+      "prior_elo": 1042.0,
+      "prior_source": "sp+",
+      "rating": 981.3344,
+      "rating_uncertainty": 0.2
+    },
+    "SAM HOUSTON": {
+      "games_played": 3,
+      "prior_elo": 1218.0,
+      "prior_source": "sp+",
+      "rating": 1180.6343,
+      "rating_uncertainty": 0.4
+    },
+    "SAN DIEGO STATE": {
+      "games_played": 3,
+      "prior_elo": 1344.0,
+      "prior_source": "sp+",
+      "rating": 1284.3126,
+      "rating_uncertainty": 0.4
+    },
+    "SAN JOSE STATE": {
+      "games_played": 3,
+      "prior_elo": 1198.0,
+      "prior_source": "sp+",
+      "rating": 1222.5569,
+      "rating_uncertainty": 0.4
+    },
+    "SMU": {
+      "games_played": 3,
+      "prior_elo": 1760.0,
+      "prior_source": "sp+",
+      "rating": 1711.4427,
+      "rating_uncertainty": 0.4
+    },
+    "SOUTH ALABAMA": {
+      "games_played": 3,
+      "prior_elo": 1192.0,
+      "prior_source": "sp+",
+      "rating": 1224.6413,
+      "rating_uncertainty": 0.4
+    },
+    "SOUTH CAROLINA": {
+      "games_played": 3,
+      "prior_elo": 1650.0,
+      "prior_source": "sp+",
+      "rating": 1615.1294,
+      "rating_uncertainty": 0.4
+    },
+    "SOUTH FLORIDA": {
+      "games_played": 3,
+      "prior_elo": 1578.0,
+      "prior_source": "sp+",
+      "rating": 1638.6671,
+      "rating_uncertainty": 0.4
+    },
+    "SOUTHERN MISS": {
+      "games_played": 3,
+      "prior_elo": 1132.0,
+      "prior_source": "sp+",
+      "rating": 1077.1362,
+      "rating_uncertainty": 0.4
+    },
+    "STANFORD": {
+      "games_played": 4,
+      "prior_elo": 1332.0,
+      "prior_source": "sp+",
+      "rating": 1418.6503,
+      "rating_uncertainty": 0.2
+    },
+    "SYRACUSE": {
+      "games_played": 2,
+      "prior_elo": 1476.0,
+      "prior_source": "sp+",
+      "rating": 1418.0468,
+      "rating_uncertainty": 0.6
+    },
+    "TCU": {
+      "games_played": 3,
+      "prior_elo": 1664.0,
+      "prior_source": "sp+",
+      "rating": 1574.8917,
+      "rating_uncertainty": 0.4
+    },
+    "TEMPLE": {
+      "games_played": 3,
+      "prior_elo": 1378.0,
+      "prior_source": "sp+",
+      "rating": 1317.3859,
+      "rating_uncertainty": 0.4
+    },
+    "TENNESSEE": {
+      "games_played": 3,
+      "prior_elo": 1854.0,
+      "prior_source": "sp+",
+      "rating": 1847.4521,
+      "rating_uncertainty": 0.4
+    },
+    "TEXAS": {
+      "games_played": 4,
+      "prior_elo": 1948.0,
+      "prior_source": "sp+",
+      "rating": 2012.5736,
+      "rating_uncertainty": 0.2
+    },
+    "TEXAS A&M": {
+      "games_played": 4,
+      "prior_elo": 1678.0,
+      "prior_source": "sp+",
+      "rating": 1627.2459,
+      "rating_uncertainty": 0.2
+    },
+    "TEXAS STATE": {
+      "games_played": 3,
+      "prior_elo": 1464.0,
+      "prior_source": "sp+",
+      "rating": 1474.6996,
+      "rating_uncertainty": 0.4
+    },
+    "TEXAS TECH": {
+      "games_played": 3,
+      "prior_elo": 1904.0,
+      "prior_source": "sp+",
+      "rating": 1931.5527,
+      "rating_uncertainty": 0.4
+    },
+    "TOLEDO": {
+      "games_played": 3,
+      "prior_elo": 1506.0,
+      "prior_source": "sp+",
+      "rating": 1492.9879,
+      "rating_uncertainty": 0.4
+    },
+    "TROY": {
+      "games_played": 3,
+      "prior_elo": 1324.0,
+      "prior_source": "sp+",
+      "rating": 1281.2093,
+      "rating_uncertainty": 0.4
+    },
+    "TULANE": {
+      "games_played": 4,
+      "prior_elo": 1354.0,
+      "prior_source": "sp+",
+      "rating": 1363.6696,
+      "rating_uncertainty": 0.2
+    },
+    "TULSA": {
+      "games_played": 3,
+      "prior_elo": 1432.0,
+      "prior_source": "sp+",
+      "rating": 1467.154,
+      "rating_uncertainty": 0.4
+    },
+    "UAB": {
+      "games_played": 4,
+      "prior_elo": 1214.0,
+      "prior_source": "sp+",
+      "rating": 1251.8621,
+      "rating_uncertainty": 0.2
+    },
+    "UCF": {
+      "games_played": 3,
+      "prior_elo": 1674.0,
+      "prior_source": "sp+",
+      "rating": 1703.1925,
+      "rating_uncertainty": 0.4
+    },
+    "UCLA": {
+      "games_played": 4,
+      "prior_elo": 1776.0,
+      "prior_source": "sp+",
+      "rating": 1860.4558,
+      "rating_uncertainty": 0.2
+    },
+    "UCONN": {
+      "games_played": 3,
+      "prior_elo": 1426.0,
+      "prior_source": "sp+",
+      "rating": 1371.4408,
+      "rating_uncertainty": 0.4
+    },
+    "UMASS": {
+      "games_played": 2,
+      "prior_elo": 1376.0,
+      "prior_source": "sp+",
+      "rating": 1497.8205,
+      "rating_uncertainty": 0.6
+    },
+    "UNLV": {
+      "games_played": 4,
+      "prior_elo": 1452.0,
+      "prior_source": "sp+",
+      "rating": 1366.4431,
+      "rating_uncertainty": 0.2
+    },
+    "USC": {
+      "games_played": 5,
+      "prior_elo": 1856.0,
+      "prior_source": "sp+",
+      "rating": 1809.546,
+      "rating_uncertainty": 0.2
+    },
+    "UTAH": {
+      "games_played": 3,
+      "prior_elo": 1930.0,
+      "prior_source": "sp+",
+      "rating": 1956.1885,
+      "rating_uncertainty": 0.4
+    },
+    "UTAH STATE": {
+      "games_played": 3,
+      "prior_elo": 1314.0,
+      "prior_source": "sp+",
+      "rating": 1369.4634,
+      "rating_uncertainty": 0.4
+    },
+    "UTEP": {
+      "games_played": 3,
+      "prior_elo": 1020.0,
+      "prior_source": "sp+",
+      "rating": 1007.0123,
+      "rating_uncertainty": 0.4
+    },
+    "UTSA": {
+      "games_played": 3,
+      "prior_elo": 1480.0,
+      "prior_source": "sp+",
+      "rating": 1561.4211,
+      "rating_uncertainty": 0.4
+    },
+    "VANDERBILT": {
+      "games_played": 3,
+      "prior_elo": 1650.0,
+      "prior_source": "sp+",
+      "rating": 1646.4455,
+      "rating_uncertainty": 0.4
+    },
+    "VIRGINIA": {
+      "games_played": 3,
+      "prior_elo": 1788.0,
+      "prior_source": "sp+",
+      "rating": 1731.2919,
+      "rating_uncertainty": 0.4
+    },
+    "VIRGINIA TECH": {
+      "games_played": 3,
+      "prior_elo": 1746.0,
+      "prior_source": "sp+",
+      "rating": 1819.6983,
+      "rating_uncertainty": 0.4
+    },
+    "WAKE FOREST": {
+      "games_played": 4,
+      "prior_elo": 1574.0,
+      "prior_source": "sp+",
+      "rating": 1629.0819,
+      "rating_uncertainty": 0.2
+    },
+    "WASHINGTON": {
+      "games_played": 3,
+      "prior_elo": 1742.0,
+      "prior_source": "sp+",
+      "rating": 1704.2911,
+      "rating_uncertainty": 0.4
+    },
+    "WASHINGTON STATE": {
+      "games_played": 3,
+      "prior_elo": 1314.0,
+      "prior_source": "sp+",
+      "rating": 1286.8419,
+      "rating_uncertainty": 0.4
+    },
+    "WEST VIRGINIA": {
+      "games_played": 3,
+      "prior_elo": 1528.0,
+      "prior_source": "sp+",
+      "rating": 1562.8864,
+      "rating_uncertainty": 0.4
+    },
+    "WESTERN KENTUCKY": {
+      "games_played": 3,
+      "prior_elo": 1172.0,
+      "prior_source": "sp+",
+      "rating": 1134.2881,
+      "rating_uncertainty": 0.4
+    },
+    "WESTERN MICHIGAN": {
+      "games_played": 3,
+      "prior_elo": 1356.0,
+      "prior_source": "sp+",
+      "rating": 1366.5917,
+      "rating_uncertainty": 0.4
+    },
+    "WISCONSIN": {
+      "games_played": 3,
+      "prior_elo": 1638.0,
+      "prior_source": "sp+",
+      "rating": 1684.5384,
+      "rating_uncertainty": 0.4
+    },
+    "WYOMING": {
+      "games_played": 3,
+      "prior_elo": 1246.0,
+      "prior_source": "sp+",
+      "rating": 1192.218,
+      "rating_uncertainty": 0.4
+    }
+  }
+}

@@ -1,0 +1,952 @@
+{
+  "calendar_warnings": [],
+  "coverage": {
+    "games": {
+      "ALABAMA@MISSISSIPPI STATE": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "ARKANSAS@TEXAS A&M": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "AUBURN@TENNESSEE": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "BAYLOR@ARIZONA STATE": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "BOSTON COLLEGE@SMU": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "BYU@TCU": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "CINCINNATI@ARIZONA": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "FLORIDA@MISSOURI": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "INDIANA@RUTGERS": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "KENTUCKY@SOUTH CAROLINA": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "LOUISVILLE@NC STATE": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "MARYLAND@NEBRASKA": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "MIAMI@CLEMSON": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "MICHIGAN STATE@WISCONSIN": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "MICHIGAN@MINNESOTA": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "NOTRE DAME@NORTH CAROLINA": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "OHIO STATE@IOWA": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "PENN STATE@NORTHWESTERN": {
+        "betting_lines": "odds",
+        "schedule_intel": "missing"
+      },
+      "PITTSBURGH@VIRGINIA TECH": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "PURDUE@ILLINOIS": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "STANFORD@WAKE FOREST": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "TEXAS TECH@COLORADO": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "UCF@HOUSTON": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "VANDERBILT@GEORGIA": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "VIRGINIA@FLORIDA STATE": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "WASHINGTON@USC": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      },
+      "WEST VIRGINIA@IOWA STATE": {
+        "betting_lines": "odds",
+        "schedule_intel": "derived"
+      }
+    },
+    "teams": {
+      "ALABAMA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "ARIZONA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "ARIZONA STATE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "ARKANSAS": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "AUBURN": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "BAYLOR": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "BOSTON COLLEGE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "BYU": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "CAL": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "CINCINNATI": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "CLEMSON": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "COLORADO": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "DUKE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "FLORIDA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "FLORIDA STATE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "GEORGIA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "GEORGIA TECH": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "HOUSTON": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "ILLINOIS": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "INDIANA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "IOWA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "IOWA STATE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "KANSAS": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "KANSAS STATE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "KENTUCKY": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "LOUISVILLE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "LSU": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "MARYLAND": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "MIAMI": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "MICHIGAN": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "MICHIGAN STATE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "MINNESOTA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "MISSISSIPPI": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "MISSISSIPPI STATE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "MISSOURI": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "NC STATE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "NEBRASKA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "NORTH CAROLINA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "NORTHWESTERN": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "NOTRE DAME": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "OHIO STATE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "OKLAHOMA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "OKLAHOMA STATE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "OREGON": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "PENN STATE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "PITTSBURGH": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "PURDUE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "RUTGERS": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "SMU": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "SOUTH CAROLINA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "STANFORD": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "SYRACUSE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "TCU": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "TENNESSEE": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "TEXAS": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "TEXAS A&M": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "TEXAS TECH": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "UCF": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "UCLA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "USC": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "UTAH": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "VANDERBILT": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "VIRGINIA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "VIRGINIA TECH": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "WAKE FOREST": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "WASHINGTON": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "WEST VIRGINIA": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      },
+      "WISCONSIN": {
+        "advanced_stats": "cfbd",
+        "coaching": "cfbd",
+        "info": "cfbd",
+        "returning_production": "cfbd",
+        "schedule": "cfbd",
+        "sp_rating": "cfbd",
+        "stats": "cfbd",
+        "venue": "registry"
+      }
+    }
+  },
+  "meta": {
+    "built_at": "2026-09-29T18:40:57.092883+00:00",
+    "snapshot_id": "c3aa4257524af3f4",
+    "week": 5,
+    "year": 2026
+  },
+  "reconciliation": {
+    "cfbd_rows_fetched": 3679,
+    "excluded_from_normalization": {
+      "by_reason": {
+        "fcs_opponent_out_of_scope": 762,
+        "non_fbs_matchup": 2156
+      },
+      "total": 2918,
+      "unresolved_team_name": []
+    },
+    "games_normalized": 761,
+    "odds_cross_reference": {
+      "events_normalized": 51,
+      "excluded_events": 7,
+      "matched_to_slate": 27,
+      "slate_games_without_a_line": [],
+      "unmatched_odds_events": [
+        "AKRON@CENTRAL MICHIGAN",
+        "ARMY@LOUISIANA TECH",
+        "BOWLING GREEN@MIAMI (OH)",
+        "CAL@UNLV",
+        "EASTERN MICHIGAN@UMASS",
+        "FRESNO STATE@WASHINGTON STATE",
+        "GEORGIA SOUTHERN@COASTAL CAROLINA",
+        "MARSHALL@JAMES MADISON",
+        "MEMPHIS@CHARLOTTE",
+        "NAVY@AIR FORCE",
+        "OHIO@KENT STATE",
+        "OLD DOMINION@GEORGIA STATE",
+        "SAN JOSE STATE@HAWAII",
+        "SYRACUSE@UCONN",
+        "TEMPLE@SOUTH FLORIDA",
+        "TEXAS STATE@SAN DIEGO STATE",
+        "TEXAS@OKLAHOMA",
+        "TOLEDO@BALL STATE",
+        "UCLA@OREGON",
+        "UTAH STATE@BOISE STATE",
+        "UTEP@NEW MEXICO",
+        "UTSA@RICE",
+        "WESTERN KENTUCKY@NEW MEXICO STATE",
+        "WESTERN MICHIGAN@BUFFALO"
+      ],
+      "unresolved_events": [
+        "Arkansas State Red Wolves@Louisiana Ragin Cajuns",
+        "Liberty Flames@Delaware Blue Hens",
+        "Middle Tennessee Blue Raiders@Kansas Jayhawks",
+        "North Texas Mean Green@Tulsa Golden Hurricane",
+        "Oregon State Beavers@Colorado State Rams",
+        "UL Monroe Warhawks@South Alabama Jaguars",
+        "Wyoming Cowboys@North Dakota State Bison"
+      ]
+    },
+    "week_slate": {
+      "out_of_scope": 29,
+      "out_of_scope_games": [
+        "AKRON@CENTRAL MICHIGAN",
+        "ARKANSAS STATE@LOUISIANA",
+        "ARMY@LOUISIANA TECH",
+        "BOWLING GREEN@MIAMI (OH)",
+        "CAL@UNLV",
+        "EASTERN MICHIGAN@UMASS",
+        "FRESNO STATE@WASHINGTON STATE",
+        "GEORGIA SOUTHERN@COASTAL CAROLINA",
+        "LIBERTY@DELAWARE",
+        "LOUISIANA MONROE@SOUTH ALABAMA",
+        "MARSHALL@JAMES MADISON",
+        "MEMPHIS@CHARLOTTE",
+        "MIDDLE TENNESSEE@KANSAS",
+        "NAVY@AIR FORCE",
+        "NORTH TEXAS@TULSA",
+        "OHIO@KENT STATE",
+        "OLD DOMINION@GEORGIA STATE",
+        "OREGON STATE@COLORADO STATE",
+        "SAN JOSE STATE@HAWAII",
+        "SYRACUSE@UCONN",
+        "TEMPLE@SOUTH FLORIDA",
+        "TEXAS STATE@SAN DIEGO STATE",
+        "TOLEDO@BALL STATE",
+        "UTAH STATE@BOISE STATE",
+        "UTEP@NEW MEXICO",
+        "UTSA@RICE",
+        "WESTERN KENTUCKY@NEW MEXICO STATE",
+        "WESTERN MICHIGAN@BUFFALO",
+        "WYOMING@NORTH DAKOTA STATE"
+      ],
+      "tracked_games": 27,
+      "week": 5
+    }
+  },
+  "sources": {
+    "advanced_stats": {
+      "count": 138,
+      "fallback_reason": null,
+      "fetched_at": "2026-09-29T18:40:46.190524+00:00",
+      "source": "cfbd"
+    },
+    "betting_lines": {
+      "count": 58,
+      "fallback_reason": null,
+      "fetched_at": "2026-09-29T18:40:56.832809+00:00",
+      "quota": {
+        "remaining": 460,
+        "used": 40
+      },
+      "source": "odds"
+    },
+    "coaching": {
+      "count": 138,
+      "fallback_reason": null,
+      "fetched_at": "2026-09-29T18:40:54.482123+00:00",
+      "source": "cfbd"
+    },
+    "games": {
+      "count": 3679,
+      "fallback_reason": null,
+      "fetched_at": "2026-09-29T18:40:38.872373+00:00",
+      "source": "cfbd"
+    },
+    "registry": {
+      "fetched_at": "2026-07-03T19:09:38.123073+00:00",
+      "source": "cfbd"
+    },
+    "returning_production": {
+      "count": 136,
+      "fallback_reason": null,
+      "fetched_at": "2026-09-29T18:40:56.767163+00:00",
+      "source": "cfbd"
+    },
+    "season_stats": {
+      "count": 8590,
+      "fallback_reason": null,
+      "fetched_at": "2026-09-29T18:40:54.587868+00:00",
+      "source": "cfbd"
+    },
+    "sp_ratings": {
+      "count": 139,
+      "fallback_reason": null,
+      "fetched_at": "2026-09-29T18:40:56.710923+00:00",
+      "source": "cfbd"
+    }
+  },
+  "summary": {
+    "coverage_pct": 99.8,
+    "fields_missing": 1,
+    "fields_present": 597,
+    "fields_total": 598,
+    "slate_games": 27,
+    "teams": 68
+  }
+}
