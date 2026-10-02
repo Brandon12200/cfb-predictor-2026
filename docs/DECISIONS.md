@@ -1428,13 +1428,18 @@ not belong in the document — the standing rule, and the one this project has p
 
 ### The sweep
 
-For each threshold from **0.05 to 0.75 in 0.05 steps**: every graded game whose
-\|`predicted_edge`\| ≥ threshold is a **flat 1-unit bet on `edge_direction`**, priced at the
+For each threshold from **0.05 to 0.75 in 0.05 steps**: every **graded game that took a side**
+(`edge_direction` is `home` or `away` — a neutral lean is not a bet and is excluded, see Conventions
+below) whose \|`predicted_edge`\| ≥ threshold is a **flat 1-unit bet on that side**, priced at the
 **claim-time `vegas_spread`** — the record's own grading basis — and settled from the graded row's
-`ats_result`: **win +0.909, loss −1, push 0.**
+`ats_result`: **win +0.909, loss −1, push 0.** Eligible population as at 2026-10-01: **56 of 70**
+graded rows.
 
 Per threshold, report: **bets, W-L-P, win%, Wilson 95% interval, mean CLV, total units, units per
-bet.**
+bet.** Two denominators, stated so the script cannot pick its own: **win% and the Wilson interval
+exclude pushes** — `wins / (wins + losses)`, with pushes reported separately, matching
+`analytics.kpis.ats_summary` — while **units** are over all bets, a push contributing 0. **Mean CLV**
+is the graded row's own `clv` field, over the bets at that threshold that have one.
 
 **The exhibit is the whole curve.** The most profitable threshold is reported **with its interval and
 the plateau around it, never alone** — a single "best" number from 56 gradable games is a
