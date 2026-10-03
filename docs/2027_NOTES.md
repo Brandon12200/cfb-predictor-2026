@@ -99,6 +99,13 @@ factor keeps its slice of the denominator while contributing zero, so the **live
 normalized weights sum to only **~69.5% of unity**. The 3c.5 ladder was ratified against an
 implicitly full budget; ~30% of it is held by factors that cannot fire.
 
+**The 2026 evidence for this arrives with D47**, the post-season threshold analysis due
+**Sun 2026-12-20** — a sweep of every floor from 0.05 to 0.75 over the season's graded record, whose
+2027 paragraph is the one to read here: what transfers is a plateau, not a spike, and any floor
+carried forward must be **rescaled if the weight budget changes**, because waking a dormant factor
+moves the denominator above. It is a ruled decision entry, not a drawer item; nothing about the 2026
+model changes.
+
 > **The single change most likely to restore the ladder's intended scale without touching any
 > ratified coefficient: exclude dormant factors from the normalization denominator.** Decide this
 > against 2026 attribution — and note it interacts with §1, because waking a factor changes the

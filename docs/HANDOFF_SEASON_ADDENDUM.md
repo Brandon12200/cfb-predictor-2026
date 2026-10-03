@@ -140,3 +140,16 @@ The list below is the earlier order, kept for the record.
 - **Prose claims are re-derived, not proofread** (D42 (d)): resolve every locator, then separately
   re-derive every count, date, SHA and status. Every error caught this tenure was caught that way.
 - **No AI attribution** in commits or PR text (D3). Freeze untouched: `factors/`, `engine/`.
+
+### The season's remaining dated obligations (appended 2026-10-01)
+
+Two dates and one undated item, so a successor reads the calendar rather than reconstructing it:
+
+| when | what |
+|---|---|
+| **2026-11-01** | the EST flip — every UTC cron lands an hour earlier in ET |
+| **Sun 2026-12-13** | the final regular-season grade; the three cadence crons stop after it (D42 (b)). **The change that stops them is still unbuilt** — `pipeline_week` clamps, so nothing stops on its own |
+| **Sun 2026-12-20** | **D47, the post-season threshold analysis** — `scripts/threshold_sweep.py` + `docs/analysis/2026_THRESHOLD_SWEEP.md`, one week after the final grade. Ruled 2026-10-01; nothing about the 2026 model changes, the zero-bet result is the pre-registered outcome |
+| undated | **D45**, the claim-path ruling — queued as insurance, no deadline (its 10-06 date was withdrawn); the margin and its reference timestamp are still unruled |
+
+What `freeze-integrity` does after 2026-12-13 is still open (§4).
