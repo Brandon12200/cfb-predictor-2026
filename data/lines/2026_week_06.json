@@ -1,0 +1,1485 @@
+{
+  "ARIZONA@WEST VIRGINIA": {
+    "away_team": "ARIZONA",
+    "home_team": "WEST VIRGINIA",
+    "kickoff": "2026-10-10T16:00:00Z",
+    "observations": [
+      {
+        "consensus_spread": 3.3,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": 3.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 3.0,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 3.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": 3.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "DUKE@GEORGIA TECH": {
+    "away_team": "DUKE",
+    "home_team": "GEORGIA TECH",
+    "kickoff": "2026-10-10T19:30:00Z",
+    "observations": [
+      {
+        "consensus_spread": 6.9,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 6.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": 7.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 7.0,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 7.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": 7.0,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": 7.0,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 7.0,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 6.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": 7.0,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "FLORIDA STATE@LOUISVILLE": {
+    "away_team": "FLORIDA STATE",
+    "home_team": "LOUISVILLE",
+    "kickoff": "2026-10-09T23:00:00Z",
+    "observations": [
+      {
+        "consensus_spread": -3.6,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "draftkings",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "fanduel",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -4.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -3.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "GEORGIA@ALABAMA": {
+    "away_team": "GEORGIA",
+    "home_team": "ALABAMA",
+    "kickoff": "2026-10-10T23:30:00Z",
+    "observations": [
+      {
+        "consensus_spread": -1.7,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -2.0,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -1.0,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -2.0,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -2.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -2.0,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -1.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "HOUSTON@KANSAS STATE": {
+    "away_team": "HOUSTON",
+    "home_team": "KANSAS STATE",
+    "kickoff": "2026-10-10T19:30:00Z",
+    "observations": [
+      {
+        "consensus_spread": -2.5,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": -2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": -2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -2.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "ILLINOIS@MICHIGAN STATE": {
+    "away_team": "ILLINOIS",
+    "home_team": "MICHIGAN STATE",
+    "kickoff": "2026-10-10T19:30:00Z",
+    "observations": [
+      {
+        "consensus_spread": 2.5,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": 2.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "INDIANA@NEBRASKA": {
+    "away_team": "INDIANA",
+    "home_team": "NEBRASKA",
+    "kickoff": "2026-10-10T16:00:00Z",
+    "observations": [
+      {
+        "consensus_spread": 7.2,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 7.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 7.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": 7.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 7.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": 7.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": 7.0,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 7.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": 7.0,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "IOWA STATE@BYU": {
+    "away_team": "IOWA STATE",
+    "home_team": "BYU",
+    "kickoff": "2026-10-10T02:15:00Z",
+    "observations": [
+      {
+        "consensus_spread": -10.4,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "draftkings",
+            "spread": -10.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -10.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -10.5,
+            "spread_open": null
+          },
+          {
+            "provider": "fanduel",
+            "spread": -10.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -10.0,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -10.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -10.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -10.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -10.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "IOWA@WASHINGTON": {
+    "away_team": "IOWA",
+    "home_team": "WASHINGTON",
+    "kickoff": "2026-10-10T01:00:00Z",
+    "observations": [
+      {
+        "consensus_spread": -2.9,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "draftkings",
+            "spread": -3.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -3.0,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -3.0,
+            "spread_open": null
+          },
+          {
+            "provider": "fanduel",
+            "spread": -2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -3.0,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -3.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -3.0,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -3.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -3.0,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "KANSAS@UTAH": {
+    "away_team": "KANSAS",
+    "home_team": "UTAH",
+    "kickoff": "2026-10-11T02:15:00Z",
+    "observations": [
+      {
+        "consensus_spread": -15.4,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": -15.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -15.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -15.0,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": -15.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -15.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -15.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -15.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -15.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "LSU@KENTUCKY": {
+    "away_team": "LSU",
+    "home_team": "KENTUCKY",
+    "kickoff": "2026-10-10T23:00:00Z",
+    "observations": [
+      {
+        "consensus_spread": 8.7,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "draftkings",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": 9.0,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "fanduel",
+            "spread": 9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": 9.0,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": 9.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 8.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": 8.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "MARYLAND@OHIO STATE": {
+    "away_team": "MARYLAND",
+    "home_team": "OHIO STATE",
+    "kickoff": "2026-10-10T20:15:00Z",
+    "observations": [
+      {
+        "consensus_spread": -34.1,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "draftkings",
+            "spread": -34.5,
+            "spread_open": null
+          },
+          {
+            "provider": "fanduel",
+            "spread": -34.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -34.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -34.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -33.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -33.0,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -34.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -34.0,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "MINNESOTA@PURDUE": {
+    "away_team": "MINNESOTA",
+    "home_team": "PURDUE",
+    "kickoff": "2026-10-11T00:00:00Z",
+    "observations": [
+      {
+        "consensus_spread": 2.4,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": 2.0,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": 2.0,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": 2.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "MISSISSIPPI@VANDERBILT": {
+    "away_team": "MISSISSIPPI",
+    "home_team": "VANDERBILT",
+    "kickoff": "2026-10-10T19:30:00Z",
+    "observations": [
+      {
+        "consensus_spread": 9.8,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 10.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 10.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": 10.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": 9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": 10.0,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 9.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "NORTH CAROLINA@PITTSBURGH": {
+    "away_team": "NORTH CAROLINA",
+    "home_team": "PITTSBURGH",
+    "kickoff": "2026-10-10T16:00:00Z",
+    "observations": [
+      {
+        "consensus_spread": -3.7,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -4.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -4.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -4.0,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -4.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -3.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "SOUTH CAROLINA@FLORIDA": {
+    "away_team": "SOUTH CAROLINA",
+    "home_team": "FLORIDA",
+    "kickoff": "2026-10-10T16:45:00Z",
+    "observations": [
+      {
+        "consensus_spread": -12.4,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "draftkings",
+            "spread": -12.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -12.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -12.5,
+            "spread_open": null
+          },
+          {
+            "provider": "fanduel",
+            "spread": -13.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -12.0,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -12.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -12.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -11.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -12.0,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "STANFORD@NOTRE DAME": {
+    "away_team": "STANFORD",
+    "home_team": "NOTRE DAME",
+    "kickoff": "2026-10-10T19:30:00Z",
+    "observations": [
+      {
+        "consensus_spread": -38.2,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "draftkings",
+            "spread": -38.5,
+            "spread_open": null
+          },
+          {
+            "provider": "fanduel",
+            "spread": -37.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -37.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -38.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -38.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -38.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -38.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -38.0,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "SYRACUSE@VIRGINIA": {
+    "away_team": "SYRACUSE",
+    "home_team": "VIRGINIA",
+    "kickoff": "2026-10-10T23:30:00Z",
+    "observations": [
+      {
+        "consensus_spread": -9.3,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": -8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -9.0,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": -9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -10.0,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -9.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -9.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "TENNESSEE@ARKANSAS": {
+    "away_team": "TENNESSEE",
+    "home_team": "ARKANSAS",
+    "kickoff": "2026-10-10T20:15:00Z",
+    "observations": [
+      {
+        "consensus_spread": 13.5,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 13.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": 13.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 13.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 13.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": 13.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": 13.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 13.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": 13.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 13.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "TEXAS A&M@MISSOURI": {
+    "away_team": "TEXAS A&M",
+    "home_team": "MISSOURI",
+    "kickoff": "2026-10-10T16:00:00Z",
+    "observations": [
+      {
+        "consensus_spread": -3.5,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "draftkings",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "fanduel",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -3.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "TEXAS@OKLAHOMA": {
+    "away_team": "TEXAS",
+    "home_team": "OKLAHOMA",
+    "kickoff": "2026-10-10T19:30:00Z",
+    "observations": [
+      {
+        "consensus_spread": 8.6,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 9.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "UCF@OKLAHOMA STATE": {
+    "away_team": "UCF",
+    "home_team": "OKLAHOMA STATE",
+    "kickoff": "2026-10-10T16:00:00Z",
+    "observations": [
+      {
+        "consensus_spread": -8.7,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": -9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -9.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -9.0,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": -8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -8.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "UCLA@OREGON": {
+    "away_team": "UCLA",
+    "home_team": "OREGON",
+    "kickoff": "2026-10-10T19:30:00Z",
+    "observations": [
+      {
+        "consensus_spread": -11.6,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": -11.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": -11.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -12.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -11.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -11.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -12.0,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -12.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -11.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -11.0,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "USC@PENN STATE": {
+    "away_team": "USC",
+    "home_team": "PENN STATE",
+    "kickoff": "2026-10-10T23:30:00Z",
+    "observations": [
+      {
+        "consensus_spread": -1.4,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "draftkings",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": -1.0,
+            "spread_open": null
+          },
+          {
+            "provider": "fanduel",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -1.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": -1.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "VIRGINIA TECH@CAL": {
+    "away_team": "VIRGINIA TECH",
+    "home_team": "CAL",
+    "kickoff": "2026-10-10T19:30:00Z",
+    "observations": [
+      {
+        "consensus_spread": 9.2,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 8.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": 9.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": 9.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": 9.0,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 9.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": 9.0,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 9.5,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  },
+  "WAKE FOREST@NC STATE": {
+    "away_team": "WAKE FOREST",
+    "home_team": "NC STATE",
+    "kickoff": "2026-10-10T16:00:00Z",
+    "observations": [
+      {
+        "consensus_spread": 3.8,
+        "fetched_at": "2026-10-06T18:56:10.949251+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betrivers",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 4.0,
+            "spread_open": null
+          },
+          {
+            "provider": "lowvig",
+            "spread": 4.0,
+            "spread_open": null
+          },
+          {
+            "provider": "betonlineag",
+            "spread": 4.0,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 4.0,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betus",
+            "spread": 4.0,
+            "spread_open": null
+          }
+        ]
+      }
+    ]
+  }
+}
