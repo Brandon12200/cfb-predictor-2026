@@ -2327,6 +2327,37 @@
             "spread_open": null
           }
         ]
+      },
+      {
+        "consensus_spread": 1.8,
+        "fetched_at": "2026-10-11T01:59:16.747674+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -0.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 2.0,
+            "spread_open": null
+          }
+        ]
       }
     ]
   },
@@ -5669,6 +5700,37 @@
             "spread_open": null
           }
         ]
+      },
+      {
+        "consensus_spread": -11.7,
+        "fetched_at": "2026-10-11T01:59:16.747674+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": -10.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -10.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": -11.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -14.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -11.5,
+            "spread_open": null
+          }
+        ]
       }
     ]
   },
@@ -6418,6 +6480,37 @@
           {
             "provider": "bovada",
             "spread": 5.5,
+            "spread_open": null
+          }
+        ]
+      },
+      {
+        "consensus_spread": 0.2,
+        "fetched_at": "2026-10-11T01:59:16.747674+00:00",
+        "lines": [
+          {
+            "provider": "draftkings",
+            "spread": 1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "fanduel",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -1.0,
             "spread_open": null
           }
         ]
@@ -7882,6 +7975,37 @@
           {
             "provider": "betus",
             "spread": 2.5,
+            "spread_open": null
+          }
+        ]
+      },
+      {
+        "consensus_spread": -17.0,
+        "fetched_at": "2026-10-11T01:59:16.747674+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": -19.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -17.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": -17.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": -13.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -17.0,
             "spread_open": null
           }
         ]
@@ -10919,6 +11043,37 @@
           {
             "provider": "betus",
             "spread": -14.0,
+            "spread_open": null
+          }
+        ]
+      },
+      {
+        "consensus_spread": 4.5,
+        "fetched_at": "2026-10-11T01:59:16.747674+00:00",
+        "lines": [
+          {
+            "provider": "fanduel",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": 5.5,
+            "spread_open": null
+          },
+          {
+            "provider": "draftkings",
+            "spread": 3.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 5.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": 4.5,
             "spread_open": null
           }
         ]
@@ -14756,6 +14911,37 @@
           {
             "provider": "betus",
             "spread": 0.0,
+            "spread_open": null
+          }
+        ]
+      },
+      {
+        "consensus_spread": 0.0,
+        "fetched_at": "2026-10-11T01:59:16.747674+00:00",
+        "lines": [
+          {
+            "provider": "draftkings",
+            "spread": 1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "mybookieag",
+            "spread": 2.5,
+            "spread_open": null
+          },
+          {
+            "provider": "fanduel",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "betmgm",
+            "spread": -1.5,
+            "spread_open": null
+          },
+          {
+            "provider": "bovada",
+            "spread": -1.0,
             "spread_open": null
           }
         ]
