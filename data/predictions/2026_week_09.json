@@ -1,0 +1,3183 @@
+{
+  "meta": {
+    "coverage": {
+      "lines": 28,
+      "skipped": [],
+      "written": 28
+    },
+    "engine": "contrarian_v2",
+    "generated_at": "2026-10-27T18:45:12.817669+00:00",
+    "model_version": "v2026-frozen-3-252-g0cca08b",
+    "prediction_count": 28,
+    "schema_version": 2,
+    "snapshot_id": "9d3bf22ec82217f6",
+    "week": 9,
+    "year": 2026
+  },
+  "predictions": [
+    {
+      "away_team": "ARIZONA STATE",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.5013,
+      "confidence_tier": "B",
+      "contrarian_spread": -16.37,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.2,
+          "weighted_value": 0.084
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": 0.942,
+          "weighted_value": 0.008
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -1.85,
+          "weighted_value": -0.036
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": -1.0,
+          "weighted_value": -0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.6,
+          "weighted_value": 0.047
+        }
+      },
+      "game_id": "arizona-state-vs-byu-week9",
+      "graded_at": null,
+      "home_team": "BYU",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.03 below threshold 1.00; extreme factor variance; variance recommends AVOID_OR_MINIMUM",
+      "power_rating_spread": -19.42,
+      "predicted_edge": 0.0324,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -16.4,
+      "week": 9
+    },
+    {
+      "away_team": "ARIZONA",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8039,
+      "confidence_tier": "A",
+      "contrarian_spread": -3.4,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -1.457,
+          "weighted_value": -0.014
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.2,
+          "weighted_value": 0.112
+        }
+      },
+      "game_id": "arizona-vs-texas-tech-week9",
+      "graded_at": null,
+      "home_team": "TEXAS TECH",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.10 below threshold 1.00",
+      "power_rating_spread": -4.02,
+      "predicted_edge": 0.098,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -3.5,
+      "week": 9
+    },
+    {
+      "away_team": "AUBURN",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8003,
+      "confidence_tier": "A",
+      "contrarian_spread": -13.19,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": 0.799,
+          "weighted_value": 0.008
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "auburn-vs-mississippi-week9",
+      "graded_at": null,
+      "home_team": "MISSISSIPPI",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.01 below threshold 1.50",
+      "power_rating_spread": -12.44,
+      "predicted_edge": 0.0078,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -13.2,
+      "week": 9
+    },
+    {
+      "away_team": "BAYLOR",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.5,
+      "confidence_tier": "B",
+      "contrarian_spread": -1.1,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.5,
+          "weighted_value": 0.024
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": -1.0,
+          "weighted_value": -0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.6,
+          "weighted_value": 0.047
+        }
+      },
+      "game_id": "baylor-vs-ucf-week9",
+      "graded_at": null,
+      "home_team": "UCF",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.00 below threshold 0.75; extreme factor variance; variance recommends AVOID_OR_MINIMUM",
+      "power_rating_spread": -2.75,
+      "predicted_edge": 0.001,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -1.1,
+      "week": 9
+    },
+    {
+      "away_team": "BOSTON COLLEGE",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8004,
+      "confidence_tier": "A",
+      "contrarian_spread": -7.09,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.5,
+          "weighted_value": 0.024
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -1.48,
+          "weighted_value": -0.014
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "boston-college-vs-duke-week9",
+      "graded_at": null,
+      "home_team": "DUKE",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.01 below threshold 1.00",
+      "power_rating_spread": -7.32,
+      "predicted_edge": 0.0099,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -7.1,
+      "week": 9
+    },
+    {
+      "away_team": "CAL",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.5095,
+      "confidence_tier": "B",
+      "contrarian_spread": -6.66,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -0.817,
+          "weighted_value": -0.007
+        },
+        "ConsecutiveRoad": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.5,
+          "weighted_value": 0.024
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": 1.053,
+          "weighted_value": 0.01
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.5,
+          "weighted_value": 0.14
+        }
+      },
+      "game_id": "cal-vs-nc-state-week9",
+      "graded_at": null,
+      "home_team": "NC STATE",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.24 below threshold 1.00; extreme factor variance; variance recommends AVOID_OR_MINIMUM",
+      "power_rating_spread": -8.4,
+      "predicted_edge": 0.2384,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -6.9,
+      "week": 9
+    },
+    {
+      "away_team": "CLEMSON",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8034,
+      "confidence_tier": "A",
+      "contrarian_spread": -5.82,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.094
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -0.96,
+          "weighted_value": -0.009
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "clemson-vs-florida-state-week9",
+      "graded_at": null,
+      "home_team": "FLORIDA STATE",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.08 below threshold 1.00",
+      "power_rating_spread": -2.1,
+      "predicted_edge": 0.0842,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -5.9,
+      "week": 9
+    },
+    {
+      "away_team": "FLORIDA",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.502,
+      "confidence_tier": "B",
+      "contrarian_spread": -11.75,
+      "data_quality": 1.0,
+      "edge_direction": "away",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -0.62,
+          "weighted_value": -0.005
+        },
+        "ConsecutiveRoad": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.5,
+          "weighted_value": 0.024
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": -1.0,
+          "weighted_value": -0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "florida-vs-georgia-week9",
+      "graded_at": null,
+      "home_team": "GEORGIA",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.05 below threshold 1.00; extreme factor variance; variance recommends AVOID_OR_MINIMUM",
+      "power_rating_spread": -14.1,
+      "predicted_edge": 0.0508,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -11.7,
+      "week": 9
+    },
+    {
+      "away_team": "GEORGIA TECH",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8003,
+      "confidence_tier": "A",
+      "contrarian_spread": -7.51,
+      "data_quality": 1.0,
+      "edge_direction": "away",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -0.777,
+          "weighted_value": -0.008
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "georgia-tech-vs-pittsburgh-week9",
+      "graded_at": null,
+      "home_team": "PITTSBURGH",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.01 below threshold 1.50",
+      "power_rating_spread": -15.57,
+      "predicted_edge": 0.0076,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -7.5,
+      "week": 9
+    },
+    {
+      "away_team": "ILLINOIS",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.508,
+      "confidence_tier": "B",
+      "contrarian_spread": 2.6,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.094
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -1.15,
+          "weighted_value": -0.011
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.6,
+          "weighted_value": 0.047
+        }
+      },
+      "game_id": "illinois-vs-maryland-week9",
+      "graded_at": null,
+      "home_team": "MARYLAND",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.20 below threshold 0.75; extreme factor variance; variance recommends AVOID_OR_MINIMUM",
+      "power_rating_spread": 4.2,
+      "predicted_edge": 0.1992,
+      "prediction_type": "NO_BET",
+      "vegas_spread": 2.4,
+      "week": 9
+    },
+    {
+      "away_team": "KANSAS STATE",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.7062,
+      "confidence_tier": "A",
+      "contrarian_spread": 2.46,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.2,
+          "weighted_value": 0.084
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.5,
+          "weighted_value": 0.024
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.6,
+          "weighted_value": 0.047
+        }
+      },
+      "game_id": "kansas-state-vs-colorado-week9",
+      "graded_at": null,
+      "home_team": "COLORADO",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.16 below threshold 0.75",
+      "power_rating_spread": 3.9,
+      "predicted_edge": 0.1553,
+      "prediction_type": "NO_BET",
+      "vegas_spread": 2.3,
+      "week": 9
+    },
+    {
+      "away_team": "KANSAS",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.803,
+      "confidence_tier": "A",
+      "contrarian_spread": -5.87,
+      "data_quality": 1.0,
+      "edge_direction": "away",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -0.58,
+          "weighted_value": -0.005
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": -1.0,
+          "weighted_value": -0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "kansas-vs-tcu-week9",
+      "graded_at": null,
+      "home_team": "TCU",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.07 below threshold 1.00",
+      "power_rating_spread": -7.88,
+      "predicted_edge": 0.0748,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -5.8,
+      "week": 9
+    },
+    {
+      "away_team": "MIAMI",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.803,
+      "confidence_tier": "A",
+      "contrarian_spread": 14.77,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": 0.54,
+          "weighted_value": 0.004
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "miami-vs-north-carolina-week9",
+      "graded_at": null,
+      "home_team": "NORTH CAROLINA",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.07 below threshold 1.00",
+      "power_rating_spread": 15.65,
+      "predicted_edge": 0.0745,
+      "prediction_type": "NO_BET",
+      "vegas_spread": 14.7,
+      "week": 9
+    },
+    {
+      "away_team": "MICHIGAN",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8,
+      "confidence_tier": "A",
+      "contrarian_spread": 14.0,
+      "data_quality": 1.0,
+      "edge_direction": "neutral",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "michigan-vs-rutgers-week9",
+      "graded_at": null,
+      "home_team": "RUTGERS",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.00 below threshold 1.50",
+      "power_rating_spread": 14.8,
+      "predicted_edge": 0.0,
+      "prediction_type": "NO_BET",
+      "vegas_spread": 14.0,
+      "week": 9
+    },
+    {
+      "away_team": "MINNESOTA",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8047,
+      "confidence_tier": "A",
+      "contrarian_spread": -19.88,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.6,
+          "weighted_value": 0.047
+        }
+      },
+      "game_id": "minnesota-vs-indiana-week9",
+      "graded_at": null,
+      "home_team": "INDIANA",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.12 below threshold 0.75",
+      "power_rating_spread": -23.33,
+      "predicted_edge": 0.1169,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -20.0,
+      "week": 9
+    },
+    {
+      "away_team": "MISSISSIPPI STATE",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8028,
+      "confidence_tier": "A",
+      "contrarian_spread": -20.17,
+      "data_quality": 1.0,
+      "edge_direction": "away",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": -1.0,
+          "weighted_value": -0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "mississippi-state-vs-texas-week9",
+      "graded_at": null,
+      "home_team": "TEXAS",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.07 below threshold 1.00",
+      "power_rating_spread": -12.69,
+      "predicted_edge": 0.0701,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -20.1,
+      "week": 9
+    },
+    {
+      "away_team": "MISSOURI",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.6053,
+      "confidence_tier": "B",
+      "contrarian_spread": 10.03,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.5,
+          "weighted_value": 0.024
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": 2.0,
+          "weighted_value": 0.039
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "missouri-vs-arkansas-week9",
+      "graded_at": null,
+      "home_team": "ARKANSAS",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.13 below threshold 0.75",
+      "power_rating_spread": 8.91,
+      "predicted_edge": 0.1334,
+      "prediction_type": "NO_BET",
+      "vegas_spread": 9.9,
+      "week": 9
+    },
+    {
+      "away_team": "NORTHWESTERN",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8045,
+      "confidence_tier": "A",
+      "contrarian_spread": -3.19,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.2,
+          "weighted_value": 0.112
+        }
+      },
+      "game_id": "northwestern-vs-oregon-week9",
+      "graded_at": null,
+      "home_team": "OREGON",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.11 below threshold 1.00",
+      "power_rating_spread": -2.37,
+      "predicted_edge": 0.1122,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -3.3,
+      "week": 9
+    },
+    {
+      "away_team": "OHIO STATE",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.5059,
+      "confidence_tier": "B",
+      "contrarian_spread": 6.75,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": true,
+          "category": "physical",
+          "value": -1.0,
+          "weighted_value": -0.094
+        },
+        "CloseGamePerformance": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": 0.62,
+          "weighted_value": 0.005
+        },
+        "ConsecutiveRoad": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.5,
+          "weighted_value": 0.024
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.5,
+          "weighted_value": 0.14
+        }
+      },
+      "game_id": "ohio-state-vs-usc-week9",
+      "graded_at": null,
+      "home_team": "USC",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.15 below threshold 0.75; extreme factor variance; variance recommends AVOID_OR_MINIMUM",
+      "power_rating_spread": 13.0,
+      "predicted_edge": 0.1463,
+      "prediction_type": "NO_BET",
+      "vegas_spread": 6.6,
+      "week": 9
+    },
+    {
+      "away_team": "OKLAHOMA STATE",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8044,
+      "confidence_tier": "A",
+      "contrarian_spread": 8.69,
+      "data_quality": 1.0,
+      "edge_direction": "away",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -2.0,
+          "weighted_value": -0.039
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": -1.0,
+          "weighted_value": -0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "oklahoma-state-vs-iowa-state-week9",
+      "graded_at": null,
+      "home_team": "IOWA STATE",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.11 below threshold 1.00",
+      "power_rating_spread": 10.72,
+      "predicted_edge": 0.1091,
+      "prediction_type": "NO_BET",
+      "vegas_spread": 8.8,
+      "week": 9
+    },
+    {
+      "away_team": "PURDUE",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8017,
+      "confidence_tier": "A",
+      "contrarian_spread": -7.84,
+      "data_quality": 1.0,
+      "edge_direction": "away",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -0.65,
+          "weighted_value": -0.005
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -1.85,
+          "weighted_value": -0.036
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "purdue-vs-penn-state-week9",
+      "graded_at": null,
+      "home_team": "PENN STATE",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.04 below threshold 1.50",
+      "power_rating_spread": -4.44,
+      "predicted_edge": 0.0413,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -7.8,
+      "week": 9
+    },
+    {
+      "away_team": "SMU",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8015,
+      "confidence_tier": "A",
+      "contrarian_spread": 9.84,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -1.017,
+          "weighted_value": -0.01
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.6,
+          "weighted_value": 0.047
+        }
+      },
+      "game_id": "smu-vs-syracuse-week9",
+      "graded_at": null,
+      "home_team": "SYRACUSE",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.04 below threshold 1.00",
+      "power_rating_spread": 13.05,
+      "predicted_edge": 0.0369,
+      "prediction_type": "NO_BET",
+      "vegas_spread": 9.8,
+      "week": 9
+    },
+    {
+      "away_team": "SOUTH CAROLINA",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8047,
+      "confidence_tier": "A",
+      "contrarian_spread": -4.98,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.07
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.6,
+          "weighted_value": 0.047
+        }
+      },
+      "game_id": "south-carolina-vs-oklahoma-week9",
+      "graded_at": null,
+      "home_team": "OKLAHOMA",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.12 below threshold 0.75",
+      "power_rating_spread": -3.01,
+      "predicted_edge": 0.1169,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -5.1,
+      "week": 9
+    },
+    {
+      "away_team": "STANFORD",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.5093,
+      "confidence_tier": "B",
+      "contrarian_spread": -22.17,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.094
+        },
+        "CloseGamePerformance": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -1.19,
+          "weighted_value": -0.01
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": 0.799,
+          "weighted_value": 0.008
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.5,
+          "weighted_value": 0.14
+        }
+      },
+      "game_id": "stanford-vs-louisville-week9",
+      "graded_at": null,
+      "home_team": "LOUISVILLE",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.23 below threshold 1.00; extreme factor variance; variance recommends AVOID_OR_MINIMUM",
+      "power_rating_spread": -20.2,
+      "predicted_edge": 0.2319,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -22.4,
+      "week": 9
+    },
+    {
+      "away_team": "UTAH",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8078,
+      "confidence_tier": "A",
+      "contrarian_spread": 6.69,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.082
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.2,
+          "weighted_value": 0.112
+        }
+      },
+      "game_id": "utah-vs-cincinnati-week9",
+      "graded_at": null,
+      "home_team": "CINCINNATI",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.19 below threshold 0.75",
+      "power_rating_spread": 5.46,
+      "predicted_edge": 0.194,
+      "prediction_type": "NO_BET",
+      "vegas_spread": 6.5,
+      "week": 9
+    },
+    {
+      "away_team": "VIRGINIA",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.6055,
+      "confidence_tier": "B",
+      "contrarian_spread": -12.36,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.0,
+          "weighted_value": 0.094
+        },
+        "CloseGamePerformance": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": 0.74,
+          "weighted_value": 0.006
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": 2.0,
+          "weighted_value": 0.039
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "virginia-vs-wake-forest-week9",
+      "graded_at": null,
+      "home_team": "WAKE FOREST",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.14 below threshold 1.00",
+      "power_rating_spread": -17.28,
+      "predicted_edge": 0.1385,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -12.5,
+      "week": 9
+    },
+    {
+      "away_team": "WASHINGTON",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.5051,
+      "confidence_tier": "B",
+      "contrarian_spread": -7.77,
+      "data_quality": 1.0,
+      "edge_direction": "home",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": false,
+          "category": "momentum_factors",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ConsecutiveRoad": {
+          "activated": true,
+          "category": "physical",
+          "value": 0.5,
+          "weighted_value": 0.024
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -0.943,
+          "weighted_value": -0.009
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": true,
+          "category": "physical",
+          "value": 1.2,
+          "weighted_value": 0.112
+        }
+      },
+      "game_id": "washington-vs-nebraska-week9",
+      "graded_at": null,
+      "home_team": "NEBRASKA",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.13 below threshold 1.00; extreme factor variance; variance recommends AVOID_OR_MINIMUM",
+      "power_rating_spread": -11.25,
+      "predicted_edge": 0.1274,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -7.9,
+      "week": 9
+    },
+    {
+      "away_team": "WISCONSIN",
+      "closing_spread": null,
+      "clv": null,
+      "confidence": 0.8002,
+      "confidence_tier": "A",
+      "contrarian_spread": -3.3,
+      "data_quality": 1.0,
+      "edge_direction": "away",
+      "factor_breakdown": {
+        "Altitude": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ByeAdvantage": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "CloseGamePerformance": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": 0.505,
+          "weighted_value": 0.004
+        },
+        "ConsecutiveRoad": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "DesperationIndex": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ExperienceDifferential": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "HeadToHeadRecord": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "MarketSentiment": {
+          "activated": false,
+          "category": "market",
+          "value": 1.0,
+          "weighted_value": 0.0
+        },
+        "PointDifferentialTrends": {
+          "activated": true,
+          "category": "momentum_factors",
+          "value": -0.913,
+          "weighted_value": -0.009
+        },
+        "PressureSituation": {
+          "activated": false,
+          "category": "coaching_edge",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "RevengeGame": {
+          "activated": false,
+          "category": "situational_context",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "Sandwich": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "ShortWeek": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "StyleMismatch": {
+          "activated": false,
+          "category": "matchup",
+          "value": 0.0,
+          "weighted_value": 0.0
+        },
+        "TravelBurden": {
+          "activated": false,
+          "category": "physical",
+          "value": 0.0,
+          "weighted_value": 0.0
+        }
+      },
+      "game_id": "wisconsin-vs-iowa-week9",
+      "graded_at": null,
+      "home_team": "IOWA",
+      "line_as_of": "2026-10-27T18:45:12.411986+00:00",
+      "no_bet": true,
+      "no_bet_reason": "edge 0.00 below threshold 1.50",
+      "power_rating_spread": -2.31,
+      "predicted_edge": 0.0048,
+      "prediction_type": "NO_BET",
+      "vegas_spread": -3.3,
+      "week": 9
+    }
+  ]
+}
