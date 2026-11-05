@@ -87,7 +87,20 @@ _job_file = {"predict": "weekly-predict.yml", "capture": "daily-capture.yml",
 # the check is that none has come back, and that a cron which somehow exists still matches
 # season.json — the anti-drift rule kept in the form that survives the stop. `schedule_et` itself is
 # retained as the record of the cadence that ran and is still shape-checked by its own tests.
-_scheduled = [job for job, f in _job_file.items() if _crons(f)]
+def _on_block(name: str) -> str:
+    """The workflow's `on:` mapping, comments stripped — see the twin helper in
+    tests/test_workflow_schedules.py. `_crons` needs a QUOTED value, so `- cron: 1 2 * * 3` is a
+    live schedule it cannot see; harmless while the rule was set-equality, a hole once the expected
+    set is empty (found by an independent review of the stop PR)."""
+    text = (WORKFLOWS / name).read_text()
+    start = text.index("\non:\n") + 1
+    rest = text[start + len("on:\n"):]
+    end = next((m.start() for m in re.finditer(r"^\S", rest, re.M)), len(rest))
+    return "\n".join(ln for ln in rest[:end].splitlines() if not ln.strip().startswith("#"))
+
+
+_scheduled = [job for job, f in _job_file.items()
+              if _crons(f) or "schedule" in _on_block(f) or "cron" in _on_block(f)]
 _drifted = [
     job for job, f in _job_file.items()
     if not _crons(f) <= {" ".join(e["cron_utc"].split()) for e in PIPELINE["schedule_et"][job]}
