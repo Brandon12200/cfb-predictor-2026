@@ -89,7 +89,10 @@ def _catch_up_index(steps: list[dict]) -> int:
 def _run(tmp_path: Path, weeks: str, fail_on: str = "", fail_rc: int = 1) -> tuple[int, list[str]]:
     """Run the catch-up step's real script. Returns (exit status, recorded calls)."""
     script = _steps()[_catch_up_index(_steps())]["run"]
-    script = (script.replace("${{ steps.setup.outputs.grade_weeks }}", weeks)
+    # `catchup_weeks` since D48 — the loop iterates the weeks that could still have a late finisher,
+    # not every claimed week. The substituted token must track the workflow or the assertion below
+    # that no `${{` survives is what catches it.
+    script = (script.replace("${{ steps.setup.outputs.catchup_weeks }}", weeks)
                     .replace("${{ steps.setup.outputs.year }}", "2026"))
     assert "${{" not in script, "an unsubstituted expression would make this test vacuous"
 

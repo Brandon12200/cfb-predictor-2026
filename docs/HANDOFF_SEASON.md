@@ -57,6 +57,14 @@ claim, no overwrite, claim blob unchanged, a fresh `snapshot:` commit at `8f7a5f
 | freeze-integrity | daily 07:43 | 2.3–6.4 h (n=16) | 0.3–9.8 h (n=20) |
 | **all four** | | **1.6–6.4 h** | **0.3–9.8 h** |
 
+> **Superseded figure, corrected 2026-11-05 (D48 item 5).** The band above was measured on
+> 2026-09-13, through week 2. **Across the season it is 1.5–8 h**, not 1.6–6.4 h: the 8 h outlier is
+> `freeze-integrity` run `37365254988` on Mon 2026-10-05, which was then **cancelled before its
+> first step** on GitHub-side runner capacity — a shape that fires no `if: failure()` and is visible
+> only in the notification email (`2027_NOTES`). The table's per-job rows are left as measured on
+> their date; this note is the season-wide number. **All of it is now historical**: D48 removed every
+> cron, so nothing is scheduled to be late any more.
+
 Delay is each run's `createdAt` minus the most recent cron slot at or before it, matched to the
 nearest preceding slot so capture's Saturday waves pair correctly; crons are UTC, so no DST effect in
 this window. Measured 2026-09-13 from `gh run list --event schedule`. The wider second column is

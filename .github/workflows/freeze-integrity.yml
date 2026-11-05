@@ -69,8 +69,11 @@ jobs:
           python scripts/sp_watch.py 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
           echo "rc=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 
+      # A probe error reddens the job — an unobservable upstream is worth knowing about — but it is
+      # NOT a freeze failure, and D48 separates the two. `rc != ''` is explicit: a skipped step
+      # leaves the output empty, and an empty string is not an error code (D46's lesson).
       - name: Fail on a probe error
-        if: steps.spwatch.outputs.rc != '0' && steps.spwatch.outputs.rc != '2'
+        if: steps.spwatch.outputs.rc != '' && steps.spwatch.outputs.rc != '0' && steps.spwatch.outputs.rc != '2'
         run: |
           echo "::error::sp_watch exited ${{ steps.spwatch.outputs.rc }}"
           exit 1
@@ -158,8 +161,40 @@ jobs:
           mode: live
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # D48 item 2: a probe error gets its OWN kind, label, dedupe bucket and title.
+      #
+      # The defect this fixes, demonstrated 2026-10-21/22: `sp_watch` hit a CFBD Cloudflare 502,
+      # this job went red, and the only reporter was the generic one below — so the owner was
+      # emailed "pipeline: freeze failure" about a run in which **every freeze check passed and the
+      # fingerprint matched**. Worse than the wrong title: the issue carried
+      # `pipeline-failure` + `stage:freeze`, the same dedupe bucket a real freeze failure uses, so
+      # the next morning's rerun closed #73 as "recovered" — a probe outage silently clearing the
+      # alarm that means the frozen model moved.
+      #
+      # The pattern is not new: the SP+ ARRIVAL path above already has its own `kind: transition`
+      # and title for exactly this reason. This is that ruling applied one step further.
       - uses: ./.github/actions/report-failure
-        if: failure()
+        if: failure() && steps.spwatch.outputs.rc != '' && steps.spwatch.outputs.rc != '0' && steps.spwatch.outputs.rc != '2'
+        with:
+          stage: freeze
+          kind: probe
+          title: "CFBD probe unreachable — sp_watch could not observe SP+/returning production"
+          body: >
+            `scripts/sp_watch.py` could not reach CFBD, so this run could not observe whether SP+ or
+            returning production moved. **The freeze itself is not implicated**: every freeze check
+            in this run is reported above, and a probe outage says nothing about the frozen model.
+            Three such outages failed scheduled runs this season (#56, #71, #72), which is why the
+            CFBD client now retries once on a transport error or a 5xx (D48) — reaching this issue
+            means both attempts failed. Re-dispatch this workflow once CFBD is reachable; a
+            successful run closes this automatically.
+          mode: live
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Everything else: a failed freeze check, a bad fingerprint, a tripwire error. Gated to
+      # exclude the probe case so one red run never files two issues, and so this title keeps
+      # meaning what it says.
+      - uses: ./.github/actions/report-failure
+        if: failure() && (steps.spwatch.outputs.rc == '' || steps.spwatch.outputs.rc == '0' || steps.spwatch.outputs.rc == '2')
         with:
           stage: freeze
           kind: failure
@@ -177,5 +212,17 @@ jobs:
         with:
           stage: freeze
           kind: failure
+          mode: live
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Symmetric clear for the new kind (D48). Without it a `pipeline-probe` issue would stay open
+      # after CFBD came back and the label would stop meaning "a live problem" — the same reasoning
+      # that put a clear path on this workflow in the first place. Separate kinds must mean separate
+      # clears: that is the whole point of not sharing a bucket.
+      - uses: ./.github/actions/clear-failure
+        if: success() && github.ref_name == github.event.repository.default_branch
+        with:
+          stage: freeze
+          kind: probe
           mode: live
           token: ${{ secrets.GITHUB_TOKEN }}
