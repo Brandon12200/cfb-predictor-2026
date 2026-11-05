@@ -546,7 +546,7 @@ review table names `9e5e069`. And its "Merge the batch first (by 11-29)" was ove
 merged 11-05. Both are stale history, not wrong instructions. This audit edits only the section it
 audits.
 
-**`make resolve-locators` at this audit's head:** 152 locators, 51 failed, 5 to check by eye. Every
+**`make resolve-locators` at this audit's head:** 153 locators, 51 failed, 5 to check by eye (152 before the review fixes; dating the D47 cite added one). Every
 new failure falls into a class G4.6 already names: #76's branch SHAs, the three permanent SHAs, the
 expected-absent files, and the memory filenames. Most of them are this section citing those same
 locators again. None fails for being wrong.
