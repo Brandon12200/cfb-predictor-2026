@@ -211,20 +211,25 @@ A figure here that disagrees with the repository means the repository is right.
 
 1. `git fetch origin` first, before any other git command.
 2. `gh pr view 76` — read the state from GitHub, do not assume it is still open.
-3. **The D46 §(4).2 base-movement check.** A GO survives base movement only when `main` moved in
-   files **disjoint** from the diff:
+3. **The D46 §(4).2 base-movement check — both halves.** D46 §(4).2 says a GO survives base
+   movement only when **`git merge-tree` reports no conflict *and*** `main` moved in files
+   **disjoint** from the diff. *(Corrected by the G5 audit: the original gave only the second half.)*
    ```
+   git merge-tree --write-tree origin/main 9e5e069 >/dev/null; echo "merge-tree exit=$?"   # must be 0
    git diff --name-only 72d1a3d origin/main
    git diff --name-only 72d1a3d 9e5e069
    comm -12 <(git diff --name-only 72d1a3d origin/main | sort) \
             <(git diff --name-only 72d1a3d 9e5e069 | sort)
    ```
-   `72d1a3d` is the reviewed base. **Empty overlap ⇒ the GO stands.** Any overlap voids it and needs
+   `72d1a3d` is the reviewed base. **merge-tree exit 0 and empty overlap ⇒ the GO stands.** A
+   conflict or any overlap voids it and needs
    a fresh `code-reviewer` pass at the head, which in December is under deadline — so run this
    *before* the grade if you want warning. Baseline run 2026-11-05 at `f56a243`: `main` had moved
    in zero files, overlap empty. **Re-run 2026-11-05 at `8b7af00` (G5 audit):** `main` had moved in
    one file, `docs/HANDOFF_SEASON_ADDENDUM.md` (this section's own merge, #77), and the overlap was
-   empty, so the GO stands. Expect movement under `data/` (daily `lines:` commits, the weekly claim
+   empty. **Both halves, re-run 2026-11-05 at `5a2a578`:** merge-tree exit 0; `main` had moved in
+   `data/lines/2026_week_10.json`, `data/quota/odds_2026_11.json` and
+   `docs/HANDOFF_SEASON_ADDENDUM.md`; overlap 0 files. The GO stands. Expect movement under `data/` (daily `lines:` commits, the weekly claim
    and grade) **and under `docs/HANDOFF_*`** (handoffs and their audits, this one included). Both
    are disjoint from all eleven files. *(Corrected by the G5 audit: the original said "only under
    `data/`", and the merge that carried that sentence was itself a counter-example.)* **But run it;
@@ -428,6 +433,16 @@ because sessions act through the owner's `gh` credentials. **Owner ruling, 2026-
 PRs and the owner merges, D43 included.** D43 waives *review before merge*. It does not waive the
 owner's hand on the merge. This is appended to D43 in `docs/DECISIONS.md`.
 
+**Generation 5's own ordering error (owner, 2026-11-05):** this generation ran the D43 audit
+**before** the confirm-back the owner asked for at the start. The order cost something. The audit
+re-ran the merge-day base check as G4 wrote it, without opening D46 §(4).2, and passed it as
+correct. The reviewer passed it too. The missing half, `git merge-tree` reporting no conflict, was
+found only when the confirm-back read the procedure from `docs/DECISIONS.md` rather than from the
+handoff (G5.6). The confirm-back also caught an undated claim of the audit's own: "no scheduled run
+has executed the D48 code". **The rule is: reconstitute, then confirm back, then audit.** Confirm
+back from the authoritative sources first. Only then audit the handoff against them, so that the
+document under audit is never the source of its own check.
+
 ## G4.5 The drawer as it stands
 
 - **Watching `freeze-integrity` for a *missing* run.** The 2026-10-05 cancellation showed a
@@ -513,8 +528,9 @@ re-derivation pass can.
 ## G5 audit — the post-merge audit of G4.1–G4.6, 2026-11-05 (D43 (a))
 
 Performed by generation 5 against `8b7af00`. Every claim was re-derived from the repository, `gh`,
-or the Actions API. The section's prose was not proofread instead. **Four corrections**, each made
-in place above and marked *(Corrected by the G5 audit)*, plus one omission:
+or the Actions API. The section's prose was not proofread instead. **Five corrections**, each made
+in place above and marked *(Corrected by the G5 audit)*, plus one omission. G5.6 was found after
+the first review's GO, by the confirm-back. See the G4.4 ledger entry on ordering:
 
 | # | where | what was wrong | what is true |
 |---|---|---|---|
@@ -523,13 +539,19 @@ in place above and marked *(Corrected by the G5 audit)*, plus one omission:
 | G5.3 | G4.1, merge-day step 4 | "`9e5e069`'s parent is on `main`" | `9e5e069`'s parent is `3d99b10` (branch-only). The stack's base `72d1a3d` is `f56a243`'s second parent |
 | G5.4 | G4.2, catch-up bullet | step "Resolve the week" in `weekly-predict.yml` | step "Resolve week", `id: resolve`, inside `.github/actions/cfb-setup`, invoked as `id: setup` |
 | G5.5 | G4.6, locator classification | `66f3313` (G4.3 rule 5) unclassified | permanently unreachable (on `pipeline/season-stop-v2` only). With `b2cab2e` cited below, expect three unreachable SHAs after #76 merges, not one |
+| G5.6 | G4.1, merge-day step 3 | the check gave only the file-overlap half of D46 §(4).2 | D46 §(4).2 also requires `git merge-tree` to report no conflict. Both halves re-run at `5a2a578`: exit 0, overlap 0 |
 
 **Re-derived and found correct:** `main` head and parents at the time of writing. CI on `f56a243`
 was success (run `42116445053`). There were 49 `## D` entries, ending at D48. Week 10 was claimed as
 `1bacd90`. `pipeline_week` gave `grade_weeks = 1 … 10`, `catchup_weeks = 10`. D47 was at
 `docs/DECISIONS.md:1388` at `8b7af00` (1398 after this audit's D43 appendix). `WIN_RETURN = 0.909` is right, and so is `ats_result`. The last scheduled
-run before the merge was `42089182312`, at 18:57:11Z, and **still no scheduled run has executed the
-D48 code** (the runs since are CI only). The probe step names, the issue title and the `kind:
+run before the merge was `42089182312`, at 18:57:11Z. As of ~22:20Z no scheduled run had executed
+the D48 code. **That stopped being true at 22:23:49Z:** `daily-capture` run `42121135569` (the
+Thursday `23 21` slot, about 1.0 h late) ran on `8b7af00` and committed `5a2a578`. Capture calls
+the Odds API, not CFBD (`daily-capture.yml` has no CFBD reference, and its log has no retry line),
+so **none of D48's three changes has yet been exercised by a scheduled run.** The first will be
+Friday's `freeze-integrity`. *(This audit's first draft stated the 22:20Z fact undated. The
+confirm-back caught it.)* The probe step names, the issue title and the `kind:
 probe` label match `freeze-integrity.yml`. The retry is one retry, and it never fires on a 4xx
 (`data/clients/cfbd_v2.py`). Its WARNING text matches the log format. `tests/test_probe_kind.py`
 has 8 tests. Every delay figure was recomputed from all 90 scheduled `freeze-integrity` runs:
@@ -537,7 +559,7 @@ largest 9.79 h (`33212867178`), then 9.59 and 9.15 (`41523134721`), then 8.70, 8
 (`37365254988`) and 7.24. Since 08-29 the range is 2.28–9.15 h, n=69. Issues #56, #71, #72 and #73
 are as described. #73 came from run `39810193934`, and attempt 4 of `39631525799` started 10-23
 04:58:15Z. PRs #63–#70, #75 and #77 are all merge commits. `#62` = `fccfd50` at 01:56:51Z. The
-2027 drawer items 33, 38 and 39 say what G4.5 says. The memory directory holds 13 files.
+2027 drawer items 33, 38 and 39 say what G4.5 says. The memory directory held 13 files when checked (14 after generation 5 added one).
 `make resolve-locators` at `8b7af00` reported 113 locators, 37 failed and 3 to check by eye. The
 tally matches.
 
@@ -546,7 +568,7 @@ review table names `9e5e069`. And its "Merge the batch first (by 11-29)" was ove
 merged 11-05. Both are stale history, not wrong instructions. This audit edits only the section it
 audits.
 
-**`make resolve-locators` at this audit's head:** 153 locators, 51 failed, 5 to check by eye (152 before the review fixes; dating the D47 cite added one). Every
+**`make resolve-locators` at this audit's head:** 162 locators, 51 failed, 5 to check by eye. It was 152 at the first review, then 153 after dating the D47 cite, then 162 after the confirm-back fixes (G5.6, the dated capture run and the ledger entry). Every
 new failure falls into a class G4.6 already names: #76's branch SHAs, the three permanent SHAs, the
 expected-absent files, and the memory filenames. Most of them are this section citing those same
 locators again. None fails for being wrong.
