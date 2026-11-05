@@ -78,11 +78,12 @@ claim, no overwrite, claim blob unchanged, a fresh `snapshot:` commit at `8f7a5f
 > 2026-08-29 and the season's third largest** — not the season maximum, which the table's second
 > column already gave correctly as 9.8 h (that is 9.79 rounded: the 08-28 run).
 >
-> *Two drafts of this note were wrong before this one.* The first said the band was "1.5–8 h". The
-> second called 9.15 h the season maximum while the table two lines above it said 9.8 h. The run id,
-> date and figure in that second draft did come from a query — what was never done was **ranking all
-> the runs**, which is the step that shows 9.15 h third. Both drafts were caught by this project's
-> own reviewer: twice on one paragraph.
+> *Three drafts of this note were wrong before this one.* The first said the band was "1.5–8 h". The
+> second called 9.15 h the season maximum while the table two lines above it said 9.8 h. The third
+> fixed the ranking and left those same cells arguing with the paragraph beside them, which is the
+> defect the second one had. The run id, date and figure in the second draft did come from a query —
+> what was never done was **ranking all the runs**, which is the step that shows 9.15 h third. All
+> three were caught by this project's own reviewer, on one paragraph.
 >
 > **Capture's delay is not measurable from `gh run list`, and the 09-13 figures for it are the
 > pairing rule's output rather than the scheduler's behaviour.** Capture runs carry no
@@ -90,9 +91,17 @@ claim, no overwrite, claim blob unchanged, a fresh `snapshot:` commit at `8f7a5f
 > capture's slots can legitimately sit **30 minutes apart** — D44 pins exactly that as the minimum
 > gap between two slots on a day, and two Saturday pairs are at it (`50 12` / `20 13`, and `20 16` /
 > `50 16` UTC). A wave that fires 31 minutes late therefore pairs to the *next* slot and reports a
-> near-zero delay: over the season the rule returns a capture minimum of **0.00 h** (2026-10-10) and
-> a maximum of only 8.08 h. Capture is excluded from the re-measurement for that reason, and the
-> **all four** row of the 09-13 table inherits the same defect through its lower bound.
+> near-zero delay: over the season the rule returns a capture minimum of **0.00 h** and a maximum of
+> only 8.08 h. **2026-10-10 shows the shape plainly.** Seven capture runs that Saturday, against eight
+> slots: `17:29:07Z` and `17:54:16Z` both pair to the same `50 16` slot, while `50 9`, `50 12` and
+> `20 16` pair to nothing at all — so at least one of those two runs is attributed to a slot that is
+> not its own. The 0.00 h itself is run `38083338656` at `20:20:08Z`, eight seconds after the `20 20`
+> slot, which may be a punctual run or a late one that happened to land just past a later slot;
+> nothing in the API distinguishes them. **Neither bound is evidence either way** — the error runs in
+> one direction, *understating* lateness, so capture's delays are unverifiable rather than wrong. Capture is therefore excluded from the
+> re-measurement, and the **first** column's **all four** lower bound — 1.6 h, which is capture's — is
+> unverifiable with it. The second column's 0.3 h is untouched by this: that one is
+> freeze-integrity's own 08-25 run at +17 min, as the paragraph after next says.
 >
 > **The "not jitter" claim below therefore holds on three jobs, not four:** since 2026-08-29 no
 > *pairable* run has started within 1.5 h of its slot, the smallest being grade's **1.88 h** on
@@ -428,7 +437,7 @@ named. Run it on anything with citations before it merges, including a document 
 
 | # | Where | Was | Is | Why it was wrong |
 |---|---|---|---|---|
-| **C9** | §1, cadence table | "predict +40–60 min (09:58, 13:20)", "capture +20–25 min", "grade +15 min", "freeze-integrity +10–25 min", Saturday waves "similar" | measured per-workflow delay over two stated windows, both closing on the measurement date: **1.6–6.4 h** across all four over 08-29 → 09-13, **0.3–9.8 h** over 08-25 → 09-13 (the all-four lower bound is capture's and is an artifact of the pairing rule — §1's note) | Off by roughly an order of magnitude, and internally inconsistent: the predict row gave `13:20` as an example of "+40–60 min", when 13:20 ET is 4 h 3 min after a 09:17 slot (that example is the 2026-09-01 predict run, which fired at 17:20Z). No derivation for the original figures is recorded, so they are treated as unmeasured. |
+| **C9** | §1, cadence table | "predict +40–60 min (09:58, 13:20)", "capture +20–25 min", "grade +15 min", "freeze-integrity +10–25 min", Saturday waves "similar" | measured per-workflow delay over two stated windows, both closing on the measurement date: **1.6–6.4 h** across all four over 08-29 → 09-13, **0.3–9.8 h** over 08-25 → 09-13 (the first column's all-four lower bound is capture's, and a capture run cannot be attributed to a slot at all — §1's note; the second column's 0.3 h is freeze-integrity's own and stands) | Off by roughly an order of magnitude, and internally inconsistent: the predict row gave `13:20` as an example of "+40–60 min", when 13:20 ET is 4 h 3 min after a 09:17 slot (that example is the 2026-09-01 predict run, which fired at 17:20Z). No derivation for the original figures is recorded, so they are treated as unmeasured. |
 
 **Not an error — an orientation update, per D42 (a)1.** §3's "Dec 6–7 cron shutdown — unruled" was
 true when written and became false on 2026-09-04, when the owner ruled the shutdown. It now records

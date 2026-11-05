@@ -1680,10 +1680,15 @@ carried, is 9.79 rounded.
 **Capture is excluded, and its 09-13 figures are an artifact.** Its runs carry no
 `github.event.schedule`, so pairing is by nearest preceding slot, and D44 pins 30 minutes as the minimum gap
 between two slots on a day, which two Saturday pairs sit at (`50 12` / `20 13`, `20 16` / `50 16`
-UTC). A wave 31 minutes late pairs to the next slot and reports a near-zero delay — the rule returns a season minimum of 0.00 h (2026-10-10). The
-`all four` row's lower bound inherits that defect, so the "no run within 1.5 h of its slot since
-08-29" claim is established for predict, grade and freeze-integrity only (smallest: grade 1.88 h,
-09-06).
+UTC). A wave 31 minutes late pairs to the next slot and reports a near-zero delay — the rule returns a season minimum of 0.00 h. 2026-10-10 is the
+clearest case: seven capture runs against eight slots, with `17:29:07Z` and `17:54:16Z` both paired
+to the same `50 16` slot while `50 9`, `50 12` and `20 16` pair to nothing, so at least one run is
+attributed to a slot that is not its own. The error runs one way, **understating** lateness, so
+capture's figures are unverifiable rather than wrong, and the 0.00 h (run `38083338656` at
+`20:20:08Z`, eight seconds past `20 20`) is not evidence of punctuality either. The **first**
+column's `all four` lower bound, 1.6 h, is capture's and goes with it; the second column's 0.3 h is
+freeze-integrity's own 08-25 run and stands. So the "no run within 1.5 h of its slot since 08-29"
+claim is established for predict, grade and freeze-integrity only (smallest: grade 1.88 h, 09-06).
 
 *(Three drafts of this item were needed. The first said the band was "1.5–8 h"; the second called
 9.15 h the season maximum while `HANDOFF_SEASON`'s own table two lines above said 9.8 h; the third
