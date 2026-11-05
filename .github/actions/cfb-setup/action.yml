@@ -55,6 +55,12 @@ outputs:
     value: ${{ steps.resolve.outputs.claim_window_open }}
   grade_weeks:
     value: ${{ steps.resolve.outputs.grade_weeks }}
+  # Declared, not merely emitted. An undeclared composite output resolves to the EMPTY STRING with
+  # no warning, which here would make the catch-up loop iterate nothing and silently stop grading —
+  # D39's defect in a new place, and the reason that entry's test asserts every
+  # `steps.setup.outputs.*` reference across all workflows is declared in this block.
+  catchup_weeks:
+    value: ${{ steps.resolve.outputs.catchup_weeks }}
   mode:
     value: ${{ steps.mode.outputs.mode }}
   commit_suffix:

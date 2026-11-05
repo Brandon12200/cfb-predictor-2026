@@ -96,9 +96,20 @@ jobs:
           CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
         run: |
           set -euo pipefail
-          # grade_weeks is pre-filtered to weeks that HAVE a claim: grade.py exits 1 on a week with
-          # none, and that is not a failure. Filtering here means any non-zero exit is genuine.
-          for W in ${{ steps.setup.outputs.grade_weeks }}; do
+          # `catchup_weeks`, not `grade_weeks` (D48). Both are pre-filtered to weeks that HAVE a
+          # claim — grade.py exits 1 on a week with none, and that is not a failure — but this loop
+          # makes one CFBD call per week it iterates, and `grade_weeks` is every claimed week: seven
+          # calls in front of the week-8 claim, fourteen by week 15, each able to fail the job that
+          # writes the season's pre-registration artifact. #71 is that failure having happened.
+          # `catchup_weeks` drops the weeks whose graded file already covers every claimed game,
+          # which is exactly the weeks with no late finisher left to find. Measured 2026-11-05:
+          # grade_weeks = 1..10, catchup_weeks = 10.
+          #
+          # Unchanged: grading still precedes the claim, and still fails the whole job closed on a
+          # CLV sign disagreement (D43). `weekly-grade` keeps using the full `grade_weeks` for its
+          # render loop, because re-rendering an unchanged week is a no-op and that is what makes a
+          # stale report self-healing (#58).
+          for W in ${{ steps.setup.outputs.catchup_weeks }}; do
             echo "::group::catch-up grade week $W"
             python scripts/fetch_results.py --week "$W" --year "${{ steps.setup.outputs.year }}" \
               2>&1 | tee -a "$RUNNER_TEMP/pipeline.log" || \

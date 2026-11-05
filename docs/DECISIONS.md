@@ -1490,3 +1490,229 @@ it could have had — written once, from the committed artifacts, after the seas
 **Scope.** `scripts/` and `docs/analysis/` only. No `factors/`, no `engine/`, no calibration
 constant, no append-only or byte-immutable artifact path. The freeze is untouched: this is
 measurement of the record, after the season it describes has ended.
+
+---
+
+## D48 — The November batch: the season stop, the probe's own alarm, one CFBD retry, and the catch-up narrowing — **RATIFIED (owner, 2026-11-05)**
+**Date:** 2026-11-05. Two PRs: the **stop PR**, prepared and reviewed now and **merged by the owner
+after the 2026-12-13 grade lands and before Tue 2026-12-15 09:00 ET**; and the **batch PR** (items
+2–5), on `main` by **Sun 2026-11-29**. Freeze zero-diff throughout; no artifact path is written by
+either.
+
+### (1) The season stop — D42 (b) extended to all four workflows
+
+**This section describes the held stop PR, in the present tense of the state it creates.** At
+the time of writing all four workflows still carry their crons and the cadence is still running;
+nothing in §(1) is true of `main` until the owner merges that PR after the 2026-12-13 grade.
+
+**The mechanism is the removal of the trigger.** Every `schedule:` block is deleted from
+`weekly-predict.yml`, `daily-capture.yml`, `weekly-grade.yml` and `freeze-integrity.yml`.
+`workflow_dispatch` is intact on all four, so each job is still runnable by hand — which is how
+every failed run this season was recovered.
+
+**No date-conditioned logic, anywhere.** A cron guarded by a date is still a cron that fires, and
+still a thing that can be wrong about what day it is; the two most expensive defects of this season
+(D38's early claim, D39's inverted gate) were both a condition that was true for the wrong reason.
+Nothing new executes unattended as a result of this change, because the change adds no executable
+logic at all.
+
+**`season.json`'s `pipeline.schedule_et` is retained**, deliberately, as the record of the cadence
+that ran. It is still shape-checked by `tests/test_season_pipeline_config.py` and still read by the
+timing guard to name a slot. So the two anti-drift guards **invert** rather than disappear: no
+workflow may carry a cron, and **any cron that somehow exists must still match `season.json`** —
+which is the rule a 2027 re-enable needs, kept in the form that survives the stop
+(`tests/test_workflow_schedules.py`, `scripts/verify_phase_5.py`). `verify_phase_5`'s Tue–Sat cadence
+check now reads `season.json` for the same reason: the claim it tests is about the *ratified
+cadence*, and asserting it against a file that no longer schedules anything would only report that
+the stop happened.
+
+#### The recorded fallback, measured before the PR was written
+
+Measured from the committed calendar and code, not reasoned about — what happens if the merge is
+missed:
+
+| date | `pipeline_week` | `claim_window_open(15)` |
+|---|---:|---|
+| Sun 2026-12-13 | 15 | True |
+| Mon 2026-12-14 | 15 | True |
+| Tue 2026-12-15 | 15 | True |
+| Sun 2026-12-20 | 15 | True |
+| Tue 2027-01-05 | 15 | True |
+
+`pipeline_week` **clamps** to the last week once the final window closes, and `claim_window_open`
+gates only the **lead** edge (`start - today <= CLAIM_LEAD_DAYS`), so with week 15 starting
+2026-12-07 it never closes behind the week. Neither is a defect; together they are why the stop had
+to be the removal of the trigger rather than anything the pipeline could decide for itself.
+
+**What each workflow would then do, per the owner's question about the claim:**
+
+- **`weekly-predict`** would catch-up-grade, rebuild week 15's snapshot and commit it, and then
+  **skip the claim**: `prediction_exists` is `true`, so the Build-predictions step never runs. **If
+  it were forced**, `write_predictions` refuses with **`FileExistsError`** — D22 is checked *first*
+  in that function, before the window check, because "this week is already pre-registered" is the
+  answer the caller needs. `scripts/build_predictions.py` maps it to **exit 1**. So the weld holds
+  and the failure is loud; pinned by
+  `tests/test_pipeline_cycle.py::test_the_writer_refuses_to_overwrite_an_existing_claim`.
+- **`daily-capture`** would spend an Odds credit per run on a slate whose games the books have
+  de-listed (the mechanism #53 recorded), appending nothing.
+- **`weekly-grade`** would re-grade week 15 idempotently and re-render byte-identical reports,
+  committing nothing.
+- **`freeze-integrity`** would keep proving the freeze daily and keep re-checking week 15's claim
+  forever (`2027_NOTES` §8 item 3).
+
+**No artifact is at risk in any of it** — the claim is welded, outcomes are append-only and
+idempotent, renderings are regenerable. **The cost of a missed merge is Odds credits, CI minutes and
+alarm surface, not correctness.** That is why 2026-12-15 09:00 ET is a deadline and not an emergency,
+and it is recorded here so nobody has to re-derive it under time pressure. The two clamp facts are pinned by a test that lands
+**with the stop PR** (`tests/test_pipeline_week.py`, the post-season clamp case) — named rather than
+cited as a symbol, because citing a symbol that does not exist on `main` yet is a dangling locator,
+and `make resolve-locators` fails on it.
+
+### (2) A CFBD probe outage is not a freeze failure
+
+`freeze-integrity`'s probe-error path gets its **own reporter call**: `kind: probe`, its own label
+and dedupe bucket, and the title **"CFBD probe unreachable — sp_watch could not observe
+SP+/returning production"**. The job still goes **red** on a probe error — an unobservable upstream
+is worth knowing about — and exits 0 and 2 are unchanged, so an arrival still opens its
+`kind: transition` issue and still leaves the job green.
+
+**The defect, demonstrated 2026-10-21/23 — corrected here against the issue and run history,
+because the first draft of this entry got it wrong.** What is demonstrated, three times (#56, #72,
+#73), is the **wrong title and email**: a probe outage reddens this job and the only reporter was the
+generic one, so the owner was told **"pipeline: freeze failure"** about runs in which every freeze
+check passed and the fingerprint matched. #73's own body carries `ALL PHASE 3 CHECKS PASSED` above
+`CFBD request failed: GET /ratings/sp … Read timed out`.
+
+**What is also demonstrated is that the clear is label-based, not run-based.** `clear-failure` closes
+whatever sits in `pipeline-failure` + `stage:freeze`, regardless of which run opened it. On
+2026-10-23 04:58 the owner ran **attempt 4 of the 10-21 run** (`39631525799`), and its clear closed
+**#73** — an issue opened the previous day at 16:02 by a *different* run (`39810193934`). Both
+comments cite run `39631525799`, a day apart, which is how the overlap is visible at all.
+
+**What has NOT happened, and the first draft claimed had:** a *real* freeze alarm cleared by a probe
+recovery. Both #72 and #73 were themselves probe outages, so what got cleared was a mislabelled probe
+issue, not the alarm that means the frozen model moved. **That direction is latent, not
+demonstrated** — and it is reachable precisely because the bucket is shared, which is why this ruling
+stands on its own merits rather than on an incident that did not occur. The correction is recorded
+rather than quietly fixed: a wrong attribution in the authoritative record, replicated into a code
+comment and a test docstring, is exactly what D42 (d) exists to catch, and here the project's own
+review caught it.
+
+**The pattern already existed one step away.** The SP+ *arrival* path has carried its own kind and
+title since D33, with a comment explaining that sharing `pipeline-failure` once let an open "job
+failed" issue swallow an arrival. This is that ruling applied to the probe *error*.
+
+Both reporters are now gated so **one red run files exactly one issue**, and `clear-failure` runs
+once per kind — separate buckets must mean separate clears, or a `pipeline-probe` issue stays open
+after CFBD recovers and the label stops meaning "a live problem". Conditions are pinned as whole
+strings (`tests/test_probe_kind.py`), the D46 way, because every way they go wrong is a
+two-character edit.
+
+### (3) One CFBD retry, on transport errors and 5xx only
+
+**Four** scheduled runs died on a transient CFBD fault this season, each fixed by the owner
+re-dispatching the identical job: **#56** (09-05, `sp_watch` read timeout), **#71** (10-20, the
+catch-up grade's `fetch_results` read timeout — the only one of the four that blocked a claim),
+**#72** (10-21, `sp_watch` Cloudflare 502) and **#73** (10-22, `sp_watch` read timeout). Three of
+the four are the probe; one is the predict path. The drawer's third-occurrence condition was met at
+#72 and the ruling was made on 11-05; #73 is counted here because an entry that undercounts its own
+evidence invites someone to re-derive it. *(The first draft said "three … (#56, #71, #72)", mixing a
+predict failure into a probe sentence and omitting #73.)*
+
+**Measured first:** the client's timeout is `DEFAULT_TIMEOUT = 30` seconds and every method funnels
+through one `_get`, which raised `CFBDError` on a `requests.RequestException` and on any non-200.
+The retry therefore goes **in `_get`**, which is what makes it cover the probe, the catch-up grade
+and the predict alike rather than whichever caller someone remembered — two of the three failures
+were the probe and one blocked a week's claim.
+
+**One** retry, 2 s backoff, and the boundaries matter: a `requests.RequestException` or a status
+**≥ 500** is retried; **every 4xx is answered, not faulty**, and repeating it burns a call against a
+5,000/month key shared with the basketball API (D5); a **200 whose body will not parse** is a
+different fault from an unreachable server and is raised immediately. Each retry logs at WARNING, so
+a run that *succeeds* on the second attempt still says that the first one failed — a silent rescue
+would hide a degrading upstream until it stopped being rescuable.
+
+`data/clients/` is pipeline code, not a freeze path. The call counts are asserted as literals, so
+raising `RETRY_ATTEMPTS` fails the tests and has to be deliberate.
+
+### (4) The catch-up loop stops visiting finished weeks
+
+`gradable_weeks` is every week with a claim, and the Tuesday catch-up loop calls CFBD **once per
+week it iterates**: seven calls in front of the week-8 claim on 2026-10-20, fourteen by week 15, each
+able to fail the job that writes the season's pre-registration artifact. **#71 is that having
+happened.**
+
+New `weeks_needing_grade` keeps only the weeks whose graded file does **not** yet cover every claimed
+game — exactly the weeks that could still have a late finisher. Measured on 2026-11-05:
+`grade_weeks = 1 2 3 4 5 6 7 8 9 10`, **`catchup_weeks = 10`** — ten CFBD calls become one.
+
+**`gradable_weeks` is deliberately unchanged**, and this is the trap worth recording: `weekly-grade`
+re-renders *every* week in that set (#58), which is what makes a report whose data moved beneath it
+self-healing. Narrowing the shared function would have silently retired that, so the catch-up gets
+its own output, `catchup_weeks`, **declared** in `cfb-setup`'s `outputs:` block — an undeclared
+composite output resolves to the empty string and would have made the loop silently grade nothing,
+which is D39 exactly.
+
+**Unchanged by design:** grading still precedes the claim, and still fails the whole job closed on a
+CLV sign disagreement (D43). Only the set of weeks shrinks. A postponed game keeps its week in the
+set indefinitely, which is correct — that is the definition of a late finisher still to come.
+
+### (5) Docs
+
+`HANDOFF_SEASON` §1's scheduler-delay table **keeps its cells and gains a window in each column
+header** — `Delay, 08-29 → 09-13` and `Delay, 08-25 → 09-13`. It was measured on 2026-09-13 and
+every figure in it is correct for that window; what was wrong was reading it as current. A
+re-measurement through 2026-11-05 is added beside it instead of editing the cells, covering the three
+jobs whose runs can be paired to a slot:
+
+| Job | Delay since 08-29, re-measured 11-05 | Whole season |
+|---|---|---|
+| predict | 3.99–6.85 h (n=10) | 0.70–6.85 h (n=13) |
+| grade | 1.88–4.07 h (n=10) | 0.25–4.07 h (n=13) |
+| freeze-integrity | 2.28–9.15 h (n=69) | 0.17–9.79 h (n=90) |
+
+From all 90 scheduled `freeze-integrity` runs: **9.79 h** (`33212867178`, 08-28), **9.59**
+(`33117515178`, 08-27), **9.15** (`41523134721`, 11-02), **8.70** (`38304045494`, 10-12), **8.01**
+(`37365254988`, 10-05), **7.24** (`42089182312`, 11-05). So 9.15 h is the largest **since
+2026-08-29** and the season's third largest; 9.8 h, the figure the table's second column already
+carried, is 9.79 rounded.
+
+**Capture is excluded, and its 09-13 figures are an artifact.** Its runs carry no
+`github.event.schedule`, so pairing is by nearest preceding slot, and D44 pins 30 minutes as the minimum gap
+between two slots on a day, which two Saturday pairs sit at (`50 12` / `20 13`, `20 16` / `50 16`
+UTC). A wave 31 minutes late pairs to the next slot and reports a near-zero delay — the rule returns a season minimum of 0.00 h. 2026-10-10 is the
+clearest case: seven capture runs against eight slots, with `17:29:07Z` and `17:54:16Z` both paired
+to the same `50 16` slot while `50 9`, `50 12` and `20 16` pair to nothing, so at least one run is
+attributed to a slot that is not its own. The error runs one way, **understating** lateness, so
+capture's figures are unverifiable rather than wrong, and the 0.00 h (run `38083338656` at
+`20:20:08Z`, eight seconds past `20 20`) is not evidence of punctuality either. The **first**
+column's `all four` lower bound, 1.6 h, is capture's and goes with it; the second column's 0.3 h is
+freeze-integrity's own 08-25 run and stands. So the "no run within 1.5 h of its slot since 08-29"
+claim is established for predict, grade and freeze-integrity only (smallest: grade 1.88 h, 09-06).
+
+*(Three drafts of this item were needed. The first said the band was "1.5–8 h"; the second called
+9.15 h the season maximum while `HANDOFF_SEASON`'s own table two lines above said 9.8 h; the third
+corrected the ranking but left those table cells contradicting the note beside them. The second
+draft's run id and figure did come from a query — the step never done was **ranking all the runs**.
+All three were caught by this project's own reviewer, on one paragraph.)*
+
+The 8.01 h run is still the one worth knowing about: its **attempt 1** failed with the job
+**cancelled before its first step** (runner empty, zero steps, 15 min queued), and its attempt 2 —
+the owner's re-run — succeeded.
+
+*A trap worth recording, since an independent review of this PR fell into it:* `gh run view` and the
+top-level runs API return the **latest attempt**, so `37365254988` reads as `conclusion: success`
+with every step present, and the cancellation is only visible via
+`/actions/runs/37365254988/attempts/1`. #55 recorded this exact rule for the runner-image diagnosis
+and it cost a reviewer a blocker here — **a run with more than one attempt has no single
+conclusion.** The addendum's dated-obligations table
+gains **2026-11-29** (this batch on `main`), **2026-12-13** (final grade; the owner merges the stop
+PR after it), **Tue 2026-12-15 09:00 ET** (the stop deadline) and **2026-12-20** (D47); D45 stays
+undated.
+
+### Explicitly not in this batch
+
+Anything that watches `freeze-integrity` for a **missing** run stays in the drawer — the 2026-10-05
+cancellation showed that a pre-step cancellation is invisible, and `queue: max` (D46) does not cover
+it, but a watcher for it is new unattended machinery and this batch is the opposite of that. **D45**
+stays undated. The **2025 retro's staleness** and `verify-phase-4`'s side-effect write stay open.

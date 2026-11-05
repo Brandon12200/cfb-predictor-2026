@@ -14,12 +14,33 @@ returns all teams) over per-team calls, and cache upstream in the snapshot layer
 
 from __future__ import annotations
 
+import logging
+import time
 from typing import Any
 
 import requests
 
 DEFAULT_BASE_URL = "https://api.collegefootballdata.com"
 DEFAULT_TIMEOUT = 30
+
+# D48 (owner 2026-11-05): ONE retry, on transport errors and 5xx only.
+#
+# Three scheduled runs failed this season on a transient CFBD fault and each was fixed by the owner
+# re-dispatching the identical job: #56 (09-05, `sp_watch` read timeout), #71 (10-20, the catch-up
+# grade's `fetch_results` read timeout) and #72 (10-21, `sp_watch` Cloudflare 502). That met the
+# drawer's third-occurrence condition. The retry lives here, at the single `_get` chokepoint, so it
+# covers the probe, the catch-up grade and the predict alike rather than whichever caller someone
+# remembered — two of the three failures were the probe and one blocked a week's claim.
+#
+# **One** retry, not a policy: a transient 502 or a dropped connection clears on an immediate
+# second attempt, and anything that does not is a real outage the alarm should report rather than
+# something to grind against. A 4xx is NEVER retried — 401, 403 and 404 are answers, not faults,
+# and repeating them wastes a call against a 5,000/month key shared with the basketball API (D5).
+RETRY_ON_5XX_FROM = 500
+RETRY_ATTEMPTS = 2          # the first try plus one retry
+RETRY_BACKOFF_SECONDS = 2.0
+
+_log = logging.getLogger(__name__)
 
 
 class CFBDError(RuntimeError):
@@ -30,11 +51,19 @@ class CFBDv2Client:
     """Thin, raise-on-failure wrapper over the CFBD v2 REST API."""
 
     def __init__(self, api_key: str, base_url: str = DEFAULT_BASE_URL,
-                 timeout: int = DEFAULT_TIMEOUT, session: requests.Session | None = None):
+                 timeout: int = DEFAULT_TIMEOUT, session: requests.Session | None = None,
+                 retry_backoff: float = RETRY_BACKOFF_SECONDS):
         if not api_key:
             raise CFBDError("CFBD API key is required (set CFBD_API_KEY).")
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
+        # Injectable so a test can exercise the retry without sleeping through it. A test that has
+        # to wait two seconds is a test someone eventually marks slow and skips. Validated, because
+        # a negative value would make `time.sleep` raise ValueError from inside `_get` and break
+        # this client's one contract: every failure leaves here as a CFBDError.
+        if retry_backoff < 0:
+            raise CFBDError(f"retry_backoff must be >= 0, got {retry_backoff}")
+        self._retry_backoff = retry_backoff
         self._session = session or requests.Session()
         self._session.headers.update({
             "Authorization": f"Bearer {api_key}",
@@ -44,18 +73,43 @@ class CFBDv2Client:
 
     # -- transport -------------------------------------------------------------
     def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
+        """GET and parse, with one retry on a transient fault (D48).
+
+        Retryable: a `requests.RequestException` (DNS, connection, read timeout) and any status at
+        or above 500. Not retryable, and raised on the first attempt: every 4xx, and a 200 whose
+        body will not parse as JSON — a malformed answer is a different fault from an unreachable
+        server, and repeating the call neither diagnoses nor fixes it.
+        """
         url = f"{self._base_url}{path}"
-        try:
-            resp = self._session.get(url, params=params, timeout=self._timeout)
-        except requests.RequestException as exc:  # network/DNS/timeout
-            raise CFBDError(f"CFBD request failed: GET {path} params={params}: {exc}") from exc
-        if resp.status_code != 200:
-            body = resp.text[:200]
-            raise CFBDError(f"CFBD returned {resp.status_code} for GET {path} params={params}: {body}")
-        try:
-            return resp.json()
-        except ValueError as exc:
-            raise CFBDError(f"CFBD returned non-JSON for GET {path}: {exc}") from exc
+        for attempt in range(1, RETRY_ATTEMPTS + 1):
+            retryable: bool
+            try:
+                resp = self._session.get(url, params=params, timeout=self._timeout)
+            except requests.RequestException as exc:  # network/DNS/timeout
+                error = CFBDError(f"CFBD request failed: GET {path} params={params}: {exc}")
+                error.__cause__ = exc
+                retryable = True
+            else:
+                if resp.status_code == 200:
+                    try:
+                        return resp.json()
+                    except ValueError as exc:
+                        raise CFBDError(f"CFBD returned non-JSON for GET {path}: {exc}") from exc
+                body = resp.text[:200]
+                error = CFBDError(
+                    f"CFBD returned {resp.status_code} for GET {path} params={params}: {body}")
+                retryable = resp.status_code >= RETRY_ON_5XX_FROM
+
+            if retryable and attempt < RETRY_ATTEMPTS:
+                # Logged at WARNING so it reaches the Actions log of a run that then SUCCEEDS:
+                # a retry that rescues a run is the only evidence the outage happened at all, and
+                # a silent rescue would hide a degrading upstream until it stopped being rescuable.
+                _log.warning("CFBD GET %s failed (%s); retrying once in %.1fs",
+                             path, error, self._retry_backoff)
+                time.sleep(self._retry_backoff)
+                continue
+            raise error
+        raise AssertionError("unreachable: the loop either returns or raises")  # pragma: no cover
 
     # -- registry / calendar (league-wide; used by Phase 1a) -------------------
     def get_conferences(self) -> list[dict]:
