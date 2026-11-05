@@ -548,7 +548,7 @@ was success (run `42116445053`). There were 49 `## D` entries, ending at D48. We
 run before the merge was `42089182312`, at 18:57:11Z. As of ~22:20Z no scheduled run had executed
 the D48 code. **That stopped being true at 22:23:49Z:** `daily-capture` run `42121135569` (the
 Thursday `23 21` slot, about 1.0 h late) ran on `8b7af00` and committed `5a2a578`. Capture calls
-the Odds API, not CFBD (`daily-capture.yml` has no CFBD reference, and its log has no retry line),
+the Odds API, not CFBD (`daily-capture.yml` has no CFBD reference, and its log has no `retrying once` line, the CFBD retry's WARNING text),
 so **none of D48's three changes has yet been exercised by a scheduled run.** The first will be
 Friday's `freeze-integrity`. *(This audit's first draft stated the 22:20Z fact undated. The
 confirm-back caught it.)* The probe step names, the issue title and the `kind:
