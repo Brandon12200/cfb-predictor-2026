@@ -8,10 +8,9 @@
 name: Weekly grade (Sun)
 
 on:
-  schedule:
-    # 12:47 ET (16:47 UTC under EDT). The last Saturday 22:30 ET kickoff ends ~02:00 ET and CFBD
-    # finals settle within an hour or two, leaving ~11h of slack.
-    - cron: "47 16 * * 0"
+  # SEASON STOP (D48). The `schedule:` block is deleted — see `weekly-predict.yml` for the full
+  # reasoning. The cadence it ran is retained in `season.json` `pipeline.schedule_et` as the record;
+  # `workflow_dispatch` stays so the job remains runnable by hand.
   workflow_dispatch:
     inputs:
       week:
