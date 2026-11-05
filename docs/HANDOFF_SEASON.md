@@ -101,7 +101,8 @@ claim, no overwrite, claim blob unchanged, a fresh `snapshot:` commit at `8f7a5f
 > one direction, *understating* lateness, so capture's delays are unverifiable rather than wrong. Capture is therefore excluded from the
 > re-measurement, and the **first** column's **all four** lower bound — 1.6 h, which is capture's — is
 > unverifiable with it. The second column's 0.3 h is untouched by this: that one is
-> freeze-integrity's own 08-25 run at +17 min, as the paragraph after next says.
+> freeze-integrity's own 08-25 run at +17 min, restated with the other minima at the end of this
+> note.
 >
 > **The "not jitter" claim below therefore holds on three jobs, not four:** since 2026-08-29 no
 > *pairable* run has started within 1.5 h of its slot, the smallest being grade's **1.88 h** on
