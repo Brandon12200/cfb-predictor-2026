@@ -83,7 +83,7 @@ def _game_ids(path: Path, key: str) -> set[str] | None:
     try:
         rows = json.loads(path.read_text()).get(key) or []
         return {r["game_id"] for r in rows if isinstance(r, dict) and "game_id" in r}
-    except (OSError, ValueError, AttributeError):
+    except (OSError, ValueError, AttributeError, TypeError):
         return None
 
 

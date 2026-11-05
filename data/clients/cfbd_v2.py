@@ -58,7 +58,11 @@ class CFBDv2Client:
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
         # Injectable so a test can exercise the retry without sleeping through it. A test that has
-        # to wait two seconds is a test someone eventually marks slow and skips.
+        # to wait two seconds is a test someone eventually marks slow and skips. Validated, because
+        # a negative value would make `time.sleep` raise ValueError from inside `_get` and break
+        # this client's one contract: every failure leaves here as a CFBDError.
+        if retry_backoff < 0:
+            raise CFBDError(f"retry_backoff must be >= 0, got {retry_backoff}")
         self._retry_backoff = retry_backoff
         self._session = session or requests.Session()
         self._session.headers.update({

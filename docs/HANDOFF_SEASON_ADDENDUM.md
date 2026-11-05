@@ -147,7 +147,7 @@ So a successor reads the calendar rather than reconstructing it:
 
 | when | what |
 |---|---|
-| ~~**2026-11-01**~~ | the EST flip — **passed**, and now moot: D48 removed every cron, so there is no UTC schedule left to land an hour earlier |
+| **2026-11-01 — HAPPENED, and it moved every slot** | the EST flip. The crons are single UTC expressions anchored to EDT, so from this date each fires **an hour earlier in ET**: `43 11 * * *` is now **06:43 ET**, not the 07:43 ET written beside it in `freeze-integrity.yml` and in `HANDOFF_SEASON` §1's cadence table. Those stated ET times are EDT times and are now an hour fast; the cron expressions themselves are correct and unchanged (`season.json` `pipeline.dst_note` is the design note). Live until the stop PR merges |
 | **Sun 2026-11-29** | the **D48 November batch** is on `main` by this date: the probe kind, the CFBD retry, the catch-up narrowing and the docs |
 | **Sun 2026-12-13** | the final regular-season grade (D42 (b)). **The owner merges the season-stop PR after this grade lands** — it is prepared, reviewed and held open, not merged early, because merging it first would stop the grade it is waiting for |
 | **Tue 2026-12-15, 09:00 ET** | the deadline for that merge. Past it the pipeline is still safe — `pipeline_week` clamps to 15, the claim is welded, outcomes are idempotent — but it spends Odds credits and CI minutes on a season that has ended (D48's recorded fallback) |
@@ -156,3 +156,7 @@ So a successor reads the calendar rather than reconstructing it:
 
 What `freeze-integrity` does after 2026-12-13 is **answered by D48**: it stops with the other three.
 Whether anything should watch for a *missing* run of it is in the drawer, not this batch.
+
+**The crons are still running as this is written (2026-11-05).** D48's stop PR is prepared, reviewed
+and held open; nothing in that ruling's §(1) is true of `main` until the owner merges it after the
+12-13 grade.

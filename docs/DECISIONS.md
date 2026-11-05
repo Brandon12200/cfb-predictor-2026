@@ -1501,6 +1501,10 @@ either.
 
 ### (1) The season stop — D42 (b) extended to all four workflows
 
+**This section describes the held stop PR, in the present tense of the state it creates.** At
+the time of writing all four workflows still carry their crons and the cadence is still running;
+nothing in §(1) is true of `main` until the owner merges that PR after the 2026-12-13 grade.
+
 **The mechanism is the removal of the trigger.** Every `schedule:` block is deleted from
 `weekly-predict.yml`, `daily-capture.yml`, `weekly-grade.yml` and `freeze-integrity.yml`.
 `workflow_dispatch` is intact on all four, so each job is still runnable by hand — which is how
@@ -1559,8 +1563,10 @@ to be the removal of the trigger rather than anything the pipeline could decide 
 **No artifact is at risk in any of it** — the claim is welded, outcomes are append-only and
 idempotent, renderings are regenerable. **The cost of a missed merge is Odds credits, CI minutes and
 alarm surface, not correctness.** That is why 2026-12-15 09:00 ET is a deadline and not an emergency,
-and it is recorded here so nobody has to re-derive it under time pressure. The two clamp facts are
-pinned by `tests/test_pipeline_week.py::test_after_the_final_grade_the_week_clamps_and_the_claim_window_stays_open`.
+and it is recorded here so nobody has to re-derive it under time pressure. The two clamp facts are pinned by a test that lands
+**with the stop PR** (`tests/test_pipeline_week.py`, the post-season clamp case) — named rather than
+cited as a symbol, because citing a symbol that does not exist on `main` yet is a dangling locator,
+and `make resolve-locators` fails on it.
 
 ### (2) A CFBD probe outage is not a freeze failure
 
@@ -1570,12 +1576,27 @@ SP+/returning production"**. The job still goes **red** on a probe error — an 
 is worth knowing about — and exits 0 and 2 are unchanged, so an arrival still opens its
 `kind: transition` issue and still leaves the job green.
 
-**The defect, demonstrated 2026-10-21/22.** `sp_watch` hit a Cloudflare 502, the job went red, and
-the only reporter was the generic one — so the owner was emailed **"pipeline: freeze failure"** about
-a run in which every freeze check passed and the fingerprint matched. Worse than the wrong title:
-the issue carried `pipeline-failure` + `stage:freeze`, **the same dedupe bucket a real freeze failure
-uses**, so the next morning's rerun closed **#73** as "recovered" — a probe outage silently clearing
-the one alarm that means the frozen model moved.
+**The defect, demonstrated 2026-10-21/23 — corrected here against the issue and run history,
+because the first draft of this entry got it wrong.** What is demonstrated, three times (#56, #72,
+#73), is the **wrong title and email**: a probe outage reddens this job and the only reporter was the
+generic one, so the owner was told **"pipeline: freeze failure"** about runs in which every freeze
+check passed and the fingerprint matched. #73's own body carries `ALL PHASE 3 CHECKS PASSED` above
+`CFBD request failed: GET /ratings/sp … Read timed out`.
+
+**What is also demonstrated is that the clear is label-based, not run-based.** `clear-failure` closes
+whatever sits in `pipeline-failure` + `stage:freeze`, regardless of which run opened it. On
+2026-10-23 04:58 the owner ran **attempt 4 of the 10-21 run** (`39631525799`), and its clear closed
+**#73** — an issue opened the previous day at 16:02 by a *different* run (`39810193934`). Both
+comments cite run `39631525799`, a day apart, which is how the overlap is visible at all.
+
+**What has NOT happened, and the first draft claimed had:** a *real* freeze alarm cleared by a probe
+recovery. Both #72 and #73 were themselves probe outages, so what got cleared was a mislabelled probe
+issue, not the alarm that means the frozen model moved. **That direction is latent, not
+demonstrated** — and it is reachable precisely because the bucket is shared, which is why this ruling
+stands on its own merits rather than on an incident that did not occur. The correction is recorded
+rather than quietly fixed: a wrong attribution in the authoritative record, replicated into a code
+comment and a test docstring, is exactly what D42 (d) exists to catch, and here the project's own
+review caught it.
 
 **The pattern already existed one step away.** The SP+ *arrival* path has carried its own kind and
 title since D33, with a comment explaining that sharing `pipeline-failure` once let an open "job
@@ -1589,10 +1610,14 @@ two-character edit.
 
 ### (3) One CFBD retry, on transport errors and 5xx only
 
-Three scheduled runs died on a transient CFBD fault this season, each fixed by the owner
+**Four** scheduled runs died on a transient CFBD fault this season, each fixed by the owner
 re-dispatching the identical job: **#56** (09-05, `sp_watch` read timeout), **#71** (10-20, the
-catch-up grade's `fetch_results` read timeout) and **#72** (10-21, `sp_watch` Cloudflare 502). That
-met the drawer's third-occurrence condition.
+catch-up grade's `fetch_results` read timeout — the only one of the four that blocked a claim),
+**#72** (10-21, `sp_watch` Cloudflare 502) and **#73** (10-22, `sp_watch` read timeout). Three of
+the four are the probe; one is the predict path. The drawer's third-occurrence condition was met at
+#72 and the ruling was made on 11-05; #73 is counted here because an entry that undercounts its own
+evidence invites someone to re-derive it. *(The first draft said "three … (#56, #71, #72)", mixing a
+predict failure into a probe sentence and omitting #73.)*
 
 **Measured first:** the client's timeout is `DEFAULT_TIMEOUT = 30` seconds and every method funnels
 through one `_get`, which raised `CFBDError` on a `requests.RequestException` and on any non-200.
@@ -1634,10 +1659,20 @@ set indefinitely, which is correct — that is the definition of a late finisher
 
 ### (5) Docs
 
-`HANDOFF_SEASON` §1's scheduler-delay band is corrected from **1.6–6.4 h** (measured through week 2)
-to **1.5–8 h** across the season, with the 8 h outlier named: `freeze-integrity` run `37365254988`
-on 2026-10-05, cancelled before its first step on GitHub-side runner capacity — a shape that fires no
-`if: failure()` and is visible only in the notification email. The addendum's dated-obligations table
+`HANDOFF_SEASON` §1's scheduler-delay band is corrected from **1.6–6.4 h** (measured through week 2).
+The season maximum is **9.15 h**: `freeze-integrity` run `41523134721`, cron slot 11:43 UTC, created
+2026-11-02T20:52:13Z, which then ran green. The run this project already had a note about,
+`37365254988` on 2026-10-05, is **8.01 h** and third-largest; its **attempt 1** failed with the job
+**cancelled before its first step** (runner empty, zero steps, 15 min queued), and its attempt 2 —
+the owner's re-run — succeeded. Both figures matter and neither replaces the other: 9.15 h is the
+longest wait, 8.01 h is the one that also demonstrated the invisible-cancellation shape.
+
+*A trap worth recording, since an independent review of this PR fell into it:* `gh run view` and the
+top-level runs API return the **latest attempt**, so `37365254988` reads as `conclusion: success`
+with every step present, and the cancellation is only visible via
+`/actions/runs/37365254988/attempts/1`. #55 recorded this exact rule for the runner-image diagnosis
+and it cost a reviewer a blocker here — **a run with more than one attempt has no single
+conclusion.** The addendum's dated-obligations table
 gains **2026-11-29** (this batch on `main`), **2026-12-13** (final grade; the owner merges the stop
 PR after it), **Tue 2026-12-15 09:00 ET** (the stop deadline) and **2026-12-20** (D47); D45 stays
 undated.

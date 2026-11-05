@@ -1,11 +1,14 @@
 """A CFBD probe outage is not a freeze failure (D48 item 2).
 
-**The defect, demonstrated 2026-10-21/22.** `sp_watch` hit a Cloudflare 502, `freeze-integrity`
-went red, and the only reporter was the generic one — so the owner was emailed
-*"pipeline: freeze failure"* about a run in which every freeze check passed and the fingerprint
-matched. The issue carried `pipeline-failure` + `stage:freeze`, the **same dedupe bucket a real
-freeze failure uses**, so the next morning's rerun closed #73 as "recovered": a probe outage
-clearing the alarm that means the frozen model moved.
+**The defect, demonstrated three times** (#56, #72, #73): a CFBD outage reddened
+`freeze-integrity`, the only reporter was the generic one, and the owner was emailed
+*"pipeline: freeze failure"* about runs in which every freeze check passed and the fingerprint
+matched. And because `clear-failure` keys on labels rather than on the run, attempt 4 of the 10-21
+run closed #73 on 10-23 — an issue a different run had opened the day before.
+
+A *real* freeze alarm cleared by a probe recovery has **not** happened; both #72 and #73 were probe
+outages, so what was cleared was a mislabelled probe issue. That direction is latent and reachable
+only while the bucket is shared (D48 §(2) records this correction to an earlier draft).
 
 Conditions are asserted as **whole strings**, the D46 way. Each of these is a live `if:` on the job
 that proves the freeze daily, and the ways they go wrong are all two-character edits: a `&&` that
@@ -27,6 +30,23 @@ PROBE_ERRORED = ("steps.spwatch.outputs.rc != '' && steps.spwatch.outputs.rc != 
                  "&& steps.spwatch.outputs.rc != '2'")
 PROBE_DID_NOT_ERROR = ("steps.spwatch.outputs.rc == '' || steps.spwatch.outputs.rc == '0' "
                        "|| steps.spwatch.outputs.rc == '2'")
+TRIPWIRE_ERRORED = ("steps.tripwire.outputs.rc != '' && steps.tripwire.outputs.rc != '0' "
+                    "&& steps.tripwire.outputs.rc != '2' && steps.tripwire.outputs.rc != '3'")
+GENERIC_GATE = f"if: failure() && (({PROBE_DID_NOT_ERROR}) || ({TRIPWIRE_ERRORED}))"
+
+
+def _rc_values():
+    """Every value each output can take: empty (step skipped), its designed codes, an error."""
+    return [("", ""), ("", "0"), ("", "1"), ("0", "0"), ("0", "2"), ("0", "9"),
+            ("1", "0"), ("1", "3"), ("1", "9"), ("2", "0"), ("7", "0"), ("7", "4")]
+
+
+def _probe_reporter_fires(sp, _tw):
+    return sp not in ("", "0", "2")
+
+
+def _generic_reporter_fires(sp, tw):
+    return sp in ("", "0", "2") or tw not in ("", "0", "2", "3")
 
 
 def _steps() -> list[str]:
@@ -60,6 +80,15 @@ def _condition(step: str) -> str:
     return next(ln for ln in step.splitlines() if ln.strip().startswith("if:")).strip()
 
 
+def _probe_step() -> str:
+    return _step("actions/report-failure", "kind: probe")
+
+
+def _generic_step() -> str:
+    return _step("actions/report-failure", "kind: failure", "stage: freeze",
+                 absent=("steps.tripwire.outputs.week_padded",))
+
+
 def test_the_probe_reporter_exists_with_its_own_kind_and_title():
     step = _step("actions/report-failure", "kind: probe")
     assert "stage: freeze" in step
@@ -71,17 +100,31 @@ def test_the_probe_reporter_exists_with_its_own_kind_and_title():
 def test_the_generic_reporter_cannot_fire_on_a_probe_error():
     """One red run, one issue. With both reporters ungated, a probe outage files the probe issue
     AND the freeze-failure issue, which is the original defect plus noise."""
-    generic = _step("actions/report-failure", "kind: failure", "stage: freeze",
-                    absent=("steps.tripwire",))
-    assert _condition(generic) == f"if: failure() && ({PROBE_DID_NOT_ERROR})", _condition(generic)
+    # Selected by the tripwire reporter's own `week_padded` input, not by the absence of
+    # "steps.tripwire": the generic gate now REFERENCES the tripwire's rc (SF5), so the old
+    # exclusion stopped matching anything the moment that clause was added.
+    assert _condition(_generic_step()) == GENERIC_GATE, _condition(_generic_step())
 
 
-def test_every_red_run_files_exactly_one_freeze_issue():
-    """The property behind the two literals above: the reporters' conditions must partition the
-    probe's exit codes. If they ever drift apart, some failure mode reports twice — or nothing."""
-    for rc in ("", "0", "1", "2", "3", "7"):
-        errored = rc not in ("", "0", "2")
-        assert sum([errored, not errored]) == 1, rc
+def test_no_fault_is_left_without_an_issue():
+    """The property the two literals exist to protect, evaluated rather than restated.
+
+    An earlier version of this test asserted `sum([x, not x]) == 1`, which holds for every bool and
+    never read the workflow — a test that could not fail, in a module about conditions that are two
+    characters from being wrong. This one walks every combination of the two outputs' values and
+    checks the real gate strings, so the hole an independent review found here — a probe error plus
+    a tripwire error filing the probe issue and suppressing the other — fails it.
+    """
+    generic, probe = _condition(_generic_step()), _condition(_probe_step())
+    assert generic == GENERIC_GATE and probe == f"if: failure() && {PROBE_ERRORED}"
+    for sp, tw in _rc_values():
+        fired = [_probe_reporter_fires(sp, tw), _generic_reporter_fires(sp, tw)]
+        assert any(fired), (
+            f"spwatch rc={sp!r}, tripwire rc={tw!r}: a red run would file NO issue")
+        if sp not in ("", "0", "2") and tw in ("", "0", "2", "3"):
+            assert fired == [True, False], "a probe outage alone must not also claim the freeze failed"
+        if sp in ("", "0", "2"):
+            assert fired == [False, True], "a non-probe failure belongs to the generic reporter"
 
 
 def test_the_probe_error_step_ignores_an_empty_rc():

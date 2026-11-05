@@ -59,7 +59,8 @@ jobs:
           make verify-phase-3 2>&1 | tee -a "$RUNNER_TEMP/pipeline.log"
           exit "${PIPESTATUS[0]}"
 
-      # 2 CFBD calls, ZERO Odds credits. Exit 2 = the data arrived.
+      # 2 CFBD calls on the happy path (up to 4 if both retry once, D48), ZERO Odds credits.
+      # Exit 2 = the data arrived.
       - name: SP+ / returning-production watch
         id: spwatch
         env:
@@ -163,13 +164,17 @@ jobs:
 
       # D48 item 2: a probe error gets its OWN kind, label, dedupe bucket and title.
       #
-      # The defect this fixes, demonstrated 2026-10-21/22: `sp_watch` hit a CFBD Cloudflare 502,
-      # this job went red, and the only reporter was the generic one below — so the owner was
-      # emailed "pipeline: freeze failure" about a run in which **every freeze check passed and the
-      # fingerprint matched**. Worse than the wrong title: the issue carried
-      # `pipeline-failure` + `stage:freeze`, the same dedupe bucket a real freeze failure uses, so
-      # the next morning's rerun closed #73 as "recovered" — a probe outage silently clearing the
-      # alarm that means the frozen model moved.
+      # The defect this fixes, demonstrated three times (#56, #72, #73): a CFBD outage reddens this
+      # job, the only reporter was the generic one below, and the owner was emailed "pipeline: freeze
+      # failure" about runs in which EVERY freeze check passed and the fingerprint matched. #73's
+      # body carries `ALL PHASE 3 CHECKS PASSED` directly above the CFBD read timeout.
+      #
+      # The sharper half: `clear-failure` closes whatever sits in `pipeline-failure` + `stage:freeze`
+      # regardless of which run opened it. On 2026-10-23 attempt 4 of the 10-21 run (39631525799)
+      # closed #73 — opened the day before by a different run (39810193934). A real freeze alarm
+      # being cleared by a probe recovery has NOT happened; both were probe outages. That direction
+      # is latent, and it is reachable only because the bucket is shared, which is what this fixes.
+      # (D48 §(2) records the correction: an earlier draft of this comment claimed it had happened.)
       #
       # The pattern is not new: the SP+ ARRIVAL path above already has its own `kind: transition`
       # and title for exactly this reason. This is that ruling applied one step further.
@@ -183,18 +188,30 @@ jobs:
             `scripts/sp_watch.py` could not reach CFBD, so this run could not observe whether SP+ or
             returning production moved. **The freeze itself is not implicated**: every freeze check
             in this run is reported above, and a probe outage says nothing about the frozen model.
-            Three such outages failed scheduled runs this season (#56, #71, #72), which is why the
-            CFBD client now retries once on a transport error or a 5xx (D48) — reaching this issue
-            means both attempts failed. Re-dispatch this workflow once CFBD is reachable; a
-            successful run closes this automatically.
+            Four transient-CFBD faults failed scheduled runs this season (#56, #71, #72, #73) —
+            three of them this probe — which is why the CFBD client now retries once on a transport
+            error or a 5xx (D48). Reaching this issue
+            means both attempts failed — or that the fault was one the retry deliberately does not
+            repeat: a 4xx (a revoked or wrong key answers 401/403, which is not a transient fault)
+            or an error inside `sp_watch` itself, both of which also exit non-zero and land here.
+            **Read the log tail below before assuming CFBD is down.** Re-dispatch this workflow once
+            the cause is cleared; a successful run closes this automatically.
           mode: live
           token: ${{ secrets.GITHUB_TOKEN }}
 
       # Everything else: a failed freeze check, a bad fingerprint, a tripwire error. Gated to
-      # exclude the probe case so one red run never files two issues, and so this title keeps
-      # meaning what it says.
+      # exclude the probe case so a probe outage alone does not also file a freeze-failure issue,
+      # and so this title keeps meaning what it says.
+      #
+      # The second clause is NOT redundant, and leaving it out opened a hole (found by an
+      # independent review of this PR). The tripwire steps carry `!cancelled()`, so they still run
+      # after "Fail on a probe error" has failed the job. With the probe clause alone, CFBD being
+      # down AND `claim_tripwire.py` erroring filed the probe issue and suppressed this one — and
+      # this step's own comment names a tripwire error as something it covers. A missing claim would
+      # have gone unreported behind a CFBD outage. Two independent faults now file two issues, which
+      # is the right answer: they have different remedies.
       - uses: ./.github/actions/report-failure
-        if: failure() && (steps.spwatch.outputs.rc == '' || steps.spwatch.outputs.rc == '0' || steps.spwatch.outputs.rc == '2')
+        if: failure() && ((steps.spwatch.outputs.rc == '' || steps.spwatch.outputs.rc == '0' || steps.spwatch.outputs.rc == '2') || (steps.tripwire.outputs.rc != '' && steps.tripwire.outputs.rc != '0' && steps.tripwire.outputs.rc != '2' && steps.tripwire.outputs.rc != '3'))
         with:
           stage: freeze
           kind: failure
