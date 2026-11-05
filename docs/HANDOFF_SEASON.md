@@ -58,8 +58,9 @@ claim, no overwrite, claim blob unchanged, a fresh `snapshot:` commit at `8f7a5f
 | **all four** | | **1.6–6.4 h** | **0.3–9.8 h** |
 
 > **The table above is the 2026-09-13 measurement, and all three of its column headers now say so**
-> (D48 item 5, corrected 2026-11-05 — after two wrong drafts of this very note, below). No cell in it
-> is stale any more, because no cell claims to be current: the slots themselves moved after 09-13
+> (D48 item 5, corrected 2026-11-05 — the drafts of this note that were wrong are recorded below,
+> and counted in one place only). No cell in it is stale any more, because no cell claims to be
+> current: the slots themselves moved after 09-13
 > too, when D44 widened capture to eight Saturday waves and the 11-01 EST flip pulled every ET
 > label an hour earlier — `season.json` → `pipeline.schedule_et` is the live record of both. The re-measurement through 2026-11-05 is
 > separate, and it excludes capture:
