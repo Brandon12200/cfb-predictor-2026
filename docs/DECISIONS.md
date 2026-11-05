@@ -1659,18 +1659,37 @@ set indefinitely, which is correct — that is the definition of a late finisher
 
 ### (5) Docs
 
-`HANDOFF_SEASON` §1's scheduler-delay band: the **first** column's ceiling moves from **6.4 h**
-(measured through week 2) to **9.15 h** — `freeze-integrity` run `41523134721`, 11:43 UTC slot,
-created 2026-11-02T20:52:13Z, which then ran green. **Only that column was stale.** The table's
-second column already carried **9.8 h**, which is the whole-season maximum, correctly attributed
-below it to the 2026-08-27/28 episode.
+`HANDOFF_SEASON` §1's scheduler-delay table **keeps its cells and gains a window in each column
+header** — `Delay, 08-29 → 09-13` and `Delay, 08-25 → 09-13`. It was measured on 2026-09-13 and
+every figure in it is correct for that window; what was wrong was reading it as current. A
+re-measurement through 2026-11-05 is added beside it instead of editing the cells, covering the three
+jobs whose runs can be paired to a slot:
 
-Re-derived from all 90 scheduled `freeze-integrity` runs: **9.79 h** (`33212867178`, 08-28), **9.59**
+| Job | Delay since 08-29, re-measured 11-05 | Whole season |
+|---|---|---|
+| predict | 3.99–6.85 h (n=10) | 0.70–6.85 h (n=13) |
+| grade | 1.88–4.07 h (n=10) | 0.25–4.07 h (n=13) |
+| freeze-integrity | 2.28–9.15 h (n=69) | 0.17–9.79 h (n=90) |
+
+From all 90 scheduled `freeze-integrity` runs: **9.79 h** (`33212867178`, 08-28), **9.59**
 (`33117515178`, 08-27), **9.15** (`41523134721`, 11-02), **8.70** (`38304045494`, 10-12), **8.01**
-(`37365254988`, 10-05). So 9.15 h is the largest **since 2026-08-29** and the season's third
-largest. *(Two earlier drafts of this item got this wrong: the first said "1.5–8 h", the second
-called 9.15 h the season maximum while `HANDOFF_SEASON`'s own table two lines above said 9.8 h. Both
-were written without querying the runs. The review that caught it is the project's own, twice.)*
+(`37365254988`, 10-05), **7.24** (`42089182312`, 11-05). So 9.15 h is the largest **since
+2026-08-29** and the season's third largest; 9.8 h, the figure the table's second column already
+carried, is 9.79 rounded.
+
+**Capture is excluded, and its 09-13 figures are an artifact.** Its runs carry no
+`github.event.schedule`, so pairing is by nearest preceding slot, and D44 pins 30 minutes as the minimum gap
+between two slots on a day, which two Saturday pairs sit at (`50 12` / `20 13`, `20 16` / `50 16`
+UTC). A wave 31 minutes late pairs to the next slot and reports a near-zero delay — the rule returns a season minimum of 0.00 h (2026-10-10). The
+`all four` row's lower bound inherits that defect, so the "no run within 1.5 h of its slot since
+08-29" claim is established for predict, grade and freeze-integrity only (smallest: grade 1.88 h,
+09-06).
+
+*(Three drafts of this item were needed. The first said the band was "1.5–8 h"; the second called
+9.15 h the season maximum while `HANDOFF_SEASON`'s own table two lines above said 9.8 h; the third
+corrected the ranking but left those table cells contradicting the note beside them. The second
+draft's run id and figure did come from a query — the step never done was **ranking all the runs**.
+All three were caught by this project's own reviewer, on one paragraph.)*
 
 The 8.01 h run is still the one worth knowing about: its **attempt 1** failed with the job
 **cancelled before its first step** (runner empty, zero steps, 15 min queued), and its attempt 2 —
