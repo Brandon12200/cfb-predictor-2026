@@ -1015,6 +1015,17 @@ and the "Not ruled" paragraph above is superseded by rulings 2 and 3.
 because neither contains a bad pointer. That is the half-a-tool limit, measured: re-derive every bare
 assertion separately (D42 (d)).
 
+
+### Appended — who merges (owner, 2026-11-05)
+
+Generation 4 merged its own handoff PR, #77 (`8b7af00`, docs-only, under (a), on a green gate).
+The owner recorded it as the first session-performed merge of the season and ruled:
+
+**Sessions open PRs; the owner merges. D43 is included.** (a) waives **review before merge** for a
+session-boundary handoff. It does not waive **the owner's hand on the merge**. A handoff still
+merges ahead of its review, on (a)'s condition, but the owner performs that merge. #77 is recorded
+as it happened, without relabelling, in `docs/HANDOFF_SEASON_ADDENDUM.md` G4.4.
+
 ---
 
 ## D44 — Capture cadence: two slots per kickoff window plus Tuesday; the timing guard and its escalation; close-age buckets; boundary week 4 — **RATIFIED (owner, 2026-09-15)**

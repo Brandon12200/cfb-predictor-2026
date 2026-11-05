@@ -193,8 +193,13 @@ A figure here that disagrees with the repository means the repository is right.
 - **`code-reviewer`: GO for `9e5e069`**, that exact SHA, quoted in the PR body. No blockers, no
   should-fixes.
 - It carries **four** commits of its own — `5874279`, `88f2a6b`, `3d99b10`, `9e5e069` — over eleven
-  files. GitHub's PR view may still show eleven commits and `mergeable: UNKNOWN`; that is its
-  post-merge recompute lag, and `git log origin/main..9e5e069` is the truth.
+  files. GitHub's PR view shows **eleven commits and 19 files** and will keep showing them: it is
+  not a recompute lag. *(Corrected by the G5 audit.)* The PR's stored `base.sha` is still
+  `d6c5267`, recorded when it opened, and GitHub refreshes that only on a push to the head. By
+  2026-11-05 22:20 UTC `mergeable` had already settled to `MERGEABLE` / `clean`, and
+  `gh api repos/Brandon12200/cfb-predictor-2026/compare/main...9e5e069` gave **ahead 4, behind 3, 11
+  files, merge base `72d1a3d`**. The truth is `git log origin/main..9e5e069` or that compare call.
+  The PR page's counts are not.
 - **It is not a deletions-only PR.** Besides the four `schedule:` blocks it adds
   `scripts/workflow_triggers.py` (a new module, test/verifier-only — its importers are
   `tests/test_workflow_schedules.py` and `scripts/verify_phase_5.py`, plus the `Makefile` path
@@ -216,11 +221,18 @@ A figure here that disagrees with the repository means the repository is right.
    ```
    `72d1a3d` is the reviewed base. **Empty overlap ⇒ the GO stands.** Any overlap voids it and needs
    a fresh `code-reviewer` pass at the head, which in December is under deadline — so run this
-   *before* the grade if you want warning. Baseline run 2026-11-05: `main` had moved in zero files,
-   overlap empty. Expect movement only under `data/` (daily `lines:` commits, the weekly claim and
-   grade), which is disjoint from all eleven files — **but run it; do not reason that it must be
-   fine.** The owner ruled this check and asked for it to be reported.
-4. **Merge with a merge commit.** #75 landed as one, which is why `9e5e069`'s parent is on `main`.
+   *before* the grade if you want warning. Baseline run 2026-11-05 at `f56a243`: `main` had moved
+   in zero files, overlap empty. **Re-run 2026-11-05 at `8b7af00` (G5 audit):** `main` had moved in
+   one file, `docs/HANDOFF_SEASON_ADDENDUM.md` (this section's own merge, #77), and the overlap was
+   empty, so the GO stands. Expect movement under `data/` (daily `lines:` commits, the weekly claim
+   and grade) **and under `docs/HANDOFF_*`** (handoffs and their audits, this one included). Both
+   are disjoint from all eleven files. *(Corrected by the G5 audit: the original said "only under
+   `data/`", and the merge that carried that sentence was itself a counter-example.)* **But run it;
+   do not reason that it must be fine.** The owner ruled this check and asked for it to be reported.
+4. **Merge with a merge commit.** #75 landed as one, which is why the stack's base is on `main`:
+   `72d1a3d` (the parent of #76's first commit `5874279`) is `f56a243`'s second parent.
+   *(Corrected by the G5 audit: the original said "`9e5e069`'s parent". That parent is `3d99b10`,
+   which is on #76's branch, not on `main`.)*
    A squash here is harmless to #76 itself (nothing is stacked on it) but breaks the repo's
    practice; PRs #63–#70 and #75 all landed as merge commits and no squash-merged title appears in
    `main`'s history.
@@ -272,9 +284,13 @@ log, and remember the attempts rule in G4.3.
   retrying once in 2.0s`**. Its presence in a run that then **succeeds** is the only evidence the
   outage happened — that is why it is WARNING and not DEBUG. Two of those lines for one path means
   the retry was spent and the call still failed. 4xx never retries.
-- **Narrowed catch-up.** In `weekly-predict`, step **"Resolve the week"** (`id: resolve`) pipes
-  `scripts/pipeline_week.py` through `tee -a "$GITHUB_OUTPUT"`, so its log shows both
-  **`grade_weeks=…`** and **`catchup_weeks=…`**. The step **"Catch-up grade (Sunday/Monday
+- **Narrowed catch-up.** In `weekly-predict`, the step `id: setup` runs the composite action
+  `.github/actions/cfb-setup`. Inside it, step **"Resolve week"** (`id: resolve`,
+  `.github/actions/cfb-setup/action.yml:127`) pipes `scripts/pipeline_week.py` through
+  `tee -a "$GITHUB_OUTPUT"`, so the setup step's log shows both **`grade_weeks=…`** and
+  **`catchup_weeks=…`**. The workflow reads the result as `steps.setup.outputs.catchup_weeks`.
+  *(Corrected by the G5 audit: the original named the step "Resolve the week" and placed it in
+  `weekly-predict.yml` itself. No step by that name exists.)* The step **"Catch-up grade (Sunday/Monday
   finishers + postponements)"** iterates `catchup_weeks` only. On 2026-11-10 expect `grade_weeks` to list every
   claimed week that is gradable and `catchup_weeks` to be **much shorter**; one CFBD call per week
   iterated is the cost the narrowing removes. Today, on `main`, they are `1 2 3 4 5 6 7 8 9 10` and
@@ -404,6 +420,14 @@ right); and a count of "nine capture runs" on 2026-10-10 when the API gives **se
 Saturday — an eighth at `00:56:34Z` belongs to Friday's `23 21` slot. Both recorded, not quietly
 dropped. **A reviewer's finding is a claim too.**
 
+**Recorded at the owner's instruction by generation 5 (2026-11-05):** generation 4 **merged its own
+handoff PR, #77**, as `8b7af00` at 2026-11-05T22:12:49Z. It was docs-only, under D43 (a), on a green
+gate (every check `SUCCESS`). The owner records it as **the first session-performed merge of the
+season**. The API cannot confirm or refute that: `mergedBy` reads `Brandon12200` on every merge,
+because sessions act through the owner's `gh` credentials. **Owner ruling, 2026-11-05: sessions open
+PRs and the owner merges, D43 included.** D43 waives *review before merge*. It does not waive the
+owner's hand on the merge. This is appended to D43 in `docs/DECISIONS.md`.
+
 ## G4.5 The drawer as it stands
 
 - **Watching `freeze-integrity` for a *missing* run.** The 2026-10-05 cancellation showed a
@@ -469,7 +493,13 @@ re-running the tool tells you.)*
   several times. They are real and the tool's *says* axis matches; they are simply not ancestors of
   `main` while #76 is held open. These resolve themselves on the merge, and **one line of the audit
   is to re-run this and confirm they did** — if they are still unreachable after #76 merges,
-  something went wrong with the merge. Plus the pre-existing stash SHA at `:24`.
+  something went wrong with the merge. Plus the pre-existing stash SHA at `:24`. **Also
+  `66f3313`, the commit cited in G4.3 rule 5**, which this classification left out *(G5 audit)*. It
+  is real, and its message really does have the blanked phrases. But it lives only on
+  `origin/pipeline/season-stop-v2`, an abandoned earlier stack, so **#76's merge will not make it
+  reachable.** The G5 audit below adds a third permanent one, `b2cab2e`, #76's pre-rebuild head.
+  After #76 merges, expect exactly **three** unreachable SHAs: `0bcd378`, `66f3313` and `b2cab2e`.
+  A fourth means something went wrong.
 - **MISSING** — `scripts/workflow_triggers.py`: on #76's branch only, same resolution.
   `scripts/threshold_sweep.py` and `docs/analysis/2026_THRESHOLD_SWEEP.md`: D47's unbuilt
   deliverables, expected absent until 12-20. `docs/proposals/D44_CRON_CADENCE.md` at `:88`:
@@ -479,3 +509,44 @@ re-running the tool tells you.)*
 **No locator in this section fails for being wrong.** That distinction is the reason D43 (b) calls
 the tool half a tool: it cannot tell a deliberate forward reference from a typo, and only the
 re-derivation pass can.
+
+## G5 audit — the post-merge audit of G4.1–G4.6, 2026-11-05 (D43 (a))
+
+Performed by generation 5 against `8b7af00`. Every claim was re-derived from the repository, `gh`,
+or the Actions API. The section's prose was not proofread instead. **Four corrections**, each made
+in place above and marked *(Corrected by the G5 audit)*, plus one omission:
+
+| # | where | what was wrong | what is true |
+|---|---|---|---|
+| G5.1 | G4.1, #76 bullet 3 | eleven commits / `UNKNOWN` described as a recompute lag | `mergeable` has settled to `MERGEABLE`; the 11 commits / 19 files persist because the PR's stored `base.sha` is `d6c5267` |
+| G5.2 | G4.1, merge-day step 3 | "expect movement only under `data/`" | #77 moved `main` in `docs/HANDOFF_SEASON_ADDENDUM.md`. Re-run at `8b7af00`: overlap empty, so the GO stands |
+| G5.3 | G4.1, merge-day step 4 | "`9e5e069`'s parent is on `main`" | `9e5e069`'s parent is `3d99b10` (branch-only). The stack's base `72d1a3d` is `f56a243`'s second parent |
+| G5.4 | G4.2, catch-up bullet | step "Resolve the week" in `weekly-predict.yml` | step "Resolve week", `id: resolve`, inside `.github/actions/cfb-setup`, invoked as `id: setup` |
+| G5.5 | G4.6, locator classification | `66f3313` (G4.3 rule 5) unclassified | permanently unreachable (on `pipeline/season-stop-v2` only). With `b2cab2e` cited below, expect three unreachable SHAs after #76 merges, not one |
+
+**Re-derived and found correct:** `main` head and parents at the time of writing. CI on `f56a243`
+was success (run `42116445053`). There were 49 `## D` entries, ending at D48. Week 10 was claimed as
+`1bacd90`. `pipeline_week` gave `grade_weeks = 1 … 10`, `catchup_weeks = 10`. D47 is at
+`docs/DECISIONS.md:1388`. `WIN_RETURN = 0.909` is right, and so is `ats_result`. The last scheduled
+run before the merge was `42089182312`, at 18:57:11Z, and **still no scheduled run has executed the
+D48 code** (the runs since are CI only). The probe step names, the issue title and the `kind:
+probe` label match `freeze-integrity.yml`. The retry is one retry, and it never fires on a 4xx
+(`data/clients/cfbd_v2.py`). Its WARNING text matches the log format. `tests/test_probe_kind.py`
+has 8 tests. Every delay figure was recomputed from all 90 scheduled `freeze-integrity` runs:
+largest 9.79 h (`33212867178`), then 9.59 and 9.15 (`41523134721`), then 8.70, 8.01
+(`37365254988`) and 7.24. Since 08-29 the range is 2.28–9.15 h, n=69. Issues #56, #71, #72 and #73
+are as described. #73 came from run `39810193934`, and attempt 4 of `39631525799` started 10-23
+04:58:15Z. PRs #63–#70, #75 and #77 are all merge commits. `#62` = `fccfd50` at 01:56:51Z. The
+2027 drawer items 33, 38 and 39 say what G4.5 says. The memory directory holds 13 files.
+`make resolve-locators` at `8b7af00` reported 113 locators, 37 failed and 3 to check by eye. The
+tally matches.
+
+**Not touched:** the PR #76 body. It still says "Head: `b2cab2e`" in its opening line, while its own
+review table names `9e5e069`. And its "Merge the batch first (by 11-29)" was overtaken when #75
+merged 11-05. Both are stale history, not wrong instructions. This audit edits only the section it
+audits.
+
+**`make resolve-locators` at this audit's head:** 152 locators, 51 failed, 5 to check by eye. Every
+new failure falls into a class G4.6 already names: #76's branch SHAs, the three permanent SHAs, the
+expected-absent files, and the memory filenames. Most of them are this section citing those same
+locators again. None fails for being wrong.
