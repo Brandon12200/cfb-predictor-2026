@@ -559,7 +559,7 @@ largest 9.79 h (`33212867178`), then 9.59 and 9.15 (`41523134721`), then 8.70, 8
 (`37365254988`) and 7.24. Since 08-29 the range is 2.28–9.15 h, n=69. Issues #56, #71, #72 and #73
 are as described. #73 came from run `39810193934`, and attempt 4 of `39631525799` started 10-23
 04:58:15Z. PRs #63–#70, #75 and #77 are all merge commits. `#62` = `fccfd50` at 01:56:51Z. The
-2027 drawer items 33, 38 and 39 say what G4.5 says. The memory directory held 13 files when checked (14 after generation 5 added one).
+2027 drawer items 33, 38 and 39 say what G4.5 says. The memory directory held 13 files when checked. Generation 5 has since added its own files, so do not read a live count as a check of G4.6.
 `make resolve-locators` at `8b7af00` reported 113 locators, 37 failed and 3 to check by eye. The
 tally matches.
 
