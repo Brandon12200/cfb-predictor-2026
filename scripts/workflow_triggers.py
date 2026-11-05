@@ -39,8 +39,10 @@ _ON_KEY = re.compile(r'^["\']?on["\']?[ \t]*:(?P<inline>.*)$', re.M)
 #: `cron` is the key under it, checked separately so a malformed block is still caught.
 UNATTENDED_KEYS = ("schedule", "cron")
 
-#: A mapping key inside the `on:` block, with the indentation that says which level it sits at.
-_BLOCK_KEY = re.compile(r"^(?P<indent>[ \t]+)(?P<key>[A-Za-z_][\w-]*)[ \t]*:", re.M)
+#: A mapping key inside the `on:` block. The quotes are optional because `"push":` is the same key
+#: as `push:` — a review found that requiring a bare key let a quoted trigger through the
+#: dispatch-only assertion unseen.
+_BLOCK_KEY = re.compile(r'^[ \t]+["\']?(?P<key>[A-Za-z_][\w.-]*)["\']?[ \t]*:')
 
 
 def norm_cron(cron: str) -> str:
@@ -90,15 +92,28 @@ def on_keys(text: str) -> list[str]:
     that fires a workflow without anybody asking — `push`, `workflow_run` and `repository_dispatch`
     all do — so a guard that names what IS allowed outlives a list of what is not.
 
-    Block style only. A flow-style mapping (`on: {schedule: ...}`) is reported as the single key
-    ``"<flow>"``, so an exact-set assertion fails on it rather than quietly parsing it as nothing;
-    `unattended_triggers` is what reads a cron out of that shape.
+    Every top-level line is accounted for, as a key or as ``"<unknown>"``. Returning only the keys
+    it recognised would mean a shape the parser cannot read — a list item (`- push`), a scalar
+    (`on: push`), a sequence (`on: [push]`) — disappearing from the answer and leaving a
+    dispatch-only assertion satisfied by a file that declares something else entirely.
+
+    Block style only. A flow-style mapping is reported as the single key ``"<flow>"``, so an
+    exact-set assertion fails on it rather than quietly parsing it as nothing; `unattended_triggers`
+    is what reads a cron out of that shape. The test is simply a ``{`` anywhere in the block, which
+    also catches the harmless `workflow_dispatch: {}` — a false positive, and the right side to be
+    wrong on, since it fails closed and says so.
     """
     block = on_block(text)
     if "{" in block:
         return ["<flow>"]
-    matches = list(_BLOCK_KEY.finditer(block))
-    if not matches:
+    lines = [ln for ln in block.splitlines() if ln.strip() and not ln.lstrip().startswith("#")]
+    if not lines:
         return []
-    top = min(len(m.group("indent")) for m in matches)
-    return [m.group("key") for m in matches if len(m.group("indent")) == top]
+    top = min(len(ln) - len(ln.lstrip()) for ln in lines)
+    out: list[str] = []
+    for line in lines:
+        if len(line) - len(line.lstrip()) != top:
+            continue
+        match = _BLOCK_KEY.match(line)
+        out.append(match.group("key") if match else "<unknown>")
+    return out
