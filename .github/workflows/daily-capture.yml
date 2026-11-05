@@ -20,26 +20,9 @@
 name: Daily line capture (Tue–Sat)
 
 on:
-  schedule:
-    - cron: "50 16 * * 2"      # Tue 12:50 ET — guarantee, before 19:00
-    # One line per weekday, never `3,4,5`: the timing guard finds the slot that fired by matching
-    # `github.event.schedule` and walking back to that cron's latest time. With a shared line, a
-    # Wednesday run more than 24 h late would match THURSDAY's slot and report on-time (D44 audit).
-    - cron: "50 16 * * 3"      # Wed 12:50 ET — guarantee, before 19:00
-    - cron: "23 21 * * 3"      # Wed 17:23 ET — best-effort, before 19:00 (serves 19:30+ kickoffs)
-    - cron: "50 16 * * 4"      # Thu 12:50 ET — guarantee, before 19:00
-    - cron: "23 21 * * 4"      # Thu 17:23 ET — best-effort, before 19:00
-    - cron: "50 16 * * 5"      # Fri 12:50 ET — guarantee, before 19:00
-    - cron: "23 21 * * 5"      # Fri 17:23 ET — best-effort, before 19:00
-    - cron: "50 9 * * 6"       # Sat 05:50 ET — guarantee, before 12:00
-    - cron: "50 12 * * 6"      # Sat 08:50 ET — best-effort, before 12:00
-    - cron: "20 13 * * 6"      # Sat 09:20 ET — guarantee, before 15:30
-    - cron: "20 16 * * 6"      # Sat 12:20 ET — best-effort, before 15:30
-    - cron: "50 16 * * 6"      # Sat 12:50 ET — guarantee, before 19:00
-    - cron: "50 19 * * 6"      # Sat 15:50 ET — best-effort, before 19:00
-    - cron: "20 20 * * 6"      # Sat 16:20 ET — guarantee, before 22:30
-    - cron: "20 23 * * 6"      # Sat 19:20 ET — best-effort, before 22:30. Still Saturday in UTC under
-                               # EDT; week resolution uses ET regardless (utils.season_calendar).
+  # SEASON STOP (D48). The `schedule:` block is deleted — see `weekly-predict.yml` for the full
+  # reasoning. The cadence it ran is retained in `season.json` `pipeline.schedule_et` as the record;
+  # `workflow_dispatch` stays so the job remains runnable by hand.
   workflow_dispatch:
     inputs:
       week:

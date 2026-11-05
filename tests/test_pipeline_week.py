@@ -20,6 +20,7 @@ import pytest
 from utils.season_calendar import (
     DEFAULT_PIPELINE_TIMEZONE,
     WeekInferenceError,
+    claim_window_open,
     load_calendar,
     pipeline_timezone,
     pipeline_today,
@@ -64,6 +65,24 @@ def test_resolve_week_still_raises_on_those_dates(day):
 ])
 def test_pipeline_week_rule(day, expected):
     assert pipeline_week(day, CAL) == expected
+
+
+@pytest.mark.parametrize("day", [date(2026, 12, 14), date(2026, 12, 15), date(2026, 12, 20),
+                                 date(2027, 1, 5)])
+def test_after_the_final_grade_the_week_clamps_and_the_claim_window_stays_open(day):
+    """The two facts D48's recorded fallback rests on, pinned so the record stays checkable.
+
+    If the season-stop PR is not merged, every later run still resolves **week 15** (the clamp), and
+    `claim_window_open(15)` is still **True** — the gate tests only the lead edge, `start - today <=
+    CLAIM_LEAD_DAYS`, and week 15 started 2026-12-07, so it never closes behind the week. Neither
+    fact is a defect; together they are why the stop had to be the removal of the trigger rather
+    than anything the pipeline could decide for itself. **What actually protects the claim is the
+    weld** — `write_predictions` refuses an existing claim with `FileExistsError`
+    (`tests/test_pipeline_cycle.py::test_the_writer_refuses_to_overwrite_an_existing_claim`), and
+    the workflow skips the step anyway on `prediction_exists`.
+    """
+    assert pipeline_week(day, CAL) == 15
+    assert claim_window_open(15, day, CAL) is True
 
 
 def test_pipeline_week_never_raises_across_the_whole_season():

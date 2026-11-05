@@ -83,12 +83,20 @@ def _crons(name: str) -> set[str]:
 
 _job_file = {"predict": "weekly-predict.yml", "capture": "daily-capture.yml",
              "grade": "weekly-grade.yml", "freeze_integrity": "freeze-integrity.yml"}
-_mismatched = [
+# Inverted by the season stop (D48, owner 2026-11-05): all four `schedule:` blocks are deleted, so
+# the check is that none has come back, and that a cron which somehow exists still matches
+# season.json — the anti-drift rule kept in the form that survives the stop. `schedule_et` itself is
+# retained as the record of the cadence that ran and is still shape-checked by its own tests.
+_scheduled = [job for job, f in _job_file.items() if _crons(f)]
+_drifted = [
     job for job, f in _job_file.items()
-    if _crons(f) != {" ".join(e["cron_utc"].split()) for e in PIPELINE["schedule_et"][job]}
+    if not _crons(f) <= {" ".join(e["cron_utc"].split()) for e in PIPELINE["schedule_et"][job]}
 ]
-check("workflow crons match season.json schedule_et (duplicated schedules cannot drift)",
-      not _mismatched, "mismatched: " + ", ".join(_mismatched) if _mismatched else "all agree")
+check("no workflow is scheduled after the season stop (D48); season.json keeps the record",
+      not _scheduled and not _drifted,
+      "scheduled again: " + ", ".join(_scheduled) if _scheduled else
+      ("drifted from season.json: " + ", ".join(_drifted) if _drifted else
+       "4 workflows dispatch-only, cadence retained in season.json"))
 
 # Without tags, `git describe --always` returns a bare SHA and every claim of the season would be
 # stamped with a commit hash where the freeze tag belongs.
@@ -116,8 +124,17 @@ check("the predict step is skipped when the byte-immutable claim already exists 
       "steps.setup.outputs.prediction_exists != 'true'" in _predict)
 
 _capture = (WORKFLOWS / "daily-capture.yml").read_text()
-check("line capture is daily Tue–Sat, not Saturday-only (PHASE5_NOTES §1, extended to Tuesday by D44)",
-      all(f'* * {d}"' in _capture for d in ("2", "3", "4", "5")) and _capture.count("* * 6") >= 2)
+# Read from `season.json`'s retained cadence, not from the workflow's crons, since the season stop
+# (D48) deleted those. The claim being checked — PHASE5_NOTES §1's binding "daily, not
+# Saturday-only", extended to Tuesday by D44 — is a statement about the *ratified cadence*, and the
+# cadence is what `schedule_et` keeps. Asserting it against a file that no longer schedules anything
+# would only ever report that the stop happened.
+_capture_days = {d for e in PIPELINE["schedule_et"]["capture"] for d in e["days"]}
+_saturday_slots = sum(1 for e in PIPELINE["schedule_et"]["capture"] if "sat" in e["days"])
+check("the ratified capture cadence is daily Tue–Sat, not Saturday-only (PHASE5_NOTES §1, extended "
+      "to Tuesday by D44) — read from season.json, which retains it after the D48 stop",
+      _capture_days == {"tue", "wed", "thu", "fri", "sat"} and _saturday_slots >= 2,
+      f"days {sorted(_capture_days)}, {_saturday_slots} Saturday slots")
 check("a Tuesday capture that beats the snapshot (exit 4) is a designed state, not a failure (D44)",
       "rc == '4'" in _capture and "rc != '4'" in _capture)
 check("a budget refusal (exit 3) leaves the capture job green and commits nothing",
