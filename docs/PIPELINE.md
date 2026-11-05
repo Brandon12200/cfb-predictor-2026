@@ -25,6 +25,13 @@ conversational context can operate or repair the pipeline.
 > **The times below are the record of what ran**, retained in `season.json`
 > `pipeline.schedule_et` and still shape-checked by `tests/test_season_pipeline_config.py`. Read
 > this table in the past tense.
+>
+> **And not only this table.** Every passage in this document that reasons about *when* something
+> fires describes the season that ran, and is kept because the reasoning is what a 2027 re-enable
+> needs: §1's UTC/EDT rationale and its weekly credit arithmetic, §3's queue-depth and
+> tripwire-cadence arguments, and §7's live-mode rule. Each is marked where it occurs. What is **not** past tense is
+> everything about what the jobs *do* when dispatched — that is unchanged, and `workflow_dispatch`
+> is how they are now run.
 
 | Job | Fired, until the stop PR merged | Does |
 |---|---|---|
@@ -84,10 +91,15 @@ document, carried unverified, and was never checked against the registry (D46 §
 **The slot stays anyway** (owner, 2026-09-28): it costs one credit a week, it gives Thursday's games
 an extra pre-window observation, and removing it is a workflow change nothing forces. Its removal is
 a 2027 drawer item. Cost of the cadence: 16 credits a week (15 captures plus the snapshot), with
-`odds_budget.expected_weekly_credits` moved to match. The boundary is week 4 (D44); the reports mark
+`odds_budget.expected_weekly_credits` moved to match — *a weekly cost only while the crons
+ran; since the stop (D48) a credit is spent only when capture is dispatched, and the budget
+key is retained as the record of the expected spend.* The boundary is week 4 (D44); the reports mark
 it and never blend the season across it.
 
-### Why the crons are UTC and anchored to EDT
+### Why the crons were UTC and anchored to EDT
+
+*Past tense since the stop (D48): there are no crons. Kept because the reasoning is what a 2027
+re-enable needs, and because the EST flip of 2026-11-01 happened while the crons were still live.*
 
 GitHub cron is UTC and has no date ranges. EDT is UTC−4; EST (from **2026-11-01**) is UTC−5, so a
 fixed UTC time lands **one hour earlier in ET** after the flip — always the safe direction for a
@@ -244,9 +256,11 @@ protects only a *running* job. The queue default, `queue: single`, keeps **at mo
 per group and cancels the older one when a newer arrives; `max` holds **up to 100**, processed
 **FIFO** by the time each started waiting, and cancels only overflow past 100. It may not be
 combined with `cancel-in-progress: true`, which is why `false` is stated explicitly beside it. A
-cadence group never approaches 100 — the busiest day, Saturday, schedules **8 captures and nothing
-else** (the single grade cron is Sunday, `47 16 * * 0`, and capture runs Tue–Sat), and with
-`timeout-minutes: 20` against slots at least 30 minutes apart, only about two can be pending at once.
+cadence group never approached 100 — the busiest day, Saturday, scheduled **8 captures and nothing
+else** (the grade cron was Sunday, `47 16 * * 0`, and capture ran Tue–Sat), and with
+`timeout-minutes: 20` against slots at least 30 minutes apart, only about two could be pending at
+once. *Past tense since the stop: `queue: max` is retained and still governs dispatched runs, where
+the depth is whatever is dispatched by hand.*
 
 This closes both shapes recorded below as hazards, because a cancelled run concludes `cancelled`,
 which never fires `if: failure()` (`2027_NOTES` §8 item 15 records the same blind spot for
@@ -256,10 +270,15 @@ timeouts), so **nothing would have reported either one**:
   a third group run, in practice a manual dispatch, is created. Under `single` the week then had no
   claim; under `max` it waits its turn. **The tripwire stays**, because queueing is not the only way
   a claim goes missing — GitHub drops scheduled runs under load, a predict can fail outright, and a
-  claim can land `-dirty`. Detection, in the daily freeze-integrity job
-  (`scripts/claim_tripwire.py`; its own concurrency group, so no cadence run can cancel it). From
-  Wednesday to Saturday, once that week's own predict day has passed, it opens a `stage:predict`
-  issue if the claim is missing, unreadable, or stamped `-dirty`. **The two are not the same alarm.**
+  claim can land `-dirty`. Detection, in the **then-daily** freeze-integrity job
+  (`scripts/claim_tripwire.py`; its own concurrency group, so no cadence run could cancel it). From
+  Wednesday to Saturday, once that week's own predict day had passed, it opened a `stage:predict`
+  issue if the claim was missing, unreadable, or stamped `-dirty`. **Since the stop the tripwire runs
+  only when freeze-integrity is dispatched**, which is the honest statement of it: the detector is
+  intact and its code is unchanged, but nothing fires it on a clock, so after 2026-12-13 a missing
+  claim is not alarmed — there are no more claims to miss. Watching freeze-integrity itself for a run
+  that never happened was considered for this batch and left in the drawer (D48, "explicitly not in
+  this batch"). **The two are not the same alarm.**
   A *missing* claim is recoverable: re-dispatching predict writes it, and that run closes the issue
   (`kind: failure`). A *dirty* one is not: a claim is byte-immutable (D22), so a re-dispatched
   predict skips it and succeeds while nothing is repaired, which is why it gets `kind: dirty-claim`,
@@ -284,9 +303,10 @@ run of it. That is deliberate: it is a daily idempotent check, the next day's ru
 of it, and it writes no artifact — the reasons the cadence group needed `max` do not apply.
 
 **The tripwire checks only the week in play.** `pipeline_week` resolves one week, so once the week
-rolls over, an earlier week's missing claim is never re-examined. Its Wed–Sat checks are four
-independent chances, but if all four are missed — GitHub may **drop** scheduled runs under load, and
-a dispatch cancels a pending freeze-integrity run — that week's absence is never alarmed again.
+rolls over, an earlier week's missing claim is never re-examined. Its Wed–Sat checks were four
+independent chances, but if all four were missed — GitHub may **drop** scheduled runs under load, and
+a dispatch cancels a pending freeze-integrity run — that week's absence was never alarmed again.
+*Since the stop there are no scheduled chances at all; see the paragraph above.*
 Verified by walking dates with a missing week-4 claim: 09-23 and 09-26 check week 4, 09-30 and 10-03
 check week 5.
 
@@ -415,8 +435,14 @@ decision process, and a red required check only pressures someone into making th
 ## 7. Rehearsals
 
 **Mode is derived from the ref, never from a dispatch input** — a mode that cannot be typed cannot be
-mistyped. `main` + `schedule` ⇒ live. `rehearsal/*` ⇒ rehearsal (commits get a ` [rehearsal]` suffix
-and issues a `rehearsal` label). Anything else refuses to run.
+mistyped. **`main` ⇒ live, whatever the event.** `rehearsal/*` ⇒ rehearsal (commits get a
+` [rehearsal]` suffix and issues a `rehearsal` label). Anything else refuses to run.
+
+*This used to read "`main` + `schedule` ⇒ live", which was never what the code did:
+`.github/actions/cfb-setup/action.yml` tests the ref alone and, when the event is not `schedule`,
+merely adds a `::warning::` that the run writes real artifacts. The stop makes the distinction
+visible — a dispatch on `main` is now the only live path there is, so that warning fires on every
+live run from here.*
 
 Rehearsals run on an **unmerged branch** (D32) rather than writing to a separate artifact tree,
 because every script then runs its exact production code path with zero flags — a rehearsal that

@@ -8,15 +8,27 @@ at the wrong time, and nobody notices until a close is captured after kickoff.
 Parsed with regex rather than a YAML library on purpose: this project is deliberately
 minimal-dependency (SPEC §13), and D24 declined a YAML parser for exactly this reason. Every
 assertion here is a line-level fact that regex reads reliably.
+
+The parsing itself lives in `scripts/workflow_triggers.py`, shared with `scripts/verify_phase_5.py`:
+after the season stop both guards depend on *not* finding a cron, which is the one direction where a
+parser bug reports success. Two copies of that parser would have to agree forever; one copy with
+mutation tests (`TestTheTriggerParserSeesEveryCronShape` below) does not.
 """
 
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 
 import pytest
+
+from scripts.workflow_triggers import (
+    norm_cron,
+    on_block,
+    on_keys,
+    quoted_crons,
+    unattended_triggers,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 WORKFLOWS = ROOT / ".github" / "workflows"
@@ -33,38 +45,18 @@ JOB_FILE = {
 CADENCE_FILES = ["weekly-predict.yml", "daily-capture.yml", "weekly-grade.yml"]
 ALL_FILES = [*CADENCE_FILES, "ci.yml", "freeze-integrity.yml"]
 
-_CRON = re.compile(r'^\s*-\s*cron:\s*["\'](?P<cron>[^"\']+)["\']', re.M)
-
-
-def _norm(cron: str) -> str:
-    """Collapse whitespace so `23  0 * * 0` and `23 0 * * 0` compare equal."""
-    return " ".join(cron.split())
-
-
 def crons_in(filename: str) -> set[str]:
-    return {_norm(m.group("cron")) for m in _CRON.finditer((WORKFLOWS / filename).read_text())}
+    """Every QUOTED cron in the file. Quoted only, because that is the form whose value can be
+    compared against `season.json`; `unattended_triggers` is what detects a cron in any form."""
+    return quoted_crons((WORKFLOWS / filename).read_text())
 
 
-def _on_block(filename: str) -> str:
-    """The workflow's `on:` mapping, comments stripped.
-
-    Needed because `_CRON` requires a QUOTED value, and `- cron: 1 2 * * 3` is valid YAML and a live
-    schedule. While the rule was "the crons here equal season.json's", an unquoted cron still failed
-    that comparison, so the quoting was never load-bearing. The season stop changes the expected set
-    to **empty**, and an unquoted cron then satisfies "no quoted crons found" — the hole the stop
-    itself opens (found by an independent review of this PR). Scoped to the `on:` block so
-    `github.event.schedule` plumbing elsewhere in the file is not mistaken for a trigger, and
-    comments are dropped because prose about a setting is not the setting.
-    """
-    text = (WORKFLOWS / filename).read_text()
-    start = text.index("\non:\n") + 1
-    rest = text[start + len("on:\n"):]
-    end = next((m.start() for m in re.finditer(r"^\S", rest, re.M)), len(rest))
-    return "\n".join(ln for ln in rest[:end].splitlines() if not ln.strip().startswith("#"))
+def triggers_in(filename: str) -> list[str]:
+    return unattended_triggers((WORKFLOWS / filename).read_text())
 
 
 def configured(job: str) -> set[str]:
-    return {_norm(e["cron_utc"]) for e in PIPELINE["schedule_et"][job]}
+    return {norm_cron(e["cron_utc"]) for e in PIPELINE["schedule_et"][job]}
 
 
 @pytest.mark.parametrize("filename", ALL_FILES)
@@ -95,11 +87,19 @@ def test_no_workflow_is_scheduled_after_the_season_stop(job, filename):
         f"and see the re-enable test below, which is what keeps the two sources in step."
     )
     # Quoting-independent, because `- cron: 1 2 * * 3` is a live schedule that the quoted-value
-    # regex above does not see. Asserted on the `on:` block so the trigger, not the plumbing, is
-    # what is checked.
-    on_block = _on_block(filename)
-    assert "schedule" not in on_block, f"{filename}: `on:` still declares a schedule:\n{on_block}"
-    assert "cron" not in on_block, f"{filename}: `on:` still names a cron:\n{on_block}"
+    # regex does not see. Asserted on the `on:` block so the trigger, not the plumbing, is what is
+    # checked; the parser's own mutation tests are below.
+    assert triggers_in(filename) == [], (
+        f"{filename}: `on:` still declares "
+        f"{' and '.join(triggers_in(filename))}:\n{on_block((WORKFLOWS / filename).read_text())}"
+    )
+    # And the positive form, which is the stronger one: `workflow_dispatch` is the ONLY trigger
+    # these four may carry. `push`, `workflow_run` and `repository_dispatch` also fire without
+    # anybody asking, and "dispatch-only" is what D48 (1) ratified — not "no cron specifically".
+    assert on_keys((WORKFLOWS / filename).read_text()) == ["workflow_dispatch"], (
+        f"{filename}: `on:` declares "
+        f"{on_keys((WORKFLOWS / filename).read_text())}, not workflow_dispatch alone"
+    )
     assert configured(job), (
         f"season.json pipeline.schedule_et.{job} is empty. The cadence is kept as the record of "
         f"what ran; deleting it loses the only documented statement of the season's schedule."
@@ -230,3 +230,112 @@ def test_the_report_leads_with_the_lean_split_not_the_blend():
     it is pinned here as well as in the renderer's own tests."""
     reports = (ROOT / "analytics" / "reports.py").read_text()
     assert reports.index("_lean_block(ctx)") < reports.index("_kpi_block(ctx)")
+
+
+class TestTheTriggerParserSeesEveryCronShape:
+    """Mutations of the `on:` block, asserted against the shared parser.
+
+    The stop makes "no cron found" the passing answer, so every blind spot in the parser is a way
+    for a live schedule to pass both guards. Two were found by review rather than by tests — an
+    unquoted cron value, and a column-0 comment that ended the block early — and this is where any
+    third one gets added. Each case is a complete `on:` block, so these tests fail if the parser
+    narrows, not merely if the workflows change.
+    """
+
+    DISPATCH = "name: x\n\non:\n  workflow_dispatch:\n\njobs:\n  a:\n    runs-on: ubuntu-latest\n"
+
+    @staticmethod
+    def _wrap(on_body: str) -> str:
+        return f"name: x\n\non:{on_body}\njobs:\n  a:\n    runs-on: ubuntu-latest\n"
+
+    def test_the_dispatch_only_shape_is_the_passing_case(self):
+        assert unattended_triggers(self.DISPATCH) == []
+        assert quoted_crons(self.DISPATCH) == set()
+
+    def test_a_quoted_cron_is_seen(self):
+        text = self._wrap('\n  workflow_dispatch:\n  schedule:\n    - cron: "1 2 * * 3"\n')
+        assert unattended_triggers(text) == ["schedule", "cron"]
+        assert quoted_crons(text) == {"1 2 * * 3"}
+
+    def test_an_unquoted_cron_is_seen(self):
+        """`- cron: 1 2 * * 3` is valid YAML and a live schedule. `crons_in` cannot read its value,
+        which was harmless while the rule was set-equality and is the hole the stop opens."""
+        text = self._wrap("\n  workflow_dispatch:\n  schedule:\n    - cron: 1 2 * * 3\n")
+        assert unattended_triggers(text) == ["schedule", "cron"]
+        assert quoted_crons(text) == set()
+
+    def test_a_column_zero_comment_inside_the_block_does_not_hide_a_cron(self):
+        """The blocker found in review of this PR: ending the block at the first column-0
+        non-whitespace character ended it at `# note` too, and everything below was invisible."""
+        text = self._wrap("\n  workflow_dispatch:\n# note\n  schedule:\n    - cron: 1 2 * * 3\n")
+        assert unattended_triggers(text) == ["schedule", "cron"]
+
+    def test_a_blank_line_inside_the_block_does_not_hide_a_cron(self):
+        text = self._wrap("\n  workflow_dispatch:\n\n  schedule:\n    - cron: 1 2 * * 3\n")
+        assert unattended_triggers(text) == ["schedule", "cron"]
+
+    def test_the_flow_style_block_is_seen(self):
+        text = self._wrap("\n  {schedule: [{cron: 1 2 * * 3}]}\n")
+        assert unattended_triggers(text) == ["schedule", "cron"]
+
+    def test_a_flow_mapping_on_the_on_line_itself_is_seen(self):
+        """`on: {schedule: …}` puts the whole mapping on the key's own line, where a parser that
+        reads only the lines below it sees nothing at all."""
+        text = self._wrap(" {schedule: [{cron: 1 2 * * 3}]}\n")
+        assert unattended_triggers(text) == ["schedule", "cron"]
+
+    def test_the_quoted_on_key_is_found(self):
+        """YAML 1.1 reads a bare `on` as a boolean, so some authors write `"on":`."""
+        text = 'name: x\n\n"on":\n  schedule:\n    - cron: 1 2 * * 3\n\njobs:\n  a:\n'
+        assert unattended_triggers(text) == ["schedule", "cron"]
+
+    def test_trailing_whitespace_after_the_on_key_is_tolerated(self):
+        text = "name: x\n\non: \n  schedule:\n    - cron: 1 2 * * 3\n\njobs:\n  a:\n"
+        assert unattended_triggers(text) == ["schedule", "cron"]
+
+    def test_a_comment_mentioning_a_schedule_is_not_a_schedule(self):
+        """Comment bleed, the other direction. Prose about a setting is not the setting, and this
+        project has lost four defects to the confusion — including comments added by this very PR,
+        which say the word `schedule:` in all four workflow headers."""
+        text = self._wrap("\n  # the schedule: block was removed by the season stop (cron, D48)\n"
+                          "  workflow_dispatch:\n")
+        assert unattended_triggers(text) == []
+
+    def test_an_indented_comment_after_a_trigger_is_not_a_trigger(self):
+        text = self._wrap("\n  workflow_dispatch:\n    # no schedule / cron here any more\n")
+        assert unattended_triggers(text) == []
+
+    def test_event_plumbing_outside_the_on_block_is_not_a_trigger(self):
+        """`github.event.schedule` in a step is how the timing guard names its slot. It is not a
+        trigger, and scoping the read to the `on:` block is what keeps it from reading as one."""
+        text = ("name: x\n\non:\n  workflow_dispatch:\n\njobs:\n  a:\n    runs-on: x\n"
+                "    steps:\n      - run: echo ${{ github.event.schedule }} cron\n")
+        assert unattended_triggers(text) == []
+
+    def test_a_file_with_no_on_key_fails_closed(self):
+        """A workflow whose triggers cannot be located must not read as one with no triggers."""
+        with pytest.raises(ValueError):
+            on_block("name: x\n\njobs:\n  a:\n    runs-on: ubuntu-latest\n")
+
+    def test_the_declared_trigger_names_are_read_at_the_top_level_only(self):
+        """`workflow_dispatch:` with `inputs:` under it declares ONE trigger, not four."""
+        text = self._wrap(
+            "\n  workflow_dispatch:\n    inputs:\n      week:\n        required: false\n"
+        )
+        assert on_keys(text) == ["workflow_dispatch"]
+
+    def test_a_second_trigger_is_reported_even_though_it_is_not_a_cron(self):
+        """`push` fires unattended too, and the stop is "dispatch-only", not "no cron"."""
+        text = self._wrap("\n  workflow_dispatch:\n  push:\n    branches: [main]\n")
+        assert on_keys(text) == ["workflow_dispatch", "push"]
+        assert unattended_triggers(text) == []
+
+    def test_a_flow_style_block_is_not_mistaken_for_no_triggers(self):
+        text = self._wrap(" {schedule: [{cron: 1 2 * * 3}]}\n")
+        assert on_keys(text) == ["<flow>"]
+
+    def test_every_real_workflow_parses(self):
+        """The parser is only load-bearing if it can actually read the files it guards."""
+        for filename in ALL_FILES:
+            on_block((WORKFLOWS / filename).read_text())
+
