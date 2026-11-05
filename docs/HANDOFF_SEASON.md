@@ -57,22 +57,33 @@ claim, no overwrite, claim blob unchanged, a fresh `snapshot:` commit at `8f7a5f
 | freeze-integrity | daily 07:43 | 2.3–6.4 h (n=16) | 0.3–9.8 h (n=20) |
 | **all four** | | **1.6–6.4 h** | **0.3–9.8 h** |
 
-> **Superseded figure, corrected 2026-11-05 (D48 item 5).** The band above was measured on
-> 2026-09-13, through week 2, and is stale in both directions.
+> **One figure above is stale, corrected 2026-11-05 (D48 item 5) — and the correction is narrower
+> than two earlier drafts of this note claimed.** The table's **first** column (since 08-29) is the
+> only part that moved: its **6.4 h** ceiling is now **9.15 h**, `freeze-integrity` run
+> `41523134721`, 11:43 UTC slot, created 2026-11-02T20:52:13Z, which then ran green. The **second**
+> column was already right: **9.8 h** is the whole-season maximum and the paragraph below correctly
+> attributes it to the 2026-08-27/28 episode.
 >
-> **The season maximum is 9.15 h** — `freeze-integrity` run `41523134721`, cron slot 11:43 UTC,
-> created 2026-11-02T20:52:13Z, which then ran green. Second is 8.70 h (`38304045494`, 10-12), third
-> **8.01 h** (`37365254988`, 10-05), and that third one is the interesting one: its **attempt 1**
-> failed with the job **cancelled before its first step** — runner empty, zero steps, 15 min queued
-> on GitHub-side capacity — a shape that fires no `if: failure()` and is visible only in the
-> notification email. Its attempt 2, the owner's re-run, succeeded. **`gh run view` shows the latest
-> attempt**, so that run reads as a clean success unless you query
-> `/actions/runs/37365254988/attempts/1`; #55 recorded this rule and an independent review of the
-> D48 batch fell into it anyway.
+> Re-derived from all 90 scheduled `freeze-integrity` runs against that unchanged slot, largest
+> first: **9.79 h** (`33212867178`, 08-28), **9.59 h** (`33117515178`, 08-27), **9.15 h**
+> (`41523134721`, 11-02), **8.70 h** (`38304045494`, 10-12), **8.01 h** (`37365254988`, 10-05).
+> So 9.15 h is the largest **since 2026-08-29** and third largest of the season — *not* the season
+> maximum, which an earlier draft of this block asserted while the table two lines above it said
+> otherwise.
 >
-> The lower bound is left unrestated: the per-job minima that can be paired unambiguously are grade
-> **1.88 h**, freeze-integrity **2.28 h** and predict **3.99 h**, while capture's 15 slots cannot be
-> paired from `gh run list` at all, because it does not expose `github.event.schedule`.
+> **The 8.01 h run is still the one worth knowing about.** Its **attempt 1** failed with the job
+> **cancelled before its first step** — runner empty, zero steps, 15 min queued on GitHub-side
+> capacity — a shape that fires no `if: failure()` and is visible only in the notification email.
+> Its attempt 2, the owner's re-run, succeeded. **`gh run view` and the top-level runs API return
+> the latest attempt**, so that run reads as a clean success unless you query
+> `/actions/runs/37365254988/attempts/1`. #55 recorded this exact rule for the runner-image
+> diagnosis, and an independent review of the D48 batch hit it anyway: **a run with more than one
+> attempt has no single conclusion.**
+>
+> The lower bound is left as measured on 09-13. The per-job minima that can be paired unambiguously
+> today are grade **1.88 h**, freeze-integrity **0.17 h** and predict **3.99 h**, while capture's 15
+> slots cannot be paired from `gh run list` at all, because it does not expose
+> `github.event.schedule`.
 >
 > **None of this is historical yet.** The crons are still running; D48's stop PR is prepared and
 > **held open** until the owner merges it after the 2026-12-13 grade.
