@@ -11,7 +11,22 @@ conversational context can operate or repair the pipeline.
 
 ## 1. The cadence
 
-| Job | Fires | Does |
+> ### ⚠ The season is stopped. Nothing below fires on a schedule any more.
+>
+> **D48 (owner, 2026-11-05), extending D42 (b) to all four workflows, `freeze-integrity` included.**
+> Every `schedule:` block is **deleted** from `weekly-predict.yml`, `daily-capture.yml`,
+> `weekly-grade.yml` and `freeze-integrity.yml`. `workflow_dispatch` is intact everywhere, so each
+> job is still runnable by hand — which is how every failed run this season was recovered.
+>
+> **No date-conditioned logic was added anywhere**, deliberately: a cron guarded by a date is still
+> a cron that fires, and still something that can be wrong about what day it is. The stop is the
+> absence of the trigger.
+>
+> **The times below are the record of what ran**, retained in `season.json`
+> `pipeline.schedule_et` and still shape-checked by `tests/test_season_pipeline_config.py`. Read
+> this table in the past tense.
+
+| Job | Fired (through 2026-12-13) | Does |
 |---|---|---|
 | **Weekly predict** | Tue 09:17 ET | **catch-up grade first** (CLV sign check per week), then snapshot → quality gate → predict |
 | **Daily capture** | Tue 12:50; Wed–Fri 12:50 and 17:23; Sat 05:50 / 08:50 / 09:20 / 12:20 / 12:50 / 15:50 / 16:20 / 19:20 ET (D44, from week 4) | append one line observation per slate game |
@@ -428,7 +443,7 @@ Every key has a consumer; `verify-phase-5` fails if one appears here without one
 | `timezone` | `utils.season_calendar.pipeline_today` / `pipeline_timezone` → all week resolution |
 | `freeze_tag` | `scripts/pipeline_preflight.py` (tree-hash assertion), `freeze-integrity.yml` |
 | `slate_filter` | documents SPEC §16.1 scope; the dropped-game detector will consume it |
-| `schedule_et` | `pipeline_preflight.evaluate_timing` (maps `github.event.schedule` to its slot; capture `precedes`/`kind`) + the cron-agreement test |
+| `schedule_et` | **retained as the record of the cadence that ran (D48)** — still read by `pipeline_preflight.evaluate_timing` to name a slot, still shape-checked by `tests/test_season_pipeline_config.py`, and now asserted *against* the workflows: no cron may exist, and any cron that does must match it (`tests/test_workflow_schedules.py`, `scripts/verify_phase_5.py`) |
 | `kickoff_windows_et` | `pipeline_preflight.evaluate_timing` (which games a missed window affects); every `schedule_et.capture.*.precedes` must name one (test) |
 | `jitter_slack_minutes` | `pipeline_preflight.evaluate_timing` (`on_time` vs `late`, before the window) |
 | `data_quality` | `scripts/check_snapshot_quality.py` (per-threshold `fail`/`warn`) |
@@ -471,6 +486,20 @@ is closed at the source instead of held back at the commit.)*
 
 ## 10. Operating notes
 
+* **After the stop, every run is a manual run.** `workflow_dispatch` is the only trigger left on all
+  four workflows (D48). A backfill, a re-grade or a one-off capture is dispatched exactly as it was
+  during the season; nothing else changes.
+* **If the stop PR had not been merged — the measured fallback (D48).** `pipeline_week` clamps, so
+  every date from 2026-12-13 onward resolves **week 15**, and `claim_window_open(15)` stays **True**
+  (it gates only the lead edge). What would have happened each week, measured rather than assumed:
+  the Tuesday predict would catch-up-grade, rebuild week 15's snapshot and commit it, then **skip
+  the claim** — `prediction_exists` is `true`, so the Build-predictions step never runs, and if it
+  were forced, `write_predictions` refuses with `FileExistsError` (D22, the weld). Captures would
+  spend an Odds credit a run for a slate whose games the books have de-listed. The Sunday grade
+  would re-grade week 15 idempotently and re-render byte-identical reports, committing nothing.
+  **No artifact is at risk in any of it** — the claim is welded, outcomes are append-only and
+  idempotent, renderings are regenerable. The cost of a missed merge is credits, CI minutes and
+  alarm surface, not correctness; that is why it is a deadline rather than an emergency.
 * **Manual run:** `workflow_dispatch` on any cadence workflow; `week` blank resolves from ET.
   `dry_run: true` runs everything and commits nothing.
 * **Backfill a week:** dispatch with an explicit `week`. Explicit always wins.

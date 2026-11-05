@@ -7,11 +7,13 @@
 name: Weekly predict (Tue)
 
 on:
-  schedule:
-    # 09:17 ET (13:17 UTC under EDT). Anchored to EDT deliberately: after the 2026-11-01 EST flip
-    # a fixed UTC time lands an hour EARLIER in ET, which is always the safe direction. Minute is
-    # :17 because top-of-hour Actions crons are the most heavily delayed.
-    - cron: "17 13 * * 2"
+  # SEASON STOP (D48, owner ruling 2026-11-05; D42 (b) extended to all four workflows). The
+  # `schedule:` block is DELETED, not commented out and not guarded by a date: the stop must be
+  # that nothing new executes unattended, and a date-conditioned cron is still a cron that fires,
+  # still a thing that can be wrong about what day it is. The cadence that ran all season is
+  # retained in `season.json` `pipeline.schedule_et` as the record of it — this file no longer
+  # schedules it. `workflow_dispatch` stays, so every job is still runnable by hand for a backfill
+  # or a re-grade, which is how the whole season was recovered whenever a run failed.
   workflow_dispatch:
     inputs:
       week:

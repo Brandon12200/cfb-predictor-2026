@@ -60,10 +60,42 @@ def test_composite_exists(action):
 
 
 @pytest.mark.parametrize("job,filename", sorted(JOB_FILE.items()))
-def test_workflow_crons_match_season_json(job, filename):
-    assert crons_in(filename) == configured(job), (
-        f"{filename} and season.json pipeline.schedule_et.{job} disagree. "
-        f"Both must change together, or the pipeline runs at a time nothing documents."
+def test_no_workflow_is_scheduled_after_the_season_stop(job, filename):
+    """**Inverted by the season stop (D48, owner 2026-11-05).** This asserted that each workflow's
+    crons equalled `season.json`'s. All four `schedule:` blocks are now deleted, so what has to hold
+    is that **none of them comes back by accident** — a cron restored here would resume unattended
+    writes to an append-only record after the season it describes has ended.
+
+    `season.json`'s `pipeline.schedule_et` is deliberately **retained**: it is the record of the
+    cadence that ran, it is still shape-checked by `tests/test_season_pipeline_config.py`, and the
+    timing guard still reads it to name a slot. Retained config plus no cron is the intended state,
+    which is why "they disagree" is no longer the failure.
+    """
+    assert crons_in(filename) == set(), (
+        f"{filename} has regained a `schedule:` cron after the season stop. If the 2027 season is "
+        f"being started deliberately, update this test and `scripts/verify_phase_5.py` together — "
+        f"and see the re-enable test below, which is what keeps the two sources in step."
+    )
+    assert configured(job), (
+        f"season.json pipeline.schedule_et.{job} is empty. The cadence is kept as the record of "
+        f"what ran; deleting it loses the only documented statement of the season's schedule."
+    )
+
+
+@pytest.mark.parametrize("job,filename", sorted(JOB_FILE.items()))
+def test_a_restored_cron_must_still_match_season_json(job, filename):
+    """The old guarantee, preserved for whoever re-enables a season.
+
+    The reason the two sources had to agree has not gone away — a duplicated schedule drifts
+    silently, and the drift shows up as a close captured after kickoff. So the rule is kept in a
+    form that survives the stop: **zero crons is fine, and any cron that exists must match
+    `season.json`.** A 2027 re-enable that edits only the workflow fails here rather than running
+    at a time nothing documents.
+    """
+    present = crons_in(filename)
+    assert present <= configured(job), (
+        f"{filename} schedules {sorted(present - configured(job))}, which is not in season.json "
+        f"pipeline.schedule_et.{job}. Both sources change together or not at all."
     )
 
 
