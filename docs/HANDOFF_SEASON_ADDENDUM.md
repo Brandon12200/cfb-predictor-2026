@@ -195,7 +195,7 @@ A figure here that disagrees with the repository means the repository is right.
 - It carries **four** commits of its own — `5874279`, `88f2a6b`, `3d99b10`, `9e5e069` — over eleven
   files. GitHub's PR view shows **eleven commits and 19 files** and will keep showing them: it is
   not a recompute lag. *(Corrected by the G5 audit.)* The PR's stored `base.sha` is still
-  `d6c5267`, recorded when it opened, and GitHub refreshes that only on a push to the head. By
+  `d6c5267`, recorded when it opened, and it had not refreshed by the time of this audit. By
   2026-11-05 22:20 UTC `mergeable` had already settled to `MERGEABLE` / `clean`, and
   `gh api repos/Brandon12200/cfb-predictor-2026/compare/main...9e5e069` gave **ahead 4, behind 3, 11
   files, merge base `72d1a3d`**. The truth is `git log origin/main..9e5e069` or that compare call.
@@ -526,8 +526,8 @@ in place above and marked *(Corrected by the G5 audit)*, plus one omission:
 
 **Re-derived and found correct:** `main` head and parents at the time of writing. CI on `f56a243`
 was success (run `42116445053`). There were 49 `## D` entries, ending at D48. Week 10 was claimed as
-`1bacd90`. `pipeline_week` gave `grade_weeks = 1 … 10`, `catchup_weeks = 10`. D47 is at
-`docs/DECISIONS.md:1388`. `WIN_RETURN = 0.909` is right, and so is `ats_result`. The last scheduled
+`1bacd90`. `pipeline_week` gave `grade_weeks = 1 … 10`, `catchup_weeks = 10`. D47 was at
+`docs/DECISIONS.md:1388` at `8b7af00` (1399 after this audit's D43 appendix). `WIN_RETURN = 0.909` is right, and so is `ats_result`. The last scheduled
 run before the merge was `42089182312`, at 18:57:11Z, and **still no scheduled run has executed the
 D48 code** (the runs since are CI only). The probe step names, the issue title and the `kind:
 probe` label match `freeze-integrity.yml`. The retry is one retry, and it never fires on a 4xx

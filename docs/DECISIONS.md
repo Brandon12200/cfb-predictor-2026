@@ -1015,7 +1015,6 @@ and the "Not ruled" paragraph above is superseded by rulings 2 and 3.
 because neither contains a bad pointer. That is the half-a-tool limit, measured: re-derive every bare
 assertion separately (D42 (d)).
 
-
 ### Appended — who merges (owner, 2026-11-05)
 
 Generation 4 merged its own handoff PR, #77 (`8b7af00`, docs-only, under (a), on a green gate).
