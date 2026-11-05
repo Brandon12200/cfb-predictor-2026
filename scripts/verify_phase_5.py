@@ -22,6 +22,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from scripts.workflow_triggers import on_keys, quoted_crons, unattended_triggers  # noqa: E402
+
 results: list[tuple[bool, str]] = []
 
 
@@ -74,42 +76,39 @@ check("the four composite actions exist",
       all((ACTIONS / a / "action.yml").exists()
           for a in ("cfb-setup", "cfb-commit", "report-failure", "clear-failure")))
 
-_CRON = re.compile(r'^\s*-\s*cron:\s*["\']([^"\']+)["\']', re.M)
-
-
-def _crons(name: str) -> set[str]:
-    return {" ".join(c.split()) for c in _CRON.findall((WORKFLOWS / name).read_text())}
-
-
 _job_file = {"predict": "weekly-predict.yml", "capture": "daily-capture.yml",
              "grade": "weekly-grade.yml", "freeze_integrity": "freeze-integrity.yml"}
 # Inverted by the season stop (D48, owner 2026-11-05): all four `schedule:` blocks are deleted, so
 # the check is that none has come back, and that a cron which somehow exists still matches
 # season.json — the anti-drift rule kept in the form that survives the stop. `schedule_et` itself is
 # retained as the record of the cadence that ran and is still shape-checked by its own tests.
-def _on_block(name: str) -> str:
-    """The workflow's `on:` mapping, comments stripped — see the twin helper in
-    tests/test_workflow_schedules.py. `_crons` needs a QUOTED value, so `- cron: 1 2 * * 3` is a
-    live schedule it cannot see; harmless while the rule was set-equality, a hole once the expected
-    set is empty (found by an independent review of the stop PR)."""
-    text = (WORKFLOWS / name).read_text()
-    start = text.index("\non:\n") + 1
-    rest = text[start + len("on:\n"):]
-    end = next((m.start() for m in re.finditer(r"^\S", rest, re.M)), len(rest))
-    return "\n".join(ln for ln in rest[:end].splitlines() if not ln.strip().startswith("#"))
+def _crons(name: str) -> set[str]:
+    return quoted_crons((WORKFLOWS / name).read_text())
 
 
-_scheduled = [job for job, f in _job_file.items()
-              if _crons(f) or "schedule" in _on_block(f) or "cron" in _on_block(f)]
+def _triggers(name: str) -> list[str]:
+    """Any unattended trigger in the `on:` block, in any quoting or flow style. The parser is
+    shared with tests/test_workflow_schedules.py, which mutation-tests it: after the stop both
+    guards pass by NOT finding a cron, so a parser blind spot is a live schedule nobody sees."""
+    return unattended_triggers((WORKFLOWS / name).read_text())
+
+
+_scheduled = [job for job, f in _job_file.items() if _crons(f) or _triggers(f)]
+# The positive form, and the stronger one: `workflow_dispatch` alone. `push`, `workflow_run` and
+# `repository_dispatch` fire unattended too, and "dispatch-only" is what D48 (1) ratified.
+_extra_triggers = [f"{job} ({', '.join(on_keys((WORKFLOWS / f).read_text()))})"
+                   for job, f in _job_file.items()
+                   if on_keys((WORKFLOWS / f).read_text()) != ["workflow_dispatch"]]
 _drifted = [
     job for job, f in _job_file.items()
     if not _crons(f) <= {" ".join(e["cron_utc"].split()) for e in PIPELINE["schedule_et"][job]}
 ]
 check("no workflow is scheduled after the season stop (D48); season.json keeps the record",
-      not _scheduled and not _drifted,
+      not _scheduled and not _extra_triggers and not _drifted,
       "scheduled again: " + ", ".join(_scheduled) if _scheduled else
-      ("drifted from season.json: " + ", ".join(_drifted) if _drifted else
-       "4 workflows dispatch-only, cadence retained in season.json"))
+      ("triggers beyond workflow_dispatch: " + "; ".join(_extra_triggers) if _extra_triggers else
+       ("drifted from season.json: " + ", ".join(_drifted) if _drifted else
+        "4 workflows dispatch-only, cadence retained in season.json")))
 
 # Without tags, `git describe --always` returns a bare SHA and every claim of the season would be
 # stamped with a commit hash where the freeze tag belongs.
