@@ -26,7 +26,7 @@ conversational context can operate or repair the pipeline.
 > `pipeline.schedule_et` and still shape-checked by `tests/test_season_pipeline_config.py`. Read
 > this table in the past tense.
 
-| Job | Fired (through 2026-12-13) | Does |
+| Job | Fired, until the stop PR merged | Does |
 |---|---|---|
 | **Weekly predict** | Tue 09:17 ET | **catch-up grade first** (CLV sign check per week), then snapshot → quality gate → predict |
 | **Daily capture** | Tue 12:50; Wed–Fri 12:50 and 17:23; Sat 05:50 / 08:50 / 09:20 / 12:20 / 12:50 / 15:50 / 16:20 / 19:20 ET (D44, from week 4) | append one line observation per slate game |
@@ -443,15 +443,18 @@ Every key has a consumer; `verify-phase-5` fails if one appears here without one
 | `timezone` | `utils.season_calendar.pipeline_today` / `pipeline_timezone` → all week resolution |
 | `freeze_tag` | `scripts/pipeline_preflight.py` (tree-hash assertion), `freeze-integrity.yml` |
 | `slate_filter` | documents SPEC §16.1 scope; the dropped-game detector will consume it |
-| `schedule_et` | **retained as the record of the cadence that ran (D48)** — still read by `pipeline_preflight.evaluate_timing` to name a slot, still shape-checked by `tests/test_season_pipeline_config.py`, and now asserted *against* the workflows: no cron may exist, and any cron that does must match it (`tests/test_workflow_schedules.py`, `scripts/verify_phase_5.py`) |
+| `schedule_et` | **retained as the record of the cadence that ran (D48)** — still read by `pipeline_preflight.evaluate_timing`, though that slot lookup is unreachable until a re-enable: with no scheduled runs every dispatch is labelled `manual` before it, still shape-checked by `tests/test_season_pipeline_config.py`, and now asserted *against* the workflows: no cron may exist, and any cron that does must match it (`tests/test_workflow_schedules.py`, `scripts/verify_phase_5.py`) |
 | `kickoff_windows_et` | `pipeline_preflight.evaluate_timing` (which games a missed window affects); every `schedule_et.capture.*.precedes` must name one (test) |
 | `jitter_slack_minutes` | `pipeline_preflight.evaluate_timing` (`on_time` vs `late`, before the window) |
 | `data_quality` | `scripts/check_snapshot_quality.py` (per-threshold `fail`/`warn`) |
 | `odds_budget` | `fetch_lines --min-credits`, `pipeline_preflight.report_budget` (`expected_weekly_credits` = capture slots + 1, test-pinned) |
 | `rehearsal` | the live/rehearsal guard in `.github/actions/cfb-setup` |
 
-`schedule_et.*.cron_utc` is the one deliberately non-executable key — Actions cannot read this file,
-so the crons are duplicated into the workflows and a test asserts the two agree.
+`schedule_et.*.cron_utc` is the one deliberately non-executable key — Actions cannot read this file.
+**Through the 2026 season the crons were duplicated into the workflows and a test asserted the two
+agreed; after the stop (D48) there are no workflow crons**, and the test asserts the inverse: none
+may exist, and any that somehow does must still match this key. That is the anti-drift rule a 2027
+re-enable needs, kept in the form that survives the stop.
 
 ---
 

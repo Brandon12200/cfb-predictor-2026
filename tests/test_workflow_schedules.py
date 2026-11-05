@@ -45,6 +45,24 @@ def crons_in(filename: str) -> set[str]:
     return {_norm(m.group("cron")) for m in _CRON.finditer((WORKFLOWS / filename).read_text())}
 
 
+def _on_block(filename: str) -> str:
+    """The workflow's `on:` mapping, comments stripped.
+
+    Needed because `_CRON` requires a QUOTED value, and `- cron: 1 2 * * 3` is valid YAML and a live
+    schedule. While the rule was "the crons here equal season.json's", an unquoted cron still failed
+    that comparison, so the quoting was never load-bearing. The season stop changes the expected set
+    to **empty**, and an unquoted cron then satisfies "no quoted crons found" — the hole the stop
+    itself opens (found by an independent review of this PR). Scoped to the `on:` block so
+    `github.event.schedule` plumbing elsewhere in the file is not mistaken for a trigger, and
+    comments are dropped because prose about a setting is not the setting.
+    """
+    text = (WORKFLOWS / filename).read_text()
+    start = text.index("\non:\n") + 1
+    rest = text[start + len("on:\n"):]
+    end = next((m.start() for m in re.finditer(r"^\S", rest, re.M)), len(rest))
+    return "\n".join(ln for ln in rest[:end].splitlines() if not ln.strip().startswith("#"))
+
+
 def configured(job: str) -> set[str]:
     return {_norm(e["cron_utc"]) for e in PIPELINE["schedule_et"][job]}
 
@@ -76,6 +94,12 @@ def test_no_workflow_is_scheduled_after_the_season_stop(job, filename):
         f"being started deliberately, update this test and `scripts/verify_phase_5.py` together — "
         f"and see the re-enable test below, which is what keeps the two sources in step."
     )
+    # Quoting-independent, because `- cron: 1 2 * * 3` is a live schedule that the quoted-value
+    # regex above does not see. Asserted on the `on:` block so the trigger, not the plumbing, is
+    # what is checked.
+    on_block = _on_block(filename)
+    assert "schedule" not in on_block, f"{filename}: `on:` still declares a schedule:\n{on_block}"
+    assert "cron" not in on_block, f"{filename}: `on:` still names a cron:\n{on_block}"
     assert configured(job), (
         f"season.json pipeline.schedule_et.{job} is empty. The cadence is kept as the record of "
         f"what ran; deleting it loses the only documented statement of the season's schedule."
