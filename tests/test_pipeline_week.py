@@ -69,8 +69,10 @@ def test_pipeline_week_rule(day, expected):
     assert pipeline_week(day, CAL) == expected
 
 
-@pytest.mark.parametrize("day", [date(2026, 12, 14), date(2026, 12, 15), date(2026, 12, 20),
-                                 date(2027, 1, 5)])
+# 12-13 first: week 15 ends 2026-12-12, so that is the first clamped day and the date D48 and
+# PIPELINE §10 both cite. A review of the stop PR noticed it was the one date missing here.
+@pytest.mark.parametrize("day", [date(2026, 12, 13), date(2026, 12, 14), date(2026, 12, 15),
+                                 date(2026, 12, 20), date(2027, 1, 5)])
 def test_after_the_final_grade_the_week_clamps_and_the_claim_window_stays_open(day):
     """The two facts D48's recorded fallback rests on, pinned so the record stays checkable.
 
