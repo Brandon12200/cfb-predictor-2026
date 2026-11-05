@@ -527,7 +527,7 @@ in place above and marked *(Corrected by the G5 audit)*, plus one omission:
 **Re-derived and found correct:** `main` head and parents at the time of writing. CI on `f56a243`
 was success (run `42116445053`). There were 49 `## D` entries, ending at D48. Week 10 was claimed as
 `1bacd90`. `pipeline_week` gave `grade_weeks = 1 … 10`, `catchup_weeks = 10`. D47 was at
-`docs/DECISIONS.md:1388` at `8b7af00` (1399 after this audit's D43 appendix). `WIN_RETURN = 0.909` is right, and so is `ats_result`. The last scheduled
+`docs/DECISIONS.md:1388` at `8b7af00` (1398 after this audit's D43 appendix). `WIN_RETURN = 0.909` is right, and so is `ats_result`. The last scheduled
 run before the merge was `42089182312`, at 18:57:11Z, and **still no scheduled run has executed the
 D48 code** (the runs since are CI only). The probe step names, the issue title and the `kind:
 probe` label match `freeze-integrity.yml`. The retry is one retry, and it never fires on a 4xx
