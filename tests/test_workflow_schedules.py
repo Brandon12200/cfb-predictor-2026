@@ -334,6 +334,29 @@ class TestTheTriggerParserSeesEveryCronShape:
         text = self._wrap(" {schedule: [{cron: 1 2 * * 3}]}\n")
         assert on_keys(text) == ["<flow>"]
 
+    @pytest.mark.parametrize("quote", ['"', "'"])
+    def test_a_quoted_trigger_key_is_still_that_trigger(self, quote):
+        """`"push":` is the same key as `push:`. A review found that requiring a bare key let a
+        quoted one through the dispatch-only assertion entirely unseen."""
+        text = self._wrap(f"\n  workflow_dispatch:\n  {quote}push{quote}:\n    branches: [main]\n")
+        assert on_keys(text) == ["workflow_dispatch", "push"]
+
+    @pytest.mark.parametrize("body,expected", [
+        ("\n  workflow_dispatch:\n  - push\n", ["workflow_dispatch", "<unknown>"]),
+        (" [push, workflow_dispatch]\n", ["<unknown>"]),
+        (" push\n", ["<unknown>"]),
+    ])
+    def test_a_shape_the_parser_cannot_read_is_reported_rather_than_dropped(self, body, expected):
+        """A list item, a sequence and a scalar are all valid YAML `on:` forms. None of them may
+        vanish from the answer: silence there reads as "declares nothing", which is the one answer
+        that would satisfy the dispatch-only assertion."""
+        assert on_keys(self._wrap(body)) == expected
+
+    def test_the_real_workflows_declare_workflow_dispatch_and_nothing_else(self):
+        """The assertion the stop rests on, stated once over the four it governs."""
+        for filename in JOB_FILE.values():
+            assert on_keys((WORKFLOWS / filename).read_text()) == ["workflow_dispatch"], filename
+
     def test_every_real_workflow_parses(self):
         """The parser is only load-bearing if it can actually read the files it guards."""
         for filename in ALL_FILES:
