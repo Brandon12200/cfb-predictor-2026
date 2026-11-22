@@ -1,24 +1,24 @@
 # 2026 Season Report — to date
 
-_270/270 games graded across 11 week(s)._
+_302/302 games graded across 12 week(s)._
 
 _Capture cadence changed at **week 04** (D44). Close-age and timeliness figures below are reported per era and never blended across it._
 
 ### Games of interest, by lean side (D27 — read this before the blended numbers)
 
-_250 of 270 games carry a gradable lean (172 home / 78 away, 2.21:1)._
+_281 of 302 games carry a gradable lean (194 home / 87 away, 2.23:1)._
 
-_**These are hypothetical leans, not placed bets.** All 250 graded games were NO_BET — this is what the model would have done had it bet, which is how selectivity gets measured (3c.5). No wager was recommended._
+_**These are hypothetical leans, not placed bets.** All 281 graded games were NO_BET — this is what the model would have done had it bet, which is how selectivity gets measured (3c.5). No wager was recommended._
 
 | lean | leans | graded | W-L-P | ATS win% | Wilson 95% | avg CLV |
 |---|---|---|---|---|---|---|
-| home | 172 | 172 | 98-74-0 | 57.0% | [50%–64%] | +0.16 pts (beat close 47.7%, n=172) |
-| away | 78 | 78 | 52-25-1 | 67.5% | [56%–77%] | +0.04 pts (beat close 47.4%, n=78) |
-| _naive: always lean home_ | 250 | 250 | 123-126-1 | 49.4% | [43%–56%] | +0.10 pts (beat close 47.6%, n=250) |
+| home | 194 | 194 | 111-83-0 | 57.2% | [50%–64%] | +0.05 pts (beat close 46.4%, n=194) |
+| away | 87 | 87 | 56-30-1 | 65.1% | [55%–74%] | +0.06 pts (beat close 49.4%, n=87) |
+| _naive: always lean home_ | 281 | 281 | 141-139-1 | 50.4% | [45%–56%] | +0.01 pts (beat close 46.3%, n=281) |
 
-_Model 60.2% vs naive baseline 49.4% on the same games: **+10.8%** — **above** always taking the home team._
+_Model 59.6% vs naive baseline 50.4% on the same games: **+9.3%** — **above** always taking the home team._
 
-_20 neutral games: no side taken — CLV is defined from the bet side's perspective, so it is null rather than 0.0 (D22 f3). Their own selectivity bucket, never win-rated._
+_21 neutral games: no side taken — CLV is defined from the bet side's perspective, so it is null rather than 0.0 (D22 f3). Their own selectivity bucket, never win-rated._
 
 _Leans are structurally home-skewed: TravelBurden/ConsecutiveRoad only penalise the visitor and Altitude only advantages the host (D27). Read the away cell's Wilson interval before drawing anything from it._
 
@@ -55,8 +55,8 @@ _No graded bets in these tiers yet — tier separation unmeasured. An empty brea
 | bucket | games | ATS win% |
 |---|---|---|
 | placed bets | 0 | — |
-| NO_BET (hypothetical lean) | 250 | 60.2% |
-| NO_BET (neutral, no lean) | 20 | — (no side) |
+| NO_BET (hypothetical lean) | 281 | 59.6% |
+| NO_BET (neutral, no lean) | 21 | — (no side) |
 
 _Entire slate NO_BET — selectivity working as designed (dormancy-as-design, 3c.9), not breakage._
 
@@ -66,13 +66,13 @@ _Entire slate NO_BET — selectivity working as designed (dormancy-as-design, 3c
 |---|---|---|---|---|
 | Altitude | 13 | 11-2 | 84.6% | +0.35 |
 | ByeAdvantage | 67 | 43-24 | 64.2% | -0.13 |
-| CloseGamePerformance | 62 | 39-23 | 62.9% | -0.15 |
-| ConsecutiveRoad | 56 | 36-20 | 64.3% | +0.09 |
-| DesperationIndex | 1 | 0-1 | 0.0% | +2.10 |
-| PointDifferentialTrends | 83 | 48-34 | 58.5% | +0.12 |
-| Sandwich | 121 | 70-51 | 57.9% | +0.08 |
-| ShortWeek | 37 | 22-15 | 59.5% | +0.18 |
-| TravelBurden | 145 | 89-56 | 61.4% | +0.19 |
+| CloseGamePerformance | 75 | 44-31 | 58.7% | -0.20 |
+| ConsecutiveRoad | 64 | 39-25 | 60.9% | +0.02 |
+| DesperationIndex | 2 | 1-1 | 50.0% | +0.50 |
+| PointDifferentialTrends | 104 | 58-45 | 56.3% | -0.02 |
+| Sandwich | 135 | 79-56 | 58.5% | +0.05 |
+| ShortWeek | 45 | 27-18 | 60.0% | +0.09 |
+| TravelBurden | 162 | 100-62 | 61.7% | +0.09 |
 
 _read the Wilson intervals — first-season per-factor cells are small_
 
@@ -94,11 +94,11 @@ _12 further graded game(s) are not counted here: a neutral lean takes no side, s
 
 | close age | games with CLV | avg CLV | beat the close |
 |---|---|---|---|
-| ≤3 h | 216 | +0.13 | 47.7% |
+| ≤3 h | 247 | +0.05 | 47.4% |
 | 3–12 h | 1 | -0.70 | 0.0% |
 | >12 h | 0 | — | — |
 
-_8 further graded game(s) are not counted here: a neutral lean takes no side, so it has no CLV to age (D22 f3) — the close itself may well have been fresh._
+_9 further graded game(s) are not counted here: a neutral lean takes no side, so it has no CLV to age (D22 f3) — the close itself may well have been fresh._
 
 _The two eras are reported separately and never summed: weeks 1–3 ran one capture wave per kickoff window, week 4 onward runs D44's guarantee + best-effort pair. A single season row would average a fixed cadence with the one that replaced it (D44 §(4))._
 
@@ -115,6 +115,7 @@ _The two eras are reported separately and never summed: weeks 1–3 ran one capt
 | 09 | 8 | 8 | 0 |
 | 10 | 8 | 8 | 0 |
 | 11 | 8 | 8 | 0 |
+| 12 | 8 | 8 | 0 |
 
 _A guarantee slot is judged by the capture run it produced — the earliest observation at or after its scheduled time — and counts as covered when that run landed before the kickoff window it precedes. Best-effort slots are designed to miss and are not counted (D44 implementation ruling 1)._
 _Week 08: the Tue 12:50 ET slot before the 19:00 ET window was served by Tue 10-20 21:39 ET._
