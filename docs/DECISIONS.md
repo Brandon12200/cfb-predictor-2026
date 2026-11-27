@@ -1393,6 +1393,44 @@ evidence. A test asserts the printed token and the written value agree.
    own `generated_at`, with a margin of at least the predict-to-first-capture gap, 213 min on a
    Tuesday). **D45 is not to be implemented until then.** Neither PR F nor this entry depends on it.
 
+
+### Appended — owner dispatches of `daily-capture` under `queue: max` (owner, 2026-11-26)
+
+**The limit queueing does not cover.** A queued run checks out the commit `main` was at **when it
+was triggered**. `actions/checkout` tests `refs/remotes/origin/main` against the event SHA, and
+re-fetches that SHA if `main` has moved. Every capture rewrites `data/lines/<week>.json` and
+`data/quota/<month>.json` by appending to the end of each list. So a capture whose event SHA
+predates another capture's `lines:` commit cannot be rebased onto it:
+
+- **Simulated 2026-11-26** in a throwaway repository with the real writers: the second push was
+  rejected, and `git pull --rebase` hit a CONFLICT in both files.
+- `cfb-commit` retries that same rebase three times, so the run ends red with a capture-failure
+  issue. It has spent 1 credit, and its observation and quota entry are lost.
+- The first run's commit is untouched, and no artifact is corrupted.
+- `cfb-commit`'s comment that there is "nothing to conflict with textually" is wrong for this case.
+- No in-season run has overlapped another (median capture run about 20 s, longest 32 s, measured
+  over November), so the path has never run.
+
+**Ruling.** The owner may dispatch `daily-capture.yml` by hand before a kickoff wave when the
+scheduled run has not landed, under two rules:
+
+1. **The group is idle.** No `daily-capture`, `weekly-predict` or `weekly-grade` run is `queued` or
+   `in_progress`.
+2. **The previous run's commit has landed.** The last capture's `lines:` commit is on `main` before
+   the next dispatch.
+
+**A residual the two rules do not close.** A scheduled capture created while a dispatch is in
+flight (about 20 s) carries an event SHA from before the dispatch's commit. That scheduled run is
+the one that fails: it spends 1 credit, loses its observation, goes red, and is cleared by the next
+clean capture. The dispatch's own observation stands. The window is narrow; it is recorded, not
+ruled.
+
+Each dispatch is recorded in the season ledger, using the template in
+`docs/HANDOFF_SEASON_ADDENDUM.md`. A dispatched capture's timing verdict is `manual`, and no D44 tier
+fires for it. `analytics/cadence.py` credits its observation to every uncovered guarantee slot at
+or before it, while #79-style tallies count only scheduled runs. The two records disagree by design;
+see D47's appendix of the same date.
+
 ---
 
 ## D47 — Post-season threshold analysis: a ruled deliverable of the 2026 season, due Sun 2026-12-20 — **RATIFIED (owner, 2026-10-01)**
@@ -1500,6 +1538,28 @@ it could have had — written once, from the committed artifacts, after the seas
 **Scope.** `scripts/` and `docs/analysis/` only. No `factors/`, no `engine/`, no calibration
 constant, no append-only or byte-immutable artifact path. The freeze is untouched: this is
 measurement of the record, after the season it describes has ended.
+
+
+### Appended — two report defects folded into this deliverable (owner, 2026-11-26)
+
+These were found by a read-only measurement on 2026-11-26. They are **ruled post-season**: no code
+change in-season. Both fixes land **in the D47 PR**, followed by a re-render by dispatch.
+
+1. **`analytics/cadence.py` places guarantee slots at `time_edt`, not `time_est`.**
+   - `guarantee_slots` builds each slot from `entry["time_edt"]` on every date. From the 2026-11-01
+     EST flip, each slot sits an hour after its cron. The Saturday slots read 05:50, 09:20, 12:50
+     and 16:20 ET, while the crons fire at 04:50, 08:20, 11:50 and 15:20.
+   - Simulated against week 13's lines file, with an observation injected at 05:00 ET on Saturday
+     11-28 (the file holds no such observation): it is credited to **no** slot.
+   - Timeliness rendered for weeks 10 onward carries the offset until the re-render.
+2. **The Tuesday snapshot's seed observation counts as a capture run.**
+   - `capture_runs` takes every distinct `fetched_at` in the week's line store, and its docstring
+     says so deliberately. So the predict job's seed can cover a guarantee slot that the live check
+     scored as missed.
+   - Week 13 already shows the disagreement: #79 counts Tue, Wed and Thu as missed, while the
+     report credits Tuesday to the 18:03 ET seed.
+   - The same source-blindness credits an owner-dispatched capture to every uncovered guarantee
+     slot at or before it, as D46's appended dispatch ruling records.
 
 ---
 
@@ -1726,3 +1786,52 @@ Anything that watches `freeze-integrity` for a **missing** run stays in the draw
 cancellation showed that a pre-step cancellation is invisible, and `queue: max` (D46) does not cover
 it, but a watcher for it is new unattended machinery and this batch is the opposite of that. **D45**
 stays undated. The **2025 retro's staleness** and `verify-phase-4`'s side-effect write stay open.
+
+### Appended — the stop moves to the week-14 grade (owner, 2026-11-26)
+
+This supersedes §(1)'s merge window. The text above stays as written. Where the two conflict, this
+section governs.
+
+**The measurement behind it** was taken 2026-11-26 against `main` at `8e0f6d2`, read-only:
+
+- **Week 15 has no tracked games.** The CFBD schedule in the committed week-13 snapshot lists
+  exactly one week-15 game: ARMY vs NAVY, neutral site, 2026-12-12T20:00Z. Neither team is in the
+  tracked registry (68 teams, Notre Dame included). `season.json` week 15 runs 2026-12-07 to
+  2026-12-12.
+- **The predict gate refuses an empty slate.** `scripts/check_snapshot_quality.py`, run on a
+  synthetic week-15 snapshot with an empty slate, reports `FAIL min_slate_games — slate games in the snapshot: 0 < 1`
+  and exits 1 (`season.json` `pipeline.data_quality`: `min_slate_games` 1, severity `fail`). The gate runs
+  before the snapshot commit and before `build_predictions`, so no week-15 snapshot or claim would
+  ever be written.
+- **If the crons run through week 15, about 19 red runs follow, and none of them puts an artifact
+  at risk:**
+  - **Tue 12-08:** predict goes red at the gate. It has already spent **one Odds credit**, because
+    `build_snapshot.py` calls `get_ncaaf_spreads` before the gate runs. That credit goes
+    **unrecorded on `main`**: the gate fails before the commit step, so the run's `data/quota` entry
+    is never committed. The Tuesday capture exits 4, its designed state, and stays green.
+  - **Wed 12-09 to Sat 12-12:** fourteen captures exit 1 on the missing snapshot (before any fetch,
+    so no credit is spent). `freeze-integrity`'s claim tripwire exits 2 on each of the four days
+    ("no claim file").
+  - **Sun 12-13:** the grade has nothing new to grade.
+
+**The ruling.**
+
+1. **The final regular-season grade for this slate is Sun 2026-12-06** (week 14). D42 (b)'s
+   criterion, "after the final regular-season grade", stands. Its computed date of 2026-12-13
+   assumed a week 15 with games; for this slate the date is 12-06.
+2. **The owner merges the stop PR (#76) after the 12-06 grade lands and before Tue 2026-12-08 08:17
+   EST.** That bound is the predict cron `17 13 * * 2`; merging before it means no run ever targets
+   week 15. This replaces "after the 2026-12-13 grade lands and before Tue 2026-12-15 09:00 ET". The
+   recorded fallback above still holds as a statement of the clamp. What a missed merge would now
+   cost is the cascade measured above.
+3. **Late week-14 finishers after the stop are graded by a manual `weekly-grade` dispatch with
+   `week: 14` set explicitly.** This was measured: `pipeline_week` returns 15 from 2026-12-07, so a
+   dispatch with `week` blank resolves week 15, which has no claim, and grades nothing.
+
+**Not changed by this ruling:**
+- D47's due date (Sun 2026-12-20, written as "one week after the final regular-season grade"). It
+  stands as written unless the owner rules otherwise.
+- #76's tree. Its `docs/PIPELINE.md:278` at `9e5e069` still says "after 2026-12-13", which the move makes stale.
+  It is not edited, because any change to #76's branch voids its GO; it is corrected after the merge.
+  This appendix changes `docs/DECISIONS.md` only, which is disjoint from #76's eleven files, so
+  #76's GO stands under D46 §(4).2.
