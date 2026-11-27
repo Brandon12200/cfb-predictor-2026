@@ -101,8 +101,10 @@ runs:
       run: python -m pip install --quiet --upgrade pip && python -m pip install --quiet -e .
 
     # Mode is derived from the ref, never from a dispatch input: a mode that cannot be typed
-    # cannot be mistyped. Scheduled runs on the default branch are LIVE; anything on the
-    # rehearsal prefix is a REHEARSAL; anything else refuses to run at all.
+    # cannot be mistyped. ANY run on the default branch is LIVE -- the event name only decides
+    # whether the warning below is printed, and since the season stop (D48) a manual dispatch is
+    # the only live path there is. Anything on the rehearsal prefix is a REHEARSAL; anything else
+    # refuses to run at all.
     - name: Resolve live/rehearsal mode
       id: mode
       shell: bash
