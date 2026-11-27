@@ -1419,6 +1419,12 @@ scheduled run has not landed, under two rules:
 2. **The previous run's commit has landed.** The last capture's `lines:` commit is on `main` before
    the next dispatch.
 
+**A residual the two rules do not close.** A scheduled capture created while a dispatch is in
+flight (about 20 s) carries an event SHA from before the dispatch's commit. That scheduled run is
+the one that fails: it spends 1 credit, loses its observation, goes red, and is cleared by the next
+clean capture. The dispatch's own observation stands. The window is narrow; it is recorded, not
+ruled.
+
 Each dispatch is recorded in the season ledger, using the template in
 `docs/HANDOFF_SEASON_ADDENDUM.md`. A dispatched capture's timing verdict is `manual`, and no D44 tier
 fires for it. `analytics/cadence.py` credits its observation to every uncovered guarantee slot at
@@ -1543,8 +1549,8 @@ change in-season. Both fixes land **in the D47 PR**, followed by a re-render by 
    - `guarantee_slots` builds each slot from `entry["time_edt"]` on every date. From the 2026-11-01
      EST flip, each slot sits an hour after its cron. The Saturday slots read 05:50, 09:20, 12:50
      and 16:20 ET, while the crons fire at 04:50, 08:20, 11:50 and 15:20.
-   - Measured on week 13's lines file: an observation at 05:00 ET on Saturday 11-28 is credited to
-     **no** slot.
+   - Simulated against week 13's lines file, with an observation injected at 05:00 ET on Saturday
+     11-28 (the file holds no such observation): it is credited to **no** slot.
    - Timeliness rendered for weeks 10 onward carries the offset until the re-render.
 2. **The Tuesday snapshot's seed observation counts as a capture run.**
    - `capture_runs` takes every distinct `fetched_at` in the week's line store, and its docstring
@@ -1793,14 +1799,16 @@ section governs.
   tracked registry (68 teams, Notre Dame included). `season.json` week 15 runs 2026-12-07 to
   2026-12-12.
 - **The predict gate refuses an empty slate.** `scripts/check_snapshot_quality.py`, run on a
-  synthetic week-15 snapshot with an empty slate, reports `FAIL min_slate_games — 0 < 1` and exits
-  1 (`season.json` `pipeline.data_quality`: `min_slate_games` 1, severity `fail`). The gate runs
+  synthetic week-15 snapshot with an empty slate, reports `FAIL min_slate_games — slate games in the snapshot: 0 < 1`
+  and exits 1 (`season.json` `pipeline.data_quality`: `min_slate_games` 1, severity `fail`). The gate runs
   before the snapshot commit and before `build_predictions`, so no week-15 snapshot or claim would
   ever be written.
 - **If the crons run through week 15, about 19 red runs follow, and none of them puts an artifact
   at risk:**
-  - **Tue 12-08:** predict goes red at the gate. The Tuesday capture exits 4, its designed state,
-    and stays green.
+  - **Tue 12-08:** predict goes red at the gate. It has already spent **one Odds credit**, because
+    `build_snapshot.py` calls `get_ncaaf_spreads` before the gate runs. That credit goes
+    **unrecorded on `main`**: the gate fails before the commit step, so the run's `data/quota` entry
+    is never committed. The Tuesday capture exits 4, its designed state, and stays green.
   - **Wed 12-09 to Sat 12-12:** fourteen captures exit 1 on the missing snapshot (before any fetch,
     so no credit is spent). `freeze-integrity`'s claim tripwire exits 2 on each of the four days
     ("no claim file").
